@@ -1,26 +1,45 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ─── Design Tokens ────────────────────────────────────────────────────
+   Rename a value here → all Tailwind utilities update everywhere.
+   Color tokens → bg-theme-*, text-theme-*, border-theme-*, fill-theme-*, etc.
+   Font tokens  → font-primary, font-sans
+──────────────────────────────────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Typography — next/font injects --font-inter via layout className */
+  --font-primary: var(--font-inter, 'Inter', Arial, sans-serif);
+  --font-sans:    var(--font-primary);
+
+  /* Brand */
+  --color-theme-primary:       #cc0000;
+  --color-theme-primary-dark:  #a50000;
+  --color-theme-primary-light: #f5e6e6;
+  --color-theme-accent:        #003087;
+
+  /* Neutrals */
+  --color-theme-dark:   #1a1a1a;
+  --color-theme-dark-2: #2b2b2b;
+  --color-theme-mid:    #444444;
+  --color-theme-muted:  #6b6b6b;
+  --color-theme-border: #e0e0e0;
+  --color-theme-subtle: #f7f7f7;
+  --color-theme-bg:     #ffffff;
+  --color-theme-footer: #111111;
+
+  /* State */
+  --color-theme-success:       #4caf50;
+  --color-theme-success-dark:  #2e7d32;
+  --color-theme-success-light: #90ee90;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ─── Base ─────────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-primary);
+  color: var(--color-theme-dark);
+  background: var(--color-theme-bg);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-x: hidden;
 }
