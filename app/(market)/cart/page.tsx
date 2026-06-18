@@ -44,7 +44,7 @@ export default function CartPage() {
   const deliveryFee = mounted && cart.totalItems > 0 ? DELIVERY_FEE : 0
 
   return (
-    <section className="max-w-6xl mx-auto px-[5%] py-8 sm:py-10">
+    <section className="px-[5%] py-8 sm:py-10">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 items-start">
 
         {/* ── Left: items column ── */}

@@ -5,6 +5,13 @@ const WP_ORIGIN = "https://onsitestorage.com";
 const nextConfig: NextConfig = {
   cacheComponents: true,
 
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'onsite-cdn.sfo3.cdn.digitaloceanspaces.com' },
+      { protocol: 'https', hostname: 'onsitestorage.com' },
+    ],
+  },
+
   // Proxy WordPress API paths so AJAX calls from the iframe avoid CORS.
   // The browser hits localhost; Next.js forwards to the live WordPress site.
   async rewrites() {
