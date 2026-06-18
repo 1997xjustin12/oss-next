@@ -1,7 +1,24 @@
 import type { NextConfig } from "next";
 
+const WP_ORIGIN = "https://onsitestorage.com";
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
+
+  // Proxy WordPress API paths so AJAX calls from the iframe avoid CORS.
+  // The browser hits localhost; Next.js forwards to the live WordPress site.
+  async rewrites() {
+    return [
+      {
+        source: "/wp-json/:path*",
+        destination: `${WP_ORIGIN}/wp-json/:path*`,
+      },
+      {
+        source: "/wp-admin/:path*",
+        destination: `${WP_ORIGIN}/wp-admin/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
