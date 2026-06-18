@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { CartButton } from "@/components/layout/CartButton";
 
 const NAV_LINKS = [
   { href: "/buy",         label: "Buy",            dropdown: true  },
@@ -52,12 +53,7 @@ export function Navbar() {
 
         {/* Desktop right section */}
         <div className="hidden lg:flex items-center gap-[10px] shrink-0">
-          <button
-            className="flex items-center gap-[5px] text-[13px] text-theme-muted px-[10px] py-[6px] border border-theme-border rounded cursor-pointer transition-colors hover:border-theme-primary bg-transparent font-primary"
-            aria-label="View cart"
-          >
-            🛒 $0.00 &nbsp;0
-          </button>
+          <CartButton />
           <div className="text-base font-extrabold text-theme-primary whitespace-nowrap">
             <a href="tel:8889779085">(888) 977-9085</a>
           </div>
