@@ -69,9 +69,7 @@ export async function fetchSaleProducts(
   })
   if (opts.location) params.set('location', opts.location)
 
-  const res = await fetch(`${WP_PRODUCTS_URL}?${params}`, {
-    signal: AbortSignal.timeout(15_000),
-  })
+  const res = await fetch(`${WP_PRODUCTS_URL}?${params}`)
 
   if (!res.ok) return { products: [], maxPages: 0 }
 
