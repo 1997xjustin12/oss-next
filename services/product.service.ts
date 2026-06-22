@@ -67,7 +67,7 @@ export async function fetchSaleProducts(
     page:         String(opts.page ?? 1),
     sort:         opts.sort ?? 'default',
   })
-  if (opts.location) params.set('location', opts.location)
+  params.set('location', opts.location ?? 'Various North America')
 
   const res = await fetch(`${WP_PRODUCTS_URL}?${params}`)
 

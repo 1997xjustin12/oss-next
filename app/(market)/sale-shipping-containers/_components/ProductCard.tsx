@@ -67,7 +67,9 @@ export function ProductCard({ product }: Props) {
           <span className="text-theme-muted">({product.reviews} reviews)</span>
         </div>
 
-        <div className="text-xs font-bold text-theme-primary">{product.location}</div>
+        {product.location && product.location !== 'Various North America' && (
+          <div className="text-xs font-bold text-theme-primary">{product.location}</div>
+        )}
 
         {product.monthly && (
           <div className="rounded-md border border-theme-border bg-theme-subtle px-3 py-2 text-xs leading-relaxed text-theme-muted">
