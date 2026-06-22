@@ -2107,16 +2107,16 @@ export const LOCATIONS: Location[] = [
         "description_2": "",
         "logo_id": "0",
         "marker_id": "151",
-        "is_disabled": null,
+        "is_disabled": "",
         "open_hours": "{\"mon\":[\"09:30 AM - 06:30 PM\"],\"tue\":[\"09:30 AM - 06:30 PM\"],\"wed\":[\"09:30 AM - 06:30 PM\"],\"thu\":[\"09:30 AM - 06:30 PM\"],\"fri\":[\"09:30 AM - 06:30 PM\"],\"sat\":[\"09:30 AM - 06:30 PM\"],\"sun\":[\"09:30 AM - 06:30 PM\"]}",
-        "brand": null,
-        "product": null,
+        "brand": "",
+        "product": "",
         "custom": "{\"standard_mile\":\"\",\"standard_mile_rates\":\"\",\"additional_rates_per_mile\":\"\",\"local_specials\":\"\",\"location_details\":\"\",\"pricing\":\"\",\"is_virtual_depo\":\"\",\"main_depo_id\":\"\",\"postal_code\":\"\",\"tilt_bed_rate_per_mile\":\"\",\"flat_bed_rate_per_mile\":\"\",\"tilt_bed_min_rate\":\"\",\"flat_bed_min_rate\":\"\",\"tilt_bed_hour_rate\":\"\",\"handling_fee\":\"\",\"relocation_fee\":\"\"}",
         "ordr": "0",
         "slug": "various-north-america-various-north-america",
         "pending": null,
         "created_on": "2024-09-02 23:09:23",
-        "updated_on": null
+        "updated_on": ""
     },
     {
         "id": "122",
