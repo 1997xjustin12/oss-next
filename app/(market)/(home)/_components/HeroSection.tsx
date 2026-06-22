@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BASE_URL } from "@/lib/helpers";
 
 const PRICING_ROWS = [
   { title: "20ft Standard Container", sub: "Used · Wind & Watertight · 160 sq ft", avail: "In Stock — Ready to Deliver", price: "$1,350",    unit: "Purchase" },
@@ -52,7 +53,7 @@ export function HeroSection() {
 
         <div className="flex gap-[11px] flex-wrap">
           <Link
-            href="#quote-section"
+            href={`${BASE_URL}/shipping-container-quote`}
             className="bg-theme-primary text-white px-[26px] py-[14px] rounded-[5px] text-[15.5px] font-black inline-flex items-center gap-[7px] transition-colors hover:bg-theme-primary-dark"
           >
             📋 Get Free Quote
@@ -102,7 +103,7 @@ export function HeroSection() {
         ))}
 
         <Link
-          href="/products"
+          href={`${BASE_URL}/sale-shipping-containers?ptype=buy`}
           className="mt-[14px] bg-black/[.2] border-2 border-white/[.38] text-white w-full py-3 rounded-[5px] text-[14.5px] font-bold text-center transition-colors hover:bg-black/[.32]"
         >
           View All Containers &amp; Pricing →
