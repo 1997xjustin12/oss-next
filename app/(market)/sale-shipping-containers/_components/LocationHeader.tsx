@@ -21,9 +21,9 @@ export function LocationHeader({ location, zipcode }: Props) {
           </>
         )}
       </div>
-      {zipcode && (
+      {/* {zipcode && (
         <div className="text-sm text-theme-muted mt-0.5">ZIP: {zipcode}</div>
-      )}
+      )} */}
     </div>
   );
 }

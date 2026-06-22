@@ -17,7 +17,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   const [zip, setZip] = useState(initialZip)
   const [open, setOpen] = useState(false)
 
-  const { results, loading, error, clear } = useGeoapify(zip, {
+  const { results, loading, error, clear, selectResult } = useGeoapify(zip, {
     type: 'postcode',
     countries: 'us,ca',
     debounceMs: 300,
@@ -30,14 +30,10 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   }
 
   function handleSelect(result: GeoapifyResult) {
-    const loc =
-      result.city && result.stateCode
-        ? `${result.city}, ${result.stateCode}`
-        : result.formatted
-    setZip(result.postcode || zip)
-    clear()
+    setZip(result.formatted)
+    selectResult(result)
     setOpen(false)
-    navigate(result.postcode || zip, loc)
+    navigate(result.postcode || zip, result.nearestLocation ?? result.formatted)
   }
 
   function handleSeePrices() {
