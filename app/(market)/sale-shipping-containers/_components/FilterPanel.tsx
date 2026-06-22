@@ -1,24 +1,42 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { ZipLookup } from './ZipLookup'
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { ZipLookup } from "./ZipLookup";
+import { BASE_URL } from "@/lib/helpers";
+import Link from "next/link";
 
 type Props = {
-  zipcode?: string
-  location?: string
-  ptype?: string
-}
+  zipcode?: string;
+  location?: string;
+  ptype?: string;
+};
 
 const PRODUCT_FILTERS = [
-  { label: 'Buy Shipping Container',         param: 'buy' },
-  { label: 'Rent Shipping Container',         param: 'rent' },
-  { label: 'Rent-To-Own Shipping Container',  param: 'rto' },
-  { label: 'Shipping Container Accessories',  param: 'accessories' },
-]
+  {
+    label: "Buy Shipping Container",
+    param: "buy",
+    url: `${BASE_URL}/sale-shipping-containers/?ptype=buy`,
+  },
+  {
+    label: "Rent Shipping Container",
+    param: "rental",
+    url: `${BASE_URL}/sale-shipping-containers/?ptype=rental`,
+  },
+  {
+    label: "Rent-To-Own Shipping Container",
+    param: "rto",
+    url: `${BASE_URL}/sale-shipping-containers/?ptype=rto`,
+  },
+  {
+    label: "Shipping Container Accessories",
+    param: "accessories",
+    url: `${BASE_URL}/sale-shipping-containers/?ptype=accessories`,
+  },
+];
 
-export function FilterPanel({ zipcode, location, ptype = 'buy' }: Props) {
-  const [filtersOpen, setFiltersOpen] = useState(true)
+export function FilterPanel({ zipcode, location, ptype = "buy" }: Props) {
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   return (
     <div className="flex flex-col gap-4">
@@ -29,13 +47,13 @@ export function FilterPanel({ zipcode, location, ptype = 'buy' }: Props) {
         <button
           onClick={() => setFiltersOpen((o) => !o)}
           className={`flex w-full items-center justify-between px-4 py-3 text-base font-extrabold transition-colors hover:bg-theme-subtle ${
-            filtersOpen ? 'border-b border-theme-border' : ''
+            filtersOpen ? "border-b border-theme-border" : ""
           }`}
         >
           Filter
           <ChevronDown
             size={16}
-            className={`text-theme-muted transition-transform duration-200 ${filtersOpen ? '' : '-rotate-90'}`}
+            className={`text-theme-muted transition-transform duration-200 ${filtersOpen ? "" : "-rotate-90"}`}
           />
         </button>
 
@@ -45,20 +63,29 @@ export function FilterPanel({ zipcode, location, ptype = 'buy' }: Props) {
               Products
             </div>
             {PRODUCT_FILTERS.map((f) => (
-              <label
-                key={f.label}
-                className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle cursor-pointer"
+              <Link
+                  key={f.label}
+                  prefetch={false}
+                  href={f.url || "#"}
               >
-                <input
-                  type="checkbox"
-                  defaultChecked={ptype === f.param}
-                  className="h-4 w-4 accent-red-600"
-                />
-                {f.label}
-              </label>
+                <label
+                  className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    defaultChecked={ptype === f.param}
+                    className="h-4 w-4 accent-red-600"
+                  />
+                  {f.label}
+                </label>
+              </Link>
             ))}
             <label className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-muted">
-              <input type="checkbox" disabled className="h-4 w-4 accent-gray-400" />
+              <input
+                type="checkbox"
+                disabled
+                className="h-4 w-4 accent-gray-400"
+              />
               Onsite Specials
             </label>
 
@@ -66,7 +93,11 @@ export function FilterPanel({ zipcode, location, ptype = 'buy' }: Props) {
               Payment Terms
             </div>
             <label className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle cursor-pointer">
-              <input type="checkbox" defaultChecked className="h-4 w-4 accent-red-600" />
+              <input
+                type="checkbox"
+                defaultChecked
+                className="h-4 w-4 accent-red-600"
+              />
               Buy
             </label>
 
@@ -74,12 +105,16 @@ export function FilterPanel({ zipcode, location, ptype = 'buy' }: Props) {
               Size / Length
             </div>
             <label className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle cursor-pointer">
-              <input type="checkbox" defaultChecked className="h-4 w-4 accent-red-600" />
+              <input
+                type="checkbox"
+                defaultChecked
+                className="h-4 w-4 accent-red-600"
+              />
               All
             </label>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
