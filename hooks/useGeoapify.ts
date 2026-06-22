@@ -10,6 +10,7 @@ const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ?? ''
 export interface GeoapifyResult {
   placeId: string
   formatted: string
+  formatted2: string
   city: string
   state: string
   stateCode: string
@@ -50,11 +51,14 @@ function parseFeature(feature: unknown): GeoapifyResult {
   const nearestLocation = getNearestLocation(lat, lon)
   const postcode = String(p.postcode ?? '')
   const redirectParams = new URLSearchParams({ zipcode: postcode })
+  const formatted = String(`${p.city}, ${p.state_code} ${postcode}`)
+  const formatted2 = String(`${p.city}, ${p.state_code} ${postcode}, ${p.country}`)
   if (nearestLocation) redirectParams.set('location', nearestLocation)
 
   return {
     placeId:         String(p.place_id     ?? ''),
-    formatted:       String(p.formatted    ?? ''),
+    formatted,
+    formatted2,
     city:            String(p.city         ?? ''),
     state:           String(p.state        ?? ''),
     stateCode:       String(p.state_code   ?? ''),

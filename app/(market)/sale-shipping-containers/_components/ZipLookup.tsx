@@ -1,10 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Navigation, Loader2, MapPin } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
+import { getNearestLocation } from '@/lib/locations'
+
+const GEOAPIFY_URL = 'https://api.geoapify.com/v1/geocode/autocomplete'
+const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ?? ''
 
 type Props = {
   initialZip?: string
@@ -16,6 +20,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   const router = useRouter()
   const [zip, setZip] = useState(initialZip)
   const [open, setOpen] = useState(false)
+  const [locating, setLocating] = useState(false)
 
   const { results, loading, error, clear, selectResult } = useGeoapify(zip, {
     type: 'postcode',
@@ -23,6 +28,13 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     debounceMs: 300,
     limit: 5,
   })
+
+  useEffect(() => {
+    if (open && results.length === 1) {
+      handleSelect(results[0])
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results])
 
   function navigate(zipcode: string, loc: string) {
     const params = new URLSearchParams({ zipcode, location: loc, ptype })
@@ -43,16 +55,50 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     navigate(trimmed, location ?? trimmed)
   }
 
-  function handleUseLocation() {
-    if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
+  async function handleUseLocation() {
+    const userZipCode = localStorage.getItem('userZipCode')
+    if (!userZipCode) return
+
+    setLocating(true)
+    try {
       const params = new URLSearchParams({
-        lat: String(coords.latitude),
-        lng: String(coords.longitude),
-        ptype,
+        text:   userZipCode,
+        apiKey: GEOAPIFY_KEY,
+        limit:  '1',
+        type:   'postcode',
+        filter: 'countrycode:us,ca',
       })
-      router.push(`/sale-shipping-containers?${params}`)
-    })
+
+      const res = await fetch(`${GEOAPIFY_URL}?${params}`)
+      if (!res.ok) return
+
+      const json = (await res.json()) as { features?: unknown[] }
+      const feature = json.features?.[0]
+      if (!feature) return
+
+      const p = (feature as { properties: Record<string, unknown> }).properties
+      const lat         = Number(p.lat      ?? 0)
+      const lon         = Number(p.lon      ?? 0)
+      const postcode    = String(p.postcode  ?? userZipCode)
+      const formatted   = String(p.formatted ?? userZipCode)
+      const nearestLocation = getNearestLocation(lat, lon)
+
+      const redirectParams = new URLSearchParams({ zipcode: postcode })
+      if (nearestLocation) redirectParams.set('location', nearestLocation)
+      const galleryRedirect = `/sale-shipping-containers?${redirectParams}`
+
+      localStorage.setItem('zipcode',          postcode)
+      localStorage.setItem('zipcode_label',    formatted)
+      localStorage.setItem('zipcode_depot',    nearestLocation ?? '')
+      localStorage.setItem('gallery_redirect', galleryRedirect)
+
+      setZip(formatted)
+      navigate(postcode, nearestLocation ?? formatted)
+    } catch {
+      // silently fail — user can type manually
+    } finally {
+      setLocating(false)
+    }
   }
 
   const showDropdown = open && (results.length > 0 || loading || !!error)
@@ -103,8 +149,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
                   <MapPin className="w-3.5 h-3.5 text-theme-primary shrink-0 mt-0.5" />
                   <span>
                     <span className="font-semibold text-theme-dark">
-                      {[r.city, r.stateCode].filter(Boolean).join(', ')}
-                      {r.postcode ? ` ${r.postcode}` : ''}
+                      {r.formatted}
                     </span>
                     <span className="block text-[11px] text-theme-muted">{r.country}</span>
                   </span>
@@ -124,9 +169,13 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
 
       <button
         onClick={handleUseLocation}
-        className="flex items-center justify-center gap-2 rounded-md bg-theme-dark px-3 py-2.5 text-sm font-bold text-white transition-colors hover:bg-black"
+        disabled={locating}
+        className="flex items-center justify-center gap-2 rounded-md bg-theme-dark px-3 py-2.5 text-sm font-bold text-white transition-colors hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        <Navigation size={14} /> Use Current Location
+        {locating
+          ? <><Loader2 size={14} className="animate-spin" /> Locating…</>
+          : <><Navigation size={14} /> Use Current Location</>
+        }
       </button>
     </div>
   )
