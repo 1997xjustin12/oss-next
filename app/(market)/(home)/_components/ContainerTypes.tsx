@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CONTACT_NUMBER } from "@/lib/helpers";
 
 type BadgeVariant = "green" | "red" | "blue";
 
