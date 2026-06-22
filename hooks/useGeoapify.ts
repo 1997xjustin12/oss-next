@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { getNearestLocation } from '@/lib/locations'
+import { BASE_URL } from '@/lib/helpers'
 
 const GEOAPIFY_URL = 'https://api.geoapify.com/v1/geocode/autocomplete'
 const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ?? ''
@@ -16,6 +18,8 @@ export interface GeoapifyResult {
   countryCode: string
   lat: number
   lon: number
+  nearestLocation: string | null
+  galleryRedirect: string
 }
 
 interface UseGeoapifyOptions {
@@ -36,21 +40,31 @@ interface UseGeoapifyReturn {
   loading: boolean
   error: string | null
   clear: () => void
+  selectResult: (result: GeoapifyResult) => void
 }
 
 function parseFeature(feature: unknown): GeoapifyResult {
   const p = (feature as { properties: Record<string, unknown> }).properties
+  const lat = Number(p.lat ?? 0)
+  const lon = Number(p.lon ?? 0)
+  const nearestLocation = getNearestLocation(lat, lon)
+  const postcode = String(p.postcode ?? '')
+  const redirectParams = new URLSearchParams({ zipcode: postcode })
+  if (nearestLocation) redirectParams.set('location', nearestLocation)
+
   return {
-    placeId:     String(p.place_id     ?? ''),
-    formatted:   String(p.formatted    ?? ''),
-    city:        String(p.city         ?? ''),
-    state:       String(p.state        ?? ''),
-    stateCode:   String(p.state_code   ?? ''),
-    postcode:    String(p.postcode     ?? ''),
-    country:     String(p.country      ?? ''),
-    countryCode: String(p.country_code ?? ''),
-    lat:         Number(p.lat          ?? 0),
-    lon:         Number(p.lon          ?? 0),
+    placeId:         String(p.place_id     ?? ''),
+    formatted:       String(p.formatted    ?? ''),
+    city:            String(p.city         ?? ''),
+    state:           String(p.state        ?? ''),
+    stateCode:       String(p.state_code   ?? ''),
+    postcode,
+    country:         String(p.country      ?? ''),
+    countryCode:     String(p.country_code ?? ''),
+    lat,
+    lon,
+    nearestLocation,
+    galleryRedirect: `${BASE_URL}/sale-shipping-containers/?${redirectParams}`,
   }
 }
 
@@ -123,5 +137,13 @@ export function useGeoapify(
     setError(null)
   }
 
-  return { results, loading, error, clear }
+  function selectResult(result: GeoapifyResult) {
+    localStorage.setItem('zipcode',          result.postcode)
+    localStorage.setItem('zipcode_label',    result.formatted)
+    localStorage.setItem('zipcode_depot',    result.nearestLocation ?? '')
+    localStorage.setItem('gallery_redirect', result.galleryRedirect)
+    clear()
+  }
+
+  return { results, loading, error, clear, selectResult }
 }
