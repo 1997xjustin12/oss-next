@@ -24,7 +24,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body><CartProvider>{children}</CartProvider></body>
+      <body suppressHydrationWarning><CartProvider>{children}</CartProvider></body>
     </html>
   );
 }

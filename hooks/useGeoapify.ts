@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { getNearestLocation } from '@/lib/locations'
 import { BASE_URL } from '@/lib/helpers'
+import { enrichSaleLinks } from '@/lib/linkEnrich'
 
 const GEOAPIFY_URL = 'https://api.geoapify.com/v1/geocode/autocomplete'
 const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ?? ''
@@ -146,6 +147,7 @@ export function useGeoapify(
     localStorage.setItem('zipcode_label',    result.formatted)
     localStorage.setItem('zipcode_depot',    result.nearestLocation ?? '')
     localStorage.setItem('gallery_redirect', result.galleryRedirect)
+    enrichSaleLinks()
     clear()
   }
 
