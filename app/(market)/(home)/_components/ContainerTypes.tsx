@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CONTACT_NUMBER } from "@/lib/helpers";
+import { BASE_URL, CONTACT_NUMBER } from "@/lib/helpers";
 
 type BadgeVariant = "green" | "red" | "blue";
 
@@ -58,7 +58,7 @@ const TYPES: ContainerType[] = [
     price: "Call for Price",
     priceSub: "Sale & Rental Available",
     cta: "Inquire",
-    href: "/contact",
+    href: `tel:${CONTACT_NUMBER}`,
   },
   {
     emoji: "🔓",
@@ -69,7 +69,7 @@ const TYPES: ContainerType[] = [
     price: "Call for Price",
     priceSub: "Specialty Units",
     cta: "Inquire",
-    href: "/contact",
+    href: `tel:${CONTACT_NUMBER}`,
   },
   {
     emoji: "🔧",
@@ -80,7 +80,7 @@ const TYPES: ContainerType[] = [
     price: "Custom Pricing",
     priceSub: "Built to Order",
     cta: "Learn More",
-    href: "/products/modified",
+    href: `${BASE_URL}/shipping-container-modified-containers-gallery`,
   },
 ];
 
