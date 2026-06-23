@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { ZipLookup } from "./ZipLookup";
-import { BASE_URL } from "@/lib/helpers";
 import Link from "next/link";
 
 type Props = {
@@ -12,37 +12,126 @@ type Props = {
   ptype?: string;
 };
 
+function buildFilterHref(
+  searchParams: { toString(): string },
+  property: string,
+  value: string | null,
+): string {
+  const params = new URLSearchParams(searchParams.toString());
+  if (value === null) params.delete(property);
+  else params.set(property, value);
+  params.delete("page");
+  return `?${params.toString()}`;
+}
+
+const SHIPPING_CONTAINER_FILTERS = [
+  {
+    label: "Size/Length",
+    property: "length_width",
+    options: [
+      { label: "All", value: null },
+      { label: "20'", value: "20" },
+      { label: "40'", value: "40" },
+    ],
+  },
+  {
+    label: "Condition",
+    property: "condition",
+    options: [
+      { label: "All", value: null },
+      { label: "New", value: "New" },
+      { label: "Refurbished", value: "Refurbished" },
+      { label: "Used", value: "Used" },
+    ],
+  },
+  {
+    label: "Grade",
+    property: "grade",
+    options: [
+      { label: "All", value: null },
+      { label: "AS IS", value: "AS IS" },
+      { label: "Cargo Worthy (CW)", value: "Cargo Worthy (CW)" },
+      { label: "IICL", value: "IICL" },
+      { label: "Wind and Water Tight (WWT)", value: "Wind and Water tight (WWT)" },
+    ],
+  },
+  {
+    label: "Height",
+    property: "height",
+    options: [
+      { label: "All", value: null },
+      { label: `8' 6" Standard`, value: `8' 6" Standard` },
+      { label: `9' 6" High Cube (HC)`, value: `9' 6" High Cube (HC)` },
+    ],
+  },
+  {
+    label: "Container Type",
+    property: "type",
+    options: [
+      { label: "All", value: null },
+      {
+        label: "Dry Van Shipping Container With Double Doors at 1 End",
+        value: "Double Doors at 1 End",
+      },
+    ],
+  },
+] as const;
+
+export function ShippingContainerFilters() {
+  const searchParams = useSearchParams();
+
+  return (
+    <>
+      {SHIPPING_CONTAINER_FILTERS.map((group) => {
+        const current = searchParams.get(group.property);
+        return (
+          <div key={group.property} className="mt-3">
+            <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wider text-theme-muted">
+              {group.label}
+            </div>
+            {group.options.map((option) => {
+              const isSelected =
+                option.value === null ? current === null : current === option.value;
+              return (
+                <Link
+                  key={option.label}
+                  href={buildFilterHref(searchParams, group.property, option.value)}
+                  scroll={false}
+                  className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    readOnly
+                    className="h-4 w-4 accent-red-600 pointer-events-none"
+                  />
+                  {option.label}
+                </Link>
+              );
+            })}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 const PRODUCT_FILTERS = [
-  {
-    label: "Buy Shipping Container",
-    param: "buy",
-    url: `${BASE_URL}/sale-shipping-containers/?ptype=buy`,
-  },
-  {
-    label: "Rent Shipping Container",
-    param: "rental",
-    url: `${BASE_URL}/sale-shipping-containers/?ptype=rental`,
-  },
-  {
-    label: "Rent-To-Own Shipping Container",
-    param: "rto",
-    url: `${BASE_URL}/sale-shipping-containers/?ptype=rto`,
-  },
-  {
-    label: "Shipping Container Accessories",
-    param: "accessories",
-    url: `${BASE_URL}/sale-shipping-containers/?ptype=accessories`,
-  },
+  { label: "Buy Shipping Container", param: "buy" },
+  { label: "Rent Shipping Container", param: "rental" },
+  { label: "Rent-To-Own Shipping Container", param: "rto" },
+  { label: "Shipping Container Accessories", param: "accessories" },
 ];
 
 export function FilterPanel({ zipcode, location, ptype = "buy" }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const searchParams = useSearchParams();
+  const activePtype = searchParams.get("ptype") ?? ptype;
 
   return (
     <div className="flex flex-col gap-4">
-      <ZipLookup initialZip={zipcode} location={location} ptype={ptype} />
+      <ZipLookup initialZip={zipcode} location={location} ptype={activePtype} />
 
-      {/* Collapsible filters */}
       <div className="rounded-lg border border-theme-border bg-white overflow-hidden">
         <button
           onClick={() => setFiltersOpen((o) => !o)}
@@ -64,54 +153,30 @@ export function FilterPanel({ zipcode, location, ptype = "buy" }: Props) {
             </div>
             {PRODUCT_FILTERS.map((f) => (
               <Link
-                  key={f.label}
-                  prefetch={false}
-                  href={f.url || "#"}
+                key={f.label}
+                href={buildFilterHref(searchParams, "ptype", f.param)}
+                scroll={false}
+                className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle"
               >
-                <label
-                  className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    defaultChecked={ptype === f.param}
-                    className="h-4 w-4 accent-red-600"
-                  />
-                  {f.label}
-                </label>
+                <input
+                  type="checkbox"
+                  checked={activePtype === f.param}
+                  readOnly
+                  className="h-4 w-4 accent-red-600 pointer-events-none"
+                />
+                {f.label}
               </Link>
             ))}
-            <label className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-muted">
+            <span className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-muted">
               <input
                 type="checkbox"
                 disabled
                 className="h-4 w-4 accent-gray-400"
               />
               Onsite Specials
-            </label>
+            </span>
 
-            <div className="mb-1 mt-3 text-[10px] font-extrabold uppercase tracking-wider text-theme-muted">
-              Payment Terms
-            </div>
-            <label className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle cursor-pointer">
-              <input
-                type="checkbox"
-                defaultChecked
-                className="h-4 w-4 accent-red-600"
-              />
-              Buy
-            </label>
-
-            <div className="mb-1 mt-3 text-[10px] font-extrabold uppercase tracking-wider text-theme-muted">
-              Size / Length
-            </div>
-            <label className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle cursor-pointer">
-              <input
-                type="checkbox"
-                defaultChecked
-                className="h-4 w-4 accent-red-600"
-              />
-              All
-            </label>
+            <ShippingContainerFilters />
           </div>
         )}
       </div>

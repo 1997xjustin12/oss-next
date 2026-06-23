@@ -118,7 +118,9 @@ export function ProductCard({ product }: Props) {
           )}
         </dl>
 
-        <div className="text-[10px] text-theme-muted">SKU: {product.sku}</div>
+        {product.sku && (
+          <div className="text-[10px] text-theme-muted">SKU: {product.sku}</div>
+        )}
       </div>
 
       {/* Action */}

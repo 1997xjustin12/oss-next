@@ -13,9 +13,10 @@ const WP_PRODUCTS_URL =
 
 /** Maps our ptype URL param to the value the WP API expects */
 const PTYPE_MAP: Record<string, string> = {
-  buy:  'buy',
-  rent: 'rental',
-  rto:  'rto',
+  buy:         'buy',
+  rental:      'rental',
+  rto:         'rto',
+  accessories: 'accessories',
 }
 
 function parsePrice(price: string): number {
@@ -74,8 +75,20 @@ export async function fetchSaleProducts(
   if (!res.ok) return { products: [], maxPages: 0 }
 
   const data = (await res.json()) as WpApiResponse
-  return {
-    products: (data.products ?? []).map(mapProduct),
-    maxPages: data.max_pages ?? 0,
-  }
+
+  const raw = data.products?.length ? data.products : (data.raw_products ?? [])
+  let products = raw.map(mapProduct)
+
+  if (opts.length_width)
+    products = products.filter(p => p.size?.includes(opts.length_width!))
+  if (opts.condition)
+    products = products.filter(p => p.condition === opts.condition)
+  if (opts.grade)
+    products = products.filter(p => p.grade === opts.grade)
+  if (opts.height)
+    products = products.filter(p => p.height === opts.height)
+  if (opts.containerType)
+    products = products.filter(p => p.doorType === opts.containerType)
+
+  return { products, maxPages: data.max_pages ?? 0 }
 }

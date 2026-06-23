@@ -26,6 +26,11 @@ export interface FetchProductsOptions {
   ptype?: string
   sort?: string
   page?: number
+  length_width?: string
+  condition?: string
+  grade?: string
+  height?: string
+  containerType?: string
 }
 
 /** Raw shape returned by the WP REST API — internal to the service layer */
@@ -53,5 +58,6 @@ export interface WpApiProduct {
 
 export interface WpApiResponse {
   products: WpApiProduct[]
+  raw_products?: WpApiProduct[]
   max_pages: number
 }

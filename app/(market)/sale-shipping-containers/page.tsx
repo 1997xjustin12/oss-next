@@ -14,6 +14,11 @@ type SearchParams = {
   ptype?: string
   sort?: string
   page?: string
+  length_width?: string
+  condition?: string
+  grade?: string
+  height?: string
+  type?: string
 }
 
 type Props = { searchParams: Promise<SearchParams> }
@@ -44,10 +49,16 @@ export default function SaleContainersPage({ searchParams }: Props) {
 }
 
 async function SaleContainersContent({ searchParams }: Props) {
-  const { zipcode, location, ptype = 'buy', sort = 'default', page } = await searchParams
+  const {
+    zipcode, location, ptype = 'buy', sort = 'default', page,
+    length_width, condition, grade, height, type: containerType,
+  } = await searchParams
   const currentPage = Math.max(1, parseInt(page ?? '1', 10))
 
-  const { products, maxPages } = await fetchSaleProducts({ location, ptype, sort, page: currentPage })
+  const { products, maxPages } = await fetchSaleProducts({
+    location, ptype, sort, page: currentPage,
+    length_width, condition, grade, height, containerType,
+  })
 
   // Serialize current params so client components can build updated URLs
   const paramsStr = new URLSearchParams({
@@ -55,6 +66,11 @@ async function SaleContainersContent({ searchParams }: Props) {
     ...(zipcode            && { zipcode }),
     ...(ptype              && { ptype }),
     ...(sort !== 'default' && { sort }),
+    ...(length_width       && { length_width }),
+    ...(condition          && { condition }),
+    ...(grade              && { grade }),
+    ...(height             && { height }),
+    ...(containerType      && { type: containerType }),
   }).toString()
 
   return (
