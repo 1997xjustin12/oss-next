@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { TopBar } from "@/components/layout/TopBar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -10,7 +11,9 @@ export default function MarketLayout({
     <>
       <TopBar />
       <Navbar />
-      <LinkEnricher />
+      <Suspense>
+        <LinkEnricher />
+      </Suspense>
       <main>{children}</main>
       <Footer />
     </>
