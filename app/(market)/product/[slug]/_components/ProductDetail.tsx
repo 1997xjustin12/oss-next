@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import {
   Wrench, Shield, CheckCircle2, Truck, Headphones,
@@ -10,6 +9,7 @@ import {
   Ship, Maximize2, Snowflake, Star,
 } from 'lucide-react'
 import type { WpSingleProduct } from '@/types/product'
+import { ProductImageGallery } from './ProductImageGallery'
 
 const quickSpecs = [
   { label: 'Length', value: '20 ft' },
@@ -154,7 +154,6 @@ export function ProductDetail({ product }: Props) {
     rto: { price: '$79.99', was: '', save: '', suffix: '/mo', note: '36-month term · Own it at end of term · No credit check required' },
   }
 
-  const [mainImage, setMainImage] = useState(0)
   const [priceTab, setPriceTab] = useState<PriceTab>('buy')
   const [condition, setCondition] = useState(gradeToConditionIndex(product.grade))
   const [zip, setZip] = useState('')
@@ -194,41 +193,11 @@ export function ProductDetail({ product }: Props) {
       <section className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-10 px-4 sm:px-[5%] py-8 sm:py-10">
         {/* GALLERY */}
         <div className="lg:sticky lg:top-6 self-start w-full">
-          <div className="relative aspect-4/3 rounded-xl overflow-hidden border-2 border-theme-border bg-theme-subtle cursor-zoom-in group hover:border-theme-primary transition-colors">
-            {allImages[mainImage] && (
-              <Image
-                src={allImages[mainImage]}
-                alt={product.container_title}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                priority={mainImage === 0}
-                sizes="(max-width: 1024px) 100vw, 60vw"
-              />
-            )}
-            <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-              <span className="bg-emerald-600 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded">In Stock</span>
-              {product.tag && (
-                <span className="bg-amber-500 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded">{product.tag}</span>
-              )}
-            </div>
-            <button className="absolute bottom-3 right-3 bg-black/50 hover:bg-black/70 text-white text-xs px-3 py-1.5 rounded backdrop-blur transition-colors">
-              ⛶ Zoom
-            </button>
-          </div>
-
-          <div className="grid grid-cols-4 gap-2 mt-3">
-            {allImages.map((src, i) => (
-              <button
-                key={src}
-                onClick={() => setMainImage(i)}
-                aria-label={`View image ${i + 1}`}
-                className={`relative aspect-4/3 rounded-lg border-2 overflow-hidden bg-theme-subtle transition-all
-                  ${i === mainImage ? 'border-theme-primary scale-[1.02]' : 'border-theme-border hover:border-theme-primary'}`}
-              >
-                <Image src={src} alt={`${product.container_title} ${i + 1}`} fill className="object-cover" sizes="150px" />
-              </button>
-            ))}
-          </div>
+          <ProductImageGallery
+            images={allImages}
+            title={product.container_title}
+            tag={product.tag}
+          />
 
           {/* QUICK SPECS */}
           <div className="grid grid-cols-3 gap-3 mt-5 bg-theme-dark rounded-lg p-4 sm:p-5 text-center">
