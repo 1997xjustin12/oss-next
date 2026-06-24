@@ -61,3 +61,14 @@ export interface WpApiResponse {
   raw_products?: WpApiProduct[]
   max_pages: number
 }
+
+/** Extra fields returned by the single-product endpoint */
+export interface WpSingleProduct extends WpApiProduct {
+  product_name: string
+  container_grade_title: string
+  currency: string
+  is_product_rto: boolean
+  payment_term: string[]
+  pterm: string
+  fic_call_button_html: string
+}

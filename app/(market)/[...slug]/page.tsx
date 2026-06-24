@@ -4,6 +4,9 @@ import type { Metadata } from 'next'
 import { fetchWordPressPage } from '@/services/wp-proxy.service'
 import { WpPageRenderer } from './_components/WpPageRenderer'
 
+// Routes with dedicated Next.js pages — never forward these to the WP proxy.
+const NATIVE_ROUTE_PREFIXES = ['product']
+
 type Props = {
   params: Promise<{ slug: string[] }>
   searchParams: Promise<Record<string, string>>
@@ -11,6 +14,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
+  if (NATIVE_ROUTE_PREFIXES.includes(slug[0])) return { title: 'Not Found' }
   const data = await fetchWordPressPage(slug.join('/'))
   if (!data) return { title: 'Not Found' }
 
@@ -34,6 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 async function ProxyContent({ params, searchParams }: Props) {
   const { slug } = await params
+  if (NATIVE_ROUTE_PREFIXES.includes(slug[0])) notFound()
   const search = await searchParams
 
   // Check the page exists before rendering the iframe
