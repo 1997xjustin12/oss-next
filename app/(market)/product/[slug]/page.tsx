@@ -9,8 +9,9 @@ type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const product = await fetchProduct(slug)
-  if (!product) return { title: 'Product Not Found' }
+  const data = await fetchProduct(slug)
+  if (!data) return { title: 'Product Not Found' }
+  const { product } = data
 
   return {
     title: product.container_title,
@@ -49,8 +50,9 @@ function buildJsonLd(product: WpSingleProduct) {
 
 async function ProductContent({ params }: Props) {
   const { slug } = await params
-  const product = await fetchProduct(slug)
-  if (!product) notFound()
+  const data = await fetchProduct(slug)
+  if (!data) notFound()
+  const { product, related_products } = data
 
   return (
     <>
@@ -58,7 +60,7 @@ async function ProductContent({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(product)) }}
       />
-      <ProductDetail product={product} />
+      <ProductDetail product={product} relatedProducts={related_products} />
     </>
   )
 }

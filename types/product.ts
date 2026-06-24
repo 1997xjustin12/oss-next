@@ -8,17 +8,17 @@ export interface Product {
   reviews: number
   location: string
   price: number
-  monthly?: number
   condition: string
-  doorType: string
   grade: string
   sku: string
   size?: string
   height?: string
   thumbnailUrl?: string
-  galleries: string[]
+  gallery: string[]
   productPermalink?: string
   paymentType: string
+  stock: number
+  isVirtualDepo: boolean
 }
 
 export interface FetchProductsOptions {
@@ -30,10 +30,9 @@ export interface FetchProductsOptions {
   condition?: string
   grade?: string
   height?: string
-  containerType?: string
 }
 
-/** Raw shape returned by the WP REST API — internal to the service layer */
+/** Raw shape returned by both WP REST API endpoints */
 export interface WpApiProduct {
   productID: number
   container_title: string
@@ -42,18 +41,28 @@ export interface WpApiProduct {
   grade: string
   size: string
   height: string
-  door_type: string
+  selection_option: string
   location: string
+  depot_zipcode: string
+  region: string
   sku: string
   product_price: string
-  product_sale_price: string
-  monthly_price?: string
   thumbnail_url: string
-  galleries: string[]
+  gallery: string[]
+  product_gallery_ids: number[]
+  product_gallery_html: string
   product_permalink: string
   payment_type: string
+  payment_term: string[]
+  stock: number
+  is_virtual_depo: boolean
+  relocation_fee: number
   ratings: string
   review_count: number
+  currency: string
+  yoast_focus_phrase: string
+  yoast_focus_phrase_h1: string
+  yoast_focus_phrase_h2: string
 }
 
 export interface WpApiResponse {
@@ -62,13 +71,11 @@ export interface WpApiResponse {
   max_pages: number
 }
 
-/** Extra fields returned by the single-product endpoint */
-export interface WpSingleProduct extends WpApiProduct {
-  product_name: string
-  container_grade_title: string
-  currency: string
-  is_product_rto: boolean
-  payment_term: string[]
-  pterm: string
-  fic_call_button_html: string
+/** Response wrapper from /wp-json/custom/v1/product?slug= */
+export interface WpSingleProductResponse {
+  product: WpApiProduct
+  related_products: WpApiProduct[]
 }
+
+/** The unwrapped single product — same shape as list products */
+export type WpSingleProduct = WpApiProduct

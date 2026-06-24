@@ -5,16 +5,13 @@ import type {
   FetchProductsOptions,
   WpApiProduct,
   WpApiResponse,
-  WpSingleProduct,
+  WpSingleProductResponse,
   BadgeTone,
 } from '@/types/product'
 
 const WP_SINGLE_PRODUCT_URL = 'https://onsitestorage.com/wp-json/custom/v1/product'
+const WP_PRODUCTS_URL = 'https://onsitestorage.com/wp-json/custom/v1/products-v2'
 
-const WP_PRODUCTS_URL =
-  'https://onsitestorage.com/wp-json/custom/v1/products-v2'
-
-/** Maps our ptype URL param to the value the WP API expects */
 const PTYPE_MAP: Record<string, string> = {
   buy:         'buy',
   rental:      'rental',
@@ -43,21 +40,21 @@ function mapProduct(wp: WpApiProduct): Product {
     reviews:          wp.review_count,
     location:         wp.location,
     price:            parsePrice(wp.product_price),
-    monthly:          wp.monthly_price ? parsePrice(wp.monthly_price) : undefined,
     condition:        wp.condition,
-    doorType:         wp.door_type,
     grade:            wp.grade,
     sku:              wp.sku,
     size:             wp.size,
     height:           wp.height,
     thumbnailUrl:     wp.thumbnail_url || undefined,
-    galleries:        wp.galleries ?? [],
+    gallery:          wp.gallery ?? [],
     productPermalink: wp.product_permalink || undefined,
     paymentType:      wp.payment_type,
+    stock:            wp.stock ?? 0,
+    isVirtualDepo:    wp.is_virtual_depo ?? false,
   }
 }
 
-export async function fetchProduct(slug: string): Promise<WpSingleProduct | null> {
+export async function fetchProduct(slug: string): Promise<WpSingleProductResponse | null> {
   'use cache'
   cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
@@ -70,7 +67,9 @@ export async function fetchProduct(slug: string): Promise<WpSingleProduct | null
     if (!res.ok) return null
     const data: unknown = await res.json()
     if (typeof data === 'object' && data !== null && 'message' in data) return null
-    return data as WpSingleProduct
+    const response = data as WpSingleProductResponse
+    if (!response.product) return null
+    return response
   } catch {
     return null
   }
@@ -93,7 +92,6 @@ export async function fetchSaleProducts(
   params.set('location', opts.location ?? 'Various North America')
 
   const res = await fetch(`${WP_PRODUCTS_URL}?${params}`)
-
   if (!res.ok) return { products: [], maxPages: 0 }
 
   const data = (await res.json()) as WpApiResponse
@@ -101,16 +99,10 @@ export async function fetchSaleProducts(
   const raw = data.products?.length ? data.products : (data.raw_products ?? [])
   let products = raw.map(mapProduct)
 
-  if (opts.length_width)
-    products = products.filter(p => p.size?.includes(opts.length_width!))
-  if (opts.condition)
-    products = products.filter(p => p.condition === opts.condition)
-  if (opts.grade)
-    products = products.filter(p => p.grade === opts.grade)
-  if (opts.height)
-    products = products.filter(p => p.height === opts.height)
-  if (opts.containerType)
-    products = products.filter(p => p.doorType === opts.containerType)
+  if (opts.length_width) products = products.filter(p => p.size?.includes(opts.length_width!))
+  if (opts.condition)    products = products.filter(p => p.condition === opts.condition)
+  if (opts.grade)        products = products.filter(p => p.grade === opts.grade)
+  if (opts.height)       products = products.filter(p => p.height === opts.height)
 
   return { products, maxPages: data.max_pages ?? 0 }
 }
