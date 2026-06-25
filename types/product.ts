@@ -56,6 +56,7 @@ export interface WpApiProduct {
   product_permalink: string
   payment_type: string
   payment_term: string[]
+  categories: string[]
   monthly_price: string | null
   rto_offer: { price: string; url: string } | null
   stock: number

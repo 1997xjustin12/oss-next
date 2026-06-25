@@ -57,9 +57,9 @@ function gradeToGradeIndex(grade: string): number {
   return 0
 }
 
-type Props = { product: WpSingleProduct }
+type Props = { product: WpSingleProduct; categoryLabel: string }
 
-export function ProductInfoPanel({ product }: Props) {
+export function ProductInfoPanel({ product, categoryLabel }: Props) {
   const priceData: Record<PriceTab, { price: string; was: string; save: string; suffix: string; note: string }> = {
     buy: { price: `$${product.product_price}`, was: '', save: '', suffix: '', note: '+ Delivery fee based on your location · No sales tax in most states' },
     rent: { price: '$95', was: '', save: '', suffix: '/mo', note: '3-month minimum · Month-to-month after · Delivery & pickup included' },
@@ -95,7 +95,7 @@ export function ProductInfoPanel({ product }: Props) {
       {/* Category label */}
       <div className="flex items-center gap-2 mb-2">
         <span className="text-[11px] font-bold uppercase tracking-widest text-theme-primary whitespace-nowrap">
-          Shipping Containers For Sale
+          {categoryLabel}
         </span>
         <span className="flex-1 h-px bg-theme-primary-light" />
       </div>

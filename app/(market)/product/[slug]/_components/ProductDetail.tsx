@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Wrench, Ship, Maximize2, Snowflake, CheckCircle2, ChevronRight } from 'lucide-react'
 import type { WpSingleProduct, WpApiProduct } from '@/types/product'
+import { BASE_URL } from '@/lib/helpers'
 import { ProductImageGallery } from './ProductImageGallery'
 import { ProductInfoPanel } from './ProductInfoPanel'
 import { BodyTabsSection } from './BodyTabsSection'
@@ -37,10 +38,33 @@ const reviewsList = [
   { initials: 'RK', color: 'bg-theme-accent', name: 'Robert K.', role: 'Retail Store Owner · California', date: 'November 2024', text: 'Bought a one-trip unit and had it modified with a roll-up door and shelving. The team was super helpful throughout the whole process. Container looks brand new.' },
 ]
 
+const base = BASE_URL.replace(/\/$/, '')
+
+function getListingCrumb(product: WpSingleProduct): { label: string; href: string } {
+  const cats = product.categories ?? []
+
+  if (cats.includes('accesories')) {
+    return { label: 'Shipping Containers Accessories For Sale', href: `${base}/sale-shipping-containers/?ptype=accesories` }
+  }
+
+  if (cats.includes('shipping-containers') || cats.includes('generic-product-page')) {
+    if (product.payment_type === 'rental') {
+      return { label: 'Shipping Containers For Rent', href: `${base}/sale-shipping-containers/?ptype=rental` }
+    }
+    if (product.payment_type === 'rto') {
+      return { label: 'Shipping Containers For Rent-To-Own', href: `${base}/sale-shipping-containers/?ptype=rto` }
+    }
+    return { label: 'Shipping Containers For Sale', href: `${base}/sale-shipping-containers/?ptype=buy` }
+  }
+
+  return { label: 'Shipping Containers For Sale', href: `${base}/sale-shipping-containers/?ptype=buy` }
+}
+
 type Props = { product: WpSingleProduct; relatedProducts: WpApiProduct[] }
 
 export function ProductDetail({ product }: Props) {
   const allImages = [product.thumbnail_url, ...product.gallery].filter(Boolean)
+  const listingCrumb = getListingCrumb(product)
 
   return (
     <main className="bg-theme-bg text-theme-dark">
@@ -48,9 +72,9 @@ export function ProductDetail({ product }: Props) {
       <div className="flex items-center gap-1.5 flex-wrap px-4 sm:px-[5%] py-3 text-xs sm:text-sm text-theme-muted bg-theme-subtle border-b border-theme-border">
         <Link href="/" className="hover:text-theme-primary transition-colors">Home</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-        <Link href="/product" className="hover:text-theme-primary transition-colors">Shipping Containers For Sale</Link>
+        <Link href={listingCrumb.href} className="hover:text-theme-primary transition-colors">{listingCrumb.label}</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-        <span className="text-theme-dark font-semibold">{product.container_title}</span>
+        <span className="text-theme-dark font-semibold">{product.yoast_focus_phrase_h1 || product.container_title}</span>
       </div>
 
       {/* PRODUCT GRID */}
@@ -75,7 +99,7 @@ export function ProductDetail({ product }: Props) {
         </div>
 
         {/* Product info */}
-        <ProductInfoPanel product={product} />
+        <ProductInfoPanel product={product} categoryLabel={listingCrumb.label} />
       </section>
 
       {/* BODY TABS */}

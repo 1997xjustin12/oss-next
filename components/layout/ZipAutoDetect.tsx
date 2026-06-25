@@ -72,7 +72,7 @@ export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: 
         }
       },
       (err) => {
-        if (process.env.NODE_ENV === 'development') console.warn('[ZipAutoDetect] geolocation error', err)
+        if (process.env.NODE_ENV === 'development') console.warn('[ZipAutoDetect] geolocation error', err.code, err.message)
       },
       { timeout: 10_000 },
     )
