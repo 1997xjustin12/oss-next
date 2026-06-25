@@ -104,7 +104,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   const showDropdown = open && (results.length > 0 || loading || !!error)
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-theme-border bg-white p-4">
+    <div className="flex flex-col gap-2 rounded-lg border border-theme-border bg-white dark:bg-neutral-900 dark:border-neutral-800 p-4">
       {/* Input + dropdown */}
       <div className="relative">
         <input
@@ -120,7 +120,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
           inputMode="numeric"
           maxLength={10}
           placeholder="Enter your ZIP / Postal Code"
-          className="w-full rounded-md border border-theme-border bg-theme-subtle px-3 py-2.5 pr-8 text-sm outline-none transition-colors focus:border-theme-primary focus:bg-white"
+          className="w-full rounded-md border border-theme-border bg-theme-subtle dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-100 dark:placeholder-gray-500 px-3 py-2.5 pr-8 text-sm outline-none transition-colors focus:border-theme-primary focus:bg-white dark:focus:bg-neutral-900"
           aria-label="ZIP or postal code"
           aria-autocomplete="list"
           aria-expanded={showDropdown}
@@ -132,7 +132,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
         {showDropdown && (
           <ul
             role="listbox"
-            className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-theme-border bg-white shadow-lg overflow-hidden"
+            className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-theme-border dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg overflow-hidden"
           >
             {loading && results.length === 0 && (
               <li className="px-3 py-2.5 text-sm text-theme-muted">Searching…</li>
@@ -144,11 +144,11 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
               <li key={r.placeId} role="option">
                 <button
                   onMouseDown={() => handleSelect(r)}
-                  className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left text-sm hover:bg-theme-subtle transition-colors"
+                  className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left text-sm hover:bg-theme-subtle dark:hover:bg-neutral-800 transition-colors"
                 >
                   <MapPin className="w-3.5 h-3.5 text-theme-primary shrink-0 mt-0.5" />
                   <span>
-                    <span className="font-semibold text-theme-dark">
+                    <span className="font-semibold text-theme-dark dark:text-gray-100">
                       {r.formatted}
                     </span>
                     <span className="block text-[11px] text-theme-muted">{r.country}</span>
@@ -170,7 +170,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
       <button
         onClick={handleUseLocation}
         disabled={locating}
-        className="flex items-center justify-center gap-2 rounded-md bg-theme-dark px-3 py-2.5 text-sm font-bold text-white transition-colors hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed"
+        className="flex items-center justify-center gap-2 rounded-md bg-theme-dark dark:bg-neutral-700 px-3 py-2.5 text-sm font-bold text-white transition-colors hover:bg-black dark:hover:bg-neutral-600 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {locating
           ? <><Loader2 size={14} className="animate-spin" /> Locating…</>

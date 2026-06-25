@@ -23,21 +23,21 @@ export function SortBar({ count, location, currentSort, baseParams, currentPage,
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-lg border border-theme-border bg-white px-4 py-3">
-      <div className="text-sm text-theme-muted">
-        <span className="font-bold text-theme-dark">{count}</span>{' '}
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-lg border border-theme-border dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3">
+      <div className="text-sm text-theme-muted dark:text-gray-400">
+        <span className="font-bold text-theme-dark dark:text-gray-100">{count}</span>{' '}
         container{count !== 1 ? 's' : ''} found
         {location ? ` near ${location}` : ''}
         {maxPages > 1 && (
-          <span className="ml-1 text-theme-muted">(page {currentPage} of {maxPages})</span>
+          <span className="ml-1 text-theme-muted dark:text-gray-500">(page {currentPage} of {maxPages})</span>
         )}
       </div>
-      <label className="flex items-center gap-2 text-sm font-semibold text-theme-muted">
+      <label className="flex items-center gap-2 text-sm font-semibold text-theme-muted dark:text-gray-400">
         Sort:
         <select
           value={currentSort}
           onChange={(e) => handleSort(e.target.value)}
-          className="rounded-md border border-theme-border bg-white px-2.5 py-1.5 text-sm text-theme-dark-2 outline-none focus:border-theme-primary"
+          className="rounded-md border border-theme-border dark:border-neutral-700 bg-white dark:bg-neutral-800 dark:text-gray-200 px-2.5 py-1.5 text-sm text-theme-dark-2 outline-none focus:border-theme-primary"
         >
           <option value="default">Default</option>
           <option value="price_asc">Price: Low to High</option>

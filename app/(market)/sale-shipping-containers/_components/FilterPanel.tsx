@@ -12,7 +12,7 @@ type Props = {
   ptype?: string;
 };
 
-function buildFilterHref(
+export function buildFilterHref(
   searchParams: { toString(): string },
   property: string,
   value: string | null,
@@ -24,7 +24,7 @@ function buildFilterHref(
   return `?${params.toString()}`;
 }
 
-const SHIPPING_CONTAINER_FILTERS = [
+export const SHIPPING_CONTAINER_FILTERS = [
   {
     label: "Size/Length",
     property: "length_width",
@@ -97,7 +97,7 @@ export function ShippingContainerFilters() {
                   key={option.label}
                   href={buildFilterHref(searchParams, group.property, option.value)}
                   scroll={false}
-                  className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle"
+                  className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 dark:text-gray-300 transition-colors hover:bg-theme-subtle dark:hover:bg-neutral-800"
                 >
                   <input
                     type="checkbox"
@@ -116,7 +116,7 @@ export function ShippingContainerFilters() {
   );
 }
 
-const PRODUCT_FILTERS = [
+export const PRODUCT_FILTERS = [
   { label: "Buy Shipping Container", param: "buy" },
   { label: "Rent Shipping Container", param: "rental" },
   { label: "Rent-To-Own Shipping Container", param: "rto" },
@@ -132,11 +132,11 @@ export function FilterPanel({ zipcode, location, ptype = "buy" }: Props) {
     <div className="flex flex-col gap-4">
       <ZipLookup initialZip={zipcode} location={location} ptype={activePtype} />
 
-      <div className="rounded-lg border border-theme-border bg-white overflow-hidden">
+      <div className="rounded-lg border border-theme-border bg-white dark:bg-neutral-900 overflow-hidden">
         <button
           onClick={() => setFiltersOpen((o) => !o)}
-          className={`flex w-full items-center justify-between px-4 py-3 text-base font-extrabold transition-colors hover:bg-theme-subtle ${
-            filtersOpen ? "border-b border-theme-border" : ""
+          className={`flex w-full items-center justify-between px-4 py-3 text-base font-extrabold transition-colors hover:bg-theme-subtle dark:hover:bg-neutral-800 text-theme-dark dark:text-gray-100 ${
+            filtersOpen ? "border-b border-theme-border dark:border-neutral-800" : ""
           }`}
         >
           Filter
@@ -148,7 +148,7 @@ export function FilterPanel({ zipcode, location, ptype = "buy" }: Props) {
 
         {filtersOpen && (
           <div className="flex flex-col gap-1 px-4 py-3">
-            <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wider text-theme-muted">
+            <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wider text-theme-muted dark:text-gray-500">
               Products
             </div>
             {PRODUCT_FILTERS.map((f) => (
@@ -156,7 +156,7 @@ export function FilterPanel({ zipcode, location, ptype = "buy" }: Props) {
                 key={f.label}
                 href={buildFilterHref(searchParams, "ptype", f.param)}
                 scroll={false}
-                className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle"
+                className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 dark:text-gray-300 transition-colors hover:bg-theme-subtle dark:hover:bg-neutral-800"
               >
                 <input
                   type="checkbox"
@@ -167,7 +167,7 @@ export function FilterPanel({ zipcode, location, ptype = "buy" }: Props) {
                 {f.label}
               </Link>
             ))}
-            <span className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-muted">
+            <span className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-muted dark:text-gray-600">
               <input
                 type="checkbox"
                 disabled

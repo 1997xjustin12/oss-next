@@ -6,6 +6,8 @@ import { LocationHeader } from './_components/LocationHeader'
 import { ProductCard } from './_components/ProductCard'
 import { FilterPanel } from './_components/FilterPanel'
 import { SortBar } from './_components/SortBar'
+import { ZipLookup } from './_components/ZipLookup'
+import { MobileFilterSheet } from './_components/MobileFilterSheet'
 import { PageSkeleton } from './_components/PageSkeleton'
 
 type SearchParams = {
@@ -91,15 +93,28 @@ async function SaleContainersContent({ searchParams }: Props) {
       {/* Location heading */}
       <LocationHeader location={location} zipcode={zipcode} />
 
+      {/* Mobile ZIP lookup — visible only below lg */}
+      <div className="lg:hidden px-[5%] pb-3">
+        <Suspense>
+          <ZipLookup initialZip={zipcode} location={location} ptype={ptype} />
+        </Suspense>
+      </div>
+
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-[5%] pb-16">
-        {/* Sidebar */}
-        <aside className="order-2 lg:order-1">
+        {/* Sidebar — desktop only */}
+        <aside className="hidden lg:block order-2 lg:order-1">
           <FilterPanel zipcode={zipcode} location={location} ptype={ptype} />
         </aside>
 
         {/* Main */}
         <main className="order-1 lg:order-2 lg:col-span-3 flex flex-col gap-4">
+          {/* Mobile filter chips + sheet trigger — hidden on desktop */}
+          <div className="lg:hidden">
+            <Suspense>
+              <MobileFilterSheet ptype={ptype} />
+            </Suspense>
+          </div>
           <SortBar
             count={products.length}
             location={location}
