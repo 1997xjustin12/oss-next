@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
+import { LinkEnricher } from "@/components/layout/LinkEnricher";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,7 +26,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body suppressHydrationWarning><CartProvider>{children}</CartProvider></body>
+      <body suppressHydrationWarning>
+        <CartProvider>{children}</CartProvider>
+        <Suspense><LinkEnricher /></Suspense>
+      </body>
     </html>
   );
 }

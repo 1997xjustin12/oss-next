@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CartButton } from "@/components/layout/CartButton";
 import { BASE_URL } from "@/lib/helpers";
+import { applyEnrichParams } from "@/lib/linkEnrich";
 
 type NavChild = { href: string; label: string };
 type NavLink = {
@@ -37,14 +38,14 @@ const NAV_LINKS: NavLink[] = [
     ],
   },
   {
-    href: "/rent",
+    href: `${BASE_URL}/sale-shipping-containers/?ptype=rental`,
     label: "Rent",
     children: [
-      { 
+      {
         href: `${BASE_URL}/sale-shipping-containers/?ptype=rental`,
         label: "Shipping Container Rental",
       },
-      { 
+      {
         href: `${BASE_URL}/reefer-refrigerated-container/`,
         label: "Rent Refrigerated Shipping Containers",
       }
@@ -75,8 +76,18 @@ export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [activeLink, setActiveLink] = useState<string | null>(null);
   const [dropdownLeft, setDropdownLeft] = useState(0);
+  const [enrichZip, setEnrichZip] = useState('');
+  const [enrichLoc, setEnrichLoc] = useState('');
   const navRef = useRef<HTMLElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setEnrichZip(localStorage.getItem('zipcode') ?? '');
+    setEnrichLoc(localStorage.getItem('zipcode_depot') ?? '');
+  }, []);
+
+  // Enrich a single href using stored location data
+  const e = (href: string) => applyEnrichParams(href, enrichZip, enrichLoc);
 
   const activeNavLink = NAV_LINKS.find((l) => l.href === activeLink);
 
@@ -128,13 +139,13 @@ export function Navbar() {
               key={link.href}
               onMouseEnter={
                 link.children
-                  ? (e) => openDesktopDropdown(link.href, e)
+                  ? (ev) => openDesktopDropdown(link.href, ev)
                   : undefined
               }
               onMouseLeave={link.children ? scheduleClose : undefined}
             >
               <Link
-                href={link.href}
+                href={e(link.href)}
                 className={`flex items-center gap-0.5 text-[13.5px] font-semibold px-2.75 py-1.5 rounded transition-colors whitespace-nowrap ${
                   link.highlight
                     ? "text-theme-primary"
@@ -203,7 +214,7 @@ export function Navbar() {
             {activeNavLink.children.map((child) => (
               <Link
                 key={child.href}
-                href={child.href}
+                href={e(child.href)}
                 className="block px-4 py-2.5 text-[13px] font-medium text-theme-dark-2 hover:text-theme-primary hover:bg-theme-primary/5 transition-colors"
               >
                 {child.label}
@@ -220,7 +231,7 @@ export function Navbar() {
             <div key={link.href}>
               <div className="flex items-center justify-between border-b border-theme-border/60">
                 <Link
-                  href={link.href}
+                  href={e(link.href)}
                   onClick={() => setOpen(false)}
                   className={`py-3 flex-1 text-[15px] font-semibold transition-colors hover:text-theme-primary ${
                     link.highlight ? "text-theme-primary" : "text-theme-dark-2"
@@ -253,7 +264,7 @@ export function Navbar() {
                   {link.children.map((child) => (
                     <Link
                       key={child.href}
-                      href={child.href}
+                      href={e(child.href)}
                       onClick={() => setOpen(false)}
                       className="block py-2.5 text-[13.5px] text-theme-dark-2 hover:text-theme-primary transition-colors border-b border-theme-border/40 last:border-0"
                     >
