@@ -83,3 +83,36 @@ export interface WpSingleProductResponse {
 
 /** The unwrapped single product — same shape as list products */
 export type WpSingleProduct = WpApiProduct
+
+/** Raw shape returned by /wp-json/custom/v1/accessories */
+export interface WpAccessoryProduct {
+  productID: number
+  product_name: string
+  product_price: string
+  product_permalink: string
+  thumbnail_url: string
+  sku: string
+  location?: string
+  condition?: string
+  payment_type?: string
+  ratings?: string
+  review_count?: number
+}
+
+export interface WpAccessoriesResponse {
+  products: WpAccessoryProduct[]
+  max_pages: number
+}
+
+export interface Accessory {
+  id: string
+  title: string
+  price: number
+  thumbnailUrl?: string
+  permalink?: string
+  sku: string
+  category: string
+  badge: { label: string; tone: BadgeTone }
+  rating: number
+  reviews: number
+}
