@@ -29,6 +29,18 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     limit: 5,
   })
 
+  // Show the pretty label instead of the raw zipcode
+  useEffect(() => {
+    const label  = localStorage.getItem('zipcode_label')
+    const stored = localStorage.getItem('zipcode')
+    if (initialZip) {
+      if (stored === initialZip && label) setZip(label)
+    } else if (label ?? stored) {
+      setZip(label ?? stored ?? '')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     if (open && results.length === 1) {
       handleSelect(results[0])

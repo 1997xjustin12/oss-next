@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { LinkEnricher } from "@/components/layout/LinkEnricher";
+import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,6 +30,13 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <CartProvider>{children}</CartProvider>
         <Suspense><LinkEnricher /></Suspense>
+        <Suspense>
+          <ZipAutoDetect excludePaths={[
+            '/checkout',
+            '/cart',
+            '/account',
+          ]} />
+        </Suspense>
       </body>
     </html>
   );
