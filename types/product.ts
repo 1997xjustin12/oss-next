@@ -18,6 +18,7 @@ export interface Product {
   productPermalink?: string
   paymentType: string
   monthly: number | null
+  rtoOffer?: { price: string; url: string } | null
   stock: number
   isVirtualDepo: boolean
 }
@@ -56,6 +57,7 @@ export interface WpApiProduct {
   payment_type: string
   payment_term: string[]
   monthly_price: string | null
+  rto_offer: { price: string; url: string } | null
   stock: number
   is_virtual_depo: boolean
   relocation_fee: number

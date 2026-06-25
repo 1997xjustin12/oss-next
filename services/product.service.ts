@@ -50,6 +50,7 @@ function mapProduct(wp: WpApiProduct): Product {
     productPermalink: wp.product_permalink || undefined,
     paymentType:      wp.payment_type,
     monthly:          wp.monthly_price ? parsePrice(wp.monthly_price) : null,
+    rtoOffer:         wp.rto_offer ?? null,
     stock:            wp.stock ?? 0,
     isVirtualDepo:    wp.is_virtual_depo ?? false,
   }
