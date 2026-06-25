@@ -31,7 +31,7 @@ function StarRow({ rating }: { rating: number }) {
 }
 
 export function ProductCard({ product }: Props) {
-  const href = product.productPermalink ?? `/products/${product.sku.toLowerCase()}`
+  const href = product.productPermalink ?? `/product/${product.sku.toLowerCase()}`
 
   return (
     <article className="relative grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-5 rounded-lg border border-theme-border bg-white p-4 sm:p-5 transition-all hover:border-theme-primary/40 hover:shadow-lg">
@@ -96,12 +96,6 @@ export function ProductCard({ product }: Props) {
             <>
               <dt className="font-bold uppercase tracking-wide text-theme-muted text-[10px]">Condition</dt>
               <dd className="text-theme-dark-2">{product.condition}</dd>
-            </>
-          )}
-          {product.doorType && (
-            <>
-              <dt className="font-bold uppercase tracking-wide text-theme-muted text-[10px]">Door Type</dt>
-              <dd className="text-theme-dark-2">{product.doorType}</dd>
             </>
           )}
           {product.grade && (

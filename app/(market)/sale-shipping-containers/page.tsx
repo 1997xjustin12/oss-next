@@ -57,7 +57,7 @@ async function SaleContainersContent({ searchParams }: Props) {
 
   const { products, maxPages } = await fetchSaleProducts({
     location, ptype, sort, page: currentPage,
-    length_width, condition, grade, height, containerType,
+    length_width, condition, grade, height,
   })
 
   // Serialize current params so client components can build updated URLs
