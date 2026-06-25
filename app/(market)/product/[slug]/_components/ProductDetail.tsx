@@ -16,7 +16,7 @@ const quickSpecs = [
   { label: 'Lbs Tare', value: '4,850', accent: true },
 ]
 
-const relatedProducts = [
+const staticRelatedProducts = [
   { Icon: Ship, title: '40ft Standard Container', desc: 'Double the space for larger projects and business storage.', price: 'From $2,000', cta: 'View' },
   { Icon: Maximize2, title: '20ft High Cube', desc: 'Extra 1ft of height — perfect for taller inventory and work spaces.', price: 'From $1,850', cta: 'View' },
   { Icon: Snowflake, title: '20ft Refrigerated', desc: 'Temperature-controlled for food, pharma, and sensitive goods.', price: 'Call for Price', cta: 'Inquire' },
@@ -39,7 +39,7 @@ const reviewsList = [
 
 type Props = { product: WpSingleProduct; relatedProducts: WpApiProduct[] }
 
-export function ProductDetail({ product, relatedProducts }: Props) {
+export function ProductDetail({ product }: Props) {
   const allImages = [product.thumbnail_url, ...product.gallery].filter(Boolean)
 
   return (
@@ -90,7 +90,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {relatedProducts.map((p) => (
+          {staticRelatedProducts.map((p) => (
             <div
               key={p.title}
               className="rounded-lg border border-theme-border bg-theme-bg overflow-hidden cursor-pointer hover:border-theme-primary hover:-translate-y-1 hover:shadow-lg transition-all"
