@@ -49,6 +49,7 @@ export interface WpApiProduct {
   region: string
   sku: string
   product_price: string
+  sale_price?: string
   thumbnail_url: string
   gallery: string[]
   product_gallery_ids: number[]
@@ -68,6 +69,8 @@ export interface WpApiProduct {
   yoast_focus_phrase: string
   yoast_focus_phrase_h1: string
   yoast_focus_phrase_h2: string
+  description?: string
+  short_description?: string
 }
 
 export interface WpApiResponse {
@@ -90,6 +93,7 @@ export interface WpAccessoryProduct {
   productID: number
   product_name: string
   product_price: string
+  sale_price?: string
   product_permalink: string
   thumbnail_url: string
   sku: string

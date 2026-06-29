@@ -7,6 +7,7 @@ import {
   ShoppingCart, ClipboardList, Phone,
 } from 'lucide-react'
 import type { WpSingleProduct, WpApiProduct } from '@/types/product'
+import { useCart } from '@/hooks/useCart'
 import { Stars } from './Stars'
 
 // ─── option layer types ───────────────────────────────────────────────────────
@@ -219,6 +220,8 @@ type Props = {
 
 export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVariantChange }: Props) {
 
+  const { addItem } = useCart()
+
   // The currently matched product — starts as the page product, updates on every option change
   const [activeProduct, setActiveProduct] = useState<WpApiProduct>(product)
 
@@ -404,7 +407,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         options: rentTermOptions.map(term => ({
           key:      term.value,
           label:    term.label,
-          sublabel: term.variant ? `$${term.variant.product_price}/mo` : undefined,
+          sublabel: term.variant ? `$${term.variant.sale_price || term.variant.product_price}/mo` : undefined,
           active:   selection.rentTerm === term.value,
           available: term.available,
           onSelect: () => handleSelect({ rentTerm: term.value }),
@@ -420,7 +423,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         options: rtoTermOptions.map(term => ({
           key:      term.value,
           label:    term.label,
-          sublabel: term.variant ? `$${term.variant.product_price}/mo` : undefined,
+          sublabel: term.variant ? `$${term.variant.sale_price || term.variant.product_price}/mo` : undefined,
           active:   selection.rtoTerm === term.value,
           available: term.available,
           onSelect: () => handleSelect({ rtoTerm: term.value }),
@@ -439,14 +442,14 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
   // ── price display ───────────────────────────────────────────────────────────
 
   const priceDisplay = useMemo(() => ({
-    price:  `$${activeProduct.product_price}`,
+    price:  `$${activeProduct.sale_price || activeProduct.product_price}`,
     suffix: selection.tab === 'buy' ? '' : '/mo',
     note: {
       buy:  '+ Delivery fee based on your location · No sales tax in most states',
       rent: 'Delivery & pickup included · Flexible terms',
       rto:  'Own it at end of term · No credit check required',
     }[selection.tab],
-  }), [activeProduct.product_price, selection.tab])
+  }), [activeProduct.sale_price, activeProduct.product_price, selection.tab])
 
   const rating = parseFloat(product.ratings) || 0
 
@@ -459,6 +462,23 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
   }
 
   function handleAddToCart() {
+    const orderType =
+      selection.tab === 'rent' ? `Rental · ${selection.rentTerm} Months` :
+      selection.tab === 'rto'  ? `Rent-to-Own · ${selection.rtoTerm} Months` :
+      'Purchase'
+
+    addItem({
+      id:        String(activeProduct.productID),
+      name:      activeProduct.container_title,
+      price:     parseFloat(activeProduct.sale_price || activeProduct.product_price) || 0,
+      quantity:  1,
+      sku:       activeProduct.sku,
+      size:      sizes[selection.sizeIdx]?.name ?? activeProduct.size,
+      condition: activeProduct.condition,
+      orderType,
+      image:     activeProduct.thumbnail_url,
+    })
+
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
@@ -586,7 +606,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         >
           {added
             ? <>✓ Added to Cart!</>
-            : <><ShoppingCart className="w-5 h-5" /> Add to Cart — ${activeProduct.product_price}</>
+            : <><ShoppingCart className="w-5 h-5" /> Add to Cart — ${activeProduct.sale_price || activeProduct.product_price}</>
           }
         </button>
         <button type="button" className="w-full py-3 rounded-md text-base sm:text-lg font-bold border-2 border-theme-border hover:border-theme-primary hover:text-theme-primary transition-colors flex items-center justify-center gap-2">

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { CheckoutClient } from './_components/CheckoutClient';
 
-export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Checkout',

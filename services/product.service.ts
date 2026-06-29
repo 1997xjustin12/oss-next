@@ -50,7 +50,7 @@ function mapProduct(wp: WpApiProduct): Product {
     rating:           parseFloat(wp.ratings) || 0,
     reviews:          wp.review_count,
     location:         wp.location,
-    price:            parsePrice(wp.product_price),
+    price:            parsePrice(wp.sale_price || wp.product_price),
     condition:        wp.condition,
     grade:            wp.grade,
     sku:              wp.sku,
@@ -124,7 +124,7 @@ function mapAccessory(wp: WpAccessoryProduct): Accessory {
   return {
     id:           String(wp.productID),
     title:        wp.product_name,
-    price:        parsePrice(wp.product_price),
+    price:        parsePrice(wp.sale_price || wp.product_price),
     thumbnailUrl: wp.thumbnail_url || undefined,
     permalink:    wp.product_permalink ? rebasePermalink(wp.product_permalink) : undefined,
     sku:          wp.sku ?? '',

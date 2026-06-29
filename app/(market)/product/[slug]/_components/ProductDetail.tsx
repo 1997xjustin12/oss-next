@@ -2,9 +2,12 @@ import Link from 'next/link'
 import { Wrench, Ship, Maximize2, Snowflake, CheckCircle2 } from 'lucide-react'
 import type { WpSingleProduct, WpApiProduct } from '@/types/product'
 import { ProductVariantShell } from './ProductVariantShell'
+import { AccessoryDetail } from './AccessoryDetail'
 import { BodyTabsSection } from './BodyTabsSection'
 import { FaqAccordion } from './FaqAccordion'
 import { Stars } from './Stars'
+
+const CONTAINER_CATEGORIES = ['shipping-containers', 'generic-product-page']
 
 const staticRelatedProducts = [
   { Icon: Ship,     title: '40ft Standard Container',   desc: 'Double the space for larger projects and business storage.',        price: 'From $2,000',   cta: 'View' },
@@ -30,6 +33,12 @@ const reviewsList = [
 type Props = { product: WpSingleProduct; relatedProducts: WpApiProduct[] }
 
 export function ProductDetail({ product, relatedProducts }: Props) {
+  const isContainer = CONTAINER_CATEGORIES.some(c => product.categories.includes(c))
+
+  if (!isContainer) {
+    return <AccessoryDetail product={product} />
+  }
+
   return (
     <main className="bg-theme-bg text-theme-dark">
       {/* Breadcrumb + product grid — client-driven, updates on variant change */}
