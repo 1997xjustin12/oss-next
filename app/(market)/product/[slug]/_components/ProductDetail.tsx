@@ -45,10 +45,10 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       <ProductVariantShell initialProduct={product} relatedProducts={relatedProducts} />
 
       {/* BODY TABS */}
-      {/* <BodyTabsSection /> */}
+      <BodyTabsSection />
 
       {/* RELATED PRODUCTS */}
-      {/* <section className="px-4 sm:px-[5%] py-10 sm:py-16">
+      <section className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">You May Also Need</h2>
           <Link href="/product" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
@@ -72,10 +72,10 @@ export function ProductDetail({ product, relatedProducts }: Props) {
             </div>
           ))}
         </div>
-      </section> */}
+      </section>
 
       {/* REVIEWS */}
-      {/* <section id="reviews" className="px-4 sm:px-[5%] py-10 sm:py-16">
+      <section id="reviews" className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Customer Reviews</h2>
           <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">Write a Review →</a>
@@ -121,16 +121,16 @@ export function ProductDetail({ product, relatedProducts }: Props) {
             </div>
           ))}
         </div>
-      </section> */}
+      </section>
 
       {/* FAQ */}
-      {/* <section className="px-4 sm:px-[5%] py-10 sm:py-16">
+      <section className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Frequently Asked Questions</h2>
           <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">View All FAQs →</a>
         </div>
         <FaqAccordion />
-      </section> */}
+      </section>
     </main>
   )
 }
