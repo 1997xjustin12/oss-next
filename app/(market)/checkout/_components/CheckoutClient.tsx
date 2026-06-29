@@ -573,14 +573,15 @@ export function CheckoutClient() {
                         className="h-4 w-4 accent-theme-primary"
                       />
                       {dir}
-                      <Info
-                        className="h-3.5 w-3.5 text-theme-muted dark:text-neutral-500"
+                      <span
                         title={
                           dir === 'CAB'
                             ? 'Door faces the direction the truck cab is facing'
                             : 'Door faces the direction opposite the truck cab'
                         }
-                      />
+                      >
+                        <Info className="h-3.5 w-3.5 text-theme-muted dark:text-neutral-500" />
+                      </span>
                     </label>
                   ))}
                 </div>
