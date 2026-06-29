@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useReducer } from 'react'
+import { createContext, useEffect, useReducer } from 'react'
 import type { Cart, CartItem } from '@/types/cart'
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -34,6 +34,17 @@ function derive(items: CartItem[]): Cart {
 }
 
 const EMPTY_CART: Cart = { items: [], totalItems: 0, totalPrice: 0 }
+const STORAGE_KEY = 'oss-cart'
+
+function loadCart(): Cart {
+  if (typeof window === 'undefined') return EMPTY_CART
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as Cart) : EMPTY_CART
+  } catch {
+    return EMPTY_CART
+  }
+}
 
 function reducer(state: Cart, action: Action): Cart {
   switch (action.type) {
@@ -66,7 +77,11 @@ function reducer(state: Cart, action: Action): Cart {
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, dispatch] = useReducer(reducer, EMPTY_CART)
+  const [cart, dispatch] = useReducer(reducer, undefined, loadCart)
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart))
+  }, [cart])
 
   const value: CartContextValue = {
     cart,

@@ -1,112 +1,45 @@
 import Link from 'next/link'
-import { Wrench, Ship, Maximize2, Snowflake, CheckCircle2, ChevronRight } from 'lucide-react'
+import { Wrench, Ship, Maximize2, Snowflake, CheckCircle2 } from 'lucide-react'
 import type { WpSingleProduct, WpApiProduct } from '@/types/product'
-import { BASE_URL } from '@/lib/helpers'
-import { ProductImageGallery } from './ProductImageGallery'
-import { ProductInfoPanel } from './ProductInfoPanel'
+import { ProductVariantShell } from './ProductVariantShell'
 import { BodyTabsSection } from './BodyTabsSection'
 import { FaqAccordion } from './FaqAccordion'
 import { Stars } from './Stars'
 
-const quickSpecs = [
-  { label: 'Length', value: '20 ft' },
-  { label: 'Width', value: '8 ft' },
-  { label: 'Height', value: '8\'6"' },
-  { label: 'Cu Ft', value: '1,170', accent: true },
-  { label: 'Sq Ft', value: '160', accent: true },
-  { label: 'Lbs Tare', value: '4,850', accent: true },
-]
-
 const staticRelatedProducts = [
-  { Icon: Ship, title: '40ft Standard Container', desc: 'Double the space for larger projects and business storage.', price: 'From $2,000', cta: 'View' },
-  { Icon: Maximize2, title: '20ft High Cube', desc: 'Extra 1ft of height — perfect for taller inventory and work spaces.', price: 'From $1,850', cta: 'View' },
-  { Icon: Snowflake, title: '20ft Refrigerated', desc: 'Temperature-controlled for food, pharma, and sensitive goods.', price: 'Call for Price', cta: 'Inquire' },
-  { Icon: Wrench, title: 'Container Accessories', desc: 'Locks, ramps, vents, shelving, lighting kits, and more.', price: 'From $29', cta: 'Shop' },
+  { Icon: Ship,     title: '40ft Standard Container',   desc: 'Double the space for larger projects and business storage.',        price: 'From $2,000',   cta: 'View' },
+  { Icon: Maximize2, title: '20ft High Cube',            desc: 'Extra 1ft of height — perfect for taller inventory and work spaces.', price: 'From $1,850',  cta: 'View' },
+  { Icon: Snowflake, title: '20ft Refrigerated',         desc: 'Temperature-controlled for food, pharma, and sensitive goods.',      price: 'Call for Price', cta: 'Inquire' },
+  { Icon: Wrench,   title: 'Container Accessories',     desc: 'Locks, ramps, vents, shelving, lighting kits, and more.',            price: 'From $29',      cta: 'Shop' },
 ]
 
 const ratingBars = [
   { stars: 5, pct: 88, count: 189 },
-  { stars: 4, pct: 8, count: 17 },
-  { stars: 3, pct: 3, count: 6 },
-  { stars: 2, pct: 1, count: 2 },
-  { stars: 1, pct: 0, count: 0 },
+  { stars: 4, pct: 8,  count: 17  },
+  { stars: 3, pct: 3,  count: 6   },
+  { stars: 2, pct: 1,  count: 2   },
+  { stars: 1, pct: 0,  count: 0   },
 ]
 
 const reviewsList = [
-  { initials: 'MJ', color: 'bg-theme-primary', name: 'Mark J.', role: 'Construction Manager · Texas', date: 'March 2025', text: 'Ordered a WWT 20ft for a job site — arrived in 3 days, exactly as described. The delivery driver was incredibly professional and placed it perfectly on our gravel pad. Will be ordering again.' },
-  { initials: 'ST', color: 'bg-theme-dark-2', name: 'Sarah T.', role: 'Farm Owner · Missouri', date: 'January 2025', text: "This is my third container from Onsite Storage. The price is always the lowest I can find, and the quality has been consistent every time. My 20ft is now a tack room and I couldn't be happier." },
-  { initials: 'RK', color: 'bg-theme-accent', name: 'Robert K.', role: 'Retail Store Owner · California', date: 'November 2024', text: 'Bought a one-trip unit and had it modified with a roll-up door and shelving. The team was super helpful throughout the whole process. Container looks brand new.' },
+  { initials: 'MJ', color: 'bg-theme-primary',  name: 'Mark J.',   role: 'Construction Manager · Texas',    date: 'March 2025',    text: 'Ordered a WWT 20ft for a job site — arrived in 3 days, exactly as described. The delivery driver was incredibly professional and placed it perfectly on our gravel pad. Will be ordering again.' },
+  { initials: 'ST', color: 'bg-theme-dark-2',   name: 'Sarah T.',  role: 'Farm Owner · Missouri',           date: 'January 2025',  text: "This is my third container from Onsite Storage. The price is always the lowest I can find, and the quality has been consistent every time. My 20ft is now a tack room and I couldn't be happier." },
+  { initials: 'RK', color: 'bg-theme-accent',   name: 'Robert K.', role: 'Retail Store Owner · California', date: 'November 2024', text: 'Bought a one-trip unit and had it modified with a roll-up door and shelving. The team was super helpful throughout the whole process. Container looks brand new.' },
 ]
-
-const base = BASE_URL.replace(/\/$/, '')
-
-function getListingCrumb(product: WpSingleProduct): { label: string; href: string } {
-  const cats = product.categories ?? []
-
-  if (cats.includes('accesories')) {
-    return { label: 'Shipping Containers Accessories For Sale', href: `${base}/sale-shipping-containers/?ptype=accesories` }
-  }
-
-  if (cats.includes('shipping-containers') || cats.includes('generic-product-page')) {
-    if (product.payment_type === 'rental') {
-      return { label: 'Shipping Containers For Rent', href: `${base}/sale-shipping-containers/?ptype=rental` }
-    }
-    if (product.payment_type === 'rto') {
-      return { label: 'Shipping Containers For Rent-To-Own', href: `${base}/sale-shipping-containers/?ptype=rto` }
-    }
-    return { label: 'Shipping Containers For Sale', href: `${base}/sale-shipping-containers/?ptype=buy` }
-  }
-
-  return { label: 'Shipping Containers For Sale', href: `${base}/sale-shipping-containers/?ptype=buy` }
-}
 
 type Props = { product: WpSingleProduct; relatedProducts: WpApiProduct[] }
 
-export function ProductDetail({ product }: Props) {
-  const allImages = [product.thumbnail_url, ...product.gallery].filter(Boolean)
-  const listingCrumb = getListingCrumb(product)
-
+export function ProductDetail({ product, relatedProducts }: Props) {
   return (
     <main className="bg-theme-bg text-theme-dark">
-      {/* BREADCRUMB */}
-      <div className="flex items-center gap-1.5 flex-wrap px-4 sm:px-[5%] py-3 text-xs sm:text-sm text-theme-muted bg-theme-subtle border-b border-theme-border">
-        <Link href="/" className="hover:text-theme-primary transition-colors">Home</Link>
-        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-        <Link href={listingCrumb.href} className="hover:text-theme-primary transition-colors">{listingCrumb.label}</Link>
-        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-        <span className="text-theme-dark font-semibold">{product.yoast_focus_phrase_h1 || product.container_title}</span>
-      </div>
-
-      {/* PRODUCT GRID */}
-      <section className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-10 px-4 sm:px-[5%] py-8 sm:py-10">
-        {/* Gallery + quick specs */}
-        <div className="lg:sticky lg:top-6 self-start w-full">
-          <ProductImageGallery
-            images={allImages}
-            title={product.container_title}
-            tag={product.tag}
-          />
-          <div className="grid grid-cols-3 gap-3 mt-5 bg-theme-dark rounded-lg p-4 sm:p-5 text-center">
-            {quickSpecs.map((s) => (
-              <div key={s.label}>
-                <div className={`text-lg sm:text-2xl font-extrabold tracking-tight ${s.accent ? 'text-theme-primary' : 'text-white'}`}>
-                  {s.value}
-                </div>
-                <div className="text-[10px] sm:text-[11px] text-white/45 uppercase tracking-wide mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Product info */}
-        <ProductInfoPanel product={product} categoryLabel={listingCrumb.label} />
-      </section>
+      {/* Breadcrumb + product grid — client-driven, updates on variant change */}
+      <ProductVariantShell initialProduct={product} relatedProducts={relatedProducts} />
 
       {/* BODY TABS */}
-      <BodyTabsSection />
+      {/* <BodyTabsSection /> */}
 
       {/* RELATED PRODUCTS */}
-      <section className="px-4 sm:px-[5%] py-10 sm:py-16">
+      {/* <section className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">You May Also Need</h2>
           <Link href="/product" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
@@ -115,10 +48,7 @@ export function ProductDetail({ product }: Props) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {staticRelatedProducts.map((p) => (
-            <div
-              key={p.title}
-              className="rounded-lg border border-theme-border bg-theme-bg overflow-hidden cursor-pointer hover:border-theme-primary hover:-translate-y-1 hover:shadow-lg transition-all"
-            >
+            <div key={p.title} className="rounded-lg border border-theme-border bg-theme-bg overflow-hidden cursor-pointer hover:border-theme-primary hover:-translate-y-1 hover:shadow-lg transition-all">
               <div className="h-32 flex items-center justify-center bg-theme-subtle">
                 <p.Icon className="w-10 h-10 text-theme-muted" strokeWidth={1.5} />
               </div>
@@ -127,25 +57,20 @@ export function ProductDetail({ product }: Props) {
                 <p className="text-xs text-theme-muted mb-3 leading-relaxed">{p.desc}</p>
                 <div className="flex items-center justify-between pt-2.5 border-t border-theme-border">
                   <span className="font-extrabold text-base">{p.price}</span>
-                  <button className="bg-theme-dark text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-theme-primary transition-colors">
-                    {p.cta}
-                  </button>
+                  <button className="bg-theme-dark text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-theme-primary transition-colors">{p.cta}</button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* REVIEWS */}
-      <section id="reviews" className="px-4 sm:px-[5%] py-10 sm:py-16">
+      {/* <section id="reviews" className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Customer Reviews</h2>
-          <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
-            Write a Review →
-          </a>
+          <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">Write a Review →</a>
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-6 sm:gap-8 items-center bg-theme-subtle border border-theme-border rounded-xl p-6 sm:p-7 mb-7">
           <div className="text-center">
             <div className="text-5xl sm:text-6xl font-extrabold tracking-tight">4.9</div>
@@ -164,18 +89,12 @@ export function ProductDetail({ product }: Props) {
             ))}
           </div>
         </div>
-
         <div className="flex flex-col gap-3.5">
           {reviewsList.map((rev) => (
-            <div
-              key={rev.name}
-              className="bg-theme-bg border border-theme-border rounded-lg p-4 sm:p-5 hover:border-theme-primary hover:-translate-y-0.5 transition-all"
-            >
+            <div key={rev.name} className="bg-theme-bg border border-theme-border rounded-lg p-4 sm:p-5 hover:border-theme-primary hover:-translate-y-0.5 transition-all">
               <div className="flex items-start justify-between gap-3 mb-2.5 flex-wrap">
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-extrabold shrink-0 ${rev.color}`}>
-                    {rev.initials}
-                  </div>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-extrabold shrink-0 ${rev.color}`}>{rev.initials}</div>
                   <div>
                     <span className="block font-bold text-sm">{rev.name}</span>
                     <span className="block text-xs text-theme-muted">{rev.role}</span>
@@ -193,18 +112,16 @@ export function ProductDetail({ product }: Props) {
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* FAQ */}
-      <section className="px-4 sm:px-[5%] py-10 sm:py-16">
+      {/* <section className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Frequently Asked Questions</h2>
-          <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
-            View All FAQs →
-          </a>
+          <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">View All FAQs →</a>
         </div>
         <FaqAccordion />
-      </section>
+      </section> */}
     </main>
   )
 }
