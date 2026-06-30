@@ -5,8 +5,7 @@ import { getNearestLocation } from '@/lib/locations'
 import { BASE_URL } from '@/lib/helpers'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
 
-const GEOAPIFY_URL = 'https://api.geoapify.com/v1/geocode/autocomplete'
-const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ?? ''
+const GEOAPIFY_PROXY = '/api/geoapify'
 
 export interface GeoapifyResult {
   placeId: string
@@ -107,13 +106,12 @@ export function useGeoapify(
       try {
         const params = new URLSearchParams({
           text:   trimmed,
-          apiKey: GEOAPIFY_KEY,
           limit:  String(limit),
           type,
           filter: `countrycode:${countries}`,
         })
 
-        const res = await fetch(`${GEOAPIFY_URL}?${params}`, {
+        const res = await fetch(`${GEOAPIFY_PROXY}?${params}`, {
           signal: abortRef.current.signal,
         })
 
