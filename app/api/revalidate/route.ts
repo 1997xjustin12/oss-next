@@ -29,6 +29,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Unknown tag: ${tag}` }, { status: 400 });
   }
 
-  revalidateTag(tag, 'max');
+  revalidateTag(tag);
   return NextResponse.json({ revalidated: true, tag });
 }

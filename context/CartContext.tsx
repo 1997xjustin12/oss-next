@@ -6,10 +6,11 @@ import type { Cart, CartItem } from '@/types/cart'
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 type Action =
-  | { type: 'ADD_ITEM';    payload: CartItem }
-  | { type: 'REMOVE_ITEM'; id: string }
-  | { type: 'UPDATE_QTY';  id: string; qty: number }
+  | { type: 'ADD_ITEM';     payload: CartItem }
+  | { type: 'REMOVE_ITEM';  id: string }
+  | { type: 'UPDATE_QTY';   id: string; qty: number }
   | { type: 'CLEAR_CART' }
+  | { type: 'RESTORE_CART'; payload: Cart }
 
 // ── Context shape ─────────────────────────────────────────────────────────────
 
@@ -69,6 +70,8 @@ function reducer(state: Cart, action: Action): Cart {
     }
     case 'CLEAR_CART':
       return EMPTY_CART
+    case 'RESTORE_CART':
+      return action.payload
     default:
       return state
   }
@@ -77,7 +80,13 @@ function reducer(state: Cart, action: Action): Cart {
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, dispatch] = useReducer(reducer, undefined, loadCart)
+  const [cart, dispatch] = useReducer(reducer, EMPTY_CART)
+
+  useEffect(() => {
+    // Runs only on the client after hydration — avoids SSR/client mismatch
+    const stored = loadCart()
+    if (stored.items.length > 0) dispatch({ type: 'RESTORE_CART', payload: stored })
+  }, [])
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cart))

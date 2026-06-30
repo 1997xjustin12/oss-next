@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'onsite-cdn.sfo3.cdn.digitaloceanspaces.com' },
+      { protocol: 'https', hostname: 'bbq-spaces.sfo3.cdn.digitaloceanspaces.com' },
       { protocol: 'https', hostname: 'onsitestorage.com' },
     ],
   },
