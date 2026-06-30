@@ -23,10 +23,10 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => ({})) as { all?: boolean }
 
-  revalidateTag(CACHE_TAGS.SEARCH)
+  revalidateTag(CACHE_TAGS.SEARCH, 'max')
 
   if (body.all) {
-    revalidateTag(CACHE_TAGS.ALL)
+    revalidateTag(CACHE_TAGS.ALL, 'max')
   }
 
   return NextResponse.json({
