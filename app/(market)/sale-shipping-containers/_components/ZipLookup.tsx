@@ -7,9 +7,6 @@ import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import { getNearestLocation } from '@/lib/locations'
 
-const GEOAPIFY_URL = 'https://api.geoapify.com/v1/geocode/autocomplete'
-const GEOAPIFY_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ?? ''
-
 type Props = {
   initialZip?: string
   location?: string
@@ -29,17 +26,17 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     limit: 5,
   })
 
-  // Show the pretty label instead of the raw zipcode
+  // Sync input with URL: clear when no zipcode param, show pretty label when there is one
   useEffect(() => {
+    if (!initialZip) {
+      setZip('')
+      return
+    }
     const label  = localStorage.getItem('zipcode_label')
     const stored = localStorage.getItem('zipcode')
-    if (initialZip) {
-      if (stored === initialZip && label) setZip(label)
-    } else if (label ?? stored) {
-      setZip(label ?? stored ?? '')
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (stored === initialZip && label) setZip(label)
+    else setZip(initialZip)
+  }, [initialZip])
 
   useEffect(() => {
     if (open && results.length === 1) {
@@ -75,13 +72,12 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     try {
       const params = new URLSearchParams({
         text:   userZipCode,
-        apiKey: GEOAPIFY_KEY,
         limit:  '1',
         type:   'postcode',
         filter: 'countrycode:us,ca',
       })
 
-      const res = await fetch(`${GEOAPIFY_URL}?${params}`)
+      const res = await fetch(`/api/geoapify?${params}`)
       if (!res.ok) return
 
       const json = (await res.json()) as { features?: unknown[] }

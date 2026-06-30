@@ -82,7 +82,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ results })
   } catch (err) {
-    console.error('[/api/search]', err)
-    return NextResponse.json({ results: [] }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[/api/search] error:', msg)
+    return NextResponse.json(
+      { results: [], error: process.env.NODE_ENV !== 'production' ? msg : 'Search unavailable' },
+      { status: 500 },
+    )
   }
 }
