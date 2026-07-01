@@ -10,6 +10,12 @@ import { QuoteForm } from "./_components/QuoteForm";
 import { Reviews } from "./_components/Reviews";
 import { StatesSection } from "./_components/StatesSection";
 
+import { Hero } from "./_components/Hero";
+import { RightContainer } from "./_components/RightContainer";
+import { OnsiteDifference } from "./_components/OnsiteDifference";
+import { TrustedBySection } from "./_components/TrustedBySection";
+import { ReviewsSection } from "./_components/ReviewsSection";
+
 export const metadata: Metadata = {
   title: "Shipping Containers For Sale | Lowest Price Shipping Containers",
   description:
@@ -78,13 +84,19 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <HeroSection />
-      <TrustStrip />
-      <ContainerTypes />
+      {/* <HeroSection /> */}
+      {/* <TrustStrip /> */}
+      {/* <ContainerTypes /> */}
+      {/* <WhyUs /> */}
+      {/* <Reviews /> */}
+
+      <Hero />
+      <RightContainer />
       <HowItWorks />
-      <WhyUs />
+      <OnsiteDifference />
+      <TrustedBySection />
       <QuoteForm />
-      <Reviews />
+      <ReviewsSection />
       <StatesSection />
     </>
   );
