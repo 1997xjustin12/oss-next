@@ -26,7 +26,7 @@ export function QuoteForm() {
     >
       <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-10 lg:gap-[52px] items-start">
         {/* Form box */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-7">
+        <div className="order-2 lg:order-1 bg-white dark:bg-gray-800 rounded-lg p-7">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-[11px] mb-[11px]">
             <div className="flex flex-col gap-1">
               <label htmlFor="q-fname" className={LABEL_CLS}>
@@ -127,7 +127,7 @@ export function QuoteForm() {
           </p>
         </div>
         {/* Right copy */}
-        <div className="flex flex-col gap-[20px]">
+        <div className="order-1 lg:order-2 flex flex-col gap-5">
           <h2
             id="quote-title"
             className="text-[36px] sm:text-[42px] font-bold text-white leading-[1.05] mb-[14px] tracking-[-0.02em]"

@@ -48,7 +48,7 @@ function Card({ item }: { item: Product }) {
           src={item.image}
           alt={item.type}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          sizes="(max-width: 640px) 75vw, (max-width: 1024px) 50vw, 25vw"
           className="object-cover"
         />
       </div>
@@ -86,12 +86,14 @@ export function RightContainer() {
           From compact 20ft units to oversized high cubes and temperature-controlled reefers — we
           stock every size and configuration.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 py-8 sm:py-10 w-full">
+        <div className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 -mx-5 px-5 pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none py-8 sm:py-10 w-full">
           {PRODUCTS.map((item, index) => (
-            <Card key={`product-card-${index}`} item={item} />
+            <div key={`product-card-${index}`} className="w-[75%] shrink-0 snap-start sm:w-auto sm:shrink">
+              <Card item={item} />
+            </div>
           ))}
         </div>
-        <button className="font-semibold text-lg sm:text-[20px] py-2 px-8 border border-stone-700 dark:border-gray-400 dark:text-white hover:bg-stone-100 dark:hover:bg-gray-800 transition-colors">
+        <button className="font-semibold text-lg sm:text-[20px] py-2 px-8 border transition-colors bg-[#BD112A] text-white border-[#BD112A] hover:bg-[#a00f24] sm:bg-transparent sm:text-inherit sm:border-stone-700 sm:hover:bg-stone-100 sm:dark:border-gray-400 sm:dark:text-white sm:dark:hover:bg-gray-800">
           View All Containers &amp; Pricing
         </button>
       </div>
