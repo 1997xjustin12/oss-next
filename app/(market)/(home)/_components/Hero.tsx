@@ -6,6 +6,7 @@ import { ZipLookup1 } from "@/app/(market)/(home)/_components/ZipLookup1";
 
 const BANNER_IMAGE = "/images/home-banners/hero-image.webp";
 const BANNER_MAP_IMAGE = "/images/home-banners/home-hero-map.webp";
+
 const GOOGLE_REVIEWS_IMAGE = "/images/google-reviews.webp";
 
 type PayOption = { label: string; href: string };
@@ -14,7 +15,13 @@ type StatData = { stats: string; Desc: (props: StatDescProps) => ReactNode };
 
 function HubsStratStat({ compact = false }: StatDescProps) {
   return (
-    <div className={compact ? "text-[11px] sm:text-base lg:text-[20px] font-medium" : "text-base sm:text-[20px] font-medium"}>
+    <div
+      className={
+        compact
+          ? "text-[11px] sm:text-base lg:text-[20px] font-medium"
+          : "text-base sm:text-[20px] font-medium"
+      }
+    >
       <div>Hubs</div>
       <div>Strategically Located</div>
     </div>
@@ -23,7 +30,13 @@ function HubsStratStat({ compact = false }: StatDescProps) {
 
 function LocationStat({ compact = false }: StatDescProps) {
   return (
-    <div className={compact ? "text-[11px] sm:text-base lg:text-[20px] font-medium" : "text-base sm:text-[20px] font-medium"}>
+    <div
+      className={
+        compact
+          ? "text-[11px] sm:text-base lg:text-[20px] font-medium"
+          : "text-base sm:text-[20px] font-medium"
+      }
+    >
       <div>Of The U.S. & Canada</div>
       <div>Population Served By</div>
       <div>Our Delivery Network</div>
@@ -31,7 +44,13 @@ function LocationStat({ compact = false }: StatDescProps) {
   );
 }
 
-function StatItem({ stats, compact = false }: { stats: StatData; compact?: boolean }) {
+function StatItem({
+  stats,
+  compact = false,
+}: {
+  stats: StatData;
+  compact?: boolean;
+}) {
   return (
     <div
       className={
@@ -56,6 +75,7 @@ function StatItem({ stats, compact = false }: { stats: StatData; compact?: boole
     </div>
   );
 }
+
 
 function GoogleReviews() {
   return (
@@ -126,6 +146,65 @@ const STATS: StatData[] = [
 ];
 
 export function Hero({ version: version = 1 }: { version?: number }) {
+  if (version === 3) {
+    return (
+      <section className="relative flex flex-col lg:flex-row min-h-120 sm:min-h-150">
+        <div className="relative w-full lg:w-[60%] min-h-120 sm:min-h-150">
+          <Image
+            src={BANNER_IMAGE}
+            alt="Hero banner — shipping containers delivered nationwide"
+            fill
+            priority
+            sizes="(min-width: 1024px) 60vw, 100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60" />
+
+          <div className="relative z-10 flex h-full flex-col justify-center gap-5 sm:gap-7.5 p-5 sm:p-10">
+            <div className="flex justify-center lg:justify-start">
+              <div className="shadow-lg bg-[#BD112A] text-sm sm:text-[20px] text-white py-1 px-3 rounded-sm font-semibold text-center">
+                America&apos;s #1 Container Wholesaler &middot; Since 2002
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 text-center lg:text-left">
+              <h1 className="text-shadow-lg text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white">
+                Local Shipping Containers Delivered Nationwide &amp; Canada
+              </h1>
+              <h2 className="text-shadow-lg text-white text-lg sm:text-2xl lg:text-[28px] leading-relaxed font-medium">
+                Whether You Want to{" "}
+                <span className="text-[#F4BF3C] font-extrabold">Buy</span>,{" "}
+                <span className="text-[#F4BF3C] font-extrabold">Rent</span>, Or{" "}
+                <span className="text-[#F4BF3C] font-extrabold">
+                  Rent-To-Own
+                </span>
+                , We Deliver From A Local Hub To Save You Money On Mileage.
+              </h2>
+            </div>
+
+            <div className="flex flex-row items-start lg:items-center justify-evenly gap-4 lg:gap-0 pt-2">
+              {STATS.map((item) => (
+                <StatItem key={String(item.stats)} stats={item} compact />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative w-full lg:w-[40%] min-h-150 bg-black">
+          <div className="relative z-10 flex h-full flex-col gap-5 sm:gap-7.5 p-5 sm:p-10">
+            <div className="flex justify-end">
+              <GoogleReviews />
+            </div>
+
+            <div className="flex flex-1 flex-col items-stretch justify-center gap-6">
+              <ZipLookup1 />
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (version === 2) {
     return (
       <section className="relative flex flex-col lg:flex-row min-h-120 sm:min-h-150">

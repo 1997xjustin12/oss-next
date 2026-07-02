@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { getNearestLocation } from '@/lib/locations'
 import { BASE_URL } from '@/lib/helpers'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
+import { DEFAULT_LOCATION } from '@/lib/constants'
+import type { FormattedContainerHit } from '@/types/product'
+export type { ShippingContainerHit, FormattedContainerHit } from '@/types/product'
 
 const GEOAPIFY_PROXY = '/api/geoapify'
 
@@ -42,6 +45,9 @@ interface UseGeoapifyReturn {
   error: string | null
   clear: () => void
   selectResult: (result: GeoapifyResult) => void
+  depotContainers: FormattedContainerHit[]
+  depotContainersLoading: boolean
+  depotContainersError: string | null
 }
 
 function parseFeature(feature: unknown): GeoapifyResult {
@@ -87,6 +93,10 @@ export function useGeoapify(
   const [error, setError]     = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
+  const [depotContainers, setDepotContainers]               = useState<FormattedContainerHit[]>([])
+  const [depotContainersLoading, setDepotContainersLoading] = useState(false)
+  const [depotContainersError, setDepotContainersError]     = useState<string | null>(null)
+
   useEffect(() => {
     const trimmed = query.trim()
 
@@ -103,6 +113,8 @@ export function useGeoapify(
       setLoading(true)
       setError(null)
 
+      console.log('[useGeoapify] query effect triggered — query:', trimmed)
+
       try {
         const params = new URLSearchParams({
           text:   trimmed,
@@ -118,9 +130,12 @@ export function useGeoapify(
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
         const json = (await res.json()) as { features?: unknown[] }
-        setResults((json.features ?? []).map(parseFeature))
+        const parsed = (json.features ?? []).map(parseFeature)
+        console.log('[useGeoapify] query results — query:', trimmed, 'results:', parsed)
+        setResults(parsed)
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
+          console.error('[useGeoapify] query error — query:', trimmed, err)
           setError('Could not fetch location suggestions.')
           setResults([])
         }
@@ -140,6 +155,36 @@ export function useGeoapify(
     setError(null)
   }
 
+  async function fetchDepotContainers(location: string, source: 'init' | 'select') {
+    console.log(`[useGeoapify] fetchDepotContainers triggered (${source}) — location:`, location)
+
+    setDepotContainersLoading(true)
+    setDepotContainersError(null)
+
+    try {
+      const params = new URLSearchParams({ location })
+      const res = await fetch(`/api/shipping-containers/by-location?${params}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const json = (await res.json()) as { data?: FormattedContainerHit[] }
+      console.log(`[useGeoapify] depotContainers (${source}) — location:`, location, 'data:', json.data ?? [])
+      setDepotContainers(json.data ?? [])
+    } catch (err) {
+      console.error(`[useGeoapify] fetchDepotContainers error (${source}) — location:`, location, err)
+      setDepotContainersError('Could not fetch containers for this location.')
+      setDepotContainers([])
+    } finally {
+      setDepotContainersLoading(false)
+    }
+  }
+
+  // Initial load: use the previously-selected depot if one is stored, otherwise
+  // fall back to the default location so there's always something to show.
+  useEffect(() => {
+    const storedDepot = localStorage.getItem('zipcode_depot')
+    void fetchDepotContainers(storedDepot || DEFAULT_LOCATION, 'init')
+  }, [])
+
   function selectResult(result: GeoapifyResult) {
     localStorage.setItem('zipcode',          result.postcode)
     localStorage.setItem('zipcode_label',    result.formatted)
@@ -147,7 +192,20 @@ export function useGeoapify(
     localStorage.setItem('gallery_redirect', result.galleryRedirect)
     enrichSaleLinks()
     clear()
+
+    if (result.nearestLocation) {
+      void fetchDepotContainers(result.nearestLocation, 'select')
+    }
   }
 
-  return { results, loading, error, clear, selectResult }
+  return {
+    results,
+    loading,
+    error,
+    clear,
+    selectResult,
+    depotContainers,
+    depotContainersLoading,
+    depotContainersError,
+  }
 }

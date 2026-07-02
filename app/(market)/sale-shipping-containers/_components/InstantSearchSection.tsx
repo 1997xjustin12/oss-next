@@ -238,6 +238,7 @@ type HitData = {
   product_category: ProductCategory[]
   custom_fields:    CustomField[]
   ratings:          number | null
+  sale_price:       number
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -247,7 +248,7 @@ function getCF(fields: CustomField[] | undefined, name: string): string {
 }
 
 function hitToAccessory(hit: HitData): Accessory {
-  const price    = hit.variants?.[0]?.price ? parseFloat(hit.variants[0].price) : 0
+  const price    = hit.sale_price ?? 0
   const promoTag = hit.tags?.find((t) => /best|popular|sale|deal/i.test(t))
   const tone: BadgeTone = promoTag
     ? /best|popular/i.test(promoTag) ? 'red' : 'amber'
@@ -295,7 +296,7 @@ function ProductHit({ hit }: { hit: HitData }) {
 
   const img      = hit.images?.[0]
   const variant  = hit.variants?.[0]
-  const price    = variant?.price ? parseFloat(variant.price) : 0
+  const price    = hit.sale_price ?? 0
   const location = getCF(hit.custom_fields, 'location')
   const size     = getCF(hit.custom_fields, 'length_width')
   const height   = getCF(hit.custom_fields, 'height')

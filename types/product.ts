@@ -121,3 +121,9 @@ export interface Accessory {
   rating: number
   reviews: number
 }
+
+/** Loosely-typed Elasticsearch search hit — shared shape between services/search.service.ts and client consumers */
+export type ShippingContainerHit = { objectID: string } & Record<string, unknown>
+
+/** A hit after formatProduct() has run — sale_price is guaranteed present */
+export type FormattedContainerHit = ShippingContainerHit & { sale_price: number }

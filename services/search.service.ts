@@ -1,6 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { Client } from '@elastic/elasticsearch'
 import { CACHE_TAGS } from '@/config/cache'
+import { DEFAULT_LOCATION, SHIPPING_CONTAINER_CATEGORIES } from '@/lib/constants'
+import { formatProduct } from '@/lib/pricing'
 
 function cleanEnv(val: string | undefined): string {
   return (val ?? '').split('#')[0].trim().replace(/\/$/, '')
@@ -12,8 +14,6 @@ const client = new Client({
 })
 
 const INDEX = cleanEnv(process.env.NEXT_PUBLIC_SEARCH_INDEX) || 'onsite_products_index'
-
-const DEFAULT_LOCATION = 'Various North America'
 
 // "Accesories" is intentionally one-s — that is how it is stored in Elasticsearch
 const ACCESSORY_CATEGORY_NAMES = ['Accesories', 'Shelving', 'Parts', 'Ramp', 'Security', 'Others']
@@ -108,6 +108,73 @@ function cfFilter(fieldName: string, values: string[]): object {
   }
 }
 
+export type CustomFieldFilters = Record<string, string[]>
+
+export type CustomFieldsSearchInput = {
+  filters:     CustomFieldFilters
+  categories?: string[]
+  page:        number
+  hitsPerPage: number
+}
+
+// Generic custom_fields filtering (any custom_fields.name) + pagination, for
+// consumers that don't need the full PLP facet/sort machinery of cachedEsSearch.
+export async function cachedCustomFieldsSearch(input: CustomFieldsSearchInput) {
+  'use cache'
+  cacheLife('minutes')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.SEARCH)
+
+  const { filters, categories = [], page, hitsPerPage } = input
+
+  const filterClauses = Object.entries(filters)
+    .filter(([, values]) => values.length > 0)
+    .map(([name, values]) => cfFilter(name, values))
+
+  if (categories.length > 0) {
+    filterClauses.push({ terms: { 'product_category.category_name.keyword': categories } })
+  }
+
+  const esResponse = await client.search({
+    index: INDEX,
+    from:  page * hitsPerPage,
+    size:  hitsPerPage,
+    query: { bool: { filter: filterClauses } },
+  })
+
+  const total =
+    typeof esResponse.hits.total === 'number'
+      ? esResponse.hits.total
+      : (esResponse.hits.total?.value ?? 0)
+
+  const hits = esResponse.hits.hits.map((hit) =>
+    formatProduct({
+      objectID: hit._id ?? '',
+      ...(hit._source as Record<string, unknown>),
+    }),
+  )
+
+  return {
+    hits,
+    total,
+    nbPages: Math.ceil(total / hitsPerPage),
+  }
+}
+
+// Hard ceiling for "return everything" queries — keeps an unfiltered request
+// from trying to dump the entire index in one response.
+export const ALL_RESULTS_CAP = 1000
+
+// Quick helper for the common case: every shipping container at a given location.
+export async function getShippingContainersByLocation(location: string) {
+  const result = await cachedCustomFieldsSearch({
+    filters:     { location: [location] },
+    categories:  SHIPPING_CONTAINER_CATEGORIES,
+    page:        0,
+    hitsPerPage: ALL_RESULTS_CAP,
+  })
+  return result.hits
+}
+
 // Each unique combination of inputs gets its own cache entry.
 // Busted by revalidateTag(CACHE_TAGS.SEARCH) or revalidateTag(CACHE_TAGS.ALL).
 export async function cachedEsSearch(input: SearchInput) {
@@ -166,10 +233,12 @@ export async function cachedEsSearch(input: SearchInput) {
       ? esResponse.hits.total
       : (esResponse.hits.total?.value ?? 0)
 
-  const hits = esResponse.hits.hits.map((hit) => ({
-    objectID: hit._id,
-    ...(hit._source as Record<string, unknown>),
-  }))
+  const hits = esResponse.hits.hits.map((hit) =>
+    formatProduct({
+      objectID: hit._id ?? '',
+      ...(hit._source as Record<string, unknown>),
+    }),
+  )
 
   const facetsResult = aggsToFacets(
     (esResponse.aggregations ?? {}) as Record<string, { buckets?: { key: string; doc_count: number }[] }>,
