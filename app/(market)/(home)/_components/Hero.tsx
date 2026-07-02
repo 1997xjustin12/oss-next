@@ -197,7 +197,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
             </div>
 
             <div className="flex flex-1 flex-col items-stretch justify-center gap-6">
-              <ZipLookup1 />
+              <ZipLookup1 homeVersion={3} />
             </div>
           </div>
         </div>
@@ -248,7 +248,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
             </div>
 
             <div className="lg:hidden">
-              <ZipLookup1 />
+              <ZipLookup1 homeVersion={2} />
             </div>
           </div>
         </div>
@@ -268,7 +268,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
             </div>
 
             <div className="flex flex-1 items-center justify-center">
-              <ZipLookup1 />
+              <ZipLookup1 homeVersion={2} />
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ type Props = {
   initialZip?: string;
   location?: string;
   ptype?: string;
+  homeVersion?: 1 | 2 | 3;
 };
 
 type BannerParams = {
@@ -150,6 +151,7 @@ export function ZipLookup1({
   initialZip = "",
   location = "",
   ptype = "buy",
+  homeVersion = 1,
 }: Props) {
   const router = useRouter();
   const [zip, setZip] = useState(initialZip);
@@ -185,8 +187,8 @@ export function ZipLookup1({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialZip]);
 
-  // Auto-select when the dropdown narrows to exactly one match — this no
-  // longer redirects (see handleSelect below), it just adopts that location.
+  // Auto-select when the dropdown narrows to exactly one match. Whether this
+  // redirects depends on homeVersion — see handleSelect below.
   useEffect(() => {
     if (open && results.length === 1) {
       handleSelect(results[0]);
@@ -199,16 +201,23 @@ export function ZipLookup1({
     router.push(`/sale-shipping-containers?${params}`);
   }
 
-  // Selecting a suggestion no longer auto-redirects — it just narrows the
-  // depot containers to that location so BANNER_LIST prices/links below can
-  // regenerate. Navigation only happens via the explicit "Find Local Pricing"
-  // action or by clicking a banner item's own link.
+  // homeVersion 1/2 keep the original behavior: selecting a suggestion
+  // redirects straight to the PLP. homeVersion 3 has its own BANNER_LIST
+  // below driven by sale_price, so selecting a suggestion there only narrows
+  // depotContainers to that location instead of navigating away.
   function handleSelect(result: GeoapifyResult) {
     setZip(result.formatted);
     selectResult(result);
     setOpen(false);
     setSelectedZipcode(result.postcode || zip);
     setSelectedLocation(result.nearestLocation ?? location);
+
+    if (homeVersion !== 3) {
+      navigate(
+        result.postcode || zip,
+        result.nearestLocation ?? result.formatted,
+      );
+    }
   }
 
   function handleSeePrices() {
@@ -314,20 +323,24 @@ export function ZipLookup1({
         </button>
       </div>
 
-      <div className="flex flex-col">
-        {banners.map((item) => (
-          <BannerItem key={item.title} item={item} />
-        ))}
-      </div>
-      <div className="flex justify-center">
-        <Link
-          prefetch={false}
-          href={`${BASE_URL}/sale-shipping-containers?ptype=buy`}
-          className="text-white bg-[#BD112A] text-center py-2 px-5"
-        >
-          View All Containers & Pricing
-        </Link>
-      </div>
+      {homeVersion === 3 && (
+        <>
+          <div className="flex flex-col">
+            {banners.map((item) => (
+              <BannerItem key={item.title} item={item} />
+            ))}
+          </div>
+          <div className="flex justify-center">
+            <Link
+              prefetch={false}
+              href={`${BASE_URL}/sale-shipping-containers?ptype=buy`}
+              className="text-white bg-[#BD112A] text-center py-2 px-5"
+            >
+              View All Containers & Pricing
+            </Link>
+          </div>
+        </>
+      )}
     </div>
   );
 }
