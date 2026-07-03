@@ -325,6 +325,28 @@ export function ZipLookup1({
 
       {homeVersion === 3 && (
         <>
+          <div className="mt-10">
+            <p className="flex items-center gap-2 text-white text-lg">
+              {selectedLocation ? (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="w-6 h-6 text-theme-primary shrink-0"
+                  >
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path
+                      fill="currentColor"
+                      d="M18.364 17.364L12 23.728l-6.364-6.364a9 9 0 1 1 12.728 0M12 15a4 4 0 1 0 0-8a4 4 0 0 0 0 8m0-2a2 2 0 1 1 0-4a2 2 0 0 1 0 4"
+                    />
+                  </svg>
+                  <span>{selectedLocation}</span>
+                </>
+              ) : (
+                "Enter your zipcode to see available price offers"
+              )}
+            </p>
+          </div>
           <div className="flex flex-col">
             {banners.map((item) => (
               <BannerItem key={item.title} item={item} />
@@ -334,7 +356,7 @@ export function ZipLookup1({
             <Link
               prefetch={false}
               href={`${BASE_URL}/sale-shipping-containers?ptype=buy`}
-              className="text-white bg-[#BD112A] text-center py-2 px-5"
+              className="text-white bg-theme-primary text-center py-2 px-5"
             >
               View All Containers & Pricing
             </Link>

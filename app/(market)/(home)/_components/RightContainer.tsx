@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { BASE_URL } from "@/lib/helpers";
 
 type Product = {
   image: string;
@@ -52,13 +53,17 @@ function Card({ item }: { item: Product }) {
           className="object-cover"
         />
       </div>
-      <div className="text-xl sm:text-[24px] font-semibold dark:text-white">{item.type}</div>
+      <div className="text-xl sm:text-[24px] font-semibold dark:text-white">
+        {item.type}
+      </div>
       <div className="text-xs sm:text-[12px] font-light line-clamp-3 min-h-[54px] text-gray-600 dark:text-gray-400">
         {item.desc}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="text-lg sm:text-[22px] font-bold dark:text-white">{item.price_label}</div>
+          <div className="text-lg sm:text-[18px] font-bold dark:text-white">
+            {item.price_label}
+          </div>
           <div className="text-xs text-[#04B761] font-bold">
             Buy &middot; Rent &middot; Rent-To-Own
           </div>
@@ -66,7 +71,7 @@ function Card({ item }: { item: Product }) {
         <Link
           prefetch={false}
           href={item.cta.url}
-          className="shrink-0 bg-[#BD112A] text-center text-white py-2 px-4 text-xs sm:text-sm font-semibold whitespace-nowrap hover:bg-[#a00f24] transition-colors"
+          className="shrink-0 bg-theme-primary text-center text-white py-2 px-4 text-xs sm:text-sm font-semibold whitespace-nowrap hover:bg-[#a00f24] transition-colors"
         >
           {item.cta.label}
         </Link>
@@ -78,24 +83,34 @@ function Card({ item }: { item: Product }) {
 export function RightContainer() {
   return (
     <section className="p-5 sm:p-10 dark:bg-gray-950">
-      <div className="max-w-[1280px] mx-auto flex flex-col gap-5 items-center">
+      <div className="max-w-[1280px] mx-auto flex flex-col gap-[10px] items-center">
         <h2 className="font-extrabold text-3xl sm:text-[40px] lg:text-[46px] leading-tight text-center dark:text-white">
           Find The Right Container For Your Needs
         </h2>
-        <p className="font-light text-lg sm:text-[22px] leading-relaxed text-center text-gray-700 dark:text-gray-300">
-          From compact 20ft units to oversized high cubes and temperature-controlled reefers — we
-          stock every size and configuration.
+        <p className="font-light text-lg sm:text-[20px] leading-relaxed text-center text-gray-700 dark:text-gray-300">
+          From Compact 20ft Units To Oversized High Cubes And
+          Temperature-Controlled Reefers — We Stock Every Size And
+          Configuration.
         </p>
         <div className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 -mx-5 px-5 pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none py-8 sm:py-10 w-full">
           {PRODUCTS.map((item, index) => (
-            <div key={`product-card-${index}`} className="w-[75%] shrink-0 snap-start sm:w-auto sm:shrink">
+            <div
+              key={`product-card-${index}`}
+              className="w-[75%] shrink-0 snap-start sm:w-auto sm:shrink"
+            >
               <Card item={item} />
             </div>
           ))}
         </div>
-        <button className="font-semibold text-lg sm:text-[20px] py-2 px-8 border transition-colors bg-[#BD112A] text-white border-[#BD112A] hover:bg-[#a00f24] sm:bg-transparent sm:text-inherit sm:border-stone-700 sm:hover:bg-stone-100 sm:dark:border-gray-400 sm:dark:text-white sm:dark:hover:bg-gray-800">
-          View All Containers &amp; Pricing
-        </button>
+        <div className="mt-[30px]">
+          <Link
+            prefetch={false}
+            href={`${BASE_URL}/sale-shipping-containers/?ptype=buy`}
+            className="font-semibold text-lg sm:text-[20px] py-2 px-8 border transition-colors bg-theme-primary text-white border-theme-primary hover:bg-[#a00f24] sm:bg-transparent sm:text-inherit sm:border-stone-700 sm:hover:bg-stone-100 sm:dark:border-gray-400 sm:dark:text-white sm:dark:hover:bg-gray-800"
+          >
+            View All Containers &amp; Pricing
+          </Link>
+        </div>
       </div>
     </section>
   );

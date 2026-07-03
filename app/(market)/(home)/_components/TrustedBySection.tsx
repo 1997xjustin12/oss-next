@@ -59,7 +59,7 @@ export function TrustedBySection() {
 
       <div className="max-w-[1280px] mx-auto px-5 sm:px-10 mb-6 sm:mb-8">
         <h2 className="text-lg sm:text-[20px] font-bold dark:text-white">
-          <span className="text-[#BD112A]">Trusted By </span>Organizations Like
+          <span className="text-theme-primary">Trusted By </span>Organizations Like
         </h2>
       </div>
 

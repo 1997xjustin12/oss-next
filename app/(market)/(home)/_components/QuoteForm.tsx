@@ -21,7 +21,7 @@ export function QuoteForm() {
   return (
     <section
       id="quote-section"
-      className="bg-[#BD112A] py-[72px] px-[5%]"
+      className="bg-theme-primary py-[72px] px-[5%]"
       aria-labelledby="quote-title"
     >
       <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-10 lg:gap-[52px] items-start">
@@ -134,7 +134,7 @@ export function QuoteForm() {
           >
             Get Your Free Container Quote in Minutes
           </h2>
-          <p className="text-[15px] text-white/[.78] leading-[1.65] mb-[22px]">
+          <p className="text-[15px] text-white/[.78] leading-[1.65] mb-[22px] capitalize">
             Tell us your size, location, and needs — we'll respond with an
             accurate, no-obligation price and fast delivery timeline from our
             nearest depot
@@ -143,7 +143,7 @@ export function QuoteForm() {
             {POINTS.map((point) => (
               <div
                 key={point}
-                className="flex items-center gap-[10px] text-white/[.88] text-[14px] font-medium"
+                className="flex items-center gap-[10px] text-white/[.88] text-[14px] font-medium capitalize"
               >
                 <div className="w-[21px] h-[21px] rounded-full bg-white/[.2] flex items-center justify-center text-[11.5px] shrink-0 text-white">
                   ✓

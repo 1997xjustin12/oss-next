@@ -40,7 +40,7 @@ export function OnsiteDifference() {
       <div className="max-w-[1280px] mx-auto flex flex-col lg:flex-row gap-8">
         <div className="w-full lg:w-[60%] flex flex-col gap-6 sm:gap-8">
           <div className="flex flex-col gap-4 sm:gap-5">
-            <h2 className="text-[28px] sm:text-[36px] font-bold text-[#BD112A]">
+            <h2 className="text-[28px] sm:text-[36px] font-bold text-theme-primary">
               The On-Site Storage Difference
             </h2>
             <p className="text-lg sm:text-[20px] text-[#2E2E2E] dark:text-gray-300">
@@ -59,7 +59,7 @@ export function OnsiteDifference() {
             <Link
               prefetch={false}
               href={`tel:${CONTACT_NUMBER}`}
-              className="inline-block py-2 px-5 text-white bg-[#BD112A] text-sm sm:text-[14px] font-semibold hover:bg-[#a00f24] transition-colors"
+              className="inline-block py-2 px-5 text-white bg-theme-primary text-sm sm:text-[14px] font-semibold hover:bg-[#a00f24] transition-colors"
             >
               Call To Check Fast Delivery &amp; Best Price
             </Link>

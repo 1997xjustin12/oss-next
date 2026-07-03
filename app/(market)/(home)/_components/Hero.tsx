@@ -10,33 +10,20 @@ const BANNER_MAP_IMAGE = "/images/home-banners/home-hero-map.webp";
 const GOOGLE_REVIEWS_IMAGE = "/images/google-reviews.webp";
 
 type PayOption = { label: string; href: string };
-type StatDescProps = { compact?: boolean };
-type StatData = { stats: string; Desc: (props: StatDescProps) => ReactNode };
+type StatData = { stats: string; Desc: () => ReactNode };
 
-function HubsStratStat({ compact = false }: StatDescProps) {
+function HubsStratStat() {
   return (
-    <div
-      className={
-        compact
-          ? "text-[11px] sm:text-base lg:text-[20px] font-medium"
-          : "text-base sm:text-[20px] font-medium"
-      }
-    >
+    <div className="text-[11px] sm:text-base lg:text-[20px] font-medium">
       <div>Hubs</div>
       <div>Strategically Located</div>
     </div>
   );
 }
 
-function LocationStat({ compact = false }: StatDescProps) {
+function LocationStat() {
   return (
-    <div
-      className={
-        compact
-          ? "text-[11px] sm:text-base lg:text-[20px] font-medium"
-          : "text-base sm:text-[20px] font-medium"
-      }
-    >
+    <div className="text-[11px] sm:text-base lg:text-[20px] font-medium">
       <div>Of The U.S. & Canada</div>
       <div>Population Served By</div>
       <div>Our Delivery Network</div>
@@ -44,33 +31,15 @@ function LocationStat({ compact = false }: StatDescProps) {
   );
 }
 
-function StatItem({
-  stats,
-  compact = false,
-}: {
-  stats: StatData;
-  compact?: boolean;
-}) {
+function StatItem({ stats }: { stats: StatData }) {
   return (
-    <div
-      className={
-        compact
-          ? "flex flex-col items-center gap-1 text-center text-white text-shadow-lg lg:flex-row lg:items-center lg:gap-2 lg:text-left"
-          : "flex items-center justify-center text-white text-shadow-lg gap-2"
-      }
-    >
-      <div
-        className={
-          compact
-            ? "text-4xl sm:text-6xl lg:text-[100px] font-extrabold leading-none"
-            : "text-[64px] sm:text-[80px] lg:text-[100px] font-extrabold leading-none"
-        }
-      >
+    <div className="flex flex-col items-center gap-1 text-center text-white text-shadow-lg lg:flex-row lg:items-center lg:gap-2 lg:text-left">
+      <div className="text-4xl sm:text-6xl lg:text-[100px] font-extrabold leading-none">
         {stats.stats}
         <sup>+</sup>
       </div>
       <div className="self-center">
-        <stats.Desc compact={compact} />
+        <stats.Desc />
       </div>
     </div>
   );
@@ -162,7 +131,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
 
           <div className="relative z-10 flex h-full flex-col justify-center gap-5 sm:gap-7.5 p-5 sm:p-10">
             <div className="flex justify-center lg:justify-start">
-              <div className="shadow-lg bg-[#BD112A] text-sm sm:text-[20px] text-white py-1 px-3 rounded-sm font-semibold text-center">
+              <div className="shadow-lg bg-theme-primary text-sm sm:text-[20px] text-white py-1 px-3 rounded-sm font-semibold text-center">
                 America&apos;s #1 Container Wholesaler &middot; Since 2002
               </div>
             </div>
@@ -184,7 +153,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
 
             <div className="flex flex-row items-start lg:items-center justify-evenly gap-4 lg:gap-0 pt-2">
               {STATS.map((item) => (
-                <StatItem key={String(item.stats)} stats={item} compact />
+                <StatItem key={String(item.stats)} stats={item} />
               ))}
             </div>
           </div>
@@ -221,7 +190,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
 
           <div className="relative z-10 flex h-full flex-col justify-center gap-5 sm:gap-7.5 p-5 sm:p-10">
             <div className="flex justify-center lg:justify-start">
-              <div className="shadow-lg bg-[#BD112A] text-sm sm:text-[20px] text-white py-1 px-3 rounded-sm font-semibold text-center">
+              <div className="shadow-lg bg-theme-primary text-sm sm:text-[20px] text-white py-1 px-3 rounded-sm font-semibold text-center">
                 America&apos;s #1 Container Wholesaler &middot; Since 2002
               </div>
             </div>
@@ -243,7 +212,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
 
             <div className="flex flex-row items-start lg:items-center justify-evenly gap-4 lg:gap-0 pt-2">
               {STATS.map((item) => (
-                <StatItem key={String(item.stats)} stats={item} compact />
+                <StatItem key={String(item.stats)} stats={item} />
               ))}
             </div>
 
@@ -298,7 +267,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
         <div className="flex justify-center">
           <div className="flex flex-col gap-5 sm:gap-7.5 w-full max-w-[1280px]">
             <div className="flex justify-center">
-              <div className="shadow-lg bg-[#BD112A] text-sm sm:text-[20px] text-white py-1 px-3 rounded-sm font-semibold text-center">
+              <div className="shadow-lg bg-theme-primary text-sm sm:text-[20px] text-white py-1 px-3 rounded-sm font-semibold text-center">
                 America&apos;s #1 Container Wholesaler &middot; Since 2002
               </div>
             </div>
@@ -331,7 +300,7 @@ export function Hero({ version: version = 1 }: { version?: number }) {
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-evenly gap-6 sm:gap-0 pt-2">
+            <div className="flex flex-row items-start lg:items-center justify-evenly gap-4 lg:gap-0 pt-2">
               {STATS.map((item) => (
                 <StatItem key={String(item.stats)} stats={item} />
               ))}

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { Phone } from "lucide-react";
 import { CartButton } from "@/components/layout/CartButton";
 import { BASE_URL } from "@/lib/helpers";
 import { applyEnrichParams } from "@/lib/linkEnrich";
@@ -119,17 +121,15 @@ export function Navbar() {
       aria-label="Main navigation"
     >
       {/* ── Desktop / tablet bar ── */}
-      <div className="px-[5%] flex items-center justify-between h-[68px] gap-4">
+      <div className="px-[5%] lg:px-4 xl:px-[5%] flex items-center justify-between h-17 gap-2 xl:gap-4">
         <Link href="/" className="flex items-center gap-[10px] shrink-0">
-          <div className="bg-theme-primary text-white text-[11px] font-black px-[9px] py-[6px] rounded-[3px] tracking-[.01em] leading-[1.2] text-center">
-            ON-SITE
-            <span className="text-[8px] font-normal opacity-85 block">
-              STORAGE
-            </span>
-          </div>
-          <div className="text-lg font-extrabold text-theme-dark tracking-[-0.02em]">
-            Onsite <span className="text-theme-primary">Storage</span>
-          </div>
+          <Image
+            src="/images/logo/oss-logo.webp"
+            alt="On-site Storage Solutions"
+            width={145}
+            height={40}
+            priority
+          />
         </Link>
 
         {/* Desktop nav links */}
@@ -146,7 +146,7 @@ export function Navbar() {
             >
               <Link
                 href={e(link.href)}
-                className={`flex items-center gap-0.5 text-[13.5px] font-semibold px-2.75 py-1.5 rounded transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-0.5 text-[12.5px] xl:text-[13.5px] font-semibold px-2 xl:px-2.75 py-1.5 rounded transition-colors whitespace-nowrap ${
                   link.highlight
                     ? "text-theme-primary"
                     : "text-theme-dark-2 hover:text-theme-primary"
@@ -162,17 +162,27 @@ export function Navbar() {
         </div>
 
         {/* Desktop right section */}
-        <div className="hidden lg:flex items-center gap-[10px] shrink-0">
-          <CartButton />
-          <div className="text-base font-extrabold text-theme-primary whitespace-nowrap">
-            <a href="tel:8889779085">(888) 977-9085</a>
-          </div>
+        <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 shrink-0">
+          <a
+            href="tel:8889779085"
+            aria-label="Call (888) 977-9085"
+            className="xl:hidden flex items-center justify-center mr-3 text-theme-primary hover:text-theme-primary-dark transition-colors"
+          >
+            <Phone className="w-5 h-5" />
+          </a>
+          <a
+            href="tel:8889779085"
+            className="hidden xl:block mr-3 text-base font-extrabold text-theme-primary whitespace-nowrap"
+          >
+            (888) 977-9085
+          </a>
           <Link
             href={`${BASE_URL}/shipping-container-quote/`}
-            className="bg-theme-primary text-white px-[18px] py-[10px] rounded-[5px] text-[13.5px] font-bold whitespace-nowrap transition-colors hover:bg-theme-primary-dark"
+            className="bg-theme-primary text-white px-3 xl:px-4.5 py-2 xl:py-2.5 text-[12.5px] xl:text-[13.5px] font-bold whitespace-nowrap transition-colors hover:bg-theme-primary-dark"
           >
             Get Free Quote
           </Link>
+          <CartButton />
         </div>
 
         {/* Mobile: phone + hamburger */}
