@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { BASE_URL } from "@/lib/helpers";
 
 const CONTAINER_LINKS = [
@@ -72,16 +73,13 @@ export function Footer() {
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-6 lg:gap-10 mb-8.5">
         <div className="sm:col-span-2 lg:col-span-1">
-          <Link href="/" className="inline-flex items-center gap-2 mb-3">
-            <div className="bg-theme-primary text-white text-[10px] font-black px-2 py-[5px] rounded-[2px] leading-[1.2] text-center">
-              ON-SITE
-              <span className="text-[7.5px] font-normal opacity-80 block">
-                STORAGE
-              </span>
-            </div>
-            <div className="text-[15.5px] font-extrabold text-white">
-              Onsite <span className="text-theme-primary">Storage</span>
-            </div>
+          <Link href="/" className="inline-flex items-center mb-3">
+            <Image
+              src="/images/logo/oss-logo.webp"
+              alt="On-site Storage Solutions"
+              width={145}
+              height={40}
+            />
           </Link>
           <p className="text-[13px] text-[#666] leading-[1.65] mb-[15px]">
             America&apos;s leading shipping container wholesaler since 2002. New
