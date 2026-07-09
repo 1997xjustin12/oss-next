@@ -12,6 +12,10 @@ export interface CartItem {
   orderType?: string
   shipNote?: string
   image?: string
+  // Shipping containers from different locations can't be combined into one
+  // order — set on container line items so the cart can detect the conflict.
+  isContainer?: boolean
+  location?: string
 }
 
 export interface Cart {

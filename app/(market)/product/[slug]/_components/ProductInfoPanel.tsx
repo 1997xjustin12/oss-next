@@ -9,6 +9,8 @@ import {
 import type { ProductHit } from '@/types/product'
 import { useCart } from '@/hooks/useCart'
 import { getCustomFieldValue } from '@/lib/pricing'
+import { findLocationConflict } from '@/lib/cart'
+import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
 import { Stars } from './Stars'
 
 // ─── option layer types ───────────────────────────────────────────────────────
@@ -223,10 +225,13 @@ type Props = {
 
 export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVariantChange }: Props) {
 
-  const { addItem } = useCart()
+  const { cart, addItem, clearCart } = useCart()
 
   // The currently matched product — starts as the page product, updates on every option change
   const [activeProduct, setActiveProduct] = useState<ProductHit>(product)
+
+  // Set when Add to Cart is blocked by a different-location container already in the cart
+  const [locationConflict, setLocationConflict] = useState<{ currentLocation: string; newLocation: string } | null>(null)
 
   const [selection, setSelection] = useState<Selection>(() => ({
     tab:      getCustomFieldValue(product, 'payment_type') === 'rental' ? 'rent' : (getCustomFieldValue(product, 'payment_type') as PriceTab) || 'buy',
@@ -465,6 +470,16 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
   }
 
   function handleAddToCart() {
+    const location = getCustomFieldValue(activeProduct, 'location')
+
+    // Shipping containers ship from a single depot per order — block the
+    // add and surface the conflict instead of silently mixing locations.
+    const conflict = findLocationConflict(cart, { isContainer: true, location })
+    if (conflict) {
+      setLocationConflict({ currentLocation: conflict.location!, newLocation: location })
+      return
+    }
+
     const orderType =
       selection.tab === 'rent' ? `Rental · ${selection.rentTerm} Months` :
       selection.tab === 'rto'  ? `Rent-to-Own · ${selection.rtoTerm} Months` :
@@ -480,6 +495,8 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       condition: getCustomFieldValue(activeProduct, 'condition'),
       orderType,
       image:     activeProduct.images?.[0]?.src,
+      isContainer: true,
+      location,
     })
 
     setAdded(true)
@@ -639,6 +656,16 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><GitCompare className="w-3.5 h-3.5" /> Compare</button>
         <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><Printer className="w-3.5 h-3.5" /> Print Spec Sheet</button>
       </div>
+
+      {locationConflict && (
+        <CartLocationConflictModal
+          open={true}
+          onClose={() => setLocationConflict(null)}
+          currentLocation={locationConflict.currentLocation}
+          newLocation={locationConflict.newLocation}
+          onClearCart={clearCart}
+        />
+      )}
     </div>
   )
 }

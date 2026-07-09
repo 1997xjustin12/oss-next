@@ -558,15 +558,43 @@ export function InstantSearchSection() {
     heights:           selectedHeights,
     containerTypes:    selectedTypes,
   })
-  const refreshRef    = useRef<(() => void) | null>(null)
-  const isFirstRender = useRef(true)
+  const refreshRef = useRef<(() => void) | null>(null)
+  // Snapshot of the filters this effect last actually ran with. Using a value
+  // comparison (rather than a plain "first render" boolean) matters because
+  // this ref survives Next.js's back/forward-cache reconnect of the page —
+  // React replays every effect unconditionally on reconnect, with the same
+  // filter values as before. A boolean guard would already be flipped from
+  // the original mount and call refresh() on an InstantSearch instance that
+  // hasn't re-started yet, throwing "The `start` method needs to be called
+  // before `refresh`". Comparing snapshots lets an unchanged reconnect no-op
+  // while a genuine filter change still triggers refresh().
+  const lastRunKey = useRef<string | null>(null)
 
   const searchClient = useMemo(() => makeSearchClient(filtersRef), [])
 
+  // instantsearch.js disposes its search instance shortly after this
+  // subtree is hidden (a debounced cleanup meant for fast unmount/remount
+  // cycles), but doesn't restart it when React reconnects the subtree from
+  // Next.js's back/forward cache — it only cancels the pending cleanup timer
+  // without checking whether the instance already disposed. That leaves
+  // <InstantSearch> permanently rendering null (see `if (!search.started)
+  // return null` in react-instantsearch-core's InstantSearch component).
+  // Forcing a fresh `key` here remounts <InstantSearch> from scratch on
+  // reconnect, which always goes through the working first-mount `.start()`
+  // path. `hasMountedRef` (a ref, so it survives the reconnect) tells a true
+  // first mount (skip — nothing to fix yet) apart from every later
+  // mount-like event, which under normal React only means reconnect since
+  // this effect's empty dependency array otherwise never re-fires.
+  const [instanceKey, setInstanceKey] = useState(0)
+  const hasMountedRef = useRef(false)
+  useEffect(() => {
+    if (hasMountedRef.current) setInstanceKey((k) => k + 1)
+    hasMountedRef.current = true
+  }, [])
+
   // Sync refs and re-search whenever any URL filter changes (back/forward or updates)
   useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return }
-    filtersRef.current = {
+    const nextFilters: AllFilters = {
       productType:       selectedType,
       location,
       sort:              currentSort,
@@ -577,6 +605,14 @@ export function InstantSearchSection() {
       heights:           selectedHeights,
       containerTypes:    selectedTypes,
     }
+    const key = JSON.stringify(nextFilters)
+    filtersRef.current = nextFilters
+
+    if (lastRunKey.current === key) return
+    const isFirstRun = lastRunKey.current === null
+    lastRunKey.current = key
+    if (isFirstRun) return // InstantSearch already runs its own search on start
+
     refreshRef.current?.()
   }, [selectedType, location, currentSort, accessoryCategory, selectedSizes, selectedConditions, selectedGrades, selectedHeights, selectedTypes])
 
@@ -631,6 +667,7 @@ export function InstantSearchSection() {
   return (
     <section className="px-4 sm:px-[5%] py-6">
       <InstantSearch
+        key={instanceKey}
         searchClient={searchClient}
         indexName={INDEX}
         future={{ preserveSharedStateOnUnmount: true }}
