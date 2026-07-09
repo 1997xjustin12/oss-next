@@ -269,7 +269,7 @@ export function ZipLookup1({
             inputMode="numeric"
             maxLength={10}
             placeholder="Enter Zipcode"
-            className="w-full bg-white text-theme-dark placeholder-theme-dark/70 px-4 py-3 sm:py-4 text-base sm:text-lg font-bold outline-none"
+            className="w-full bg-white text-theme-dark placeholder-theme-dark/70 px-4 py-3 sm:py-4 text-base sm:text-lg outline-none"
             aria-label="ZIP or postal code"
             aria-autocomplete="list"
             aria-expanded={showDropdown}
