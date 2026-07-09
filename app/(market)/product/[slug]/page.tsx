@@ -1,58 +1,65 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { fetchProduct } from '@/services/product.service'
+import { getProductByHandle } from '@/services/search.service'
+import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import { ProductDetail } from './_components/ProductDetail'
-import type { WpSingleProduct } from '@/types/product'
+import type { ProductHit } from '@/types/product'
 
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const data = await fetchProduct(slug)
-  if (!data) return { title: 'Product Not Found' }
-  const { product } = data
+  const result = await getProductByHandle(slug)
+  if (!result) return { title: 'Product Not Found' }
+  const { product } = result
+
+  const location = getCustomFieldValue(product, 'location')
+  const grade = getCustomFieldValue(product, 'grade')
+  const size = getCustomFieldValue(product, 'length_width')
+
+  const description = isContainerHit(product)
+    ? `Buy or rent a ${product.title}${location ? ` in ${location}` : ''}. Starting at $${product.sale_price}. Nationwide delivery in 1-5 days from 130+ depot locations.`
+    : `${product.title} — starting at $${product.sale_price}. Fast nationwide shipping.`
 
   return {
-    title: product.container_title,
-    description: `Buy or rent a ${product.container_title} in ${product.location}. Starting at $${product.product_price}. Nationwide delivery in 1-5 days from 130+ depot locations.`,
+    title: product.title,
+    description,
     alternates: { canonical: `/product/${slug}` },
     openGraph: {
-      title: product.container_title,
-      description: `${product.grade} - ${product.size} - ${product.location} - From $${product.product_price}`,
+      title: product.title,
+      description: [grade, size, location].filter(Boolean).join(' · ') || description,
       type: 'website',
-      images: product.thumbnail_url ? [{ url: product.thumbnail_url, width: 1200, height: 630 }] : [],
+      images: product.images?.[0]?.src ? [{ url: product.images[0].src, width: 1200, height: 630 }] : [],
     },
   }
 }
 
-function buildJsonLd(product: WpSingleProduct) {
+function buildJsonLd(product: ProductHit) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: product.container_title,
-    sku: product.sku,
-    description: `${product.grade} ${product.size} shipping container in ${product.location}.`,
-    image: product.thumbnail_url,
+    name: product.title,
+    sku: product.variants?.[0]?.sku,
+    image: product.images?.[0]?.src,
     brand: { '@type': 'Brand', name: 'On-Site Storage Solutions' },
     offers: {
       '@type': 'Offer',
       priceCurrency: 'USD',
-      price: product.product_price?.replace(/,/g, ''),
+      price: product.sale_price,
       availability: 'https://schema.org/InStock',
       seller: { '@type': 'Organization', name: 'On-Site Storage Solutions' },
     },
-    aggregateRating: product.review_count
-      ? { '@type': 'AggregateRating', ratingValue: product.ratings, reviewCount: String(product.review_count) }
-      : undefined,
+    // NOTE: no aggregateRating — the ES index only carries a bare `ratings`
+    // number, no reviewCount, and schema.org's AggregateRating requires one.
   }
 }
 
 async function ProductContent({ params }: Props) {
   const { slug } = await params
-  const data = await fetchProduct(slug)
-  if (!data) notFound()
-  const { product, related_products } = data
+  const result = await getProductByHandle(slug)
+  if (!result) notFound()
+  const { product, related_products } = result
 
   return (
     <>

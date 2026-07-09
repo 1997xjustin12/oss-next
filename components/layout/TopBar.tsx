@@ -15,9 +15,7 @@ export function TopBar() {
         </span>
       </div>
       <div className="flex items-center gap-4">
-        <Link href="/account" className="text-gray-500 text-xs transition-colors hover:text-white line-through">My Account</Link>
-        {/* <Link href="/locations" className="text-white/85 text-xs transition-colors hover:text-white">Locations</Link>
-        <a href="tel:8889779085" className="text-white font-bold text-xs">☎ (888) 977-9085</a> */}
+        <Link href="/my-account" className="text-gray-500 text-xs transition-colors hover:text-white line-through">My Account</Link>
       </div>
     </div>
   );

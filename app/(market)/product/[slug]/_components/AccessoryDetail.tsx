@@ -4,46 +4,45 @@ import { useState } from 'react'
 import { ShoppingCart, Phone, MapPin, Tag, CheckCircle2, Star } from 'lucide-react'
 import { ProductImageGallery } from './ProductImageGallery'
 import { useCart } from '@/hooks/useCart'
-import type { WpApiProduct } from '@/types/product'
+import { getCustomFieldValue } from '@/lib/pricing'
+import type { ProductHit } from '@/types/product'
 
-type Props = { product: WpApiProduct }
+type Props = { product: ProductHit }
 
-function formatPrice(raw: string): string {
-  const n = parseFloat(raw)
-  if (!n || n <= 0) return 'Call for Price'
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+function formatPrice(price: number): string {
+  if (!price || price <= 0) return 'Call for Price'
+  return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
-const SLUG_LABEL: Record<string, string> = {
-  accesories: 'Accessories',
-}
-
-function categoryLabel(slug: string): string {
-  if (slug in SLUG_LABEL) return SLUG_LABEL[slug]
-  return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-}
+const CONTAINER_CATEGORY_NAMES = ['Shipping Containers', 'Generic Product Page']
 
 export function AccessoryDetail({ product }: Props) {
   const { addItem } = useCart()
   const [added, setAdded] = useState(false)
 
-  const images = product.gallery?.length > 0 ? product.gallery : [product.thumbnail_url].filter(Boolean)
-  const price = parseFloat(product.sale_price || product.product_price) || 0
-  const ratingNum = parseFloat(product.ratings) || 0
-  const visibleCategories = product.categories.filter(
-    c => c !== 'shipping-containers' && c !== 'generic-product-page' && c !== 'uncategorized',
-  )
+  const images = product.images?.length > 0 ? product.images.map((img) => img.src) : []
+  const ratingNum = product.ratings ?? 0
+  const sku = product.variants?.[0]?.sku ?? ''
+  const condition = getCustomFieldValue(product, 'condition')
+  const location = getCustomFieldValue(product, 'location')
+  const visibleCategories = (product.product_category ?? [])
+    .map((c) => c.category_name)
+    .filter((name) => !CONTAINER_CATEGORY_NAMES.includes(name))
+  const promoTag = product.tags?.find((t) => !/stock/i.test(t))
 
+  // TODO: CartContext still stores the old simplified CartItem shape, not
+  // the raw CartLineItem hit — bridge the two here until the cart itself is
+  // migrated to carry raw hits (see /types/cart.ts CartLineItem).
   function handleAddToCart() {
     addItem({
-      id: String(product.productID),
-      name: product.container_title,
-      price,
+      id: product.objectID,
+      name: product.title,
+      price: product.sale_price,
       quantity: 1,
-      sku: product.sku,
-      condition: product.condition,
+      sku,
+      condition,
       orderType: 'Purchase',
-      image: product.thumbnail_url,
+      image: images[0],
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
@@ -56,11 +55,7 @@ export function AccessoryDetail({ product }: Props) {
 
           {/* ── Gallery ── */}
           <div className="w-full">
-            <ProductImageGallery
-              images={images}
-              title={product.container_title}
-              tag={product.tag && !/stock/i.test(product.tag) ? product.tag : undefined}
-            />
+            <ProductImageGallery images={images} title={product.title} tag={promoTag} />
           </div>
 
           {/* ── Info Panel ── */}
@@ -75,7 +70,7 @@ export function AccessoryDetail({ product }: Props) {
                     className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide bg-theme-subtle dark:bg-white/5 text-theme-mid border border-theme-border px-2.5 py-1 rounded"
                   >
                     <Tag className="w-3 h-3" />
-                    {categoryLabel(c)}
+                    {c}
                   </span>
                 ))}
               </div>
@@ -83,7 +78,7 @@ export function AccessoryDetail({ product }: Props) {
 
             {/* Title */}
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight dark:text-white">
-              {product.container_title}
+              {product.title}
             </h1>
 
             {/* Star rating */}
@@ -98,9 +93,6 @@ export function AccessoryDetail({ product }: Props) {
                   ))}
                 </div>
                 <span className="text-sm font-semibold text-theme-mid">{ratingNum.toFixed(1)}</span>
-                {product.review_count > 0 && (
-                  <span className="text-sm text-theme-muted">({product.review_count} reviews)</span>
-                )}
               </div>
             )}
 
@@ -110,15 +102,15 @@ export function AccessoryDetail({ product }: Props) {
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 In Stock
               </span>
-              {product.sku && (
+              {sku && (
                 <span className="text-theme-muted">
-                  SKU: <span className="font-mono font-semibold text-theme-mid">{product.sku}</span>
+                  SKU: <span className="font-mono font-semibold text-theme-mid">{sku}</span>
                 </span>
               )}
-              {product.location && (
+              {location && (
                 <span className="flex items-center gap-1 text-theme-muted">
                   <MapPin className="w-3.5 h-3.5" />
-                  {product.location}
+                  {location}
                 </span>
               )}
             </div>
@@ -126,9 +118,9 @@ export function AccessoryDetail({ product }: Props) {
             {/* Price */}
             <div className="py-5 border-t border-b border-theme-border">
               <p className="text-4xl sm:text-5xl font-extrabold tracking-tight dark:text-white">
-                {formatPrice(product.sale_price || product.product_price)}
+                {formatPrice(product.sale_price)}
               </p>
-              {price > 0 && (
+              {product.sale_price > 0 && (
                 <p className="text-sm text-theme-muted mt-1.5">
                   Per unit &middot; Shipping &amp; taxes calculated at checkout
                 </p>
@@ -136,10 +128,10 @@ export function AccessoryDetail({ product }: Props) {
             </div>
 
             {/* Condition detail */}
-            {product.condition && (
+            {condition && (
               <div className="bg-theme-subtle dark:bg-white/5 border border-theme-border rounded-lg px-4 py-3.5">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-theme-muted mb-0.5">Condition</p>
-                <p className="text-sm font-semibold dark:text-white">{product.condition}</p>
+                <p className="text-sm font-semibold dark:text-white">{condition}</p>
               </div>
             )}
 
@@ -160,14 +152,6 @@ export function AccessoryDetail({ product }: Props) {
                 Call Us
               </a>
             </div>
-
-            {/* Description */}
-            {product.short_description && (
-              <div
-                className="text-sm text-theme-mid dark:text-gray-400 leading-relaxed [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_li]:mb-1 [&_strong]:font-semibold [&_strong]:text-theme-dark dark:[&_strong]:text-white [&_a]:text-theme-primary [&_a]:underline"
-                dangerouslySetInnerHTML={{ __html: product.short_description }}
-              />
-            )}
           </div>
         </div>
       </section>

@@ -1,13 +1,12 @@
 import Link from 'next/link'
 import { Wrench, Ship, Maximize2, Snowflake, CheckCircle2 } from 'lucide-react'
-import type { WpSingleProduct, WpApiProduct } from '@/types/product'
+import { isContainerHit } from '@/lib/pricing'
+import type { ProductHit } from '@/types/product'
 import { ProductVariantShell } from './ProductVariantShell'
 import { AccessoryDetail } from './AccessoryDetail'
 import { BodyTabsSection } from './BodyTabsSection'
 import { FaqAccordion } from './FaqAccordion'
 import { Stars } from './Stars'
-
-const CONTAINER_CATEGORIES = ['shipping-containers', 'generic-product-page']
 
 const staticRelatedProducts = [
   { Icon: Ship,     title: '40ft Standard Container',   desc: 'Double the space for larger projects and business storage.',        price: 'From $2,000',   cta: 'View' },
@@ -30,19 +29,17 @@ const reviewsList = [
   { initials: 'RK', color: 'bg-theme-accent',   name: 'Robert K.', role: 'Retail Store Owner · California', date: 'November 2024', text: 'Bought a one-trip unit and had it modified with a roll-up door and shelving. The team was super helpful throughout the whole process. Container looks brand new.' },
 ]
 
-type Props = { product: WpSingleProduct; relatedProducts: WpApiProduct[] }
+type Props = { product: ProductHit; relatedProducts: ProductHit[] }
 
 export function ProductDetail({ product, relatedProducts }: Props) {
-  const isContainer = CONTAINER_CATEGORIES.some(c => product.categories.includes(c))
-
-  if (!isContainer) {
+  if (!isContainerHit(product)) {
     return <AccessoryDetail product={product} />
   }
 
   return (
     <main className="bg-theme-bg text-theme-dark">
-      {/* Breadcrumb + product grid — client-driven, updates on variant change */}
-      <ProductVariantShell initialProduct={product} relatedProducts={relatedProducts} />
+      {/* Breadcrumb + product grid */}
+      <ProductVariantShell product={product} relatedProducts={relatedProducts} />
 
       {/* BODY TABS */}
       <BodyTabsSection />

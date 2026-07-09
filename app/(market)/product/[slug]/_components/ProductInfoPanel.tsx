@@ -6,8 +6,9 @@ import {
   Heart, Share2, GitCompare, Printer,
   ShoppingCart, ClipboardList, Phone,
 } from 'lucide-react'
-import type { WpSingleProduct, WpApiProduct } from '@/types/product'
+import type { ProductHit } from '@/types/product'
 import { useCart } from '@/hooks/useCart'
+import { getCustomFieldValue } from '@/lib/pricing'
 import { Stars } from './Stars'
 
 // ─── option layer types ───────────────────────────────────────────────────────
@@ -105,26 +106,26 @@ function gradeToGradeIndex(grade: string): number {
 
 // ─── match predicates ─────────────────────────────────────────────────────────
 
-function matchesSize(p: WpApiProduct, i: number): boolean {
+function matchesSize(p: ProductHit, i: number): boolean {
   const entry = sizes[i]
   if (!entry) return false
-  const h    = (p.height ?? '').toLowerCase()
+  const h    = getCustomFieldValue(p, 'height').toLowerCase()
   const isHC = h.includes('high') || h.includes('hc')
-  const num  = (p.size ?? '').match(/\d+/)?.[0] ?? ''
+  const num  = getCustomFieldValue(p, 'length_width').match(/\d+/)?.[0] ?? ''
   return num === entry.sizeKey && isHC === entry.highCube
 }
 
-function matchesCondition(p: WpApiProduct, i: number): boolean {
+function matchesCondition(p: ProductHit, i: number): boolean {
   const cond = conditions[i]?.name
-  const pc   = (p.condition ?? '').toLowerCase()
+  const pc   = getCustomFieldValue(p, 'condition').toLowerCase()
   if (cond === 'New') return pc.includes('new') || pc.includes('one') || pc.includes('trip')
   return !pc.includes('new') && !pc.includes('trip')
 }
 
-function matchesGrade(p: WpApiProduct, i: number): boolean {
+function matchesGrade(p: ProductHit, i: number): boolean {
   const entry = grades[i]
   if (!entry) return false
-  const pg = (p.grade ?? '').toLowerCase()
+  const pg = getCustomFieldValue(p, 'grade').toLowerCase()
   const gk = entry.gradeKey.toLowerCase()
   if (gk === 'as is') return pg.includes('as is') || pg.includes('as-is') || pg === ''
   if (gk === 'wind')  return pg.includes('wind') || pg.includes('wwt') || pg.includes('water')
@@ -133,16 +134,18 @@ function matchesGrade(p: WpApiProduct, i: number): boolean {
   return false
 }
 
-function termMatch(v: WpApiProduct, termValue: string): boolean {
-  return (v.payment_term ?? []).some(t => String(t).match(/\d+/)?.[0] === termValue)
+// custom_fields stores payment_term as a stringified list literal, e.g.
+// "['12']" — pull out the first number rather than an exact string match.
+function termMatch(v: ProductHit, termValue: string): boolean {
+  return getCustomFieldValue(v, 'payment_term').match(/\d+/)?.[0] === termValue
 }
 
 function findBestMatch(
-  pool:     WpApiProduct[],
+  pool:     ProductHit[],
   sizeIdx:  number,
   condIdx:  number,
   gradeIdx: number,
-): WpApiProduct | undefined {
+): ProductHit | undefined {
   return (
     pool.find(p => matchesSize(p, sizeIdx) && matchesCondition(p, condIdx) && matchesGrade(p, gradeIdx)) ??
     pool.find(p => matchesSize(p, sizeIdx) && matchesCondition(p, condIdx)) ??
@@ -155,7 +158,7 @@ function findBestMatch(
 // when an upstream dimension changes (e.g. size → condition becomes invalid,
 // or condition → grade becomes invalid). Runs before setSelection so the first
 // click always lands in a consistent state.
-function clampSelection(next: Selection, pool: WpApiProduct[]): Selection {
+function clampSelection(next: Selection, pool: ProductHit[]): Selection {
   let { sizeIdx, condIdx, gradeIdx } = next
 
   const condValid = pool.some(p => matchesSize(p, sizeIdx) && matchesCondition(p, condIdx))
@@ -212,10 +215,10 @@ function OptionBtn({
 // ─── component ────────────────────────────────────────────────────────────────
 
 type Props = {
-  product:         WpSingleProduct
+  product:         ProductHit
   categoryLabel:   string
-  relatedProducts: WpApiProduct[]
-  onVariantChange?: (product: WpApiProduct) => void
+  relatedProducts: ProductHit[]
+  onVariantChange?: (product: ProductHit) => void
 }
 
 export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVariantChange }: Props) {
@@ -223,13 +226,13 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
   const { addItem } = useCart()
 
   // The currently matched product — starts as the page product, updates on every option change
-  const [activeProduct, setActiveProduct] = useState<WpApiProduct>(product)
+  const [activeProduct, setActiveProduct] = useState<ProductHit>(product)
 
   const [selection, setSelection] = useState<Selection>(() => ({
-    tab:      product.payment_type === 'rental' ? 'rent' : (product.payment_type as PriceTab) ?? 'buy',
-    sizeIdx:  sizeToIndex(product.size ?? '', product.height),
-    condIdx:  conditionToIndex(product.condition),
-    gradeIdx: gradeToGradeIndex(product.grade),
+    tab:      getCustomFieldValue(product, 'payment_type') === 'rental' ? 'rent' : (getCustomFieldValue(product, 'payment_type') as PriceTab) || 'buy',
+    sizeIdx:  sizeToIndex(getCustomFieldValue(product, 'length_width'), getCustomFieldValue(product, 'height')),
+    condIdx:  conditionToIndex(getCustomFieldValue(product, 'condition')),
+    gradeIdx: gradeToGradeIndex(getCustomFieldValue(product, 'grade')),
     rentTerm: RENT_TERMS[0].value,
     rtoTerm:  RTO_TERMS[0].value,
   }))
@@ -243,27 +246,27 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
     setActiveProduct(product)
     setSelection(prev => ({
       ...prev,
-      tab:      product.payment_type === 'rental' ? 'rent' : (product.payment_type as PriceTab) ?? 'buy',
-      sizeIdx:  sizeToIndex(product.size ?? '', product.height),
-      condIdx:  conditionToIndex(product.condition),
-      gradeIdx: gradeToGradeIndex(product.grade),
+      tab:      getCustomFieldValue(product, 'payment_type') === 'rental' ? 'rent' : (getCustomFieldValue(product, 'payment_type') as PriceTab) || 'buy',
+      sizeIdx:  sizeToIndex(getCustomFieldValue(product, 'length_width'), getCustomFieldValue(product, 'height')),
+      condIdx:  conditionToIndex(getCustomFieldValue(product, 'condition')),
+      gradeIdx: gradeToGradeIndex(getCustomFieldValue(product, 'grade')),
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.productID])
+  }, [product.objectID])
 
   // ── derived pools ───────────────────────────────────────────────────────────
 
   const rentVariants = useMemo(
-    () => relatedProducts.filter(p => p.payment_type === 'rental'),
+    () => relatedProducts.filter(p => getCustomFieldValue(p, 'payment_type') === 'rental'),
     [relatedProducts]
   )
   const rtoVariants = useMemo(
-    () => relatedProducts.filter(p => p.payment_type === 'rto'),
+    () => relatedProducts.filter(p => getCustomFieldValue(p, 'payment_type') === 'rto'),
     [relatedProducts]
   )
   const candidates = useMemo(() => {
     const type = selection.tab === 'rent' ? 'rental' : selection.tab
-    return relatedProducts.filter(p => p.payment_type === type)
+    return relatedProducts.filter(p => getCustomFieldValue(p, 'payment_type') === type)
   }, [selection.tab, relatedProducts])
 
   // ── cascading availability ──────────────────────────────────────────────────
@@ -318,13 +321,13 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
   const handleSelect = useCallback((patch: Partial<Selection>) => {
     const type = ({ ...selection, ...patch } as Selection).tab
     const poolType = type === 'rent' ? 'rental' : type
-    const pool = relatedProducts.filter(p => p.payment_type === poolType)
+    const pool = relatedProducts.filter(p => getCustomFieldValue(p, 'payment_type') === poolType)
 
     // Clamp before setting state — keeps downstream dimensions valid on the first click
     const next = clampSelection({ ...selection, ...patch }, pool)
     setSelection(next)
 
-    let match: WpApiProduct | undefined
+    let match: ProductHit | undefined
 
     if (next.tab === 'rent') {
       match =
@@ -407,7 +410,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         options: rentTermOptions.map(term => ({
           key:      term.value,
           label:    term.label,
-          sublabel: term.variant ? `$${term.variant.sale_price || term.variant.product_price}/mo` : undefined,
+          sublabel: term.variant ? `$${term.variant.sale_price}/mo` : undefined,
           active:   selection.rentTerm === term.value,
           available: term.available,
           onSelect: () => handleSelect({ rentTerm: term.value }),
@@ -423,7 +426,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         options: rtoTermOptions.map(term => ({
           key:      term.value,
           label:    term.label,
-          sublabel: term.variant ? `$${term.variant.sale_price || term.variant.product_price}/mo` : undefined,
+          sublabel: term.variant ? `$${term.variant.sale_price}/mo` : undefined,
           active:   selection.rtoTerm === term.value,
           available: term.available,
           onSelect: () => handleSelect({ rtoTerm: term.value }),
@@ -442,16 +445,16 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
   // ── price display ───────────────────────────────────────────────────────────
 
   const priceDisplay = useMemo(() => ({
-    price:  `$${activeProduct.sale_price || activeProduct.product_price}`,
+    price:  `$${activeProduct.sale_price}`,
     suffix: selection.tab === 'buy' ? '' : '/mo',
     note: {
       buy:  '+ Delivery fee based on your location · No sales tax in most states',
       rent: 'Delivery & pickup included · Flexible terms',
       rto:  'Own it at end of term · No credit check required',
     }[selection.tab],
-  }), [activeProduct.sale_price, activeProduct.product_price, selection.tab])
+  }), [activeProduct.sale_price, selection.tab])
 
-  const rating = parseFloat(product.ratings) || 0
+  const rating = product.ratings ?? 0
 
   function checkDelivery() {
     setDeliveryResult(
@@ -468,15 +471,15 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       'Purchase'
 
     addItem({
-      id:        String(activeProduct.productID),
-      name:      activeProduct.container_title,
-      price:     parseFloat(activeProduct.sale_price || activeProduct.product_price) || 0,
+      id:        activeProduct.objectID,
+      name:      activeProduct.title,
+      price:     activeProduct.sale_price,
       quantity:  1,
-      sku:       activeProduct.sku,
-      size:      sizes[selection.sizeIdx]?.name ?? activeProduct.size,
-      condition: activeProduct.condition,
+      sku:       activeProduct.variants?.[0]?.sku,
+      size:      sizes[selection.sizeIdx]?.name ?? getCustomFieldValue(activeProduct, 'length_width'),
+      condition: getCustomFieldValue(activeProduct, 'condition'),
       orderType,
-      image:     activeProduct.thumbnail_url,
+      image:     activeProduct.images?.[0]?.src,
     })
 
     setAdded(true)
@@ -502,16 +505,16 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       </div>
 
       <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-none mb-2">
-        {product.container_title}
+        {product.title}
       </h1>
       <p className="text-xs text-theme-muted mb-3">
-        SKU: {product.sku} · {product.location}
+        SKU: {product.variants?.[0]?.sku} · {getCustomFieldValue(product, 'location')}
       </p>
 
       <div className="flex items-center gap-2 mb-5">
         <Stars count={Math.round(rating)} />
         <span className="text-sm text-theme-muted">
-          {product.ratings} · <a href="#reviews" className="text-theme-primary underline underline-offset-2">{product.review_count} Reviews</a>
+          {rating.toFixed(1)} · <a href="#reviews" className="text-theme-primary underline underline-offset-2">Reviews</a>
         </span>
       </div>
 
@@ -606,7 +609,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         >
           {added
             ? <>✓ Added to Cart!</>
-            : <><ShoppingCart className="w-5 h-5" /> Add to Cart — ${activeProduct.sale_price || activeProduct.product_price}</>
+            : <><ShoppingCart className="w-5 h-5" /> Add to Cart — ${activeProduct.sale_price}</>
           }
         </button>
         <button type="button" className="w-full py-3 rounded-md text-base sm:text-lg font-bold border-2 border-theme-border hover:border-theme-primary hover:text-theme-primary transition-colors flex items-center justify-center gap-2">

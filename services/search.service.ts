@@ -2,7 +2,8 @@ import { cacheLife, cacheTag } from 'next/cache'
 import { Client } from '@elastic/elasticsearch'
 import { CACHE_TAGS } from '@/config/cache'
 import { DEFAULT_LOCATION, SHIPPING_CONTAINER_CATEGORIES } from '@/lib/constants'
-import { formatProduct } from '@/lib/pricing'
+import { formatProduct, getCustomFieldValue, isContainerHit } from '@/lib/pricing'
+import type { ProductDetailResponse, ProductHit } from '@/types/product'
 
 function cleanEnv(val: string | undefined): string {
   return (val ?? '').split('#')[0].trim().replace(/\/$/, '')
@@ -173,6 +174,45 @@ export async function getShippingContainersByLocation(location: string) {
     hitsPerPage: ALL_RESULTS_CAP,
   })
   return result.hits
+}
+
+// Single product lookup for the PDP (/product/[slug]). Accessories are
+// standalone — returned with no siblings. Shipping containers are one of a
+// family of documents (same physical container, different size/condition/
+// grade/payment-type) tied together only by sharing a location — so we
+// fetch every container at that location as `related_products`, mirroring
+// the old WP endpoint's { product, related_products } response shape.
+export async function getProductByHandle(handle: string): Promise<ProductDetailResponse | null> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  try {
+    const esResponse = await client.search({
+      index: INDEX,
+      size: 1,
+      query: { term: { 'handle.keyword': handle } },
+    })
+
+    const hit = esResponse.hits.hits[0]
+    if (!hit) return null
+
+    const product = formatProduct({
+      objectID: hit._id ?? '',
+      ...(hit._source as Record<string, unknown>),
+    }) as unknown as ProductHit
+
+    if (!isContainerHit(product)) {
+      return { product, related_products: [] }
+    }
+
+    const location = getCustomFieldValue(product, 'location')
+    const related_products = (await getShippingContainersByLocation(location)) as unknown as ProductHit[]
+
+    return { product, related_products }
+  } catch {
+    return null
+  }
 }
 
 // Each unique combination of inputs gets its own cache entry.

@@ -64,12 +64,19 @@ export function getCustomFieldValue(hit: ShippingContainerHit, name: string): st
   return fields?.find((f) => f.name === name)?.value ?? ''
 }
 
+// Single source of truth for "is this a shipping container or an accessory"
+// — used both for pricing (below) and for picking which PDP component to
+// render (ProductVariantShell vs AccessoryDetail).
+export function isContainerHit(hit: ShippingContainerHit): boolean {
+  const categories = (hit.product_category as ProductCategoryRef[] | undefined)?.map((c) => c.category_name) ?? []
+  return categories.some((name) => SHIPPING_CONTAINER_CATEGORIES.includes(name))
+}
+
 // Single place to inject computed/derived properties onto a raw ES hit before
 // it reaches any route handler or component — sale_price is guaranteed
 // present on the result.
 export function formatProduct(hit: ShippingContainerHit): FormattedContainerHit {
-  const categories = (hit.product_category as ProductCategoryRef[] | undefined)?.map((c) => c.category_name) ?? []
-  const isContainer = categories.some((name) => SHIPPING_CONTAINER_CATEGORIES.includes(name))
+  const isContainer = isContainerHit(hit)
   const rawPrice = (hit.variants as ContainerVariant[] | undefined)?.[0]?.price ?? '0'
 
   if (!isContainer) {

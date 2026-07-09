@@ -127,3 +127,56 @@ export type ShippingContainerHit = { objectID: string } & Record<string, unknown
 
 /** A hit after formatProduct() has run — sale_price is guaranteed present */
 export type FormattedContainerHit = ShippingContainerHit & { sale_price: number }
+
+export type ProductHitVariant = {
+  price: string
+  compare_at_price?: string
+  sku: string
+  qty?: number
+}
+
+export type ProductHitImage = {
+  src: string
+  alt?: string
+  position?: number
+}
+
+export type ProductHitCategory = {
+  category_name: string
+  id?: number
+}
+
+export type ProductHitCustomField = {
+  name: string
+  label?: string
+  value: string
+  choices?: string[]
+}
+
+// Structured view of a formatted ES hit for consumers that need real field
+// access (the PDP) rather than the loosely-typed ShippingContainerHit used
+// by the search/listing pipeline. Field names mirror the raw ES document.
+export interface ProductHit {
+  objectID: string
+  title: string
+  handle: string
+  tags: string[]
+  variants: ProductHitVariant[]
+  images: ProductHitImage[]
+  product_category: ProductHitCategory[]
+  custom_fields: ProductHitCustomField[]
+  ratings: number | null
+  sale_price: number
+  // Index signature so a ProductHit satisfies ShippingContainerHit
+  // (Record<string, unknown>) when passed into the shared pricing helpers.
+  [key: string]: unknown
+}
+
+// PDP data-fetch result — mirrors the old WP endpoint's { product,
+// related_products } shape. related_products is only populated for
+// shipping containers (every other container at the same location);
+// accessories are standalone and get an empty array.
+export interface ProductDetailResponse {
+  product: ProductHit
+  related_products: ProductHit[]
+}

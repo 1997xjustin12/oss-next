@@ -258,7 +258,7 @@ function hitToAccessory(hit: HitData): Accessory {
     title:        hit.title,
     price,
     thumbnailUrl: hit.images?.[0]?.src,
-    permalink:    `/products/${hit.handle}`,
+    permalink:    `/product/${hit.handle}`,
     sku:          hit.variants?.[0]?.sku ?? '',
     category:     hit.product_category?.[0]?.category_name ?? '',
     badge:        { label: promoTag ?? 'In Stock', tone },
