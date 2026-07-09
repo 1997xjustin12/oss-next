@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useEffect, useReducer } from 'react'
+import { createContext, useEffect, useReducer, useState } from 'react'
+import { AddedToCartModal } from '@/components/cart/AddedToCartModal'
 import type { Cart, CartItem } from '@/types/cart'
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -16,7 +17,10 @@ type Action =
 
 export interface CartContextValue {
   cart: Cart
-  addItem:    (item: CartItem) => void
+  // `showModal` defaults to true — every add-to-cart triggers the global
+  // "Added to Cart!" modal (components/cart/AddedToCartModal.tsx) unless a
+  // caller explicitly opts out by passing `false`.
+  addItem:    (item: CartItem, showModal?: boolean) => void
   removeItem: (id: string) => void
   updateQty:  (id: string, qty: number) => void
   clearCart:  () => void
@@ -81,6 +85,10 @@ function reducer(state: Cart, action: Action): Cart {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, dispatch] = useReducer(reducer, EMPTY_CART)
+  // Drives the global AddedToCartModal — set on every addItem() call unless
+  // the caller passes showModal=false. Rendered once here so it's available
+  // on every page without each call site mounting its own modal.
+  const [addedItem, setAddedItem] = useState<CartItem | null>(null)
 
   useEffect(() => {
     // Runs only on the client after hydration — avoids SSR/client mismatch
@@ -94,11 +102,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const value: CartContextValue = {
     cart,
-    addItem:    (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
+    addItem: (item, showModal = true) => {
+      dispatch({ type: 'ADD_ITEM', payload: item })
+      if (showModal) setAddedItem(item)
+    },
     removeItem: (id)   => dispatch({ type: 'REMOVE_ITEM', id }),
     updateQty:  (id, qty) => dispatch({ type: 'UPDATE_QTY', id, qty }),
     clearCart:  ()     => dispatch({ type: 'CLEAR_CART' }),
   }
 
-  return <CartContext value={value}>{children}</CartContext>
+  return (
+    <CartContext value={value}>
+      {children}
+      <AddedToCartModal item={addedItem} onClose={() => setAddedItem(null)} />
+    </CartContext>
+  )
 }

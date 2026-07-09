@@ -12,6 +12,9 @@ import { getCustomFieldValue } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
 import { Stars } from '@/components/product/Stars'
+import { DeliveryZipCheck } from './DeliveryZipCheck'
+import { CONTACT_NUMBER } from '@/lib/helpers'
+import Link from 'next/link'
 
 // ─── option layer types ───────────────────────────────────────────────────────
 
@@ -239,9 +242,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
     rtoTerm:  RTO_TERMS[0].value,
   }))
 
-  const [zip,            setZip]            = useState('')
-  const [deliveryResult, setDeliveryResult] = useState<{ ok: boolean; msg: string } | null>(null)
-  const [added,          setAdded]          = useState(false)
+  const [added, setAdded] = useState(false)
 
   // When the shell swaps to a different product, reset both states
   useEffect(() => {
@@ -458,14 +459,6 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
 
   const rating = product.ratings ?? 0
 
-  function checkDelivery() {
-    setDeliveryResult(
-      /^\d{5}$/.test(zip)
-        ? { ok: true,  msg: `Delivery available to ${zip} — estimated 2–3 business days` }
-        : { ok: false, msg: 'Please enter a valid 5-digit ZIP code' }
-    )
-  }
-
   function handleAddToCart() {
     const orderType =
       selection.tab === 'rent' ? `Rental · ${selection.rentTerm} Months` :
@@ -579,34 +572,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       ))}
 
       {/* Delivery ZIP */}
-      <div className="bg-theme-subtle border border-theme-border rounded-lg p-4 mb-5 focus-within:border-theme-primary transition-colors">
-        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-theme-mid mb-2.5">
-          <Truck className="w-3.5 h-3.5 text-theme-primary" />
-          Check Delivery to Your ZIP Code
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={zip}
-            onChange={(e) => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
-            onKeyDown={(e) => e.key === 'Enter' && checkDelivery()}
-            placeholder="Enter ZIP code"
-            className="flex-1 min-w-0 border border-theme-border rounded px-3 py-2 text-sm bg-theme-bg text-theme-dark outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/10 transition-colors"
-          />
-          <button
-            type="button"
-            onClick={checkDelivery}
-            className="bg-theme-primary hover:bg-theme-primary-dark text-white text-sm font-bold px-4 sm:px-5 rounded transition-colors whitespace-nowrap"
-          >
-            Check
-          </button>
-        </div>
-        {deliveryResult && (
-          <p className={`flex items-center gap-1.5 text-xs font-semibold mt-2 ${deliveryResult.ok ? 'text-emerald-600' : 'text-theme-primary'}`}>
-            {deliveryResult.ok ? '✓' : '⚠'} {deliveryResult.msg}
-          </p>
-        )}
-      </div>
+      <DeliveryZipCheck product={activeProduct} />
 
       {/* CTAs */}
       <div className="flex flex-col gap-2.5 mb-5">
@@ -623,9 +589,9 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         <button type="button" className="w-full py-3 rounded-md text-base sm:text-lg font-bold border-2 border-theme-border hover:border-theme-primary hover:text-theme-primary transition-colors flex items-center justify-center gap-2">
           <ClipboardList className="w-4.5 h-4.5" /> Request a Free Quote
         </button>
-        <button type="button" className="w-full py-3 rounded-md text-base sm:text-lg font-bold text-white bg-theme-dark hover:bg-black transition-colors flex items-center justify-center gap-2">
-          <Phone className="w-4.5 h-4.5" /> Call (888) 977-9085 — Talk to an Expert
-        </button>
+        <Link prefetch={false} href={`tel:${CONTACT_NUMBER}`}className="w-full py-3 rounded-md text-base sm:text-lg font-bold text-white bg-theme-dark hover:bg-black transition-colors flex items-center justify-center gap-2">
+          <Phone className="w-4.5 h-4.5" /> Call {CONTACT_NUMBER} — Talk to an Expert
+        </Link>
       </div>
 
       {/* Trust badges */}

@@ -93,3 +93,23 @@ export function formatProduct(hit: ShippingContainerHit): FormattedContainerHit 
 
   return { ...hit, sale_price }
 }
+
+// The dimensions that identify "the same container" independent of where
+// it's stocked — every container document at a given location is really
+// just this same combination re-indexed per depot (see getProductByHandle's
+// related_products in services/search.service.ts for the location-scoped
+// counterpart of this family-of-documents model).
+const EQUIVALENCE_FIELDS = ['payment_type', 'payment_term', 'length_width', 'height', 'grade', 'condition'] as const
+
+// Given a pool of containers already scoped to a target location (e.g.
+// useGeoapify's `depotContainers`), find the one that's the same container
+// as `product` in every dimension except location. Returns undefined if
+// that depot doesn't stock this exact combination.
+export function findEquivalentContainer<T extends ShippingContainerHit>(
+  pool: T[],
+  product: ShippingContainerHit,
+): T | undefined {
+  return pool.find((candidate) =>
+    EQUIVALENCE_FIELDS.every((field) => getCustomFieldValue(candidate, field) === getCustomFieldValue(product, field)),
+  )
+}

@@ -14,13 +14,13 @@ export function useAddContainerToCart() {
   const { cart, addItem, clearCart } = useCart()
   const [conflict, setConflict] = useState<{ currentLocation: string; newLocation: string } | null>(null)
 
-  function addContainerToCart(item: ContainerCartItem): boolean {
+  function addContainerToCart(item: ContainerCartItem, showModal?: boolean): boolean {
     const existing = findLocationConflict(cart, { isContainer: true, location: item.location })
     if (existing) {
       setConflict({ currentLocation: existing.location!, newLocation: item.location })
       return false
     }
-    addItem(item)
+    addItem(item, showModal)
     return true
   }
 
