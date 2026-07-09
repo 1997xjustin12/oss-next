@@ -6,7 +6,7 @@ import { ProductVariantShell } from './ProductVariantShell'
 import { AccessoryDetail } from './AccessoryDetail'
 import { BodyTabsSection } from './BodyTabsSection'
 import { FaqAccordion } from './FaqAccordion'
-import { Stars } from './Stars'
+import { Stars } from '@/components/product/Stars'
 
 const staticRelatedProducts = [
   { Icon: Ship,     title: '40ft Standard Container',   desc: 'Double the space for larger projects and business storage.',        price: 'From $2,000',   cta: 'View' },

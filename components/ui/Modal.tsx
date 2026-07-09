@@ -10,9 +10,15 @@ type Props = {
   title?: string
   children: React.ReactNode
   footer?: React.ReactNode
+  /** Skip the default title bar and padded body — the caller lays out its
+   *  own content (e.g. a two-column quick-view). A floating close button is
+   *  still rendered since there's no title bar to host one. */
+  bare?: boolean
+  /** Panel width — defaults to a compact dialog; widen for richer content. */
+  maxWidth?: string
 }
 
-export function Modal({ open, onClose, title, children, footer }: Props) {
+export function Modal({ open, onClose, title, children, footer, bare = false, maxWidth = 'max-w-md' }: Props) {
   useEffect(() => {
     if (!open) return
     function onKey(e: KeyboardEvent) {
@@ -39,7 +45,7 @@ export function Modal({ open, onClose, title, children, footer }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="w-full max-w-md rounded-xl border border-theme-border bg-theme-bg dark:bg-neutral-900 dark:border-neutral-800 shadow-2xl overflow-hidden"
+        className={`relative w-full ${maxWidth} rounded-xl border border-theme-border bg-theme-bg dark:bg-neutral-900 dark:border-neutral-800 shadow-2xl overflow-hidden`}
       >
         {title && (
           <div className="flex items-center justify-between gap-4 px-5 sm:px-6 pt-5 sm:pt-6">
@@ -57,9 +63,23 @@ export function Modal({ open, onClose, title, children, footer }: Props) {
           </div>
         )}
 
-        <div className="px-5 sm:px-6 py-4 sm:py-5 text-sm text-theme-mid dark:text-gray-300 leading-relaxed">
-          {children}
-        </div>
+        {bare ? (
+          <>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-theme-bg/90 dark:bg-neutral-800/90 text-theme-muted hover:text-theme-dark dark:hover:text-white shadow transition-colors"
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
+            {children}
+          </>
+        ) : (
+          <div className="px-5 sm:px-6 py-4 sm:py-5 text-sm text-theme-mid dark:text-gray-300 leading-relaxed">
+            {children}
+          </div>
+        )}
 
         {footer && (
           <div className="flex flex-col sm:flex-row gap-2.5 px-5 sm:px-6 pb-5 sm:pb-6 pt-1">

@@ -7,11 +7,11 @@ import {
   ShoppingCart, ClipboardList, Phone,
 } from 'lucide-react'
 import type { ProductHit } from '@/types/product'
-import { useCart } from '@/hooks/useCart'
+import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
 import { getCustomFieldValue } from '@/lib/pricing'
-import { findLocationConflict } from '@/lib/cart'
+import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
-import { Stars } from './Stars'
+import { Stars } from '@/components/product/Stars'
 
 // ─── option layer types ───────────────────────────────────────────────────────
 
@@ -225,13 +225,10 @@ type Props = {
 
 export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVariantChange }: Props) {
 
-  const { cart, addItem, clearCart } = useCart()
+  const { conflict: locationConflict, clearConflict: clearLocationConflict, addContainerToCart, clearCart } = useAddContainerToCart()
 
   // The currently matched product — starts as the page product, updates on every option change
   const [activeProduct, setActiveProduct] = useState<ProductHit>(product)
-
-  // Set when Add to Cart is blocked by a different-location container already in the cart
-  const [locationConflict, setLocationConflict] = useState<{ currentLocation: string; newLocation: string } | null>(null)
 
   const [selection, setSelection] = useState<Selection>(() => ({
     tab:      getCustomFieldValue(product, 'payment_type') === 'rental' ? 'rent' : (getCustomFieldValue(product, 'payment_type') as PriceTab) || 'buy',
@@ -470,22 +467,12 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
   }
 
   function handleAddToCart() {
-    const location = getCustomFieldValue(activeProduct, 'location')
-
-    // Shipping containers ship from a single depot per order — block the
-    // add and surface the conflict instead of silently mixing locations.
-    const conflict = findLocationConflict(cart, { isContainer: true, location })
-    if (conflict) {
-      setLocationConflict({ currentLocation: conflict.location!, newLocation: location })
-      return
-    }
-
     const orderType =
       selection.tab === 'rent' ? `Rental · ${selection.rentTerm} Months` :
       selection.tab === 'rto'  ? `Rent-to-Own · ${selection.rtoTerm} Months` :
       'Purchase'
 
-    addItem({
+    const wasAdded = addContainerToCart({
       id:        activeProduct.objectID,
       name:      activeProduct.title,
       price:     activeProduct.sale_price,
@@ -496,8 +483,9 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       orderType,
       image:     activeProduct.images?.[0]?.src,
       isContainer: true,
-      location,
+      location:  getCustomFieldValue(activeProduct, 'location'),
     })
+    if (!wasAdded) return // blocked by a different-location container already in the cart
 
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
@@ -525,7 +513,10 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
         {product.title}
       </h1>
       <p className="text-xs text-theme-muted mb-3">
-        SKU: {product.variants?.[0]?.sku} · {getCustomFieldValue(product, 'location')}
+        SKU: {product.variants?.[0]?.sku}
+        {getCustomFieldValue(product, 'location') !== DEFAULT_LOCATION && (
+          <> · {getCustomFieldValue(product, 'location')}</>
+        )}
       </p>
 
       <div className="flex items-center gap-2 mb-5">
@@ -660,7 +651,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       {locationConflict && (
         <CartLocationConflictModal
           open={true}
-          onClose={() => setLocationConflict(null)}
+          onClose={clearLocationConflict}
           currentLocation={locationConflict.currentLocation}
           newLocation={locationConflict.newLocation}
           onClearCart={clearCart}

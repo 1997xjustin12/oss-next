@@ -19,6 +19,7 @@ type ISParams = {
   gradeFilter?:             string[]
   heightFilter?:            string[]
   containerTypeFilter?:     string[]
+  termFilter?:              string[]
   [key: string]: unknown
 }
 
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
           gradeFilter         = [],
           heightFilter        = [],
           containerTypeFilter = [],
+          termFilter          = [],
         } = params
 
         const result = await cachedEsSearch({
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
           gradeFilter:         gradeFilter as string[],
           heightFilter:        heightFilter as string[],
           containerTypeFilter: containerTypeFilter as string[],
+          termFilter:          termFilter as string[],
         })
 
         return {

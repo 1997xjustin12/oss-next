@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { ShoppingCart, Phone, MapPin, Tag, CheckCircle2, Star } from 'lucide-react'
-import { ProductImageGallery } from './ProductImageGallery'
+import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { useCart } from '@/hooks/useCart'
 import { getCustomFieldValue } from '@/lib/pricing'
+import { DEFAULT_LOCATION } from '@/lib/constants'
 import type { ProductHit } from '@/types/product'
 
 type Props = { product: ProductHit }
@@ -107,7 +108,7 @@ export function AccessoryDetail({ product }: Props) {
                   SKU: <span className="font-mono font-semibold text-theme-mid">{sku}</span>
                 </span>
               )}
-              {location && (
+              {location && location !== DEFAULT_LOCATION && (
                 <span className="flex items-center gap-1 text-theme-muted">
                   <MapPin className="w-3.5 h-3.5" />
                   {location}

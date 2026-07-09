@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import type { ProductHit } from '@/types/product'
-import { ProductImageGallery } from './ProductImageGallery'
+import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { ProductInfoPanel } from './ProductInfoPanel'
 import { BASE_URL } from '@/lib/helpers'
 

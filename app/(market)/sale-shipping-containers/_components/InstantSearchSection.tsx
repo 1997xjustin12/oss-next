@@ -14,6 +14,8 @@ import Link from 'next/link'
 import { ArrowUpRight, ChevronDown, Phone, SlidersHorizontal, Star, X } from 'lucide-react'
 import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
+import { QuickViewModal } from './QuickViewModal'
+import { DEFAULT_LOCATION } from '@/lib/constants'
 import type { Accessory, BadgeTone } from '@/types/product'
 
 function cn(...classes: (string | false | null | undefined)[]) {
@@ -26,7 +28,7 @@ const SPECIALS_HREF = '/on-site-specials'
 // ─── Filter options ───────────────────────────────────────────────────────────
 
 type ProductType = 'buy' | 'rental' | 'rto' | 'accessories'
-type FilterParam = 'size' | 'condition' | 'grade' | 'height' | 'type'
+type FilterParam = 'size' | 'condition' | 'grade' | 'height' | 'type' | 'term'
 
 const FILTER_TABS: Array<{ label: string; value: ProductType }> = [
   { label: 'Buy',         value: 'buy' },
@@ -40,6 +42,12 @@ const CONDITION_OPTIONS      = ['New', 'Used']                                  
 const GRADE_OPTIONS          = ['Wind and Water tight (WWT)', 'IICL', 'Cargo Worthy (CW)', 'AS IS']                as const
 const HEIGHT_OPTIONS         = ["8' 6\" Standard", "9' 6\" High Cube (HC)"]                                        as const
 const CONTAINER_TYPE_OPTIONS = ['Dry Van Shipping Container With Double Doors at 1 End']                           as const
+
+// Payment Terms options depend on product type — Rent offers shorter terms,
+// Rent-To-Own amortizes over longer ones. Values are the raw month counts;
+// display label ("N Months") is applied via MultiFilter's formatLabel.
+const RENTAL_TERM_OPTIONS = ['3', '6', '12']       as const
+const RTO_TERM_OPTIONS    = ['12', '24', '36', '48'] as const
 
 const ACCESSORY_CATEGORY_OPTIONS: Array<{ label: string; value: string | null }> = [
   { label: 'All',      value: null },
@@ -70,8 +78,6 @@ const ACCESSORY_SORT_OPTIONS: SortOption[] = [
 
 // ─── Shared filter state type ─────────────────────────────────────────────────
 
-const DEFAULT_LOCATION = 'Various North America'
-
 type AllFilters = {
   productType:       ProductType
   location:          string
@@ -82,6 +88,7 @@ type AllFilters = {
   grades:            string[]
   heights:           string[]
   containerTypes:    string[]
+  terms:             string[]
 }
 
 // ─── Sidebar props ────────────────────────────────────────────────────────────
@@ -122,20 +129,21 @@ function ProductTypeFilter({ selectedType, onTypeSelect }: Pick<SidebarProps, 's
 }
 
 type MultiFilterProps = {
-  label:    string
-  options:  readonly string[]
-  selected: string[]
-  onToggle: (value: string) => void
+  label:        string
+  options:      readonly string[]
+  selected:     string[]
+  onToggle:     (value: string) => void
+  formatLabel?: (opt: string) => string
 }
 
-function MultiFilter({ label, options, selected, onToggle }: MultiFilterProps) {
+function MultiFilter({ label, options, selected, onToggle, formatLabel = (opt) => opt }: MultiFilterProps) {
   return (
     <div className="mt-3">
       <div className={filterLabelCls}>{label}</div>
       {options.map((opt) => (
         <button key={opt} type="button" onClick={() => onToggle(opt)} className={filterItemCls}>
           <input type="checkbox" checked={selected.includes(opt)} readOnly className={filterCheckCls} />
-          {opt}
+          {formatLabel(opt)}
         </button>
       ))}
     </div>
@@ -187,6 +195,7 @@ function makeSearchClient(filtersRef: React.MutableRefObject<AllFilters>) {
             ...(f.grades.length                     ? { gradeFilter:             f.grades }             : {}),
             ...(f.heights.length                    ? { heightFilter:            f.heights }            : {}),
             ...(f.containerTypes.length             ? { containerTypeFilter:     f.containerTypes }     : {}),
+            ...(f.terms.length                      ? { termFilter:              f.terms }              : {}),
           },
         }))
       return fetch('/api/search', {
@@ -225,7 +234,7 @@ type CustomField = {
   choices?: string[]
 }
 
-type HitData = {
+export type HitData = {
   objectID:         string
   title:            string
   handle:           string
@@ -292,6 +301,7 @@ function StarRow({ rating }: { rating: number }) {
 
 function ProductHit({ hit }: { hit: HitData }) {
   const [loading, setLoading] = useState(false)
+  const [quickView, setQuickView] = useState(false)
   const router  = useRouter()
 
   const img      = hit.images?.[0]
@@ -315,6 +325,7 @@ function ProductHit({ hit }: { hit: HitData }) {
   })()
 
   return (
+    <>
     <article
       onClick={() => { setLoading(true); router.push(href) }}
       className="relative grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-5 rounded-lg border border-theme-border bg-white p-4 sm:p-5 cursor-pointer transition-all hover:border-theme-primary/40 hover:shadow-lg"
@@ -346,7 +357,7 @@ function ProductHit({ hit }: { hit: HitData }) {
           <span className="text-theme-dark-2">{rating}</span>
         </div>
 
-        {location && location !== 'Various North America' && (
+        {location && location !== DEFAULT_LOCATION && (
           <div className="text-xs font-bold text-theme-primary">{location}</div>
         )}
 
@@ -392,7 +403,7 @@ function ProductHit({ hit }: { hit: HitData }) {
         </div>
         <div className="flex w-full max-w-45 flex-col gap-2">
           <button
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); setQuickView(true) }}
             className="w-full rounded-md bg-theme-primary px-4 py-2.5 text-sm font-extrabold text-white text-center transition-colors hover:bg-theme-primary-dark"
           >
             Quick View
@@ -408,6 +419,10 @@ function ProductHit({ hit }: { hit: HitData }) {
         </div>
       </div>
     </article>
+    {quickView && (
+      <QuickViewModal open={quickView} onClose={() => setQuickView(false)} hit={hit} />
+    )}
+    </>
   )
 }
 
@@ -445,9 +460,23 @@ function InstantSortBar({ currentSort, onSortChange, sortOptions }: {
 // ─── Filter content (shared between sidebar and mobile drawer) ────────────────
 
 function FilterContent({ selectedType, onTypeSelect, selected, onToggle, selectedAccessoryCategory, onAccessoryCategory }: SidebarProps) {
+  const termOptions =
+    selectedType === 'rental' ? RENTAL_TERM_OPTIONS :
+    selectedType === 'rto'    ? RTO_TERM_OPTIONS :
+    null
+
   return (
     <div className="flex flex-col gap-1 px-4 py-3">
       <ProductTypeFilter selectedType={selectedType} onTypeSelect={onTypeSelect} />
+      {termOptions && (
+        <MultiFilter
+          label="Payment Terms"
+          options={termOptions}
+          selected={selected.term}
+          onToggle={(v) => onToggle('term', v)}
+          formatLabel={(v) => `${v} Months`}
+        />
+      )}
       {selectedType === 'accessories' ? (
         <AccessoryCategoryFilter selected={selectedAccessoryCategory} onSelect={onAccessoryCategory} />
       ) : (
@@ -546,6 +575,7 @@ export function InstantSearchSection() {
   const selectedGrades          = useMemo(() => parseMulti(searchParams.get('grade')),     [searchParams])
   const selectedHeights         = useMemo(() => parseMulti(searchParams.get('height')),    [searchParams])
   const selectedTypes           = useMemo(() => parseMulti(searchParams.get('type')),      [searchParams])
+  const selectedTerms           = useMemo(() => parseMulti(searchParams.get('term')),      [searchParams])
 
   const filtersRef = useRef<AllFilters>({
     productType:       selectedType,
@@ -557,6 +587,7 @@ export function InstantSearchSection() {
     grades:            selectedGrades,
     heights:           selectedHeights,
     containerTypes:    selectedTypes,
+    terms:             selectedTerms,
   })
   const refreshRef = useRef<(() => void) | null>(null)
   // Snapshot of the filters this effect last actually ran with. Using a value
@@ -604,6 +635,7 @@ export function InstantSearchSection() {
       grades:            selectedGrades,
       heights:           selectedHeights,
       containerTypes:    selectedTypes,
+      terms:             selectedTerms,
     }
     const key = JSON.stringify(nextFilters)
     filtersRef.current = nextFilters
@@ -614,7 +646,7 @@ export function InstantSearchSection() {
     if (isFirstRun) return // InstantSearch already runs its own search on start
 
     refreshRef.current?.()
-  }, [selectedType, location, currentSort, accessoryCategory, selectedSizes, selectedConditions, selectedGrades, selectedHeights, selectedTypes])
+  }, [selectedType, location, currentSort, accessoryCategory, selectedSizes, selectedConditions, selectedGrades, selectedHeights, selectedTypes, selectedTerms])
 
   const updateUrl = useCallback((key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -653,6 +685,7 @@ export function InstantSearchSection() {
     grade:     selectedGrades,
     height:    selectedHeights,
     type:      selectedTypes,
+    term:      selectedTerms,
   }
 
   const sidebarProps: SidebarProps = {

@@ -41,6 +41,7 @@ export type SearchInput = {
   gradeFilter:         string[]
   heightFilter:        string[]
   containerTypeFilter: string[]
+  termFilter:          string[]
 }
 
 export { DEFAULT_LOCATION }
@@ -225,7 +226,7 @@ export async function cachedEsSearch(input: SearchInput) {
   const {
     query, hitsPerPage, page, facets, facetFilters,
     productType, locationFilter, sortParam, accessoryCategory,
-    sizeFilter, conditionFilter, gradeFilter, heightFilter, containerTypeFilter,
+    sizeFilter, conditionFilter, gradeFilter, heightFilter, containerTypeFilter, termFilter,
   } = input
 
   const filters = buildFilters(facetFilters)
@@ -247,6 +248,15 @@ export async function cachedEsSearch(input: SearchInput) {
     if (gradeFilter.length > 0)         filters.push(cfFilter('grade',              gradeFilter))
     if (heightFilter.length > 0)        filters.push(cfFilter('height',             heightFilter))
     if (containerTypeFilter.length > 0) filters.push(cfFilter('type_selectiontype', containerTypeFilter))
+    // Only rental/rto listings carry a payment_term — applying it to `buy`
+    // would filter against a field those documents don't have and zero out
+    // results, so it's scoped to the two product types that use it.
+    if ((productType === 'rental' || productType === 'rto') && termFilter.length > 0) {
+      // ES indexes this custom_fields value as a stringified list literal,
+      // e.g. "['12']", not a plain "12" — see calculateProductPrice() in
+      // lib/pricing.ts for the same quirk on the read side.
+      filters.push(cfFilter('payment_term', termFilter.map((t) => `['${t}']`)))
+    }
   }
 
   const aggs        = buildAggs(facets)

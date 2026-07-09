@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getProductByHandle } from '@/services/search.service'
 import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
+import { DEFAULT_LOCATION } from '@/lib/constants'
 import { ProductDetail } from './_components/ProductDetail'
 import type { ProductHit } from '@/types/product'
 
@@ -14,7 +15,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!result) return { title: 'Product Not Found' }
   const { product } = result
 
-  const location = getCustomFieldValue(product, 'location')
+  const rawLocation = getCustomFieldValue(product, 'location')
+  const location = rawLocation === DEFAULT_LOCATION ? '' : rawLocation
   const grade = getCustomFieldValue(product, 'grade')
   const size = getCustomFieldValue(product, 'length_width')
 
