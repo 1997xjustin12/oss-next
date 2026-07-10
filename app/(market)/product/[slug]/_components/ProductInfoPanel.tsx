@@ -586,9 +586,13 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
             : <><ShoppingCart className="w-5 h-5" /> Add to Cart — ${activeProduct.sale_price}</>
           }
         </button>
-        <button type="button" className="w-full py-3 rounded-md text-base sm:text-lg font-bold border-2 border-theme-border hover:border-theme-primary hover:text-theme-primary transition-colors flex items-center justify-center gap-2">
+        <Link
+          prefetch={false}
+          href="/shipping-container-quote/"
+          className="w-full py-3 rounded-md text-base sm:text-lg font-bold border-2 border-theme-border hover:border-theme-primary hover:text-theme-primary transition-colors flex items-center justify-center gap-2"
+        >
           <ClipboardList className="w-4.5 h-4.5" /> Request a Free Quote
-        </button>
+        </Link>
         <Link prefetch={false} href={`tel:${CONTACT_NUMBER}`}className="w-full py-3 rounded-md text-base sm:text-lg font-bold text-white bg-theme-dark hover:bg-black transition-colors flex items-center justify-center gap-2">
           <Phone className="w-4.5 h-4.5" /> Call {CONTACT_NUMBER} — Talk to an Expert
         </Link>

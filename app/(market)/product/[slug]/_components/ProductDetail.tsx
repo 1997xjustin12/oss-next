@@ -1,6 +1,10 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import { Wrench, Ship, Maximize2, Snowflake, CheckCircle2 } from 'lucide-react'
 import { isContainerHit } from '@/lib/pricing'
+import { resolveContainerVariant } from '@/lib/containerVariant'
 import type { ProductHit } from '@/types/product'
 import { ProductVariantShell } from './ProductVariantShell'
 import { AccessoryDetail } from './AccessoryDetail'
@@ -32,17 +36,28 @@ const reviewsList = [
 type Props = { product: ProductHit; relatedProducts: ProductHit[] }
 
 export function ProductDetail({ product, relatedProducts }: Props) {
+  // Shared across ProductVariantShell, BodyTabsSection, and FaqAccordion so
+  // they all react to whichever variant the shopper currently has selected.
+  const [activeProduct, setActiveProduct] = useState(product)
+
   if (!isContainerHit(product)) {
     return <AccessoryDetail product={product} />
   }
 
+  const containerVariant = resolveContainerVariant(activeProduct)
+
   return (
     <main className="bg-theme-bg text-theme-dark">
       {/* Breadcrumb + product grid */}
-      <ProductVariantShell product={product} relatedProducts={relatedProducts} />
+      <ProductVariantShell
+        product={product}
+        relatedProducts={relatedProducts}
+        activeProduct={activeProduct}
+        onVariantChange={setActiveProduct}
+      />
 
       {/* BODY TABS */}
-      <BodyTabsSection />
+      <BodyTabsSection variant={containerVariant} />
 
       {/* RELATED PRODUCTS */}
       <section className="px-4 sm:px-[5%] py-10 sm:py-16">
@@ -126,7 +141,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Frequently Asked Questions</h2>
           <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">View All FAQs →</a>
         </div>
-        <FaqAccordion />
+        <FaqAccordion variant={containerVariant} />
       </section>
     </main>
   )
