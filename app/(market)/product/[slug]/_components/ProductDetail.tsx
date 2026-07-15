@@ -10,7 +10,11 @@ import { ProductVariantShell } from './ProductVariantShell'
 import { AccessoryDetail } from './AccessoryDetail'
 import { BodyTabsSection } from './BodyTabsSection'
 import { FaqAccordion } from './FaqAccordion'
-import { CustomerReviews } from './CustomerReviews'
+// WordPress-sourced reviews (previous PDP source) — kept in place, easy to
+// restore by swapping the import + JSX below, if ReviewsCarousel needs to be
+// rolled back before the OSS reviews table has enough approved data.
+// import { CustomerReviews } from './CustomerReviews'
+import { ReviewsCarousel } from './ReviewsCarousel'
 
 const staticRelatedProducts = [
   { Icon: Ship,     title: '40ft Standard Container',   desc: 'Double the space for larger projects and business storage.',        price: 'From $2,000',   cta: 'View' },
@@ -78,7 +82,8 @@ export function ProductDetail({ product, relatedProducts }: Props) {
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Customer Reviews</h2>
           <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">Write a Review →</a>
         </div>
-        <CustomerReviews variant={containerVariant} />
+        {/* <CustomerReviews variant={containerVariant} /> */}
+        <ReviewsCarousel productId={activeProduct.product_id as string | number} />
       </section>
 
       {/* FAQ */}
