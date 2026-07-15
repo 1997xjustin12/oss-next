@@ -78,10 +78,10 @@ export function ProductDetail({ product, relatedProducts }: Props) {
 
       {/* REVIEWS */}
       <section id="reviews" className="px-4 sm:px-[5%] py-10 sm:py-16">
-        <div className="flex items-baseline justify-between mb-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Customer Reviews</h2>
-          <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">Write a Review →</a>
-        </div>
+        {/* No "Write a Review" entry point here on purpose — review submission
+            is only exposed from Order History (delivered orders), per
+            REVIEWS_FLOW.md's purchase-gating recommendation. */}
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-6">Customer Reviews</h2>
         {/* <CustomerReviews variant={containerVariant} /> */}
         <ReviewsCarousel productId={activeProduct.product_id as string | number} />
       </section>
