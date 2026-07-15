@@ -79,6 +79,29 @@ function ReviewCard({ review, colorIndex }: { review: Review; colorIndex: number
   )
 }
 
+// 5→1 star breakdown, computed from the same review list already in memory
+// (the fetch has no pagination, so `reviews` is always the full set).
+function RatingDistribution({ reviews }: { reviews: Review[] }) {
+  const total = reviews.length
+  return (
+    <div className="flex flex-col gap-1.5 w-full">
+      {[5, 4, 3, 2, 1].map((star) => {
+        const count = reviews.filter((r) => Math.round(r.rating) === star).length
+        const pct = total ? (count / total) * 100 : 0
+        return (
+          <div key={`rating-dist-${star}`} className="flex items-center gap-2 text-xs">
+            <span className="w-10 shrink-0 text-right font-semibold text-theme-dark">{star} star</span>
+            <div className="flex-1 h-2 rounded-full bg-theme-border overflow-hidden">
+              <div className="h-full rounded-full bg-theme-primary transition-[width]" style={{ width: `${pct}%` }} />
+            </div>
+            <span className="w-6 shrink-0 text-theme-muted">{count}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function ReviewsCarousel({ productId }: Props) {
   // `loaded.productId` tracks which product `reviews` belongs to — `loading`
   // is derived from the two being out of sync, rather than a separate reset
@@ -149,7 +172,7 @@ export function ReviewsCarousel({ productId }: Props) {
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-6 sm:gap-8 items-center bg-theme-subtle border border-theme-border rounded-xl p-6 sm:p-7 mb-7">
-        <div className="text-center">
+        <div className="flex flex-col items-center text-center">
           <div className="text-5xl sm:text-6xl font-extrabold tracking-tight">
             {list.length ? average.toFixed(1) : '—'}
           </div>
@@ -158,9 +181,7 @@ export function ReviewsCarousel({ productId }: Props) {
             {loading ? 'Loading reviews…' : `${list.length} review${list.length === 1 ? '' : 's'}`}
           </div>
         </div>
-        <p className="text-sm text-theme-mid leading-relaxed">
-          Reviews from verified On-Site Storage customers.
-        </p>
+        <RatingDistribution reviews={list} />
       </div>
 
       {loading && (
