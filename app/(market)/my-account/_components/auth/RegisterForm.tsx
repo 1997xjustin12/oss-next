@@ -4,7 +4,10 @@ import { useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Info } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { Recaptcha } from '@/components/ui/Recaptcha'
 import type { AuthSession, RegisterPayload } from '@/types/user'
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
 
 type Props = {
   showTitle?: boolean
@@ -37,7 +40,7 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
   const [form, setForm] = useState<RegisterFormState>(INITIAL_STATE)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [notRobot, setNotRobot] = useState(false)
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,8 +61,8 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
       setError('Passwords do not match.')
       return
     }
-    if (!notRobot) {
-      setError('Please verify that you are not a robot.')
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
+      setError('Please complete the reCAPTCHA check.')
       return
     }
     if (!acceptedTerms) {
@@ -69,13 +72,14 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
 
     try {
       setIsSubmitting(true)
-      const payload: RegisterPayload = {
+      const payload: RegisterPayload & { recaptchaToken?: string | null } = {
         firstName: form.firstName,
         lastName: form.lastName,
         contactNumber: form.contactNumber,
         companyName: form.companyName,
         email: form.email,
         password: form.password,
+        recaptchaToken,
       }
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -263,19 +267,8 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
           </div>
         </div>
 
-        {/* reCAPTCHA placeholder — swap for a real widget (e.g. react-google-recaptcha) on integration */}
-        <div className="flex w-full max-w-76 items-center justify-between gap-3 rounded-md border border-theme-border bg-theme-subtle px-3.5 py-3 dark:border-gray-700 dark:bg-gray-800">
-          <label className="flex items-center gap-2.5 text-sm text-theme-dark cursor-pointer select-none dark:text-gray-200">
-            <input
-              type="checkbox"
-              checked={notRobot}
-              onChange={(e) => setNotRobot(e.target.checked)}
-              className="h-5 w-5 rounded border-theme-border text-theme-primary focus:ring-theme-primary dark:border-gray-600 dark:bg-gray-700"
-            />
-            I&apos;m not a robot
-          </label>
-          <span className="text-[10px] leading-tight text-theme-muted dark:text-gray-500">reCAPTCHA</span>
-        </div>
+        {/* Only rendered when NEXT_PUBLIC_RECAPTCHA_SITE_KEY is configured — see lib/recaptcha.ts */}
+        {RECAPTCHA_SITE_KEY && <Recaptcha siteKey={RECAPTCHA_SITE_KEY} onChange={setRecaptchaToken} />}
 
         <label className="flex items-start gap-2 text-sm text-theme-muted cursor-pointer select-none dark:text-gray-400">
           <input

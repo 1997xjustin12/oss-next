@@ -24,10 +24,11 @@ type Props = {
   onChange: (token: string | null) => void
 }
 
-// Only rendered when NEXT_PUBLIC_RECAPTCHA_SITE_KEY is set — see CheckoutClient.tsx.
-// Renders via grecaptcha.render() directly (rather than next/third-parties, which
-// has no reCAPTCHA v2 checkbox support) so the widget can be dropped anywhere in
-// the form without owning page-level script loading.
+// Shared across any form gated on NEXT_PUBLIC_RECAPTCHA_SITE_KEY (checkout,
+// registration, ...) — only render this when that env var is set. Renders via
+// grecaptcha.render() directly (rather than next/third-parties, which has no
+// reCAPTCHA v2 checkbox support) so the widget can be dropped anywhere in a
+// form without owning page-level script loading.
 export function Recaptcha({ siteKey, onChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [scriptReady, setScriptReady] = useState(false)

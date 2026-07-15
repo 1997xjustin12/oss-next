@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { registerUser } from '@/services/user.service'
+import { isRecaptchaConfigured, verifyRecaptcha } from '@/lib/recaptcha'
 import type { RegisterPayload } from '@/types/user'
 
 export async function POST(request: NextRequest) {
-  const payload = (await request.json()) as Partial<RegisterPayload>
+  const { recaptchaToken, ...payload } = (await request.json()) as Partial<RegisterPayload> & {
+    recaptchaToken?: string
+  }
   const { firstName, lastName, contactNumber, email, password } = payload
 
   if (!firstName || !lastName || !contactNumber || !email || !password) {
     return NextResponse.json({ error: 'Please fill in all required fields.' }, { status: 400 })
+  }
+
+  if (isRecaptchaConfigured()) {
+    const recaptchaOk = await verifyRecaptcha(recaptchaToken ?? '')
+    if (!recaptchaOk) {
+      return NextResponse.json({ error: 'reCAPTCHA verification failed.' }, { status: 400 })
+    }
   }
 
   try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Info,
@@ -18,12 +18,17 @@ import {
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { cartItemsToLineItems } from '@/lib/cart';
+import { lookupZip } from '@/lib/zippopotam';
 import { BraintreeDropIn } from './BraintreeDropIn';
-import { Recaptcha } from './Recaptcha';
+import { Recaptcha } from '@/components/ui/Recaptcha';
 import type { BraintreeDropInHandle } from './BraintreeDropIn';
 import type { CartItem } from '@/types/cart';
-import type { CheckoutPayload } from '@/types/order';
+import type { CheckoutPayload, GetOrderTotalPayload, OrderTotal } from '@/types/order';
 
+// Fallback only, used until /api/orders/get-total responds (or if it fails) —
+// the real tax rate is computed server-side off the shipping address and can
+// differ meaningfully from this flat estimate (confirmed live: 10.5% for a
+// 90210/US test, not 8.875%).
 const TAX_RATE = 0.08875;
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
@@ -94,11 +99,13 @@ const inputCls =
 function TextInput({
   value,
   onChange,
+  onBlur,
   placeholder,
   type = 'text',
 }: {
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   type?: string;
 }) {
@@ -107,6 +114,7 @@ function TextInput({
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
       placeholder={placeholder}
       className={inputCls}
     />
@@ -138,6 +146,13 @@ function AddressFields({
   data: AddressForm;
   onChange: (field: keyof AddressForm, value: string) => void;
 }) {
+  async function handleZipBlur() {
+    const result = await lookupZip(data.zip, data.country);
+    if (!result) return;
+    if (result.city) onChange('city', result.city);
+    if (result.state) onChange('state', result.state);
+  }
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -186,7 +201,12 @@ function AddressFields({
         </div>
         <div>
           <Label required>Postcode / ZIP</Label>
-          <TextInput value={data.zip} onChange={(v) => onChange('zip', v)} placeholder="ZIP" />
+          <TextInput
+            value={data.zip}
+            onChange={(v) => onChange('zip', v)}
+            onBlur={handleZipBlur}
+            placeholder="ZIP"
+          />
         </div>
       </div>
 
@@ -282,15 +302,51 @@ export function CheckoutClient() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [liveTotal, setLiveTotal] = useState<OrderTotal | null>(null);
 
   const updateShipping = (field: keyof AddressForm, value: string) =>
     setShipping((p) => ({ ...p, [field]: value }));
   const updateBilling = (field: keyof AddressForm, value: string) =>
     setBilling((p) => ({ ...p, [field]: value }));
 
-  const { items, totalPrice: subtotal } = cart;
-  const tax = subtotal * TAX_RATE;
-  const total = subtotal + tax;
+  const { items, totalPrice: clientSubtotal } = cart;
+
+  // Real totals from /api/orders/get-total — debounced so rapid qty/zip
+  // edits don't fire a call per keystroke. Falls back to a flat estimate
+  // (TAX_RATE) until this resolves, or if it fails.
+  useEffect(() => {
+    // Nothing to price once the cart is empty — harmless to leave any prior
+    // liveTotal in place since this page redirects to the empty-cart view
+    // before it would ever be rendered again.
+    const lineItems = cartItemsToLineItems(items);
+    if (lineItems.length === 0) return;
+
+    const handle = setTimeout(async () => {
+      try {
+        const payload: GetOrderTotalPayload = {
+          items: lineItems,
+          shipping_zip_code: shipping.zip || undefined,
+          shipping_country: shipping.country || undefined,
+        };
+        const res = await fetch('/api/orders/get-total', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => null);
+        if (res.ok && data) setLiveTotal(data as OrderTotal);
+      } catch {
+        // keep whatever total we last had, or the flat estimate below
+      }
+    }, 600);
+
+    return () => clearTimeout(handle);
+  }, [items, shipping.zip, shipping.country]);
+
+  const subtotal = liveTotal?.sub_total ?? clientSubtotal;
+  const tax = liveTotal?.total_tax ?? clientSubtotal * TAX_RATE;
+  const shippingCost = liveTotal?.total_shipping ?? 0;
+  const total = liveTotal?.total_price ?? subtotal + tax + shippingCost;
 
   const shipToReady = shipping.city && shipping.state && shipping.zip;
 
@@ -605,6 +661,12 @@ export function CheckoutClient() {
                 <span className="font-semibold text-theme-mid dark:text-neutral-400">Sales Tax</span>
                 <span className="font-bold text-theme-dark dark:text-neutral-100">${tax.toFixed(2)}</span>
               </div>
+              {shippingCost > 0 && (
+                <div className="flex justify-between">
+                  <span className="font-semibold text-theme-mid dark:text-neutral-400">Shipping</span>
+                  <span className="font-bold text-theme-dark dark:text-neutral-100">${shippingCost.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-theme-border pt-3 dark:border-neutral-700">
                 <span className="text-base font-extrabold text-theme-dark dark:text-neutral-100">Total</span>
                 <span className="text-lg font-extrabold text-theme-dark dark:text-neutral-100">

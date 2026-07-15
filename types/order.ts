@@ -62,11 +62,15 @@ export interface GetOrderTotalPayload {
   shipping_country?: string
 }
 
-// TODO: confirm the real response shape — placeholder assumed to mirror
-// common tax/shipping breakdown fields.
+// Confirmed live against the real backend (2026-07-15) with a real ES hit as
+// a line item: `{ items }` alone returns sub_total with tax/shipping at 0;
+// adding shipping_zip_code + shipping_country computes real tax off that
+// location (10.5% for a 90210/US test — not a flat rate).
 export interface OrderTotal {
-  subtotal: number
-  shipping: number
-  tax: number
-  total: number
+  sub_total: number
+  total_tax: number
+  total_shipping: number
+  total_price: number
+  items_count: number
+  message: string
 }
