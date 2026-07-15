@@ -1,5 +1,5 @@
 import type { ShippingContainerHit, FormattedContainerHit } from '@/types/product'
-import { SHIPPING_CONTAINER_CATEGORIES } from '@/lib/constants'
+import { SHIPPING_CONTAINER_CATEGORIES, DEFAULT_LOCATION } from '@/lib/constants'
 
 type CustomField = { name: string; value: string }
 type ContainerVariant = { price?: string }
@@ -70,6 +70,16 @@ export function getCustomFieldValue(hit: ShippingContainerHit, name: string): st
 export function isContainerHit(hit: ShippingContainerHit): boolean {
   const categories = (hit.product_category as ProductCategoryRef[] | undefined)?.map((c) => c.category_name) ?? []
   return categories.some((name) => SHIPPING_CONTAINER_CATEGORIES.includes(name))
+}
+
+// "Generic Product Page" is a template listing with no real depot behind it
+// (location is the generic DEFAULT_LOCATION placeholder, not an actual
+// depot) — not meant to be purchasable. Checked both by category and by
+// location since either one alone can indicate a generic/display-only page.
+export function isGenericDisplayHit(hit: ShippingContainerHit): boolean {
+  const categories = (hit.product_category as ProductCategoryRef[] | undefined)?.map((c) => c.category_name) ?? []
+  const location = getCustomFieldValue(hit, 'location')
+  return categories.includes('Generic Product Page') || location === DEFAULT_LOCATION
 }
 
 // Single place to inject computed/derived properties onto a raw ES hit before

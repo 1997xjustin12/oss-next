@@ -4,11 +4,11 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Shield, CheckCircle2, Truck, Headphones,
   Heart, Share2, GitCompare, Printer,
-  ShoppingCart, ClipboardList, Phone,
+  ShoppingCart, ClipboardList, Phone, Info,
 } from 'lucide-react'
 import type { ProductHit } from '@/types/product'
 import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
-import { getCustomFieldValue } from '@/lib/pricing'
+import { getCustomFieldValue, isGenericDisplayHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
 import { Stars } from '@/components/product/Stars'
@@ -459,7 +459,15 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
 
   const rating = product.ratings ?? 0
 
+  // Generic Product Page / "Various North America" listings are template
+  // pages with no real depot behind them — not meant to be purchasable.
+  // Hide Add to Cart in favor of the Quote/Call CTAs below, which stay
+  // visible either way.
+  const isGenericDisplay = isGenericDisplayHit(activeProduct)
+
   function handleAddToCart() {
+    if (isGenericDisplay) return // belt-and-suspenders — the button is hidden for these
+
     const orderType =
       selection.tab === 'rent' ? `Rental · ${selection.rentTerm} Months` :
       selection.tab === 'rto'  ? `Rent-to-Own · ${selection.rtoTerm} Months` :
@@ -577,16 +585,26 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
 
       {/* CTAs */}
       <div className="flex flex-col gap-2.5 mb-5">
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className="w-full py-3.5 rounded-md text-lg sm:text-xl font-extrabold text-white bg-theme-primary hover:bg-theme-primary-dark hover:-translate-y-0.5 active:translate-y-0 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
-        >
-          {added
-            ? <>✓ Added to Cart!</>
-            : <><ShoppingCart className="w-5 h-5" /> Add to Cart — ${activeProduct.sale_price}</>
-          }
-        </button>
+        {isGenericDisplay ? (
+          <div className="w-full flex items-start gap-2 rounded-md border border-theme-border bg-theme-subtle px-4 py-3 text-sm text-theme-mid">
+            <Info className="w-4 h-4 shrink-0 mt-0.5 text-theme-muted" />
+            <span>
+              This is a general reference listing — pricing and availability vary by location.
+              Request a quote or call us for real-time details.
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="w-full py-3.5 rounded-md text-lg sm:text-xl font-extrabold text-white bg-theme-primary hover:bg-theme-primary-dark hover:-translate-y-0.5 active:translate-y-0 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+          >
+            {added
+              ? <>✓ Added to Cart!</>
+              : <><ShoppingCart className="w-5 h-5" /> Add to Cart — ${activeProduct.sale_price}</>
+            }
+          </button>
+        )}
         <Link
           prefetch={false}
           href="/shipping-container-quote/"
