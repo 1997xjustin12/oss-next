@@ -216,6 +216,37 @@ export async function getProductByHandle(handle: string): Promise<ProductDetailR
   }
 }
 
+// Order/cart records from the OSS backend only carry `product_id` (no
+// title/image) — this looks products up by that field (present on our ES
+// documents alongside objectID/handle, confirmed via a direct product_id
+// match during earlier PLP exploration) so order history can enrich items
+// for display without threading full product data through the backend.
+export async function getProductsByIds(productIds: (string | number)[]): Promise<ProductHit[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  const ids = productIds.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+  if (ids.length === 0) return []
+
+  try {
+    const esResponse = await client.search({
+      index: INDEX,
+      size: ids.length,
+      query: { terms: { product_id: ids } },
+    })
+
+    return esResponse.hits.hits.map((hit) =>
+      formatProduct({
+        objectID: hit._id ?? '',
+        ...(hit._source as Record<string, unknown>),
+      }) as unknown as ProductHit
+    )
+  } catch {
+    return []
+  }
+}
+
 // Each unique combination of inputs gets its own cache entry.
 // Busted by revalidateTag(CACHE_TAGS.SEARCH) or revalidateTag(CACHE_TAGS.ALL).
 export async function cachedEsSearch(input: SearchInput) {

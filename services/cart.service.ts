@@ -1,5 +1,4 @@
 import type { CreateCartPayload } from '@/types/cart'
-import type { User } from '@/types/user'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
 const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
@@ -9,34 +8,9 @@ const CREATE_CART_URL = `${BACKEND_URL}api/cart/create`
 const CLOSE_CART_URL = `${BACKEND_URL}api/cart/close`
 const UPDATE_CART_URL = `${BACKEND_URL}api/cart/update`
 
-// Maps a normalized User (with its nested profile) onto /api/cart/create's
-// billing_*/shipping_* fields — same field mapping as the other app's
-// userProfileToCart, just reading from our already-normalized User/UserProfile
-// shape instead of the raw backend object directly.
-export function userProfileToCart(user: User): Omit<CreateCartPayload, 'items'> {
-  const profile = user.profile ?? {}
-
-  return {
-    billing_address: profile.billingAddress ?? '',
-    billing_city: profile.billingCity ?? '',
-    billing_country: profile.billingCountry ?? '',
-    billing_email: user.email,
-    billing_first_name: user.firstName ?? '',
-    billing_last_name: user.lastName ?? '',
-    billing_phone: profile.phone ?? '',
-    billing_province: profile.billingState ?? '',
-    billing_zip_code: profile.billingZip ?? '',
-    shipping_address: profile.shippingAddress ?? '',
-    shipping_city: profile.shippingCity ?? '',
-    shipping_country: profile.shippingCountry ?? '',
-    shipping_email: user.email,
-    shipping_first_name: user.firstName ?? '',
-    shipping_last_name: user.lastName ?? '',
-    shipping_phone: profile.phone ?? '',
-    shipping_province: profile.shippingState ?? '',
-    shipping_zip_code: profile.shippingZip ?? '',
-  }
-}
+// userProfileToCart() moved to lib/cart.ts — it's a pure function needed by
+// client-side cart sync (CartContext) too, and this module references
+// server-only env vars at load time that shouldn't end up in the client bundle.
 
 // TODO: response shape not yet confirmed — passed through raw for now until
 // /api/cart/create and /api/cart/update are wired up and the full cart data

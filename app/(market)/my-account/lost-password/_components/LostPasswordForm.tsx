@@ -38,12 +38,15 @@ export function LostPasswordForm() {
 
   if (sent) {
     return (
-      <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3.5 text-sm text-green-700
-                      dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-400">
-        <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-        <p>
-          If an account matches <strong>{value}</strong>, we&apos;ve sent a link to reset your password. Check your
-          inbox — and your spam folder, just in case.
+      <div>
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3.5 text-sm font-semibold text-green-700
+                        dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-400">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          Password reset email has been sent.
+        </div>
+        <p className="mt-4 text-sm text-theme-muted dark:text-gray-400">
+          A password reset email has been sent to the email address on file for your account, but may take several
+          minutes to show up in your inbox. Please wait at least 10 minutes before attempting another reset.
         </p>
       </div>
     )

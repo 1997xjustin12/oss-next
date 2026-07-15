@@ -6,6 +6,19 @@ const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
 const LOGIN_URL = `${BACKEND_URL}api/auth/login`
 const PROFILE_URL = `${BACKEND_URL}api/auth/profile`
 
+// TODO: confirm the real refresh-token endpoint + request/response contract.
+const REFRESH_URL = `${BACKEND_URL}api/auth/token/refresh`
+
+// TODO: confirm the real reset-password endpoint + request/response contract
+// — this is the follow-up step after requestPasswordReset (lost-password)
+// emails a token+uidb64 link, distinct from that request-a-reset-email flow.
+const RESET_PASSWORD_URL = `${BACKEND_URL}api/auth/reset-password`
+
+// TODO: confirm the real change-password endpoint + request/response
+// contract — distinct from updateAccountDetails, which only covers
+// name/email.
+const CHANGE_PASSWORD_URL = `${BACKEND_URL}api/auth/change-password`
+
 // TODO: confirm the real registration endpoint + request/response contract
 // against the OSS backend — placeholder assumed to mirror LOGIN_URL and to
 // auto-login the new user by returning an AuthSession.
@@ -88,6 +101,9 @@ export async function getUserProfile(token: string): Promise<User> {
 // via GET /api/auth/profile using the freshly issued token.
 async function normalizeSession(data: Record<string, unknown>, fallbackUsername: string): Promise<AuthSession> {
   const token = (data.access ?? data.token ?? data.key ?? data.auth_token) as string | undefined
+  // SimpleJWT logins typically return both `access` and `refresh` — only
+  // used later for the background refresh cycle when present.
+  const refreshToken = data.refresh as string | undefined
 
   if (!token) {
     console.error('[normalizeSession] no recognizable token field in response:', Object.keys(data))
@@ -95,7 +111,7 @@ async function normalizeSession(data: Record<string, unknown>, fallbackUsername:
   }
 
   if (data.user) {
-    return { user: normalizeUser(data.user as Record<string, unknown>, fallbackUsername), token }
+    return { user: normalizeUser(data.user as Record<string, unknown>, fallbackUsername), token, refreshToken }
   }
 
   const user = await getUserProfile(token).catch((err) => {
@@ -103,7 +119,7 @@ async function normalizeSession(data: Record<string, unknown>, fallbackUsername:
     return normalizeUser({}, fallbackUsername)
   })
 
-  return { user, token }
+  return { user, token, refreshToken }
 }
 
 export async function loginUser(username: string, password: string): Promise<AuthSession> {
@@ -155,6 +171,65 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
   }
 
   return await normalizeSession(data ?? {}, payload.email)
+}
+
+// TODO: confirm the real field name for the rotated access token — assumed
+// `access` (SimpleJWT convention), matching normalizeSession above.
+export async function refreshAccessToken(refreshToken: string): Promise<string> {
+  const res = await fetch(REFRESH_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Store-Domain': STORE_DOMAIN ?? '',
+    },
+    body: JSON.stringify({ refresh: refreshToken }),
+  })
+
+  const data = await res.json().catch(() => null)
+
+  if (!res.ok) {
+    throw new Error(data?.error ?? data?.detail ?? 'Could not refresh session. Please log in again.')
+  }
+
+  const access = data?.access ?? data?.token
+  if (!access) {
+    throw new Error('Unexpected response from server: missing refreshed token.')
+  }
+
+  return access as string
+}
+
+export async function resetPassword(token: string, uidb64: string, newPassword: string): Promise<void> {
+  const res = await fetch(RESET_PASSWORD_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Store-Domain': STORE_DOMAIN ?? '',
+    },
+    body: JSON.stringify({ token, uidb64, new_password: newPassword }),
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null)
+    throw new Error(data?.error ?? data?.detail ?? 'Could not reset password. The link may have expired.')
+  }
+}
+
+export async function changePassword(token: string, oldPassword: string, newPassword: string): Promise<void> {
+  const res = await fetch(CHANGE_PASSWORD_URL, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Store-Domain': STORE_DOMAIN ?? '',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null)
+    throw new Error(data?.error ?? data?.detail ?? 'Could not change password. Please try again.')
+  }
 }
 
 export async function updateAccountDetails(token: string, payload: AccountDetailsPayload): Promise<User> {

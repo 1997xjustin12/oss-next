@@ -28,6 +28,9 @@ export interface User {
 export interface AuthSession {
   user: User
   token: string
+  // Not present on every backend auth flow — only used for the background
+  // refresh cycle (POST /api/refresh) when the backend issues one.
+  refreshToken?: string
 }
 
 export interface RegisterPayload {
@@ -44,6 +47,4 @@ export interface AccountDetailsPayload {
   lastName: string
   displayName?: string
   email: string
-  currentPassword?: string
-  newPassword?: string
 }

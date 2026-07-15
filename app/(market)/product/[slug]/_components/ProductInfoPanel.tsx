@@ -477,6 +477,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       image:     activeProduct.images?.[0]?.src,
       isContainer: true,
       location:  getCustomFieldValue(activeProduct, 'location'),
+      rawHit:    activeProduct,
     })
     if (!wasAdded) return // blocked by a different-location container already in the cart
 

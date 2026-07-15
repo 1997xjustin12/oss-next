@@ -7,6 +7,7 @@ export const CACHE_TAGS = {
   HOMEPAGE:   'homepage',
   ORDERS:     'orders',
   USERS:      'users',
+  REVIEWS:    'reviews',
 } as const;
 
 export type CacheTag = (typeof CACHE_TAGS)[keyof typeof CACHE_TAGS];

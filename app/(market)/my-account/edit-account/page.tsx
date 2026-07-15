@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { AccountPageShell } from '../_components/AccountPageShell'
 import { AccountDetailsForm } from './_components/AccountDetailsForm'
+import { ChangePasswordForm } from './_components/ChangePasswordForm'
 
 const TITLE = 'Account Details'
 const DESCRIPTION = 'Edit your profile and password on On-Site Storage Solutions.'
@@ -23,6 +24,11 @@ export default function EditAccountPage() {
 
         <AccountPageShell title="Account details">
           <AccountDetailsForm />
+
+          <div className="mt-10 max-w-xl border-t border-theme-border pt-8 dark:border-gray-700">
+            <h2 className="mb-5 text-xl font-bold text-theme-dark dark:text-white">Change password</h2>
+            <ChangePasswordForm />
+          </div>
         </AccountPageShell>
       </div>
     </main>

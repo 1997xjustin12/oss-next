@@ -66,6 +66,7 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
       image:       images[0],
       isContainer: true,
       location,
+      rawHit:      hit,
     })
     if (!wasAdded) return
 

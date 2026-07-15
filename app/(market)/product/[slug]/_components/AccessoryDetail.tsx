@@ -31,9 +31,6 @@ export function AccessoryDetail({ product }: Props) {
     .filter((name) => !CONTAINER_CATEGORY_NAMES.includes(name))
   const promoTag = product.tags?.find((t) => !/stock/i.test(t))
 
-  // TODO: CartContext still stores the old simplified CartItem shape, not
-  // the raw CartLineItem hit — bridge the two here until the cart itself is
-  // migrated to carry raw hits (see /types/cart.ts CartLineItem).
   function handleAddToCart() {
     addItem({
       id: product.objectID,
@@ -44,6 +41,7 @@ export function AccessoryDetail({ product }: Props) {
       condition,
       orderType: 'Purchase',
       image: images[0],
+      rawHit: product,
     })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
