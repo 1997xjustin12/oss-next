@@ -112,8 +112,9 @@ export type CreateReviewPayload = {
 // site-wide feed — not used by this app yet) + page (default 1, no
 // page_size ever sent). Response shape itself is still unconfirmed against
 // this app's own backend — table is empty, hasn't been exercised for real.
-export async function listProductReviews(productId: string | number, page = 1): Promise<ReviewListResponse> {
-  const params = new URLSearchParams({ product_id: String(productId), page: String(page) })
+export async function listProductReviews(productId?: string | number, page = 1): Promise<ReviewListResponse> {
+  const params = new URLSearchParams({ page: String(page) })
+  if (productId) params.set('product_id', String(productId))
 
   const res = await fetch(`${REVIEWS_LIST_URL}?${params.toString()}`, {
     method: 'GET',

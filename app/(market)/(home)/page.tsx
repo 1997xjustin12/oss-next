@@ -15,6 +15,7 @@ import { RightContainer } from "./_components/RightContainer";
 import { OnsiteDifference } from "./_components/OnsiteDifference";
 import { TrustedBySection } from "./_components/TrustedBySection";
 import { ReviewsSection } from "./_components/ReviewsSection";
+import { ReviewsSectionLive } from "./_components/ReviewsSectionLive";
 
 export const metadata: Metadata = {
   title: "Shipping Containers For Sale | Lowest Price Shipping Containers",
@@ -97,6 +98,8 @@ export default async function Home() {
       <TrustedBySection />
       <QuoteForm />
       <ReviewsSection />
+      {/* Rendered alongside the static one above for comparison, per request — not a final placement decision. */}
+      <ReviewsSectionLive />
       <StatesSection />
     </>
   );
