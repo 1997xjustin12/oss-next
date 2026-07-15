@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Info,
@@ -13,11 +13,19 @@ import {
   CheckCircle2,
   AlertCircle,
   ShoppingCart,
+  Loader2,
 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
+import { cartItemsToLineItems } from '@/lib/cart';
+import { BraintreeDropIn } from './BraintreeDropIn';
+import { Recaptcha } from './Recaptcha';
+import type { BraintreeDropInHandle } from './BraintreeDropIn';
 import type { CartItem } from '@/types/cart';
+import type { CheckoutPayload } from '@/types/order';
 
 const TAX_RATE = 0.08875;
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 /* ── Helpers ── */
 function itemMeta(item: CartItem): string {
@@ -52,6 +60,23 @@ const emptyAddress: AddressForm = {
   phone: '',
   email: '',
 };
+
+// Maps the on-page address form to the backend's flat billing_*/shipping_*
+// field names (same contract as CreateCartPayload) — address1/address2 fold
+// into one line since the backend has no separate field for either.
+function addressToBackendFields(form: AddressForm) {
+  return {
+    address: [form.address1, form.address2].filter(Boolean).join(', '),
+    city: form.city,
+    country: form.country,
+    email: form.email,
+    firstName: form.firstName,
+    lastName: form.lastName,
+    phone: form.phone,
+    province: form.state,
+    zipCode: form.zip,
+  };
+}
 
 /* ── Primitives ── */
 function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
@@ -207,9 +232,41 @@ function EmptyCart() {
   );
 }
 
+/* ── Order confirmation state ── */
+function OrderComplete() {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-theme-success-light dark:bg-green-950/40">
+        <CheckCircle2 className="h-9 w-9 text-theme-success dark:text-green-400" />
+      </div>
+      <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
+        Order placed!
+      </h1>
+      <p className="mt-2 max-w-sm text-sm text-theme-muted dark:text-neutral-400">
+        Your payment went through and your order has been recorded. We&apos;ve sent a confirmation
+        email with your order details.
+      </p>
+      <Link
+        href="/my-account/orders"
+        className="mt-8 inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark"
+      >
+        View Order History
+      </Link>
+      <a
+        href="tel:8889779085"
+        className="mt-3 text-sm font-semibold text-theme-primary hover:underline dark:text-red-400"
+      >
+        Questions? Call us at (888) 977-9085
+      </a>
+    </div>
+  );
+}
+
 /* ── Main Client Component ── */
 export function CheckoutClient() {
-  const { cart, removeItem, updateQty } = useCart();
+  const { cart, removeItem, updateQty, clearCart } = useCart();
+  const { token: authToken } = useAuth();
+  const dropinRef = useRef<BraintreeDropInHandle>(null);
 
   const [shipping, setShipping] = useState<AddressForm>(emptyAddress);
   const [billing, setBilling] = useState<AddressForm>(emptyAddress);
@@ -220,7 +277,11 @@ export function CheckoutClient() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showIntlNote, setShowIntlNote] = useState(false);
   const [attempted, setAttempted] = useState(false);
-  const [reserved, setReserved] = useState(false);
+  const [paymentReady, setPaymentReady] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [orderComplete, setOrderComplete] = useState(false);
 
   const updateShipping = (field: keyof AddressForm, value: string) =>
     setShipping((p) => ({ ...p, [field]: value }));
@@ -254,7 +315,9 @@ export function CheckoutClient() {
       billing.phone &&
       billing.email);
 
-  const canReserve =
+  const recaptchaSatisfied = !RECAPTCHA_SITE_KEY || !!recaptchaToken;
+
+  const detailsComplete =
     !!requiredShippingFilled &&
     !!requiredBillingFilled &&
     doorDirection !== null &&
@@ -262,12 +325,95 @@ export function CheckoutClient() {
     agreeTerms &&
     items.length > 0;
 
-  const handleReserve = () => {
+  async function handlePlaceOrder() {
     setAttempted(true);
-    if (canReserve) setReserved(true);
-  };
+    setSubmitError(null);
+    if (!detailsComplete) return;
+    if (!paymentReady || !dropinRef.current) {
+      setSubmitError('Card payment is not available yet — please check back once it has been set up.');
+      return;
+    }
+    if (!recaptchaSatisfied) {
+      setSubmitError('Please complete the reCAPTCHA check.');
+      return;
+    }
 
-  if (items.length === 0 && !reserved) {
+    setSubmitting(true);
+    try {
+      const { nonce } = await dropinRef.current.requestPaymentMethod();
+
+      const chargeRes = await fetch('/api/braintree_checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nonce, amount: total.toFixed(2), recaptchaToken }),
+      });
+      const chargeData = await chargeRes.json().catch(() => null);
+      if (!chargeRes.ok) {
+        throw new Error(chargeData?.error ?? 'Payment could not be processed.');
+      }
+
+      const shipTo = addressToBackendFields(shipping);
+      const billTo = addressToBackendFields(sameBilling ? shipping : billing);
+
+      const payload: CheckoutPayload = {
+        cart_id: cart.cartId,
+        items: cartItemsToLineItems(items),
+        billing_address: billTo.address,
+        billing_city: billTo.city,
+        billing_country: billTo.country,
+        billing_email: billTo.email,
+        billing_first_name: billTo.firstName,
+        billing_last_name: billTo.lastName,
+        billing_phone: billTo.phone,
+        billing_province: billTo.province,
+        billing_zip_code: billTo.zipCode,
+        shipping_address: shipTo.address,
+        shipping_city: shipTo.city,
+        shipping_country: shipTo.country,
+        shipping_email: shipTo.email,
+        shipping_first_name: shipTo.firstName,
+        shipping_last_name: shipTo.lastName,
+        shipping_phone: shipTo.phone,
+        shipping_province: shipTo.province,
+        shipping_zip_code: shipTo.zipCode,
+        payment_method: 'braintree',
+        transaction_id: chargeData?.transaction?.id,
+      };
+
+      const orderRes = await fetch('/api/orders/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      const orderData = await orderRes.json().catch(() => null);
+      if (!orderRes.ok) {
+        throw new Error(
+          orderData?.error ??
+            'Payment succeeded, but the order could not be recorded. Please contact us with your confirmation.',
+        );
+      }
+
+      clearCart();
+      setOrderComplete(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Could not complete checkout. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (orderComplete) {
+    return (
+      <div className="min-h-screen bg-theme-subtle dark:bg-neutral-950">
+        <OrderComplete />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
     return (
       <div className="min-h-screen bg-theme-subtle dark:bg-neutral-950">
         <EmptyCart />
@@ -467,13 +613,12 @@ export function CheckoutClient() {
               </div>
             </div>
 
-            {/* Disclaimer banner */}
-            <div className="mt-5 flex gap-2.5 rounded-md bg-theme-primary p-3.5 text-sm text-white">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            {/* Secure checkout note */}
+            <div className="mt-5 flex gap-2.5 rounded-md bg-theme-subtle p-3.5 text-sm text-theme-mid dark:bg-neutral-800 dark:text-neutral-300">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
-                <strong className="font-bold">Disclaimer:</strong> By reserving your container,
-                you are not committing to a purchase. We will contact you to confirm all the
-                details and finalize the pricing.
+                Your card is charged once you place the order below. We&apos;ll email a confirmation
+                with your order details right after.
               </p>
             </div>
 
@@ -502,29 +647,40 @@ export function CheckoutClient() {
               </p>
             )}
 
-            {attempted && !canReserve && !reserved && (
+            {attempted && !detailsComplete && !orderComplete && (
               <div className="mt-4 flex items-center gap-2 rounded-md bg-amber-50 p-3 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 Please complete all required fields and confirm delivery details below.
               </div>
             )}
 
+            {submitError && (
+              <div className="mt-4 flex items-center gap-2 rounded-md border border-theme-primary/30 bg-theme-primary-light p-3 text-xs font-semibold text-theme-primary dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {submitError}
+              </div>
+            )}
+
             <button
               type="button"
-              onClick={handleReserve}
-              disabled={reserved}
-              className={`mt-4 w-full rounded-md py-3.5 text-base font-extrabold uppercase tracking-wide text-white transition-all ${
-                reserved
+              onClick={handlePlaceOrder}
+              disabled={orderComplete || submitting}
+              className={`mt-4 w-full rounded-md py-3.5 text-base font-extrabold uppercase tracking-wide text-white transition-all disabled:cursor-not-allowed ${
+                orderComplete
                   ? 'cursor-default bg-theme-success-dark'
-                  : 'bg-theme-primary hover:-translate-y-0.5 hover:bg-theme-primary-dark hover:shadow-lg hover:shadow-theme-primary/25'
+                  : 'bg-theme-primary hover:-translate-y-0.5 hover:bg-theme-primary-dark hover:shadow-lg hover:shadow-theme-primary/25 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-none'
               }`}
             >
-              {reserved ? (
+              {orderComplete ? (
                 <span className="flex items-center justify-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" /> Reserved — We&apos;ll be in touch!
+                  <CheckCircle2 className="h-5 w-5" /> Order Placed — Confirmation Sent!
+                </span>
+              ) : submitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" /> Placing Order…
                 </span>
               ) : (
-                'Reserve My Container Today'
+                'Place Order'
               )}
             </button>
 
@@ -633,6 +789,18 @@ export function CheckoutClient() {
                 <Lock className="h-4 w-4" /> Payment
               </p>
             </div>
+
+            {/* Card payment (Braintree Drop-in) */}
+            <div className="p-6">
+              <BraintreeDropIn ref={dropinRef} onStatusChange={(s) => setPaymentReady(s === 'ready')} />
+            </div>
+
+            {/* reCAPTCHA — only rendered when a site key is configured */}
+            {RECAPTCHA_SITE_KEY && (
+              <div className="px-6 pb-6">
+                <Recaptcha siteKey={RECAPTCHA_SITE_KEY} onChange={setRecaptchaToken} />
+              </div>
+            )}
 
             {/* Privacy note */}
             <div className="flex items-start gap-2.5 bg-theme-subtle p-6 dark:bg-neutral-800/50">

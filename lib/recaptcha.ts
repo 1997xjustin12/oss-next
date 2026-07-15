@@ -1,9 +1,14 @@
 const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY
 
-// Verifies a reCAPTCHA token against Google's siteverify endpoint.
-// RECAPTCHA_SECRET_KEY isn't configured in this environment yet — returns
-// false (rather than throwing) so callers can surface a clean 4xx instead of
-// a 500 until the key is added.
+// Callers should skip the reCAPTCHA check entirely when this is false, rather
+// than calling verifyRecaptcha() and treating an unconfigured key as a
+// rejection — reCAPTCHA is optional until a secret key is actually set.
+export function isRecaptchaConfigured(): boolean {
+  return Boolean(RECAPTCHA_SECRET_KEY)
+}
+
+// Verifies a reCAPTCHA token against Google's siteverify endpoint. Only call
+// this when isRecaptchaConfigured() is true.
 export async function verifyRecaptcha(token: string): Promise<boolean> {
   if (!RECAPTCHA_SECRET_KEY) {
     console.error('[verifyRecaptcha] RECAPTCHA_SECRET_KEY is not configured')

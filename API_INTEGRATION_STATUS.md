@@ -16,12 +16,12 @@ Tracks every endpoint from the backend integration plan: whether the local Next.
 | Endpoint (per plan) | Method | Status | Actual route | Notes |
 |---|---|---|---|---|
 | `/api/login` | POST | 🔁 Mapped | `/api/auth/login` | Already live — wired into `LoginForm.tsx`. Sets `isLoggedIn` cookie. Didn't duplicate under `/api/login`. |
-| `/api/logout` | POST | 🆕 Created | `/api/logout` | Clears the `isLoggedIn` cookie server-side. `AuthContext.logout()` currently does this client-side only (localStorage + cookie) — not yet calling this route. |
+| `/api/logout` | POST | ✅ Live | `/api/logout` | `AuthContext.logout()` calls this (fire-and-forget) alongside the existing client-side cookie/localStorage clear. Covers both the sidebar "Logout" link and the inline "Log out" button. |
 | `/api/register` | POST | 🔁 Mapped | `/api/auth/register` | Already live — wired into `RegisterForm.tsx`. **Gap:** plan says registration should verify reCAPTCHA first; current implementation doesn't yet (form has a reCAPTCHA UI placeholder only, see `RegisterForm.tsx`). |
-| `/api/refresh` | POST | 🆕 Created | `/api/refresh` | Calls `refreshAccessToken()` → `POST {NEXT_OSS_BACKEND_URL}api/auth/token/refresh`. Response field name (`access` vs `token`) unconfirmed. Nothing calls this yet — no token-refresh flow exists in `AuthContext` today. |
+| `/api/refresh` | POST | ✅ Live | `/api/refresh` | `AuthContext.tsx` runs a 10-minute interval (`REFRESH_INTERVAL_MS`) calling `refreshAccessToken()` and rotating the access token in place. Confirmed live: login response really does include a `refreshToken` (SimpleJWT `refresh` field). |
 | `/api/auth/forgot-password` | POST | 🔁 Mapped | `/api/auth/lost-password` | Already live — wired into `LostPasswordForm.tsx`. Same feature (send reset email), different name. |
-| `/api/reset-password` | POST | 🆕 Created | `/api/reset-password` | Calls `resetPassword(token, uidb64, newPassword)`. This is the follow-up step after the emailed reset link — distinct from forgot/lost-password. No UI page consumes the token+uidb64 link yet. |
-| `/api/auth/change-password` | PUT | 🆕 Created | `/api/auth/change-password` | Calls `changePassword()` with Bearer auth. Distinct from account-details (below) — dedicated old/new password only. Not called from any UI yet. |
+| `/api/reset-password` | POST | ✅ Live | `/api/reset-password` | New page at `my-account/reset-password/` reads `token`/`uidb64` from the query string and submits here. Verified responsive + dark mode in both the form and invalid-link states; not yet exercised with a real emailed reset link end-to-end. |
+| `/api/auth/change-password` | PUT | ✅ Live | `/api/auth/change-password` | Split into its own `ChangePasswordForm.tsx` (separate section on the `edit-account` page, below `AccountDetailsForm.tsx`). Distinct from account-details — dedicated old/new password only. |
 | `/api/profile` | GET | 🔁 Mapped | `/api/auth/profile` | Already exists — used internally by `services/user.service.ts` (`getUserProfile`) to fetch the user after login/register, not called directly from a client component. |
 | `/api/profile/update` | PUT | 🔁 Mapped | `/api/auth/account-details` (PATCH) | Already live — wired into `AccountDetailsForm.tsx`. Same feature (update name/email), different path + verb. |
 
@@ -43,13 +43,15 @@ Tracks every endpoint from the backend integration plan: whether the local Next.
 
 | Endpoint (per plan) | Method | Status | Notes |
 |---|---|---|---|
-| `/api/orders/checkout` | POST | 🆕 Created | Calls `checkoutOrder()`. `types/order.ts` created for `CheckoutPayload`/`Order` — response shape unconfirmed. No checkout page wired yet. |
-| `/api/orders/get-total` | POST | 🆕 Created | Calls `getOrderTotal()`. `OrderTotal` shape (subtotal/shipping/tax/total) is a guess pending backend confirmation. |
+| `/api/orders/checkout` | POST | ⛔ Blocked (wired, awaiting credentials) | Calls `checkoutOrder()`. Wired into `CheckoutClient.tsx`'s `handlePlaceOrder()` — builds a `CheckoutPayload` from the address forms + cart + Braintree transaction id after a successful charge. `types/order.ts`'s `CheckoutPayload`/`Order` response shape is still **unconfirmed against the real backend** — no reference doc exists for this endpoint (unlike Order History/Reviews), so treat the contract as a well-reasoned guess until tested live. |
+| `/api/orders/get-total` | POST | 🆕 Created, not integrated | Calls `getOrderTotal()`. `OrderTotal` shape (subtotal/shipping/tax/total) is still a guess pending backend confirmation — deliberately not wired into `CheckoutClient.tsx` yet, which still computes totals client-side with a flat tax rate. |
 | `/api/auth/orders` | GET | ✅ Live, wired into `my-account/orders` | Calls `listUserOrders()`. No pagination (confirmed via `ORDER_HISTORY_ANSWER.md`). Response wrapper handled defensively (bare array or `{orders:[]}` — our own test hit confirmed the latter). Field names (`order_number`, `status`, `total_price`, `items[].product_id/quantity/price`) confirmed via the same doc. Verified live for the empty case; **populated-list shape still unconfirmed** — no order exists yet to test against (needs real checkout, which doesn't exist yet either). |
 | `/api/products/by-ids` *(not in original plan)* | GET | ✅ Live | New endpoint + `getProductsByIds()` (`services/search.service.ts`) — order items only carry `product_id`/`quantity`/`price`, so this does an ES `terms` lookup on the `product_id` field (present on our documents alongside `objectID`/`handle`) to enrich order history with title/image/handle for display and "Buy Again". |
-| `/api/braintree_token` | GET | ⛔ Blocked | Calls `getBraintreeClientToken()` (real `braintree` SDK, now installed). **Missing `BRAINTREE_MERCHANT_ID` / `BRAINTREE_PUBLIC_KEY` / `BRAINTREE_PRIVATE_KEY` in `.env.local`** — will throw a clear "Braintree is not configured" error until added. |
-| `/api/braintree_checkout` | POST | ⛔ Blocked | Calls `chargeBraintreeCheckout()` after `verifyRecaptcha()` (`lib/recaptcha.ts`). **Missing both `BRAINTREE_*` credentials and `RECAPTCHA_SECRET_KEY`** — reCAPTCHA check will always fail closed until the secret is set. |
+| `/api/braintree_token` | GET | ⛔ Blocked (wired, awaiting credentials) | Calls `getBraintreeClientToken()`. Wired into `BraintreeDropIn.tsx`, which fetches this on mount and mounts the real `braintree-web-drop-in` UI on success. **Missing `BRAINTREE_MERCHANT_ID` / `BRAINTREE_PUBLIC_KEY` / `BRAINTREE_PRIVATE_KEY` in `.env.local`** (placeholders added) — until set, this 500s with a clear "Braintree is not configured" message, which the component renders as an inline notice instead of breaking the page. Confirmed live in light/dark, desktop/mobile. |
+| `/api/braintree_checkout` | POST | ⛔ Blocked (wired, awaiting credentials) | Calls `chargeBraintreeCheckout()`. Wired into `handlePlaceOrder()` — requests a nonce from the Drop-in instance, then POSTs it here with the computed total. reCAPTCHA is now **optional by design**: `verifyRecaptcha()` only runs when `isRecaptchaConfigured()` is true (i.e. `RECAPTCHA_SECRET_KEY` is set); with it blank, the check is skipped entirely rather than failing closed. |
 | `https://api.zippopotam.us/us/{zip}` | GET | N/A | External public API, not a backend endpoint — call directly from the frontend when the ZIP autofill feature is built (not yet present). |
+
+**reCAPTCHA is opt-in, not a blocker.** `lib/recaptcha.ts` gained `isRecaptchaConfigured()`; both the server check (`/api/braintree_checkout`) and the client widget (`Recaptcha.tsx`, only rendered by `CheckoutClient.tsx` when `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` is set) key off the presence of their respective env vars. Both are blank placeholders today — fill in both together to turn reCAPTCHA on, no code changes needed either way.
 
 ## Reviews
 
@@ -71,19 +73,25 @@ Tracks every endpoint from the backend integration plan: whether the local Next.
 
 ## What's needed before the ⛔ Blocked rows can work
 
-Add to `.env.local`:
+Placeholders already added to `.env.local` — just needs real values:
 ```
 BRAINTREE_ENVIRONMENT=sandbox   # or "production"
 BRAINTREE_MERCHANT_ID=
 BRAINTREE_PUBLIC_KEY=
 BRAINTREE_PRIVATE_KEY=
+
+# Optional — leave blank to skip reCAPTCHA entirely (server and client both
+# check for these before doing anything reCAPTCHA-related)
 RECAPTCHA_SECRET_KEY=
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
 ```
+
+Once the three `BRAINTREE_*` values are set, checkout should work end-to-end without further code changes — but run one real sandbox transaction through it before trusting that, since `CheckoutPayload`'s contract with `/api/orders/checkout` is still unverified (see the Orders table above).
 
 ## Suggested integration order
 
-1. **Cart** (`/api/cart/*`) — routes already work, just needs `CartContext` switched from localStorage-only to also syncing with the backend.
-2. **Orders / checkout** — needs Braintree credentials first (blocks the payment step), plus a real checkout page.
-3. **Auth extras** (refresh, reset-password, change-password) — refresh matters most once sessions start expiring; the other two are self-serve account pages.
+1. ~~**Cart**~~ (`/api/cart/*`) — done, verified live.
+2. ~~**Orders / checkout**~~ — built and wired (Braintree Drop-in, order creation on success). One blocker left: real Braintree credentials. `get-total` intentionally not wired yet (guessed response shape).
+3. ~~**Auth extras**~~ (refresh, reset-password, change-password) — done, verified live.
 4. ~~**Reviews (OSS backend)**~~ — write/edit path built and verified live (Order-History-gated entry point only). PDP display (`CustomerReviews.tsx`) still reads from WordPress and stays that way until the OSS table has enough approved reviews to be worth switching to.
 5. **Newsletter** — lowest priority, no dependent UI exists yet.

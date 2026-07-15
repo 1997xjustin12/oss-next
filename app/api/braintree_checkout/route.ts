@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { chargeBraintreeCheckout } from '@/services/payment.service'
-import { verifyRecaptcha } from '@/lib/recaptcha'
+import { verifyRecaptcha, isRecaptchaConfigured } from '@/lib/recaptcha'
 
 export async function POST(request: NextRequest) {
   const { nonce, amount, recaptchaToken } = await request.json().catch(() => ({}))
@@ -9,9 +9,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Payment nonce and amount are required.' }, { status: 400 })
   }
 
-  const recaptchaOk = await verifyRecaptcha(recaptchaToken)
-  if (!recaptchaOk) {
-    return NextResponse.json({ error: 'reCAPTCHA verification failed.' }, { status: 400 })
+  if (isRecaptchaConfigured()) {
+    const recaptchaOk = await verifyRecaptcha(recaptchaToken)
+    if (!recaptchaOk) {
+      return NextResponse.json({ error: 'reCAPTCHA verification failed.' }, { status: 400 })
+    }
   }
 
   try {
