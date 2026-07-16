@@ -177,11 +177,29 @@ don't delete completed items until the next full regeneration (so progress is vi
       _out of scope for just adding these files. `error.tsx`/`global-error.tsx` verified via_
       _typecheck/lint only (standard, low-risk Next.js file conventions; not easily_
       _triggerable without introducing a real fault)._
-- [ ] **Rebuild the `/cart` page's fake logic**: replace the `setTimeout`-based loading
+- [x] **Rebuild the `/cart` page's fake logic**: replace the `setTimeout`-based loading
       state with a real one, replace the hardcoded `"SAVE10"` client-side coupon check with
       a real backend-validated flow (or remove the coupon box if no coupon system is
       planned), and replace the flat `$195` delivery-fee constant with a real call to
       `/api/orders/get-total` (same endpoint checkout already uses) so the two pages agree.
+      _Done 2026-07-15 — removed the fake 1.1s setTimeout entirely (cart items are already_
+      _available synchronously post-mount; no real async work was ever happening there)._
+      _Removed the coupon/promo box outright rather than fake-validate it — confirmed via_
+      _the e-commerce feature audit that zero coupon backend exists anywhere to validate_
+      _against. Delivery fee/tax now come from a real, debounced call to_
+      _`/api/orders/get-total` (same endpoint + CartLineItem payload shape as checkout);_
+      _since the cart page collects no ZIP, shipping/tax legitimately come back 0 and the_
+      _UI says "Calculated at checkout"/"At checkout" rather than implying they're free._
+      _"Refresh totals" now re-runs this real call instead of replaying a fake timer._
+      _Also fixed 2 bugs found while in this file: the empty-cart CTA linked to_
+      _`/buy-shipping-containers`, which doesn't exist (real PLP route is_
+      _`/sale-shipping-containers`); and the delivery-estimate banner said "2–4 business_
+      _days," inconsistent with the "1–5 days" claim used everywhere else on the site._
+      _Verified live: real item renders in ~750ms (no artificial delay), promo box gone,_
+      _both fixed links/copy confirmed, get-total resolves to the correct deferred state,_
+      _manual refresh re-fetches for real, total amount matches exactly. Typecheck + lint_
+      _clean (one legitimate `set-state-in-effect` suppression for the hydration-safe mount_
+      _flag — same accepted pattern already used elsewhere in this codebase)._
 - [x] **Fix the duplicate `<main>` landmark bug** — nearly every My Account page plus the
       PDP (`ProductDetail.tsx`/`AccessoryDetail.tsx`) render their own `<main>` nested
       inside the shared layout's `<main>`. Remove the nested ones.

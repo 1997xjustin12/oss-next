@@ -5,16 +5,19 @@ import { ShieldCheck, BadgeCheck } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 
 type Props = {
-  deliveryFee?: number
-  discount?: number
-  promoCode?: string
+  /** Real total_shipping from /api/orders/get-total — undefined/0 until checkout knows a ZIP. */
+  shipping?: number
+  /** Real total_tax from /api/orders/get-total — undefined/0 until checkout knows a ZIP. */
+  tax?: number
+  /** True while a get-total request is in flight. */
+  loading?: boolean
 }
 
 const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
-export function CartSummary({ deliveryFee = 0, discount = 0, promoCode }: Props) {
+export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
   const { cart, clearCart } = useCart()
-  const total = Math.max(0, cart.totalPrice + deliveryFee - discount)
+  const total = Math.max(0, cart.totalPrice + shipping + tax)
 
   return (
     <aside className="rounded-xl border border-theme-border bg-white p-5 sm:p-6 lg:sticky lg:top-24">
@@ -31,18 +34,24 @@ export function CartSummary({ deliveryFee = 0, discount = 0, promoCode }: Props)
         </div>
         <div className="flex justify-between">
           <span className="text-theme-muted">Delivery fee</span>
-          <span className="font-semibold">{deliveryFee > 0 ? fmt(deliveryFee) : '—'}</span>
+          {loading ? (
+            <span className="font-semibold text-theme-muted italic">Calculating…</span>
+          ) : shipping > 0 ? (
+            <span className="font-semibold">{fmt(shipping)}</span>
+          ) : (
+            <span className="font-semibold text-theme-muted italic">Calculated at checkout</span>
+          )}
         </div>
-        {promoCode && discount > 0 && (
-          <div className="flex justify-between text-green-600">
-            <span>Promo {promoCode}</span>
-            <span className="font-semibold">−{fmt(discount)}</span>
-          </div>
-        )}
         <hr className="border-theme-border" />
         <div className="flex justify-between">
           <span className="text-theme-muted">Est. Tax</span>
-          <span className="font-semibold text-theme-muted italic">At checkout</span>
+          {loading ? (
+            <span className="font-semibold text-theme-muted italic">Calculating…</span>
+          ) : tax > 0 ? (
+            <span className="font-semibold">{fmt(tax)}</span>
+          ) : (
+            <span className="font-semibold text-theme-muted italic">At checkout</span>
+          )}
         </div>
       </div>
 
