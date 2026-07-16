@@ -30,6 +30,15 @@ don't re-flag these in future audit passes.
    WordPress app's URL structure, where `/my-account` served both the login/registration
    form (logged out) and the account dashboard (logged in). Confirmed 2026-07-15.
 
+2. **PDP Product schema intentionally has no `hasMerchantReturnPolicy`.** The real policy
+   (a money-back guarantee minus shipping, per the PDP Warranty tab) hasn't been finalized
+   into concrete schema.org terms (return window, conditions) yet — sales hasn't decided.
+   Don't add a guessed value; wait for real terms. Confirmed 2026-07-15.
+3. **GTIN in the Product schema deliberately reuses the SKU value** (same as `mpn`), even
+   though a SKU isn't technically a GTIN — no real GTIN/barcode data exists anywhere in the
+   product data, and this matches the original WordPress site's own schema convention.
+   Confirmed 2026-07-15.
+
 _(Add new confirmed decisions here as they come up, so they persist across future audits.)_
 
 ---
@@ -174,6 +183,20 @@ don't delete completed items until the next full regeneration (so progress is vi
       by the real profile API, etc.) or remove/hide the nav entries if not planned.
 - [ ] **Add JSON-LD `BreadcrumbList` to the PLP** — a visual breadcrumb exists but no
       structured data, despite this project's own SEO rule requiring it on listing pages.
+- [x] **Enrich the PDP's Product JSON-LD to match the real WordPress schema** —
+      `sku`/`mpn`/`gtin` (gtin reuses sku, see §2), full `image` array, `itemCondition`
+      (mapped from the real `condition` field), `additionalProperty` (Container Size,
+      Grade, Height Type, Material, Payment Type, Delivery Location — container products
+      only), real tare `weight` (from `lib/data/pdpShippingContainers.ts`, averaged when
+      the source is a manufacturer-variance range), a rolling (not hardcoded)
+      `priceValidUntil`, and real `shippingDetails` matching the site's stated 1-5 day
+      delivery. `description` is now shared between `generateMetadata` and the JSON-LD so
+      they can't drift apart. Price is confirmed `sale_price` (computed by
+      `calculateProductPrice()`, same value shown everywhere else on the site).
+      **Still missing** (real, not fabricated): `aggregateRating` (no `reviewCount` in the
+      ES index) and `hasMerchantReturnPolicy` (see §2). Verified live against a generic
+      product, a real-location product, and an accessory — container-only fields correctly
+      appear/disappear. _Done 2026-07-15._
 - [ ] **Build a shared `<JsonLd>` component** (`components/shared/JsonLd.tsx`) and migrate
       the 3 existing hand-rolled inline JSON-LD blocks (home, PDP, checkout) to use it.
 - [ ] **Create `config/routes.ts`** with typed path constants; replace the ~30 hardcoded
