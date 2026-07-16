@@ -150,19 +150,27 @@ don't delete completed items until the next full regeneration (so progress is vi
 
 ### High priority
 
-- [ ] **Fix the Django backend account-update endpoint — it doesn't exist.**
-      Found 2026-07-15 while investigating whether `edit-address` could be built for
-      real: `services/user.service.ts`'s `ACCOUNT_DETAILS_URL`
-      (`api/auth/account-details/`) 404s against the real backend, in every HTTP method
-      tried (PATCH/PUT), with or without a trailing slash. Pulled the **complete**
-      registered `api/auth/` route list directly from a Django debug 404 page to
-      confirm, not guess: `register`, `login`, `token/refresh`, `change-password`,
-      `forgot-password`, `reset-password`, `profile` (GET only), `orders` — nothing else.
-      **This means `AccountDetailsForm.tsx`'s existing "Update Account Details" feature,
-      already shipped and presented to real users as working, has likely never actually
-      worked against the real backend** — every save attempt 404s silently behind a
-      generic error message. Needs a real backend fix (add the endpoint) before this or
-      the planned `edit-address` page can work. Backend fix, not fixable from this app.
+- [x] **Fix the account-update endpoint — it was a wrong URL/verb on our side, not a**
+      **missing backend feature.** Found 2026-07-15 while investigating whether
+      `edit-address` could be built for real: `services/user.service.ts`'s
+      `ACCOUNT_DETAILS_URL` (`api/auth/account-details/`) 404s against the real backend
+      in every HTTP method tried. Pulled the complete registered `api/auth/` route list
+      from a Django debug 404 page, which confirmed no `account-details` route exists —
+      initially logged as a backend gap. **Correction**: the user supplied
+      `MY_ACCOUNT_PROFILE.md`, extracted from the original WordPress app's real working
+      profile-update flow, which revealed the actual contract: `PUT` (not `PATCH`) to the
+      *same* `api/auth/profile` URL the working GET already uses (no trailing slash), as
+      a **full-object replace** (every profile field resent every time, not a diff).
+      Verified live against the real backend: 200, data genuinely persists.
+      _Done 2026-07-15 — `updateAccountDetails()` in `services/user.service.ts` now PUTs_
+      _`api/auth/profile` with the full name+email+profile payload; `AccountDetailsForm.tsx`_
+      _resends the user's current full `profile` unchanged alongside its own edits, and the_
+      _new `edit-address` page (see below) does the mirror image, so neither form can wipe_
+      _out what the other saved. Dropped the "Display name" field from `AccountDetailsForm`_
+      _entirely — the real backend has no such field, it was always a dead input. Live-_
+      _verified end-to-end (name-only save → address-only save → re-fetch → restore),_
+      _confirming each save preserves the fields the other form owns and data genuinely_
+      _persists. Typecheck + lint clean._
 - [ ] **Fix the Django backend checkout crash.** `/api/orders/checkout` throws
       `ValueError: Currency formatting is not possible using the 'C' locale` in
       `app/orders/views.py` line 89 (`locale.currency(...)` with no server locale
@@ -222,9 +230,17 @@ don't delete completed items until the next full regeneration (so progress is vi
 
 ### Medium priority
 
-- [ ] **Decide the fate of the 3 inert My Account subpages** (`downloads`,
+- [x] **Decide the fate of the 3 inert My Account subpages** (`downloads`,
       `edit-address`, `payment-methods`) — build real functionality (address CRUD backed
       by the real profile API, etc.) or remove/hide the nav entries if not planned.
+      _Done 2026-07-15 — `edit-address` rebuilt for real: a billing + shipping address_
+      _form (+ phone), backed by the same fixed `PUT api/auth/profile` flow above, merging_
+      _the user's current name/email so as not to wipe them. `downloads` and_
+      _`payment-methods` have no real backend behind them (no digital products, no stored-_
+      _payment-method API) — kept as unlinked stub route files but removed from_
+      _`AccountSidebar.tsx`'s nav so users can't reach dead pages. Verified live: both_
+      _pages render correctly, sidebar shows exactly Dashboard/Orders/Addresses/Account_
+      _Details/Logout. Typecheck + lint clean._
 - [ ] **Add JSON-LD `BreadcrumbList` to the PLP** — a visual breadcrumb exists but no
       structured data, despite this project's own SEO rule requiring it on listing pages.
 - [x] **Enrich the PDP's Product JSON-LD to match the real WordPress schema** —

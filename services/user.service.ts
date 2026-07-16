@@ -1,4 +1,4 @@
-import type { AccountDetailsPayload, AuthSession, RegisterPayload, User, UserProfile } from '@/types/user'
+import type { AccountDetailsPayload, AuthSession, ProfileUpdatePayload, RegisterPayload, User, UserProfile } from '@/types/user'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
 const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
@@ -28,9 +28,6 @@ const REGISTER_URL = `${BACKEND_URL}api/auth/register/`
 // against the OSS backend — placeholder assumed to mirror LOGIN_URL.
 const LOST_PASSWORD_URL = `${BACKEND_URL}api/auth/lost-password/`
 
-// TODO: confirm the real account-details update endpoint + request/response
-// contract against the OSS backend — placeholder assumed to mirror LOGIN_URL.
-const ACCOUNT_DETAILS_URL = `${BACKEND_URL}api/auth/account-details/`
 
 // The OSS backend's exact auth response shape isn't documented. Different
 // Django/DRF auth setups nest the user under `user`, flatten it at the top
@@ -80,11 +77,6 @@ export async function getUserProfile(token: string): Promise<User> {
   })
 
   const data = await res.json().catch(() => null)
-
-  // TEMP DEBUG — remove once the real response shape (esp. billing/shipping
-  // address fields needed for /api/cart/create) is confirmed.
-  console.log('[getUserProfile] status:', res.status)
-  console.log('[getUserProfile] raw response:', JSON.stringify(data, null, 2))
 
   if (!res.ok) {
     throw new Error(data?.error ?? data?.detail ?? 'Could not load account details.')
@@ -232,15 +224,39 @@ export async function changePassword(token: string, oldPassword: string, newPass
   }
 }
 
+// PUT /api/auth/profile — same URL as GET, different verb. The backend takes a
+// full-object replace, not a partial patch, so `payload.profile` must already be
+// the caller's current full profile merged with whatever fields they edited, or
+// the un-sent fields come back empty.
 export async function updateAccountDetails(token: string, payload: AccountDetailsPayload): Promise<User> {
-  const res = await fetch(ACCOUNT_DETAILS_URL, {
-    method: 'PATCH',
+  const profile = payload.profile ?? {}
+  const wirePayload: ProfileUpdatePayload = {
+    first_name: payload.firstName,
+    last_name: payload.lastName,
+    email: payload.email,
+    profile: {
+      phone: profile.phone ?? '',
+      billing_address: profile.billingAddress ?? '',
+      billing_country: profile.billingCountry ?? '',
+      billing_city: profile.billingCity ?? '',
+      billing_state: profile.billingState ?? '',
+      billing_zip: profile.billingZip ?? '',
+      shipping_address: profile.shippingAddress ?? '',
+      shipping_country: profile.shippingCountry ?? '',
+      shipping_city: profile.shippingCity ?? '',
+      shipping_state: profile.shippingState ?? '',
+      shipping_zip: profile.shippingZip ?? '',
+    },
+  }
+
+  const res = await fetch(PROFILE_URL, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(wirePayload),
   })
 
   const data = await res.json().catch(() => null)

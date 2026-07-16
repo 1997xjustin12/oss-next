@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth'
 type FormState = {
   firstName: string
   lastName: string
-  displayName: string
   email: string
 }
 
@@ -15,7 +14,6 @@ export function AccountDetailsForm() {
   const [form, setForm] = useState<FormState>({
     firstName: user?.firstName ?? '',
     lastName: user?.lastName ?? '',
-    displayName: user?.displayName ?? '',
     email: user?.email ?? '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -41,6 +39,10 @@ export function AccountDetailsForm() {
 
     try {
       setIsSubmitting(true)
+      // Full-object PUT under the hood — the backend has no partial-patch
+      // support, so this must resend the user's current profile (address/
+      // phone) unchanged alongside the name/email fields this form edits,
+      // or saving here would wipe out whatever /my-account/edit-address set.
       const res = await fetch('/api/auth/account-details', {
         method: 'PATCH',
         headers: {
@@ -50,8 +52,8 @@ export function AccountDetailsForm() {
         body: JSON.stringify({
           firstName: form.firstName,
           lastName: form.lastName,
-          displayName: form.displayName || undefined,
           email: form.email,
+          profile: user.profile,
         }),
       })
       const data = await res.json().catch(() => null)
@@ -123,20 +125,6 @@ export function AccountDetailsForm() {
               className={inputClass}
             />
           </div>
-        </div>
-
-        <div>
-          <label htmlFor="acc-display-name" className={labelClass}>
-            Display name
-          </label>
-          <input
-            id="acc-display-name"
-            type="text"
-            value={form.displayName}
-            onChange={(e) => update('displayName', e.target.value)}
-            className={inputClass}
-            placeholder="How your name appears on the site"
-          />
         </div>
 
         <div>

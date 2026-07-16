@@ -5,7 +5,7 @@ import type { AccountDetailsPayload } from '@/types/user'
 export async function PATCH(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   const payload = (await request.json()) as Partial<AccountDetailsPayload>
-  const { firstName, lastName, email } = payload
+  const { firstName, lastName, email, profile } = payload
 
   if (!token) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 })
@@ -16,7 +16,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const user = await updateAccountDetails(token, payload as AccountDetailsPayload)
+    const user = await updateAccountDetails(token, { firstName, lastName, email, profile })
     return NextResponse.json({ user })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Could not update account details. Please try again.'

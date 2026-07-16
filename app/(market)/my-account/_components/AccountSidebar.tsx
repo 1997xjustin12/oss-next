@@ -3,12 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+// Downloads and Payment methods are intentionally not linked here — neither
+// has a real backend behind it (no digital products, no stored payment
+// methods API), so they're left as unlinked stub routes instead of being
+// deleted outright. See AUDIT_REQUIREMENTS.md.
 const NAV_ITEMS = [
   { href: '/my-account', label: 'Dashboard' },
   { href: '/my-account/orders', label: 'Orders' },
-  { href: '/my-account/downloads', label: 'Downloads' },
   { href: '/my-account/edit-address', label: 'Addresses' },
-  { href: '/my-account/payment-methods', label: 'Payment methods' },
   { href: '/my-account/edit-account', label: 'Account Details' },
 ]
 
