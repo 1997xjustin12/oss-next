@@ -247,6 +247,48 @@ export async function getProductsByIds(productIds: (string | number)[]): Promise
   }
 }
 
+export type ProductHandleEntry = { handle: string; updatedAt?: string }
+
+// Every published product's handle + updated_at, for app/sitemap.ts. Uses
+// search_after (sorted on the efficient _doc order) rather than a single
+// large `size`, since the real catalog (~10,264 published products,
+// confirmed live 2026-07-15) exceeds Elasticsearch's default 10,000-result
+// search window — this scans in pages regardless of how large the catalog
+// grows.
+export async function getAllProductHandles(): Promise<ProductHandleEntry[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  const PAGE_SIZE = 1000
+  const entries: ProductHandleEntry[] = []
+  let searchAfter: (string | number)[] | undefined
+
+  for (;;) {
+    const esResponse = await client.search({
+      index: INDEX,
+      size: PAGE_SIZE,
+      query: { term: { status: 'publish' } },
+      _source: ['handle', 'updated_at'],
+      sort: [{ _doc: { order: 'asc' } }],
+      ...(searchAfter ? { search_after: searchAfter } : {}),
+    })
+
+    const hits = esResponse.hits.hits
+    if (hits.length === 0) break
+
+    for (const hit of hits) {
+      const src = hit._source as { handle?: string; updated_at?: string } | undefined
+      if (src?.handle) entries.push({ handle: src.handle, updatedAt: src.updated_at })
+    }
+
+    if (hits.length < PAGE_SIZE) break
+    searchAfter = hits[hits.length - 1].sort as (string | number)[]
+  }
+
+  return entries
+}
+
 // Each unique combination of inputs gets its own cache entry.
 // Busted by revalidateTag(CACHE_TAGS.SEARCH) or revalidateTag(CACHE_TAGS.ALL).
 export async function cachedEsSearch(input: SearchInput) {

@@ -146,8 +146,13 @@ don't delete completed items until the next full regeneration (so progress is vi
       `app/orders/views.py` line 89 (`locale.currency(...)` with no server locale
       configured) — on EVERY call, and the order saves before the crash. Blocks real
       checkout entirely once Braintree credentials exist. **Backend fix, not fixable here.**
-- [ ] **Add `sitemap.ts` and `robots.ts`** covering all static routes plus dynamic
+- [x] **Add `sitemap.ts` and `robots.ts`** covering all static routes plus dynamic
       ES-backed PDP/PLP URLs. Currently zero SEO route declarations exist.
+      _Done 2026-07-15 — new `getAllProductHandles()` in `search.service.ts` paginates_
+      _via `search_after` (ES's 10,000-result window is smaller than the real catalog)._
+      _Verified live: `/sitemap.xml` returns exactly 10,267 URLs (3 static + 10,264 real_
+      _published products, matching a direct ES count), with real `lastmod` dates._
+      _`/robots.txt` disallows `/my-account`, `/cart`, `/checkout`. Typecheck + lint clean._
 - [ ] **Add `error.tsx`, `not-found.tsx`, and `global-error.tsx`** for the in-scope areas —
       none exist anywhere in the app today.
 - [ ] **Rebuild the `/cart` page's fake logic**: replace the `setTimeout`-based loading
