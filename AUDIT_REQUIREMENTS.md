@@ -150,6 +150,19 @@ don't delete completed items until the next full regeneration (so progress is vi
 
 ### High priority
 
+- [ ] **Fix the Django backend account-update endpoint — it doesn't exist.**
+      Found 2026-07-15 while investigating whether `edit-address` could be built for
+      real: `services/user.service.ts`'s `ACCOUNT_DETAILS_URL`
+      (`api/auth/account-details/`) 404s against the real backend, in every HTTP method
+      tried (PATCH/PUT), with or without a trailing slash. Pulled the **complete**
+      registered `api/auth/` route list directly from a Django debug 404 page to
+      confirm, not guess: `register`, `login`, `token/refresh`, `change-password`,
+      `forgot-password`, `reset-password`, `profile` (GET only), `orders` — nothing else.
+      **This means `AccountDetailsForm.tsx`'s existing "Update Account Details" feature,
+      already shipped and presented to real users as working, has likely never actually
+      worked against the real backend** — every save attempt 404s silently behind a
+      generic error message. Needs a real backend fix (add the endpoint) before this or
+      the planned `edit-address` page can work. Backend fix, not fixable from this app.
 - [ ] **Fix the Django backend checkout crash.** `/api/orders/checkout` throws
       `ValueError: Currency formatting is not possible using the 'C' locale` in
       `app/orders/views.py` line 89 (`locale.currency(...)` with no server locale
