@@ -155,9 +155,12 @@ don't delete completed items until the next full regeneration (so progress is vi
       a real backend-validated flow (or remove the coupon box if no coupon system is
       planned), and replace the flat `$195` delivery-fee constant with a real call to
       `/api/orders/get-total` (same endpoint checkout already uses) so the two pages agree.
-- [ ] **Fix the duplicate `<main>` landmark bug** — nearly every My Account page plus the
+- [x] **Fix the duplicate `<main>` landmark bug** — nearly every My Account page plus the
       PDP (`ProductDetail.tsx`/`AccessoryDetail.tsx`) render their own `<main>` nested
       inside the shared layout's `<main>`. Remove the nested ones.
+      _Done 2026-07-15 — swapped the nested `<main>` for `<div>` in all 11 affected files_
+      _(9 my-account pages + ProductDetail.tsx + AccessoryDetail.tsx); verified exactly one_
+      _`<main>` renders per page via Playwright, typecheck + lint clean._
 
 ### Medium priority
 

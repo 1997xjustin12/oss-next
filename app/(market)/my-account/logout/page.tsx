@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 
 export default function LogoutPage() {
   return (
-    <main className="flex min-h-[50vh] items-center justify-center bg-white px-[5%] py-10 dark:bg-gray-900">
+    <div className="flex min-h-[50vh] items-center justify-center bg-white px-[5%] py-10 dark:bg-gray-900">
       <LogoutHandler />
-    </main>
+    </div>
   )
 }

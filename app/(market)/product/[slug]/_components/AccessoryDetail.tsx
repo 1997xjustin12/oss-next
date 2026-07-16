@@ -48,7 +48,7 @@ export function AccessoryDetail({ product }: Props) {
   }
 
   return (
-    <main className="bg-theme-bg text-theme-dark min-h-screen">
+    <div className="bg-theme-bg text-theme-dark min-h-screen">
       <section className="px-4 sm:px-[5%] py-8 sm:py-14">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-start">
 
@@ -154,6 +154,6 @@ export function AccessoryDetail({ product }: Props) {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

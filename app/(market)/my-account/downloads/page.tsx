@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function DownloadsPage() {
   return (
-    <main className="bg-white px-[5%] py-10 sm:py-14 dark:bg-gray-900">
+    <div className="bg-white px-[5%] py-10 sm:py-14 dark:bg-gray-900">
       <div className="mx-auto max-w-6xl">
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-theme-dark mb-8 sm:mb-12 dark:text-white">
           My Account
@@ -31,6 +31,6 @@ export default function DownloadsPage() {
           </div>
         </AccountPageShell>
       </div>
-    </main>
+    </div>
   )
 }

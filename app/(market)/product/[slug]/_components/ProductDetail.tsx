@@ -37,7 +37,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
   const containerVariant = resolveContainerVariant(activeProduct)
 
   return (
-    <main className="bg-theme-bg text-theme-dark">
+    <div className="bg-theme-bg text-theme-dark">
       {/* Breadcrumb + product grid */}
       <ProductVariantShell
         product={product}
@@ -94,6 +94,6 @@ export function ProductDetail({ product, relatedProducts }: Props) {
         </div>
         <FaqAccordion variant={containerVariant} />
       </section>
-    </main>
+    </div>
   )
 }
