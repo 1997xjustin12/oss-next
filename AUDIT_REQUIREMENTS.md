@@ -162,8 +162,21 @@ don't delete completed items until the next full regeneration (so progress is vi
       _Verified live: `/sitemap.xml` returns exactly 10,267 URLs (3 static + 10,264 real_
       _published products, matching a direct ES count), with real `lastmod` dates._
       _`/robots.txt` disallows `/my-account`, `/cart`, `/checkout`. Typecheck + lint clean._
-- [ ] **Add `error.tsx`, `not-found.tsx`, and `global-error.tsx`** for the in-scope areas —
+- [x] **Add `error.tsx`, `not-found.tsx`, and `global-error.tsx`** for the in-scope areas —
       none exist anywhere in the app today.
+      _Done 2026-07-15 — all 3 added at the true `app/` root (the only other route group,_
+      _`(admin)`, is entirely unbuilt placeholder folders, so no separate scoped versions_
+      _needed yet). Styled to match the site's existing empty-state pattern (icon + heading_
+      _+ description + CTA), with a phone-support link consistent with the rest of the site._
+      _Verified live: a nonexistent `/product/{handle}` correctly renders `not-found.tsx`'s_
+      _content. **Known caveat, pre-existing, not introduced by this change**: the PDP's_
+      _`notFound()` call happens inside a `<Suspense>` boundary, so the HTTP response has_
+      _already started streaming with a 200 status by the time it fires — the page shows_
+      _the correct not-found content, but the status code stays 200 instead of 404 on that_
+      _specific route. Fixing that would mean restructuring the PDP's Suspense placement,_
+      _out of scope for just adding these files. `error.tsx`/`global-error.tsx` verified via_
+      _typecheck/lint only (standard, low-risk Next.js file conventions; not easily_
+      _triggerable without introducing a real fault)._
 - [ ] **Rebuild the `/cart` page's fake logic**: replace the `setTimeout`-based loading
       state with a real one, replace the hardcoded `"SAVE10"` client-side coupon check with
       a real backend-validated flow (or remove the coupon box if no coupon system is
