@@ -63,6 +63,14 @@ don't re-flag these in future audit passes.
    `/version2`/`/version3` routes were removed 2026-07-17 in favor of this pattern; don't
    re-suggest separate variant routes in a future audit. See `middleware.ts` and
    `(home)/page.tsx`'s `VariantHero`.
+7. **Client-confirmed feature decisions, 2026-07-18** — don't re-flag these in future audits:
+   - Both homepage reviews carousels (`ReviewsSection.tsx` static + `ReviewsSectionLive.tsx`
+     live) are kept side by side, on purpose, for now.
+   - Product comparison, recently-viewed products, account deletion/data export, and
+     back-in-stock/price-drop alerts are **not required by the client** — not being built.
+   - Payment methods stay **Braintree card-only** — no PayPal/Venmo/Apple Pay planned.
+   - Live chat and newsletter signup UI are **still pending** a client decision (not
+     resolved either way — don't mark done, but don't re-report as newly-found either).
 
 _(Add new confirmed decisions here as they come up, so they persist across future audits.)_
 
@@ -406,9 +414,11 @@ don't delete completed items until the next full regeneration (so progress is vi
 - [ ] **Decide the homepage's direction**: it's almost entirely static marketing content,
       including a `QuoteForm` whose submit button doesn't call any backend at all. Either
       wire it to a real lead-capture endpoint or explicitly accept it as decorative.
-- [ ] **Decide between the two homepage reviews carousels** — `ReviewsSection.tsx`
+- [x] **Decide between the two homepage reviews carousels** — `ReviewsSection.tsx`
       (static) and `ReviewsSectionLive.tsx` (real backend data) are intentionally rendered
       side by side right now for comparison; pick one before shipping.
+      _Decided 2026-07-18 — retain both, for now. No code change; moved to §2 as a_
+      _confirmed decision so future audits stop flagging this as pending._
 - [ ] **New 2026-07-17 — the PDP's "You May Also Need" section is fully fake, not just**
       **static.** `ProductDetail.tsx` renders a hardcoded 4-item `staticRelatedProducts`
       array with placeholder prices (`"From $2,000"`, `"Call for Price"`) and CTA buttons
@@ -440,14 +450,20 @@ don't delete completed items until the next full regeneration (so progress is vi
 - [ ] Social sharing — build or remove the dead "Share" button on the PDP.
 - [ ] Site-wide search UI — the ES backend already supports free-text query; just needs a
       search box added to the header/nav.
-- [ ] Recently viewed products — net-new feature if wanted.
+- [x] Recently viewed products — net-new feature if wanted.
+      _Decided 2026-07-18 — not required by the client. No action._
 - [ ] **Live chat — build or remove the marketing claim.** `TrustStrip.tsx` on the homepage
       explicitly advertises "Phone, Email & Chat" support, but no chat implementation
       exists anywhere. This is a false claim to customers today, worth fixing either way.
-- [ ] Multiple payment methods — the Braintree Drop-in is currently configured card-only;
+      _2026-07-18 — client hasn't decided on live chat itself yet; leaving both the_
+      _feature and the marketing copy as-is until they do. Still an open false-claim risk_
+      _in the meantime — revisit the copy specifically if the chat decision stalls long._
+- [x] Multiple payment methods — the Braintree Drop-in is currently configured card-only;
       enabling PayPal/Venmo/Apple Pay may be cheap since the infra already exists.
+      _Decided 2026-07-18 — Braintree card-only for now. No action._
 - [ ] Newsletter signup UI — backend utility functions already exist (`lib/newsletter.ts`);
       revisit building a signup form now that checkout has more real estate.
+      _2026-07-18 — still pending a client decision, not resolved either way._
 - [ ] Wire the PDP's stock/availability badge to the real `variants[].qty` field instead
       of always showing a hardcoded "In Stock — Ready to Ship".
 - [ ] Evaluate whether any data needs the `cacheLife('seconds')` tier — currently unused.
@@ -455,13 +471,17 @@ don't delete completed items until the next full regeneration (so progress is vi
       in `wp-proxy.service.ts`) — cosmetic/convention only, both server-only, no bundle impact.
 - [ ] PLP ratings/review-count sync — already logged separately, see memory
       `backend-reminder-plp-ratings.md` (backend-side fix, not frontend).
-- [ ] **New 2026-07-17 — Account deletion / data export has zero implementation** anywhere
+- [x] **New 2026-07-17 — Account deletion / data export has zero implementation** anywhere
       (no route, form, or backend call). A standard GDPR/CCPA-style expectation for a real
       storefront; needs a product decision on whether/how to build it, not just a code fix.
-- [ ] **New 2026-07-17 — Back-in-stock alerts and price-drop alerts are pure, total gaps** —
+      _Decided 2026-07-18 — no requirement from the client. No action._
+- [x] **New 2026-07-17 — Back-in-stock alerts and price-drop alerts are pure, total gaps** —
       no UI, hook, or backend call for either. Net-new features if wanted; not previously
       itemized explicitly (distinct from the general "notifications" area, which was
       previously only represented by the stock-badge/newsletter items above).
+      _Decided 2026-07-18 — not required by the client; if built at all, it's expected to_
+      _be a backend-driven subscriber notification (for users already subscribed), not a_
+      _frontend feature. No action here._
 - [ ] **New 2026-07-17 — clarify who owns order confirmation emails.** No email-sending
       code (SendGrid/nodemailer/SMTP/etc.) exists anywhere in this Next.js app — if
       confirmation emails are sent today, it's entirely a Django-backend responsibility
