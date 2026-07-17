@@ -318,8 +318,15 @@ don't delete completed items until the next full regeneration (so progress is vi
       _`InstantSearchSection`, so that one doesn't duplicate the real breadcrumb/header_
       _already on screen by the time it could suspend. Typecheck + lint clean; page_
       _verified live (200)._
-- [ ] **Improve the PDP's Suspense fallback** — currently a generic pulsing box, not shaped
+- [x] **Improve the PDP's Suspense fallback** — currently a generic pulsing box, not shaped
       like the final content.
+      _Done 2026-07-17 — new `PdpSkeleton.tsx` mirrors the real two-column layout_
+      _(breadcrumb, gallery + quick-specs stat bar on one side, title/price/CTA stack on_
+      _the other). Close enough in shape for both real PDP layouts it can precede_
+      _(`ProductVariantShell` for containers, `AccessoryDetail` for accessories) —_
+      _exact per-layout fidelity isn't achievable from one shared fallback, but this is a_
+      _meaningful improvement over the prior single pulsing div either way. Typecheck +_
+      _lint clean; verified live against one of each product type (200)._
 - [ ] **Decide the homepage's direction**: it's almost entirely static marketing content,
       including a `QuoteForm` whose submit button doesn't call any backend at all. Either
       wire it to a real lead-capture endpoint or explicitly accept it as decorative.

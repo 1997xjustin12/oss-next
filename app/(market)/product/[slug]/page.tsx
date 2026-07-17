@@ -9,6 +9,7 @@ import { getQuickSpecs } from '@/lib/data/pdpShippingContainers'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { ProductDetail } from './_components/ProductDetail'
+import { PdpSkeleton } from './_components/PdpSkeleton'
 import type { ProductHit } from '@/types/product'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -156,7 +157,7 @@ async function ProductContent({ params }: Props) {
 
 export default function ProductPage(props: Props) {
   return (
-    <Suspense fallback={<div className="min-h-screen animate-pulse bg-theme-subtle" />}>
+    <Suspense fallback={<PdpSkeleton />}>
       <ProductContent {...props} />
     </Suspense>
   )
