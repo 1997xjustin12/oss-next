@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Shield, CheckCircle2, Truck, Headphones,
-  Heart, Share2, Printer,
+  Heart, Printer,
   ShoppingCart, ClipboardList, Phone, Info,
 } from 'lucide-react'
 import type { ProductHit } from '@/types/product'
@@ -14,6 +14,7 @@ import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
 import { Stars } from '@/components/product/Stars'
 import { DeliveryZipCheck } from './DeliveryZipCheck'
+import { ShareButton } from '@/components/product/ShareButton'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import Link from 'next/link'
 
@@ -654,7 +655,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
           <Heart className={`w-3.5 h-3.5 ${isWishlisted(activeProduct.objectID) ? 'fill-current' : ''}`} />
           {isWishlisted(activeProduct.objectID) ? 'Saved to Wishlist' : 'Save to Wishlist'}
         </button>
-        <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><Share2 className="w-3.5 h-3.5" /> Share</button>
+        <ShareButton title={activeProduct.title} />
         <button
           type="button"
           onClick={() => window.print()}

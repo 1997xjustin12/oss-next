@@ -463,7 +463,20 @@ don't delete completed items until the next full regeneration (so progress is vi
       _toggle, localStorage persistence, nav badge count, wishlist page listing, remove-_
       _to-empty-state. Typecheck + lint clean (pre-existing unrelated errors confirmed via_
       _diff)._
-- [ ] Social sharing — build or remove the dead "Share" button on the PDP.
+- [x] Social sharing — build or remove the dead "Share" button on the PDP.
+      _Done 2026-07-18 — no backend needed at all, purely client-side. New_
+      _`components/product/ShareButton.tsx`: uses the native Web Share API_
+      _(`navigator.share`) on mobile/supporting browsers; falls back to a small dropdown_
+      _(Facebook, X, WhatsApp, Email share intents + Copy Link) on desktop. `lucide-react`_
+      _doesn't ship Facebook/X brand icons, so those two rows use a generic external-link_
+      _icon rather than a wrong/placeholder brand mark. Caught and fixed a real robustness_
+      _gap while testing: `copyLink()` had no error handling — a headless-browser test_
+      _confirmed `navigator.clipboard.writeText()` throwing (permission denied) would_
+      _silently do nothing; wrapped in try/catch so it fails quietly instead of an_
+      _unhandled rejection, with no fake "Copied!" confirmation shown on failure._
+      _Verified live: menu opens, all 4 share links carry the correct encoded product_
+      _title/URL, copy-link shows real "Copied!" confirmation when clipboard access is_
+      _granted, closes on outside click and Escape. Typecheck + lint clean._
 - [ ] Site-wide search UI — the ES backend already supports free-text query; just needs a
       search box added to the header/nav.
 - [x] Recently viewed products — net-new feature if wanted.
