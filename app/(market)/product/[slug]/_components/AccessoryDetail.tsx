@@ -1,11 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { ShoppingCart, Phone, MapPin, Tag, CheckCircle2, Star } from 'lucide-react'
+import Link from 'next/link'
+import { ShoppingCart, Phone, MapPin, Tag, CheckCircle2, Star, ChevronRight } from 'lucide-react'
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { useCart } from '@/hooks/useCart'
 import { getCustomFieldValue } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { CONTACT_NUMBER } from '@/lib/helpers'
+import { ROUTES } from '@/config/routes'
 import type { ProductHit } from '@/types/product'
 
 type Props = { product: ProductHit }
@@ -49,6 +52,15 @@ export function AccessoryDetail({ product }: Props) {
 
   return (
     <div className="bg-theme-bg text-theme-dark min-h-screen">
+      {/* BREADCRUMB */}
+      <div className="flex items-center gap-1.5 flex-wrap px-4 sm:px-[5%] py-3 text-xs sm:text-sm text-theme-muted bg-theme-subtle border-b border-theme-border">
+        <Link href={ROUTES.HOME} className="hover:text-theme-primary transition-colors">Home</Link>
+        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+        <Link href={ROUTES.PLP_ACCESSORIES} className="hover:text-theme-primary transition-colors">Container Accessories</Link>
+        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+        <span className="text-theme-dark font-semibold">{product.title}</span>
+      </div>
+
       <section className="px-4 sm:px-[5%] py-8 sm:py-14">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-start">
 
@@ -144,7 +156,7 @@ export function AccessoryDetail({ product }: Props) {
                 {added ? 'Added to Cart!' : 'Add to Cart'}
               </button>
               <a
-                href="tel:+18886780313"
+                href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`}
                 className="flex items-center justify-center gap-2 bg-theme-subtle dark:bg-white/5 hover:bg-theme-border dark:hover:bg-white/10 text-theme-dark dark:text-white font-bold px-5 py-3.5 rounded-lg border border-theme-border transition-colors"
               >
                 <Phone className="w-4 h-4 shrink-0" />

@@ -303,10 +303,17 @@ don't delete completed items until the next full regeneration (so progress is vi
       _pointing at the real PLP. Typecheck + lint clean (pre-existing, unrelated errors_
       _confirmed via diff: `AccountPageShell.tsx`/`Navbar.tsx` set-state-in-effect,_
       _Footer.tsx's untouched Locations `<a>` tag)._
-- [ ] Accessory PDPs (`AccessoryDetail.tsx`) have no breadcrumb back to the PLP at all,
+- [x] Accessory PDPs (`AccessoryDetail.tsx`) have no breadcrumb back to the PLP at all,
       unlike container PDPs (`ProductVariantShell.tsx`). Found 2026-07-17 while tracing
       the routes.ts refactor above — not fixed there since it's a new UI addition, not a
       path-constant swap.
+      _Done 2026-07-17 — added a Home / Container Accessories / {title} breadcrumb,_
+      _matching `ProductVariantShell.tsx`'s exact visual style, linking to_
+      _`ROUTES.PLP_ACCESSORIES`. Also fixed a real bug found in the same file: the_
+      _"Call Us" button dialed a hardcoded `+18886780313` — a different number than the_
+      _site's actual `CONTACT_NUMBER` (888-977-9085) used everywhere else — now uses the_
+      _shared constant. Typecheck + lint clean; verified live (breadcrumb text + correct_
+      _phone number both present in the real rendered page)._
 - [x] **Wire real Suspense fallbacks on the PLP.** Both boundaries in
       `sale-shipping-containers/page.tsx` currently have no `fallback` at all — and a
       fully-built, dimension-matched `PageSkeleton.tsx` component already exists right next
