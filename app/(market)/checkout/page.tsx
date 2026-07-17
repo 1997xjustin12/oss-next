@@ -7,12 +7,12 @@ import { CheckoutClient } from './_components/CheckoutClient';
 export const metadata: Metadata = {
   title: 'Checkout',
   description:
-    'Complete your shipping container reservation with On-Site Storage Solutions. No commitment required — we confirm all details before finalizing your order.',
+    'Complete your shipping container purchase securely with On-Site Storage Solutions. Enter your details and payment information to finalize your order.',
   alternates: { canonical: ROUTES.CHECKOUT },
   robots: { index: false, follow: false },
   openGraph: {
     title: 'Checkout | On-Site Storage Solutions',
-    description: 'Reserve your shipping container today. No deposit, no commitment.',
+    description: 'Complete your shipping container order — secure checkout, fast nationwide delivery.',
     type: 'website',
     url: 'https://onsitestorage.com/checkout',
   },

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Info,
   Package,
@@ -590,8 +591,7 @@ export function CheckoutClient() {
                 <div className="flex gap-3">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-theme-subtle dark:bg-neutral-800">
                     {item.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.image} alt={item.name} className="h-full w-full rounded-md object-cover" />
+                      <Image src={item.image} alt={item.name} width={56} height={56} className="h-full w-full rounded-md object-cover" />
                     ) : (
                       <Package className="h-6 w-6 text-theme-muted dark:text-neutral-500" />
                     )}
@@ -816,9 +816,9 @@ export function CheckoutClient() {
                   />
                   <span>
                     I confirm that I have read the{' '}
-                    <a href="#" className="font-bold text-theme-primary hover:underline dark:text-red-400">
+                    <Link href="/shipping-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary hover:underline dark:text-red-400">
                       Delivery Requirement
-                    </a>{' '}
+                    </Link>{' '}
                     and that the delivery site is suitable for delivery of the container(s)/equipment{' '}
                     <span className="text-theme-primary dark:text-red-400">*</span>
                   </span>
@@ -833,13 +833,13 @@ export function CheckoutClient() {
                   />
                   <span>
                     I have read and agree to the website{' '}
-                    <a href="#" className="font-bold text-theme-primary hover:underline dark:text-red-400">
+                    <Link href="/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary hover:underline dark:text-red-400">
                       terms and conditions
-                    </a>{' '}
+                    </Link>{' '}
                     and{' '}
-                    <a href="#" className="font-bold text-theme-primary hover:underline dark:text-red-400">
+                    <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary hover:underline dark:text-red-400">
                       privacy policy
-                    </a>{' '}
+                    </Link>{' '}
                     <span className="text-theme-primary dark:text-red-400">*</span>
                   </span>
                 </label>
@@ -871,9 +871,9 @@ export function CheckoutClient() {
               <p className="text-xs text-theme-muted dark:text-neutral-400">
                 Your personal data will be used to process your order, support your experience
                 throughout this website, and for other purposes described in our{' '}
-                <a href="#" className="font-semibold text-theme-primary hover:underline dark:text-red-400">
+                <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-theme-primary hover:underline dark:text-red-400">
                   privacy policy
-                </a>
+                </Link>
                 .
               </p>
             </div>

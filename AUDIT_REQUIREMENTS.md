@@ -300,18 +300,25 @@ don't delete completed items until the next full regeneration (so progress is vi
       _or analytics library exists anywhere in this repo today, so this only covers correct_
       _variant delivery, not measurement. Wire in whatever analytics tool is chosen once one_
       _exists, rather than fabricating tracking calls with nothing to receive them._
-- [ ] **New 2026-07-17 — Checkout page metadata is stale and now factually wrong.**
+- [x] **Checkout page metadata was stale and factually wrong.**
       `app/(market)/checkout/page.tsx`'s `metadata` (title-tag description + OG copy)
-      still reads "Complete your shipping container **reservation**... **No commitment
+      still read "Complete your shipping container **reservation**... **No commitment
       required**" / "**Reserve** your shipping container today. **No deposit, no
-      commitment**." This describes the old fake "reserve, not a purchase" flow —
+      commitment**." This described the old fake "reserve, not a purchase" flow —
       `CheckoutClient.tsx` itself was already updated to real "Place Order" / "your card
       is charged" copy (per `API_INTEGRATION_STATUS.md`), but the page-level metadata
       (what shows in search results and shared links) was never updated to match.
-- [ ] **New 2026-07-17 — `cart/page.tsx` has zero `metadata` export**, violating this
-      project's own "every page.tsx must export metadata" rule. Low severity since `/cart`
-      is already `robots.txt`-disallowed, but the explicit per-page `robots: { index:
-      false }` (same defense-in-depth pattern checkout uses) is still missing.
+      _Done 2026-07-18 — rewrote both the meta description and OG copy to describe the_
+      _real payment flow. Verified live._
+- [x] **`cart/page.tsx` had zero `metadata` export**, violating this project's own "every
+      page.tsx must export metadata" rule. Low severity since `/cart` is already
+      `robots.txt`-disallowed, but the explicit per-page `robots: { index: false }` (same
+      defense-in-depth pattern checkout uses) was still missing.
+      _Done 2026-07-18 — split the page the same way `/wishlist` was just built: a new_
+      _server-shell `page.tsx` exporting real metadata (title, description, canonical,_
+      _`robots: { index: false, follow: true }`), rendering the actual cart UI (moved_
+      _as-is) from a new `_components/CartPageClient.tsx`. No behavior change. Verified_
+      _live: `/cart` returns 200 with a real `<title>` tag now._
 
 ### Medium priority
 
@@ -434,13 +441,23 @@ don't delete completed items until the next full regeneration (so progress is vi
       are declared in `config/cache.ts` but never attached via `cacheTag()` to anything,
       nor targeted by any revalidation call — meaning cart/checkout/profile mutations
       never bust their own cached data.
-- [ ] **New 2026-07-17 — dead `href="#"` consent-checkbox links in checkout.**
+- [x] **Dead `href="#"` consent-checkbox links in checkout.**
       `CheckoutClient.tsx`'s "Delivery Requirement," "terms and conditions," and "privacy
-      policy" consent-checkbox links all go nowhere (`href="#"`). The real WordPress pages
-      exist and already resolve (`/terms`, `/privacy`) — just point these at them.
-- [ ] **New 2026-07-17 — raw `<img>` in `CheckoutClient.tsx`** (order-summary line-item
-      thumbnail), carrying an `eslint-disable-next-line @next/next/no-img-element` that
-      acknowledges but doesn't fix the violation. Swap to `next/image`.
+      policy" consent-checkbox links all went nowhere (`href="#"`). The real WordPress
+      pages exist and already resolve (`/terms`, `/privacy`) — just needed pointing at them.
+      _Done 2026-07-18 — "Delivery Requirement" now links to `/shipping-policy` (closest_
+      _real match — its title is literally "Shipping Policy | Shipping Container_
+      _Delivery"), "terms and conditions" to `/terms`, both "privacy policy" instances to_
+      _`/privacy`. All 4 use `<Link target="_blank" rel="noopener noreferrer">` rather_
+      _than a same-tab navigation, so clicking one mid-checkout doesn't lose in-progress_
+      _form state. Verified live with a real cart item — all 4 links present with the_
+      _correct hrefs and target="_blank"._
+- [x] **Raw `<img>` in `CheckoutClient.tsx`** (order-summary line-item thumbnail), carrying
+      an `eslint-disable-next-line @next/next/no-img-element` that acknowledged but didn't
+      fix the violation.
+      _Done 2026-07-18 — swapped to `next/image` (fixed 56×56 thumbnail, matching its_
+      _existing `h-14 w-14` container). Verified live: renders correctly with a real image_
+      _URL. Typecheck + lint clean._
 
 ### Lower priority / needs a product decision first
 
