@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { LinkEnricher } from "@/components/layout/LinkEnricher";
 import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
+import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,7 +31,10 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body suppressHydrationWarning>
         <AuthProvider>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            {children}
+            <Suspense><GuestCartCapture /></Suspense>
+          </CartProvider>
         </AuthProvider>
         <Suspense><LinkEnricher /></Suspense>
         <Suspense>

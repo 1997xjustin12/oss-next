@@ -1,4 +1,5 @@
 import { cartItemsToLineItems, userProfileToCart } from '@/lib/cart'
+import { getGuestEmail } from '@/lib/guestCapture'
 import type { Cart, CartItem } from '@/types/cart'
 import type { User } from '@/types/user'
 import type { Action } from './CartContext'
@@ -130,13 +131,23 @@ export async function syncCartToBackend(cart: Cart, token: string, user: User, d
 
 // ── Abandoned-cart notify ────────────────────────────────────────────────────
 
+// Guests never get a Django cart_id (/api/cart/* is logged-in only), so
+// there's no name/address on file for them the way there is for a logged-in
+// user's profile — the captured guest email (see components/layout/
+// GuestCartCapture.tsx) is the only contact info a guest notify can carry.
 function buildAbandonedCartPayload(cart: Cart, user: User | null) {
+  const guestEmail = user ? undefined : getGuestEmail()
+
   return {
     cart_id: cart.cartId,
     abandoned_cart_id: cart.cartId,
     items: cartItemsToLineItems(cart.items),
     updated_at: cart.updatedAt,
-    ...(user ? userProfileToCart(user) : {}),
+    ...(user
+      ? userProfileToCart(user)
+      : guestEmail
+        ? { billing_email: guestEmail, shipping_email: guestEmail }
+        : {}),
   }
 }
 
@@ -149,6 +160,9 @@ export async function notifyAbandonedCart(
   trigger: 'timed' | 'forced',
 ): Promise<string | null> {
   if (cart.items.length === 0) return null
+  // Same early-exit the reference app uses ("no billing email yet" skips) —
+  // a guest notify with no way to follow up isn't worth sending.
+  if (!user && !getGuestEmail()) return null
 
   try {
     const res = await fetch('/api/abandoned-carts/create', {
@@ -167,6 +181,7 @@ export async function notifyAbandonedCart(
 // survives page unload. No response is read (or readable).
 export function sendAbandonedCartBeacon(cart: Cart, user: User | null): void {
   if (cart.items.length === 0) return
+  if (!user && !getGuestEmail()) return
   if (typeof navigator === 'undefined' || !navigator.sendBeacon) return
 
   const body = JSON.stringify({ ...buildAbandonedCartPayload(cart, user), trigger: 'beacon' })

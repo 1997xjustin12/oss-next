@@ -39,6 +39,14 @@ don't re-flag these in future audit passes.
    product data, and this matches the original WordPress site's own schema convention.
    Confirmed 2026-07-15.
 
+4. **Guest cart-save email capture uses a hybrid trigger** — exit-intent (desktop, cursor
+   leaves through the top of the viewport) + tab-backgrounded (mobile, no cursor to read
+   exit-intent from), both armed only after ~15s dwell time, capped to at most once per
+   guest (localStorage-gated). Confirmed 2026-07-17. See `components/layout/GuestCartCapture.tsx`
+   and the "guest carts remain structurally blocked" finding in `API_INTEGRATION_STATUS.md`'s
+   Cart section — the capture modal is real and working, but a guest abandoned-cart notify
+   still can't succeed end-to-end against the real backend (needs a backend-side fix).
+
 _(Add new confirmed decisions here as they come up, so they persist across future audits.)_
 
 ---
