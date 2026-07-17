@@ -47,6 +47,16 @@ don't re-flag these in future audit passes.
    Cart section — the capture modal is real and working, but a guest abandoned-cart notify
    still can't succeed end-to-end against the real backend (needs a backend-side fix).
 
+5. **Missing route-level `loading.tsx` on PDP/PLP/cart/checkout/my-account is NOT a gap.**
+   Two parallel research passes disagreed on this during the 2026-07-17 re-audit — one
+   flagged it as a coverage hole, the other traced it further and confirmed it's
+   architecturally correct: PDP/PLP use real page-level `<Suspense>` (which is what
+   `loading.tsx` would otherwise provide), while cart/checkout/my-account are thin server
+   shells around `'use client'` leaves that manage their own dimension-matched skeleton
+   state via `useEffect`/`useState` (e.g. `OrdersList.tsx`'s `OrdersSkeleton`) — `loading.tsx`
+   governs server-streamed async boundaries, not client-side data fetches, so it wouldn't
+   apply here. Confirmed 2026-07-17.
+
 _(Add new confirmed decisions here as they come up, so they persist across future audits.)_
 
 ---
@@ -136,18 +146,31 @@ Every audit pass should produce:
 
 ---
 
-## 5. Latest Audit Results — 2026-07-15
+## 5. Latest Audit Results — 2026-07-17
 
-| Dimension | Score |
-|---|---|
-| **Overall (blended)** | **~65%** |
-| Functional Completeness (8 areas) | ~62% |
-| E-Commerce Feature Coverage (41 items) | ~65% |
-| Core Web Vitals / PageSpeed / SEO | ~68% |
+| Dimension | Score | 2026-07-15 baseline |
+|---|---|---|
+| **Overall (blended)** | **~75%** | ~65% |
+| Functional Completeness (8 areas) | ~81% | ~62% |
+| E-Commerce Feature Coverage (41 items) | ~62% | ~65% |
+| Core Web Vitals / PageSpeed / SEO | ~82% | ~68% |
 
-Full detail (per-area breakdown, all 41 feature rows, all CWV/SEO rows) lives in the audit
-artifact generated this session — not duplicated here to avoid this file going stale; §6
-below is the actionable distillation of it.
+Functional Completeness and CWV/SEO both jumped materially — reflects the account/profile
+fix, guest cart capture, shared `<JsonLd>` + PLP breadcrumb, `config/routes.ts`, and the
+PLP/PDP Suspense fallback work, all done between the two audits.
+
+E-Commerce Feature Coverage actually reads slightly **lower** than the baseline despite no
+regression — this pass scored two items more conservatively than before: the PDP's "You May
+Also Need" section was previously counted as legitimate-but-static, but is confirmed fully
+fake (hardcoded prices, dead CTAs) with real ES `related_products` data sitting unused right
+next to it; and Q&A/FAQ vs. frequently-bought-together were split into their own honest
+partial-credit rows instead of bundled optimistically. Nothing that worked on 2026-07-15
+stopped working.
+
+Full per-area/per-item breakdown from this pass lives in the 3 parallel research reports
+that produced it (not persisted verbatim here, to avoid this file going stale) — §6 below is
+the actionable distillation, with every genuinely NEW finding from this pass folded in
+alongside the existing punch list.
 
 ---
 
@@ -235,6 +258,29 @@ don't delete completed items until the next full regeneration (so progress is vi
       _Done 2026-07-15 — swapped the nested `<main>` for `<div>` in all 11 affected files_
       _(9 my-account pages + ProductDetail.tsx + AccessoryDetail.tsx); verified exactly one_
       _`<main>` renders per page via Playwright, typecheck + lint clean._
+- [ ] **New 2026-07-17 — orphaned duplicate homepage drafts are live, crawlable, and hurt SEO.**
+      `app/(market)/(home)/version2/page.tsx` and `.../version3/page.tsx` render at real,
+      reachable URLs `/version2` and `/version3` — near-identical content/metadata to the
+      real homepage. Confirmed unlinked from anywhere in the app (dev/A-B-test scaffolding
+      left in place), yet: hand-roll inline JSON-LD instead of the shared `<JsonLd>`
+      component, hardcode `canonical: "/"` (wrong — should point at themselves or be
+      `noindex`ed, not claim to *be* the homepage), and are **not excluded** in
+      `robots.ts`'s disallow list nor in `sitemap.ts`. Real duplicate-content indexing
+      risk today. Fix: either delete both (confirm they're not an in-progress A/B test
+      first) or add `robots: { index: false }` + exclude from the disallow list is
+      redundant if noindexed directly — pick one, don't leave as-is.
+- [ ] **New 2026-07-17 — Checkout page metadata is stale and now factually wrong.**
+      `app/(market)/checkout/page.tsx`'s `metadata` (title-tag description + OG copy)
+      still reads "Complete your shipping container **reservation**... **No commitment
+      required**" / "**Reserve** your shipping container today. **No deposit, no
+      commitment**." This describes the old fake "reserve, not a purchase" flow —
+      `CheckoutClient.tsx` itself was already updated to real "Place Order" / "your card
+      is charged" copy (per `API_INTEGRATION_STATUS.md`), but the page-level metadata
+      (what shows in search results and shared links) was never updated to match.
+- [ ] **New 2026-07-17 — `cart/page.tsx` has zero `metadata` export**, violating this
+      project's own "every page.tsx must export metadata" rule. Low severity since `/cart`
+      is already `robots.txt`-disallowed, but the explicit per-page `robots: { index:
+      false }` (same defense-in-depth pattern checkout uses) is still missing.
 
 ### Medium priority
 
@@ -340,6 +386,28 @@ don't delete completed items until the next full regeneration (so progress is vi
 - [ ] **Decide between the two homepage reviews carousels** — `ReviewsSection.tsx`
       (static) and `ReviewsSectionLive.tsx` (real backend data) are intentionally rendered
       side by side right now for comparison; pick one before shipping.
+- [ ] **New 2026-07-17 — the PDP's "You May Also Need" section is fully fake, not just**
+      **static.** `ProductDetail.tsx` renders a hardcoded 4-item `staticRelatedProducts`
+      array with placeholder prices (`"From $2,000"`, `"Call for Price"`) and CTA buttons
+      with zero `onClick` handlers — while the page *does* fetch real `related_products`
+      from ES (`page.tsx`), which today is only consumed internally by `ProductInfoPanel`
+      for variant-swapping, never rendered as an actual related-items display. Either wire
+      the real data into this section or remove it — showing fabricated prices to real
+      customers is worse than showing nothing.
+- [ ] **New 2026-07-17 — `revalidateTag`/`updateTag` aren't wired to any real mutation.**
+      `actions/cache.ts`'s `revalidateAll()`/`updateAll()` exist but are never called
+      anywhere in the app (only referenced in AGENTS.md's own doc example); the only real
+      callers of `revalidateTag` are the two webhook routes. `CACHE_TAGS.ORDERS`/`USERS`
+      are declared in `config/cache.ts` but never attached via `cacheTag()` to anything,
+      nor targeted by any revalidation call — meaning cart/checkout/profile mutations
+      never bust their own cached data.
+- [ ] **New 2026-07-17 — dead `href="#"` consent-checkbox links in checkout.**
+      `CheckoutClient.tsx`'s "Delivery Requirement," "terms and conditions," and "privacy
+      policy" consent-checkbox links all go nowhere (`href="#"`). The real WordPress pages
+      exist and already resolve (`/terms`, `/privacy`) — just point these at them.
+- [ ] **New 2026-07-17 — raw `<img>` in `CheckoutClient.tsx`** (order-summary line-item
+      thumbnail), carrying an `eslint-disable-next-line @next/next/no-img-element` that
+      acknowledges but doesn't fix the violation. Swap to `next/image`.
 
 ### Lower priority / needs a product decision first
 
@@ -364,3 +432,29 @@ don't delete completed items until the next full regeneration (so progress is vi
       in `wp-proxy.service.ts`) — cosmetic/convention only, both server-only, no bundle impact.
 - [ ] PLP ratings/review-count sync — already logged separately, see memory
       `backend-reminder-plp-ratings.md` (backend-side fix, not frontend).
+- [ ] **New 2026-07-17 — Account deletion / data export has zero implementation** anywhere
+      (no route, form, or backend call). A standard GDPR/CCPA-style expectation for a real
+      storefront; needs a product decision on whether/how to build it, not just a code fix.
+- [ ] **New 2026-07-17 — Back-in-stock alerts and price-drop alerts are pure, total gaps** —
+      no UI, hook, or backend call for either. Net-new features if wanted; not previously
+      itemized explicitly (distinct from the general "notifications" area, which was
+      previously only represented by the stock-badge/newsletter items above).
+- [ ] **New 2026-07-17 — clarify who owns order confirmation emails.** No email-sending
+      code (SendGrid/nodemailer/SMTP/etc.) exists anywhere in this Next.js app — if
+      confirmation emails are sent today, it's entirely a Django-backend responsibility
+      with zero visibility from here. Worth confirming with the backend team rather than
+      silently assuming it's covered.
+- [ ] **New 2026-07-17 — dead "View All FAQs →" link on the PDP** (`ProductDetail.tsx`,
+      `href="#"`). Link to the real WordPress FAQ page or remove the link.
+- [ ] **New 2026-07-17 — PLP product cards never pass `priority`** to their `next/image`
+      calls (`ProductCard.tsx`/`AccessoryCard.tsx`), including the first/likely-LCP card.
+      Lower severity since the grid renders client-side via `react-instantsearch` rather
+      than via SSR preload hints, but still worth setting on the first result.
+- [ ] **New 2026-07-17 — cosmetic: stray `ref.md` scaffold files inside `app/`**
+      (`app/(market)/cart/ref.md`, `app/(market)/my-account/ref.md`) — old component-spec
+      notes from an earlier build pass, not real code, but violate the "`app/` holds only
+      route files" convention in spirit. Move out of `app/` or delete.
+- [ ] **New 2026-07-17 — cosmetic: `TrustedBySection.tsx`'s partner-logo alt text is**
+      **generic** (`"Trusted partner logo 1"`–`"9"`), so authenticity of the social-proof
+      claim can't be verified from the code alone — worth real, named alt text if these
+      are genuine client logos.
