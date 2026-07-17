@@ -2,16 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ROUTES } from '@/config/routes'
 
 // Downloads and Payment methods are intentionally not linked here — neither
 // has a real backend behind it (no digital products, no stored payment
 // methods API), so they're left as unlinked stub routes instead of being
 // deleted outright. See AUDIT_REQUIREMENTS.md.
 const NAV_ITEMS = [
-  { href: '/my-account', label: 'Dashboard' },
-  { href: '/my-account/orders', label: 'Orders' },
-  { href: '/my-account/edit-address', label: 'Addresses' },
-  { href: '/my-account/edit-account', label: 'Account Details' },
+  { href: ROUTES.ACCOUNT.ROOT, label: 'Dashboard' },
+  { href: ROUTES.ACCOUNT.ORDERS, label: 'Orders' },
+  { href: ROUTES.ACCOUNT.EDIT_ADDRESS, label: 'Addresses' },
+  { href: ROUTES.ACCOUNT.EDIT_ACCOUNT, label: 'Account Details' },
 ]
 
 export function AccountSidebar() {
@@ -44,7 +45,7 @@ export function AccountSidebar() {
         })}
         <li>
           <Link
-            href="/my-account/logout"
+            href={ROUTES.ACCOUNT.LOGOUT}
             className="block px-5 py-3 text-sm font-semibold text-theme-dark-2 transition-colors
                        hover:bg-white/70 hover:text-theme-primary dark:text-gray-300 dark:hover:bg-gray-900/60 dark:hover:text-red-400"
           >

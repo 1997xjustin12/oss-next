@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { LinkEnricher } from "@/components/layout/LinkEnricher";
 import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
 import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
+import { ROUTES } from "@/config/routes";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,9 +40,9 @@ export default function RootLayout({
         <Suspense><LinkEnricher /></Suspense>
         <Suspense>
           <ZipAutoDetect excludePaths={[
-            '/checkout',
-            '/cart',
-            '/account',
+            ROUTES.CHECKOUT,
+            ROUTES.CART,
+            ROUTES.ACCOUNT.ROOT,
           ]} />
         </Suspense>
       </body>

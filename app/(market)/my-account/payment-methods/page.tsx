@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { CreditCard } from 'lucide-react'
+import { ROUTES } from '@/config/routes'
 import { AccountPageShell } from '../_components/AccountPageShell'
 
 const TITLE = 'Payment Methods'
@@ -8,7 +9,7 @@ const DESCRIPTION = 'Manage your saved payment methods on On-Site Storage Soluti
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/my-account/payment-methods' },
+  alternates: { canonical: ROUTES.ACCOUNT.PAYMENT_METHODS },
   openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
   robots: { index: false, follow: true },
 }

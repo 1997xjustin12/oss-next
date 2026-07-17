@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
+import { ROUTES } from '@/config/routes'
 
 export function LostPasswordForm() {
   const [value, setValue] = useState('')
@@ -95,7 +96,7 @@ export function LostPasswordForm() {
             {isSubmitting ? 'Sending…' : 'Reset password'}
           </button>
 
-          <Link href="/my-account" className="text-sm font-semibold text-theme-primary hover:underline dark:text-red-400">
+          <Link href={ROUTES.ACCOUNT.ROOT} className="text-sm font-semibold text-theme-primary hover:underline dark:text-red-400">
             Back to login
           </Link>
         </div>

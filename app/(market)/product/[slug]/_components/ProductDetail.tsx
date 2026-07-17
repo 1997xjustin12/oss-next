@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Wrench, Ship, Maximize2, Snowflake } from 'lucide-react'
 import { isContainerHit } from '@/lib/pricing'
 import { resolveContainerVariant } from '@/lib/containerVariant'
+import { ROUTES } from '@/config/routes'
 import type { ProductHit } from '@/types/product'
 import { ProductVariantShell } from './ProductVariantShell'
 import { AccessoryDetail } from './AccessoryDetail'
@@ -53,7 +54,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       <section className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">You May Also Need</h2>
-          <Link href="/product" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
+          <Link href={ROUTES.PLP} className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
             View All Containers →
           </Link>
         </div>

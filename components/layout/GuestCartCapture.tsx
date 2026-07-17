@@ -6,10 +6,11 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { GuestCartCaptureModal } from '@/components/cart/GuestCartCaptureModal'
 import { dismissGuestCapture, isGuestCaptureSuppressed, setGuestEmail } from '@/lib/guestCapture'
+import { ROUTES } from '@/config/routes'
 
 // Never on cart/checkout (already mid-conversion there) or my-account
 // (login/register/dashboard, not a guest-shopping flow).
-const EXCLUDED_PATHS = ['/checkout', '/cart', '/my-account']
+const EXCLUDED_PATHS: string[] = [ROUTES.CHECKOUT, ROUTES.CART, ROUTES.ACCOUNT.ROOT]
 
 // Don't arm on an instant bounce — only count real dwell time as "engaged."
 const ARM_DELAY_MS = 15_000

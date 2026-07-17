@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { ROUTES } from '@/config/routes'
 
 const inputClass =
   'w-full rounded-md border border-theme-border bg-theme-subtle px-3.5 py-2.5 text-sm text-theme-dark ' +
@@ -75,7 +76,7 @@ export function ResetPasswordForm() {
         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
         <p>
           This password reset link is invalid or has expired. Request a new one from the{' '}
-          <Link href="/my-account/lost-password" className="font-semibold underline underline-offset-2">
+          <Link href={ROUTES.ACCOUNT.LOST_PASSWORD} className="font-semibold underline underline-offset-2">
             Lost Password
           </Link>{' '}
           page.
@@ -91,7 +92,7 @@ export function ResetPasswordForm() {
         <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
         <p>
           Your password has been reset.{' '}
-          <Link href="/my-account" className="font-semibold underline underline-offset-2">
+          <Link href={ROUTES.ACCOUNT.ROOT} className="font-semibold underline underline-offset-2">
             Log in
           </Link>{' '}
           with your new password.

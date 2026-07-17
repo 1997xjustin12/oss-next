@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ROUTES } from '@/config/routes'
 import { AccountView } from './_components/AccountView'
 
 const TITLE = 'My Account'
@@ -8,7 +9,7 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/my-account' },
+  alternates: { canonical: ROUTES.ACCOUNT.ROOT },
   openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
   robots: { index: false, follow: true },
 }

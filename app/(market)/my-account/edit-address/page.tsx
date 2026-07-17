@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ROUTES } from '@/config/routes'
 import { AccountPageShell } from '../_components/AccountPageShell'
 import { AddressForm } from './_components/AddressForm'
 
@@ -8,7 +9,7 @@ const DESCRIPTION = 'Manage your billing and shipping addresses on On-Site Stora
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/my-account/edit-address' },
+  alternates: { canonical: ROUTES.ACCOUNT.EDIT_ADDRESS },
   openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
   robots: { index: false, follow: true },
 }

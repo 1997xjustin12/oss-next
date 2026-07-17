@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { ROUTES } from '@/config/routes'
 import { AccountLayout } from './AccountLayout'
 import { LoginForm } from './auth/LoginForm'
 import { RegisterForm } from './auth/RegisterForm'
@@ -32,16 +33,16 @@ export function AccountView() {
 
         <p className="mt-4 max-w-2xl text-sm sm:text-base leading-relaxed text-theme-muted dark:text-gray-400">
           From your account dashboard you can view your{' '}
-          <Link href="/my-account/orders" className="font-medium text-theme-primary hover:underline dark:text-red-400">
+          <Link href={ROUTES.ACCOUNT.ORDERS} className="font-medium text-theme-primary hover:underline dark:text-red-400">
             recent orders
           </Link>
           , manage your{' '}
-          <Link href="/my-account/edit-address" className="font-medium text-theme-primary hover:underline dark:text-red-400">
+          <Link href={ROUTES.ACCOUNT.EDIT_ADDRESS} className="font-medium text-theme-primary hover:underline dark:text-red-400">
             shipping and billing addresses
           </Link>
           , and{' '}
           <Link
-            href="/my-account/edit-account"
+            href={ROUTES.ACCOUNT.EDIT_ACCOUNT}
             className="font-medium text-theme-primary hover:underline dark:text-red-400"
           >
             edit your password and account details

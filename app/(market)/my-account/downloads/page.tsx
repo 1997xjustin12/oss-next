@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { FileDown } from 'lucide-react'
+import { ROUTES } from '@/config/routes'
 import { AccountPageShell } from '../_components/AccountPageShell'
 
 const TITLE = 'Downloads'
@@ -8,7 +9,7 @@ const DESCRIPTION = 'Access your downloadable files from On-Site Storage Solutio
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/my-account/downloads' },
+  alternates: { canonical: ROUTES.ACCOUNT.DOWNLOADS },
   openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
   robots: { index: false, follow: true },
 }

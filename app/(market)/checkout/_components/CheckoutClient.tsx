@@ -19,6 +19,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { cartItemsToLineItems } from '@/lib/cart';
 import { lookupZip } from '@/lib/zippopotam';
+import { ROUTES } from '@/config/routes';
 import { BraintreeDropIn } from './BraintreeDropIn';
 import { Recaptcha } from '@/components/ui/Recaptcha';
 import type { BraintreeDropInHandle } from './BraintreeDropIn';
@@ -237,7 +238,7 @@ function EmptyCart() {
         You haven&apos;t added any containers or accessories yet. Browse our inventory to get started.
       </p>
       <Link
-        href="/products"
+        href={ROUTES.PLP}
         className="mt-8 inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark"
       >
         Browse Containers
@@ -267,7 +268,7 @@ function OrderComplete() {
         email with your order details.
       </p>
       <Link
-        href="/my-account/orders"
+        href={ROUTES.ACCOUNT.ORDERS}
         className="mt-8 inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark"
       >
         View Order History
@@ -481,7 +482,7 @@ export function CheckoutClient() {
     <div className="min-h-screen bg-theme-subtle px-4 py-8 dark:bg-neutral-950 sm:px-6 lg:px-10">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="mx-auto mb-6 max-w-7xl text-sm">
-        <Link href="/" className="font-semibold text-theme-primary hover:underline dark:text-red-400">
+        <Link href={ROUTES.HOME} className="font-semibold text-theme-primary hover:underline dark:text-red-400">
           Home
         </Link>
         <span className="mx-2 text-theme-muted dark:text-neutral-600">/</span>

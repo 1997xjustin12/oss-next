@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ROUTES } from '@/config/routes'
 import { AccountPageShell } from '../_components/AccountPageShell'
 import { AccountDetailsForm } from './_components/AccountDetailsForm'
 import { ChangePasswordForm } from './_components/ChangePasswordForm'
@@ -9,7 +10,7 @@ const DESCRIPTION = 'Edit your profile and password on On-Site Storage Solutions
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/my-account/edit-account' },
+  alternates: { canonical: ROUTES.ACCOUNT.EDIT_ACCOUNT },
   openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
   robots: { index: false, follow: true },
 }

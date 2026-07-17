@@ -9,12 +9,16 @@ import type { ProductHit } from '@/types/product'
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { ProductInfoPanel } from './ProductInfoPanel'
 import { BASE_URL } from '@/lib/helpers'
+import { ROUTES } from '@/config/routes'
 
 const base = BASE_URL.replace(/\/$/, '')
 
 function getListingCrumb(product: ProductHit) {
   if (!isContainerHit(product)) {
-    return { label: 'Shipping Containers Accessories For Sale', href: `${base}/sale-shipping-containers/?ptype=accesories` }
+    // Was `ptype=accesories` (missing an "s") — silently fell through to the
+    // default (buy) PLP view instead of the accessories-filtered one, since
+    // the PLP only special-cases the correctly-spelled value.
+    return { label: 'Shipping Containers Accessories For Sale', href: ROUTES.PLP_ACCESSORIES }
   }
   const paymentType = getCustomFieldValue(product, 'payment_type')
   if (paymentType === 'rental') return { label: 'Shipping Containers For Rent',        href: `${base}/sale-shipping-containers/?ptype=rental` }
@@ -47,7 +51,7 @@ export function ProductVariantShell({ product, relatedProducts, activeProduct, o
   useEffect(() => {
     if (activeProduct === product) return
     if (!activeProduct.handle) return
-    window.history.pushState({}, '', `/product/${activeProduct.handle}`)
+    window.history.pushState({}, '', ROUTES.PRODUCT(activeProduct.handle))
   }, [activeProduct, product])
 
   const crumb      = getListingCrumb(activeProduct)
@@ -59,7 +63,7 @@ export function ProductVariantShell({ product, relatedProducts, activeProduct, o
     <>
       {/* BREADCRUMB */}
       <div className="flex items-center gap-1.5 flex-wrap px-4 sm:px-[5%] py-3 text-xs sm:text-sm text-theme-muted bg-theme-subtle border-b border-theme-border">
-        <Link href="/" className="hover:text-theme-primary transition-colors">Home</Link>
+        <Link href={ROUTES.HOME} className="hover:text-theme-primary transition-colors">Home</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-40" />
         <Link href={crumb.href} className="hover:text-theme-primary transition-colors">{crumb.label}</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-40" />

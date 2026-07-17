@@ -279,8 +279,34 @@ don't delete completed items until the next full regeneration (so progress is vi
       _Typecheck + lint clean (pre-existing unused-import warnings on the homepage are_
       _unrelated — commented-out sections awaiting the "decide the homepage's direction"_
       _item below)._
-- [ ] **Create `config/routes.ts`** with typed path constants; replace the ~30 hardcoded
+- [x] **Create `config/routes.ts`** with typed path constants; replace the ~30 hardcoded
       internal path string literals found across the app.
+      _Done 2026-07-17 — scoped deliberately to routes this app itself owns (Home, PLP,_
+      _PDP, Cart, Checkout, My Account + subpages); left WordPress-owned content pages_
+      _(Locations, Privacy, Terms, the quote landing page, Navbar's mega-menu) as plain_
+      _hardcoded strings, since this app doesn't own those slugs and encoding them here_
+      _would misrepresent who's responsible for keeping them correct. Replaced ~35 call_
+      _sites across layout components, all my-account pages/canonicals, cart/checkout,_
+      _and dynamic `/product/{handle}` link sites._
+      _Found and fixed 2 real broken links along the way: the checkout empty-cart CTA_
+      _linked to `/products` (doesn't exist) and the PDP's "View All Containers" linked_
+      _to `/product` (doesn't exist) — both now correctly point at `/sale-shipping-_
+      _containers`. Also fixed a latent `excludePaths` bug in `app/layout.tsx`/_
+      _`ZipAutoDetect.tsx` (`'/account'` instead of `'/my-account'` — never matched,_
+      _so the geolocation prompt was never actually excluded on My Account pages) and a_
+      _typo (`ptype=accesories`, missing an "s") in `ProductVariantShell.tsx`'s listing_
+      _crumb — though live-tracing that one found it's in unreachable code: accessory_
+      _products render via the separate `AccessoryDetail.tsx`, which has no breadcrumb_
+      _at all (a real, separate gap — noted below, not fixed in this pass, since adding_
+      _one is new feature work, not a routing-constants change)._
+      _Verified live: all touched pages return 200, both fixed broken links confirmed_
+      _pointing at the real PLP. Typecheck + lint clean (pre-existing, unrelated errors_
+      _confirmed via diff: `AccountPageShell.tsx`/`Navbar.tsx` set-state-in-effect,_
+      _Footer.tsx's untouched Locations `<a>` tag)._
+- [ ] Accessory PDPs (`AccessoryDetail.tsx`) have no breadcrumb back to the PLP at all,
+      unlike container PDPs (`ProductVariantShell.tsx`). Found 2026-07-17 while tracing
+      the routes.ts refactor above — not fixed there since it's a new UI addition, not a
+      path-constant swap.
 - [ ] **Wire real Suspense fallbacks on the PLP.** Both boundaries in
       `sale-shipping-containers/page.tsx` currently have no `fallback` at all — and a
       fully-built, dimension-matched `PageSkeleton.tsx` component already exists right next

@@ -7,6 +7,7 @@ import { DEFAULT_LOCATION } from '@/lib/constants'
 import { BASE_URL } from '@/lib/helpers'
 import { getQuickSpecs } from '@/lib/data/pdpShippingContainers'
 import { JsonLd } from '@/components/shared/JsonLd'
+import { ROUTES } from '@/config/routes'
 import { ProductDetail } from './_components/ProductDetail'
 import type { ProductHit } from '@/types/product'
 
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: product.title,
     description,
-    alternates: { canonical: `/product/${slug}` },
+    alternates: { canonical: ROUTES.PRODUCT(slug) },
     openGraph: {
       title: product.title,
       description: [grade, size, location].filter(Boolean).join(' · ') || description,

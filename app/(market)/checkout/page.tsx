@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { JsonLd } from '@/components/shared/JsonLd';
+import { ROUTES } from '@/config/routes';
 import { CheckoutClient } from './_components/CheckoutClient';
 
 
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Checkout',
   description:
     'Complete your shipping container reservation with On-Site Storage Solutions. No commitment required — we confirm all details before finalizing your order.',
-  alternates: { canonical: '/checkout' },
+  alternates: { canonical: ROUTES.CHECKOUT },
   robots: { index: false, follow: false },
   openGraph: {
     title: 'Checkout | On-Site Storage Solutions',

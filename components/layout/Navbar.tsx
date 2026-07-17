@@ -7,6 +7,7 @@ import { Phone } from "lucide-react";
 import { CartButton } from "@/components/layout/CartButton";
 import { BASE_URL } from "@/lib/helpers";
 import { applyEnrichParams } from "@/lib/linkEnrich";
+import { ROUTES } from "@/config/routes";
 
 type NavChild = { href: string; label: string };
 type NavLink = {
@@ -122,7 +123,7 @@ export function Navbar() {
     >
       {/* ── Desktop / tablet bar ── */}
       <div className="px-[5%] lg:px-4 xl:px-[5%] flex items-center justify-between h-17 gap-2 xl:gap-4">
-        <Link href="/" className="flex items-center gap-[10px] shrink-0">
+        <Link href={ROUTES.HOME} className="flex items-center gap-[10px] shrink-0">
           <Image
             src="/images/logo/oss-logo.webp"
             alt="On-site Storage Solutions"

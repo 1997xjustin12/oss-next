@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ROUTES } from '@/config/routes'
 import { AccountPageShell } from '../_components/AccountPageShell'
 import { OrdersList } from './_components/OrdersList'
 
@@ -8,7 +9,7 @@ const DESCRIPTION = 'View your recent orders with On-Site Storage Solutions.'
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/my-account/orders' },
+  alternates: { canonical: ROUTES.ACCOUNT.ORDERS },
   openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
   robots: { index: false, follow: true },
 }

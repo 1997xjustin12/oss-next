@@ -7,6 +7,7 @@ import { CheckCircle2, ShoppingCart, MapPin } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { getCustomFieldValue } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { ROUTES } from '@/config/routes'
 import type { CartItem } from '@/types/cart'
 import type { ProductHit } from '@/types/product'
 
@@ -103,7 +104,7 @@ function FrequentlyBought({ onNavigate }: { onNavigate: () => void }) {
           : products.map((p, i) => (
               <Link
                 key={`accessory-upsell-${p.objectID}-${i}`}
-                href={`/product/${p.handle}`}
+                href={ROUTES.PRODUCT(p.handle)}
                 onClick={onNavigate}
                 className="snap-start shrink-0 w-32 group"
               >
@@ -148,7 +149,7 @@ export function AddedToCartModal({ item, onClose }: Props) {
             Continue Shopping
           </button>
           <Link
-            href="/cart"
+            href={ROUTES.CART}
             onClick={onClose}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-theme-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-theme-primary-dark transition-colors"
           >

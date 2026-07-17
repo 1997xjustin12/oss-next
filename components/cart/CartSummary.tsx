@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ShieldCheck, BadgeCheck } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
+import { ROUTES } from '@/config/routes'
 
 type Props = {
   /** Real total_shipping from /api/orders/get-total — undefined/0 until checkout knows a ZIP. */
@@ -64,7 +65,7 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
       </p>
 
       <Link
-        href="/checkout"
+        href={ROUTES.CHECKOUT}
         aria-disabled={cart.totalItems === 0}
         className={`w-full rounded-md text-white font-extrabold text-lg py-3.5 flex items-center justify-center gap-2 transition-colors mb-2 ${
           cart.totalItems === 0

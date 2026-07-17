@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ROUTES } from "@/config/routes";
 
 export function TopBar() {
   return (
@@ -15,7 +16,7 @@ export function TopBar() {
         </span>
       </div>
       <div className="flex items-center gap-4">
-        <Link href="/my-account" className="text-gray-500 text-xs transition-colors hover:text-white line-through">My Account</Link>
+        <Link href={ROUTES.ACCOUNT.ROOT} className="text-gray-500 text-xs transition-colors hover:text-white line-through">My Account</Link>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import { ROUTES } from '@/config/routes'
 import { ResetPasswordForm } from './_components/ResetPasswordForm'
 import { ResetPasswordFormSkeleton } from './_components/ResetPasswordFormSkeleton'
 
@@ -9,7 +10,7 @@ const DESCRIPTION = 'Create a new password for your On-Site Storage Solutions ac
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/my-account/reset-password' },
+  alternates: { canonical: ROUTES.ACCOUNT.RESET_PASSWORD },
   openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
   robots: { index: false, follow: true },
 }

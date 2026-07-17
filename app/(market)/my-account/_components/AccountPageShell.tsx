@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { ROUTES } from '@/config/routes'
 import { AccountLayout } from './AccountLayout'
 
 type Props = {
@@ -23,7 +24,7 @@ export function AccountPageShell({ title, children }: Props) {
   }, [])
 
   useEffect(() => {
-    if (mounted && !isAuthenticated) router.replace('/my-account')
+    if (mounted && !isAuthenticated) router.replace(ROUTES.ACCOUNT.ROOT)
   }, [mounted, isAuthenticated, router])
 
   if (!mounted || !isAuthenticated) return null

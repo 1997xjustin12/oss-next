@@ -10,6 +10,7 @@ import { Stars } from '@/components/product/Stars'
 import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { ROUTES } from '@/config/routes'
 import type { HitData } from './InstantSearchSection'
 
 type Props = {
@@ -135,7 +136,7 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
 
             <div className="flex flex-col sm:flex-row gap-2.5 mt-3">
               <Link
-                href={`/product/${hit.handle}`}
+                href={ROUTES.PRODUCT(hit.handle)}
                 onClick={onClose}
                 className="flex-1 text-center rounded-md border-2 border-theme-primary text-theme-primary font-bold px-4 py-2.5 text-sm hover:bg-theme-primary-light transition-colors"
               >

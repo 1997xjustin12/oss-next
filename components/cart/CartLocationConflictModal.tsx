@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { MapPinOff, Trash2, ArrowRight } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
+import { ROUTES } from '@/config/routes'
 
 type Props = {
   open:            boolean
@@ -28,7 +29,7 @@ export function CartLocationConflictModal({ open, onClose, currentLocation, newL
             <Trash2 className="w-4 h-4" /> Clear Cart
           </button>
           <Link
-            href="/checkout"
+            href={ROUTES.CHECKOUT}
             onClick={onClose}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-theme-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-theme-primary-dark transition-colors"
           >

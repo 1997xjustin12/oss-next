@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ShoppingCart, RefreshCw, Truck } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { cartItemsToLineItems } from '@/lib/cart'
+import { ROUTES } from '@/config/routes'
 import { CartItemRow } from '@/components/cart/CartItemRow'
 import { CartSummary } from '@/components/cart/CartSummary'
 import { CartSkeleton, SummarySkeleton } from './_components/CartSkeleton'
@@ -133,7 +134,7 @@ function EmptyCart() {
         Browse our containers and add items to get started.
       </p>
       <Link
-        href="/sale-shipping-containers"
+        href={ROUTES.PLP}
         className="rounded-md bg-theme-primary hover:bg-theme-primary-dark text-white font-semibold px-6 py-3 text-sm transition-colors inline-block"
       >
         Shop Containers

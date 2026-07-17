@@ -3,14 +3,15 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { getNearestLocation } from '@/lib/locations'
+import { ROUTES } from '@/config/routes'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'
 
 // Pages where the geolocation prompt should NOT fire
-export const ZIP_AUTODETECT_EXCLUDED_PATHS = [
-  '/checkout',
-  '/cart',
-  '/account',
+export const ZIP_AUTODETECT_EXCLUDED_PATHS: string[] = [
+  ROUTES.CHECKOUT,
+  ROUTES.CART,
+  ROUTES.ACCOUNT.ROOT,
 ]
 
 type Props = {

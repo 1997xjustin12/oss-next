@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { PackageSearch, Package, RotateCcw, Star } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
+import { ROUTES } from '@/config/routes'
 import { ReviewFormModal } from './ReviewFormModal'
 import type { Order, OrderStatus } from '@/types/order'
 import type { ProductHit } from '@/types/product'
@@ -62,7 +63,7 @@ function EmptyOrders() {
       <PackageSearch className="h-8 w-8 text-theme-muted dark:text-gray-500" />
       <p className="text-sm text-theme-muted dark:text-gray-400">No order has been made yet.</p>
       <Link
-        href="/sale-shipping-containers"
+        href={ROUTES.PLP}
         className="mt-2 rounded-md bg-theme-primary hover:bg-theme-primary-dark text-white font-semibold px-5 py-2.5 text-sm transition-colors"
       >
         Browse Containers
@@ -183,7 +184,7 @@ export function OrdersList() {
                   </div>
                   <div className="flex-1 min-w-0">
                     {product?.handle ? (
-                      <Link href={`/product/${product.handle}`} className="text-sm font-semibold truncate hover:text-theme-primary dark:text-white block">
+                      <Link href={ROUTES.PRODUCT(product.handle)} className="text-sm font-semibold truncate hover:text-theme-primary dark:text-white block">
                         {product.title}
                       </Link>
                     ) : (

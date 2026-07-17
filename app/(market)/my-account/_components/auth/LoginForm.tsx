@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { ROUTES } from '@/config/routes'
 import type { AuthSession } from '@/types/user'
 
 type Props = {
@@ -137,7 +138,7 @@ export function LoginForm({ showTitle = true, className = '' }: Props) {
         </div>
 
         <div>
-          <Link href="/my-account/lost-password" className="text-sm font-semibold text-theme-primary hover:underline dark:text-red-400">
+          <Link href={ROUTES.ACCOUNT.LOST_PASSWORD} className="text-sm font-semibold text-theme-primary hover:underline dark:text-red-400">
             Lost your password?
           </Link>
         </div>

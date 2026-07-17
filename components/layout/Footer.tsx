@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { BASE_URL } from "@/lib/helpers";
+import { ROUTES } from "@/config/routes";
 
 const CONTAINER_LINKS = [
   {
@@ -73,7 +74,7 @@ export function Footer() {
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-6 lg:gap-10 mb-8.5">
         <div className="sm:col-span-2 lg:col-span-1">
-          <Link href="/" className="inline-flex items-center mb-3">
+          <Link href={ROUTES.HOME} className="inline-flex items-center mb-3">
             <Image
               src="/images/logo/oss-logo.webp"
               alt="On-site Storage Solutions"
@@ -223,7 +224,7 @@ export function Footer() {
           </Link>{" "}
           ·{" "}
           <Link
-            href="/sitemap.xml"
+            href={ROUTES.SITEMAP}
             className="text-[#555] transition-colors hover:text-[#888]"
           >
             Sitemap

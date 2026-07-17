@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ROUTES } from '@/config/routes'
 import { LostPasswordForm } from './_components/LostPasswordForm'
 
 const TITLE = 'Lost Password'
@@ -8,7 +9,7 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/my-account/lost-password' },
+  alternates: { canonical: ROUTES.ACCOUNT.LOST_PASSWORD },
   openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
   robots: { index: false, follow: true },
 }

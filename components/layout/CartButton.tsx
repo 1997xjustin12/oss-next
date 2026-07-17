@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useCart } from '@/hooks/useCart'
+import { ROUTES } from '@/config/routes'
 
 function CartIcon({ className }: { className?: string }) {
   return (
@@ -21,7 +22,7 @@ export function CartButton() {
 
   return (
     <Link
-      href="/cart"
+      href={ROUTES.CART}
       aria-label={`View cart — ${label}`}
       className="flex flex-col items-center justify-center px-1.5 text-theme-muted transition-colors hover:text-theme-primary"
     >

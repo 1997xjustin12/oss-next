@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache";
+import { ROUTES } from "@/config/routes";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { HeroSection } from "./_components/HeroSection";
 import { TrustStrip } from "./_components/TrustStrip";
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
   description:
     "Buy or rent new and used shipping containers across the USA & Canada. 20ft, 40ft, high cube, reefer & more. 130+ depots, nationwide delivery, lowest prices guaranteed since 2002.",
   alternates: {
-    canonical: "/",
+    canonical: ROUTES.HOME,
   },
   openGraph: {
     title: "Shipping Containers For Sale | Lowest Price Shipping Containers",

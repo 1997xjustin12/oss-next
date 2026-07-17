@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { ROUTES } from '@/config/routes'
 
 export function LogoutHandler() {
   const { logout } = useAuth()
@@ -13,7 +14,7 @@ export function LogoutHandler() {
     if (ran.current) return
     ran.current = true
     logout()
-    router.replace('/my-account')
+    router.replace(ROUTES.ACCOUNT.ROOT)
   }, [logout, router])
 
   return <p className="text-sm text-theme-muted dark:text-gray-400">Logging out…</p>

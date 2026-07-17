@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { AlertTriangle, Phone, RotateCcw } from 'lucide-react'
 import { CONTACT_NUMBER } from '@/lib/helpers'
+import { ROUTES } from '@/config/routes'
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <RotateCcw className="h-4 w-4" /> Try Again
       </button>
       <Link
-        href="/"
+        href={ROUTES.HOME}
         className="mt-3 text-sm font-semibold text-theme-primary hover:underline dark:text-red-400"
       >
         Back to Home

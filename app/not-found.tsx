@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MapPinOff, Phone } from 'lucide-react'
 import { CONTACT_NUMBER } from '@/lib/helpers'
+import { ROUTES } from '@/config/routes'
 
 export const metadata = {
   title: 'Page Not Found',
@@ -20,13 +21,13 @@ export default function NotFound() {
         The page you&apos;re looking for doesn&apos;t exist or may have moved.
       </p>
       <Link
-        href="/sale-shipping-containers"
+        href={ROUTES.PLP}
         className="mt-8 inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark"
       >
         Browse Containers
       </Link>
       <Link
-        href="/"
+        href={ROUTES.HOME}
         className="mt-3 text-sm font-semibold text-theme-primary hover:underline dark:text-red-400"
       >
         Back to Home

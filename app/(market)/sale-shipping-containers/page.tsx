@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { JsonLd } from '@/components/shared/JsonLd'
+import { ROUTES } from '@/config/routes'
 import { LocationHeader } from './_components/LocationHeader'
 import { InstantSearchSection } from './_components/InstantSearchSection'
 
@@ -22,7 +23,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     return {
       title,
       description,
-      alternates: { canonical: '/sale-shipping-containers?ptype=accessories' },
+      alternates: { canonical: ROUTES.PLP_ACCESSORIES },
       openGraph:  { title, description, images: ['/images/og-containers.jpg'] },
     }
   }
@@ -32,7 +33,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title,
     description,
-    alternates: { canonical: '/sale-shipping-containers' },
+    alternates: { canonical: ROUTES.PLP },
     openGraph:  { title, description, images: ['/images/og-containers.jpg'] },
   }
 }
@@ -73,7 +74,7 @@ async function SaleContainersContent({ searchParams }: Props) {
       <nav aria-label="Breadcrumb" className="px-[5%] pt-4 pb-1">
         <ol className="flex items-center gap-1 text-xs text-theme-muted">
           <li>
-            <Link href="/" className="font-semibold text-theme-primary hover:underline">Home</Link>
+            <Link href={ROUTES.HOME} className="font-semibold text-theme-primary hover:underline">Home</Link>
           </li>
           <li aria-hidden>/</li>
           <li className="dark:text-gray-400">
