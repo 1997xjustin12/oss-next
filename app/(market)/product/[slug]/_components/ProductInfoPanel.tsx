@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Shield, CheckCircle2, Truck, Headphones,
-  Heart, Share2, GitCompare, Printer,
+  Heart, Share2, Printer,
   ShoppingCart, ClipboardList, Phone, Info,
 } from 'lucide-react'
 import type { ProductHit } from '@/types/product'
@@ -633,8 +633,13 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       <div className="flex items-center gap-4 sm:gap-5 pt-3.5 border-t border-theme-border text-xs text-theme-muted flex-wrap">
         <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><Heart className="w-3.5 h-3.5" /> Save to Wishlist</button>
         <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><Share2 className="w-3.5 h-3.5" /> Share</button>
-        <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><GitCompare className="w-3.5 h-3.5" /> Compare</button>
-        <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><Printer className="w-3.5 h-3.5" /> Print Spec Sheet</button>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"
+        >
+          <Printer className="w-3.5 h-3.5" /> Print Spec Sheet
+        </button>
       </div>
 
       {locationConflict && (
