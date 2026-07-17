@@ -91,7 +91,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       <section className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Frequently Asked Questions</h2>
-          <a href="#" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">View All FAQs →</a>
+          <Link href="/shipping-container-faqs" target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">View All FAQs →</Link>
         </div>
         <FaqAccordion variant={containerVariant} />
       </section>

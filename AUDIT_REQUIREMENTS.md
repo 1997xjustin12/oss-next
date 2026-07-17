@@ -515,8 +515,15 @@ don't delete completed items until the next full regeneration (so progress is vi
 - [ ] Wire the PDP's stock/availability badge to the real `variants[].qty` field instead
       of always showing a hardcoded "In Stock — Ready to Ship".
 - [ ] Evaluate whether any data needs the `cacheLife('seconds')` tier — currently unused.
-- [ ] Fix 2 default-import style violations (`braintree` in `payment.service.ts`, `cheerio`
+- [x] Fix 2 default-import style violations (`braintree` in `payment.service.ts`, `cheerio`
       in `wp-proxy.service.ts`) — cosmetic/convention only, both server-only, no bundle impact.
+      _Done 2026-07-18 — `payment.service.ts` now imports `{ BraintreeGateway, Environment,_
+      _type Transaction }`; `wp-proxy.service.ts` imports `{ load }`. `@types/braintree`_
+      _uses an `export =` namespace, so this needed care — verified it actually typechecks_
+      _(it does, `esModuleInterop` is on) AND still works at runtime, not just compiles:_
+      _`/api/braintree_token` returns the same "not configured" error as before (no import_
+      _crash), and `/terms` (which exercises `cheerio.load` through the WP proxy) still_
+      _renders real content._
 - [ ] PLP ratings/review-count sync — already logged separately, see memory
       `backend-reminder-plp-ratings.md` (backend-side fix, not frontend).
 - [x] **New 2026-07-17 — Account deletion / data export has zero implementation** anywhere
@@ -535,17 +542,43 @@ don't delete completed items until the next full regeneration (so progress is vi
       confirmation emails are sent today, it's entirely a Django-backend responsibility
       with zero visibility from here. Worth confirming with the backend team rather than
       silently assuming it's covered.
-- [ ] **New 2026-07-17 — dead "View All FAQs →" link on the PDP** (`ProductDetail.tsx`,
-      `href="#"`). Link to the real WordPress FAQ page or remove the link.
-- [ ] **New 2026-07-17 — PLP product cards never pass `priority`** to their `next/image`
-      calls (`ProductCard.tsx`/`AccessoryCard.tsx`), including the first/likely-LCP card.
-      Lower severity since the grid renders client-side via `react-instantsearch` rather
-      than via SSR preload hints, but still worth setting on the first result.
-- [ ] **New 2026-07-17 — cosmetic: stray `ref.md` scaffold files inside `app/`**
+- [x] **Dead "View All FAQs →" link on the PDP** (`ProductDetail.tsx`, `href="#"`).
+      _Done 2026-07-18 — links to the real WordPress FAQ page (`/shipping-container-faqs`,_
+      _confirmed live, real content) in a new tab. Verified live._
+- [ ] **PLP product cards never pass `priority`** to their `next/image` calls, including
+      the first/likely-LCP card. Lower severity since the grid renders client-side via
+      `react-instantsearch` rather than via SSR preload hints, but still worth setting on
+      the first result.
+      _Investigated 2026-07-18, deliberately not fixed — two real blockers, not just_
+      _effort. (1) `ProductCard.tsx` (one of the two files originally named here) is_
+      _confirmed dead code, never imported anywhere — the real live container cards_
+      _render via `ProductHit` inside `InstantSearchSection.tsx`. (2) Both that component_
+      _and the real, live `AccessoryCard.tsx` render through react-instantsearch's_
+      _`<Hits hitComponent={({ hit }) => ...}>`, whose render prop doesn't expose an item_
+      _index — there's no clean way to know "this is the first card" without replacing_
+      _`<Hits>` with a manual `useHits()` + `.map()` re-implementation, which risks_
+      _regressing pagination/insights/empty-state behavior `<Hits>` currently provides for_
+      _free, in exchange for a CWV nit the audit itself already scored as low-severity_
+      _(client-rendered post-hydration, not part of the SSR preload path anyway). Left_
+      _open rather than force a risky change to the PLP's core search UI._
+- [x] **Cosmetic: stray `ref.md` scaffold files inside `app/`**
       (`app/(market)/cart/ref.md`, `app/(market)/my-account/ref.md`) — old component-spec
       notes from an earlier build pass, not real code, but violate the "`app/` holds only
-      route files" convention in spirit. Move out of `app/` or delete.
-- [ ] **New 2026-07-17 — cosmetic: `TrustedBySection.tsx`'s partner-logo alt text is**
-      **generic** (`"Trusted partner logo 1"`–`"9"`), so authenticity of the social-proof
-      claim can't be verified from the code alone — worth real, named alt text if these
-      are genuine client logos.
+      route files" convention in spirit.
+      _Done 2026-07-18 — read both first: genuine historical build-spec/reference docs_
+      _(one's a standalone design-mockup component, the other is written build_
+      _instructions + starter code), not dead code — moved rather than deleted, matching_
+      _this repo's own convention for this kind of doc (`MY_ACCOUNT_PROFILE.md`,_
+      _`ABANDONED_CART_EXPLAINER.md`, etc.). Now `CART_PAGE_REF.md` and_
+      _`MY_ACCOUNT_PAGE_REF.md` at the repo root._
+- [x] **Cosmetic: `TrustedBySection.tsx`'s partner-logo alt text is generic**
+      (`"Trusted partner logo 1"`–`"9"`), so authenticity of the social-proof claim can't
+      be verified from the code alone — worth real, named alt text if these are genuine
+      client logos.
+      _Done 2026-07-18 — checked: the CDN filenames (e.g. `download-1-150x150-1.webp`)_
+      _carry no real company names to attribute, so specific named alt text would have to_
+      _be fabricated (worse than the placeholder). Used the actually-correct fix instead:_
+      _`alt=""` on every logo — WCAG's recommended pattern for repeated decorative images_
+      _inside a group that already has its own `aria-label` ("Trusted organizations_
+      _carousel"), which already conveys the meaning. Documented why in a code comment so_
+      _this doesn't read as an oversight later._

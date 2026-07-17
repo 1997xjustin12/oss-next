@@ -1,4 +1,4 @@
-import * as cheerio from 'cheerio'
+import { load } from 'cheerio'
 import { cacheLife, cacheTag } from 'next/cache'
 import { CACHE_TAGS } from '@/config/cache'
 
@@ -48,7 +48,7 @@ export async function fetchWordPressPage(slug: string, search = ''): Promise<WpP
     return null
   }
 
-  const $ = cheerio.load(html)
+  const $ = load(html)
 
   // ── 1. Structured SEO metadata ────────────────────────────────────────────
   const canonicalHref = $('link[rel="canonical"]').attr('href')

@@ -1,43 +1,48 @@
 import Image from "next/image";
 
+// Deliberately alt="" on every logo below (not a placeholder) — the CDN
+// filenames carry no real company names to attribute, and the carousel's own
+// aria-label already conveys the group's meaning ("trusted by several
+// organizations"). Empty alt on repeated decorative images in an already-
+// labeled group is the correct WCAG pattern, not an oversight.
 type Logo = { src: string; alt: string };
 
 const LOGOS: Logo[] = [
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054023/download-1-150x150-1.webp",
-    alt: "Trusted partner logo 1",
+    alt: "",
   },
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054024/download-3-1-150x150-1.webp",
-    alt: "Trusted partner logo 2",
+    alt: "",
   },
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054024/download-2-1-150x150-1.webp",
-    alt: "Trusted partner logo 3",
+    alt: "",
   },
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054025/download-7-150x150-1.webp",
-    alt: "Trusted partner logo 4",
+    alt: "",
   },
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054026/download-8-150x150-1.webp",
-    alt: "Trusted partner logo 5",
+    alt: "",
   },
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054027/download-1-1-150x150-1.webp",
-    alt: "Trusted partner logo 6",
+    alt: "",
   },
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054027/download-6-150x150-1.webp",
-    alt: "Trusted partner logo 7",
+    alt: "",
   },
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054028/download-9-150x150-1.webp",
-    alt: "Trusted partner logo 8",
+    alt: "",
   },
   {
     src: "https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/21054029/download-10-150x150-1.webp",
-    alt: "Trusted partner logo 9",
+    alt: "",
   },
 ];
 
