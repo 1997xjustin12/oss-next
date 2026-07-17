@@ -57,6 +57,13 @@ don't re-flag these in future audit passes.
    governs server-streamed async boundaries, not client-side data fetches, so it wouldn't
    apply here. Confirmed 2026-07-17.
 
+6. **Homepage A/B/C testing is real and intentional, not orphaned scaffolding** — but
+   implemented as a single URL (`/`) with server-side sticky variant selection
+   (`middleware.ts` + a request header), not as separate crawlable routes. The old
+   `/version2`/`/version3` routes were removed 2026-07-17 in favor of this pattern; don't
+   re-suggest separate variant routes in a future audit. See `middleware.ts` and
+   `(home)/page.tsx`'s `VariantHero`.
+
 _(Add new confirmed decisions here as they come up, so they persist across future audits.)_
 
 ---
@@ -258,17 +265,33 @@ don't delete completed items until the next full regeneration (so progress is vi
       _Done 2026-07-15 — swapped the nested `<main>` for `<div>` in all 11 affected files_
       _(9 my-account pages + ProductDetail.tsx + AccessoryDetail.tsx); verified exactly one_
       _`<main>` renders per page via Playwright, typecheck + lint clean._
-- [ ] **New 2026-07-17 — orphaned duplicate homepage drafts are live, crawlable, and hurt SEO.**
-      `app/(market)/(home)/version2/page.tsx` and `.../version3/page.tsx` render at real,
+- [x] **Orphaned duplicate homepage drafts were live, crawlable, and hurt SEO.**
+      `app/(market)/(home)/version2/page.tsx` and `.../version3/page.tsx` rendered at real,
       reachable URLs `/version2` and `/version3` — near-identical content/metadata to the
-      real homepage. Confirmed unlinked from anywhere in the app (dev/A-B-test scaffolding
-      left in place), yet: hand-roll inline JSON-LD instead of the shared `<JsonLd>`
-      component, hardcode `canonical: "/"` (wrong — should point at themselves or be
-      `noindex`ed, not claim to *be* the homepage), and are **not excluded** in
-      `robots.ts`'s disallow list nor in `sitemap.ts`. Real duplicate-content indexing
-      risk today. Fix: either delete both (confirm they're not an in-progress A/B test
-      first) or add `robots: { index: false }` + exclude from the disallow list is
-      redundant if noindexed directly — pick one, don't leave as-is.
+      real homepage, hand-rolled JSON-LD, wrong `canonical: "/"`, and not excluded from
+      `robots.ts`/`sitemap.ts`. **Correction**: these weren't abandoned scaffolding — the
+      user confirmed they're needed for real homepage A/B/C testing, just built the wrong
+      way (separate crawlable routes instead of one URL with server-side variant
+      selection).
+      _Done 2026-07-17 — replaced with the standard single-URL pattern: new `middleware.ts`_
+      _assigns a sticky variant (`1`/`2`/`3`, 30-day cookie) per visitor on `/` and forwards_
+      _it via an `x-ab-home-variant` request header (not read from the cookie directly, so_
+      _the very first request — before the cookie exists — still gets a consistent variant)._
+      _`(home)/page.tsx` reads that header in a new `VariantHero` component, wrapped in_
+      _`<Suspense fallback={<HeroSkeleton />}>` since `headers()` is a dynamic API — this_
+      _keeps the rest of the homepage statically `'use cache'`-able, only the Hero slice_
+      _becomes per-request. Deleted the `version2`/`version3` route folders entirely — now_
+      _one canonical URL, one JSON-LD block, one sitemap entry, no duplicate-content risk._
+      _Verified live: sticky cookie persists the same variant across repeat requests;_
+      _6 fresh (no-cookie) requests correctly randomized across all 3 variants; the_
+      _assigned variant's real Hero content renders; `/version2`/`/version3` now fall_
+      _through to the existing WordPress-proxy catch-all like any other unknown path_
+      _(confirmed this fallback behavior is pre-existing/unrelated, not a regression)._
+      _Typecheck + lint clean on all changed files._
+      _**Not yet built**: real analytics/conversion tracking per variant — no experimentation_
+      _or analytics library exists anywhere in this repo today, so this only covers correct_
+      _variant delivery, not measurement. Wire in whatever analytics tool is chosen once one_
+      _exists, rather than fabricating tracking calls with nothing to receive them._
 - [ ] **New 2026-07-17 — Checkout page metadata is stale and now factually wrong.**
       `app/(market)/checkout/page.tsx`'s `metadata` (title-tag description + OG copy)
       still reads "Complete your shipping container **reservation**... **No commitment

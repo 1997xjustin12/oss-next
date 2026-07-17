@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache";
@@ -13,6 +15,7 @@ import { Reviews } from "./_components/Reviews";
 import { StatesSection } from "./_components/StatesSection";
 
 import { Hero } from "./_components/Hero";
+import { HeroSkeleton } from "./_components/HeroSkeleton";
 import { RightContainer } from "./_components/RightContainer";
 import { OnsiteDifference } from "./_components/OnsiteDifference";
 import { TrustedBySection } from "./_components/TrustedBySection";
@@ -78,6 +81,18 @@ async function getHomeData() {
   // TODO: return await fetchFeaturedProducts()
 }
 
+// Reads the sticky variant middleware.ts assigned this visitor (via a
+// request header, not the cookie directly — the header is always correct
+// even on a visitor's very first request, before the cookie exists yet).
+// Isolated in its own component + Suspense boundary since headers() is a
+// dynamic API — this keeps the rest of the homepage statically cacheable.
+async function VariantHero() {
+  const h = await headers();
+  const raw = h.get("x-ab-home-variant");
+  const version = raw === "2" ? 2 : raw === "3" ? 3 : 1;
+  return <Hero version={version} />;
+}
+
 export default async function Home() {
   await getHomeData();
 
@@ -90,7 +105,9 @@ export default async function Home() {
       {/* <WhyUs /> */}
       {/* <Reviews /> */}
 
-      <Hero />
+      <Suspense fallback={<HeroSkeleton />}>
+        <VariantHero />
+      </Suspense>
       <RightContainer />
       <HowItWorks />
       <OnsiteDifference />
