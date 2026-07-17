@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { LinkEnricher } from "@/components/layout/LinkEnricher";
 import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
 import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
@@ -33,8 +34,10 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <AuthProvider>
           <CartProvider>
-            {children}
-            <Suspense><GuestCartCapture /></Suspense>
+            <WishlistProvider>
+              {children}
+              <Suspense><GuestCartCapture /></Suspense>
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
         <Suspense><LinkEnricher /></Suspense>
@@ -43,6 +46,7 @@ export default function RootLayout({
             ROUTES.CHECKOUT,
             ROUTES.CART,
             ROUTES.ACCOUNT.ROOT,
+            ROUTES.WISHLIST,
           ]} />
         </Suspense>
       </body>

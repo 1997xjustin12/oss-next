@@ -445,8 +445,24 @@ don't delete completed items until the next full regeneration (so progress is vi
 ### Lower priority / needs a product decision first
 
 - [ ] Product comparison — build the feature or remove the dead "Compare" button on the PDP.
-- [ ] Wishlist / save for later — build the feature (button + persistence) or remove the
+- [x] Wishlist / save for later — build the feature (button + persistence) or remove the
       dead "Save to Wishlist" button.
+      _Done 2026-07-18 — built client-side only, no backend exists for this. New_
+      _`context/WishlistContext.tsx` (localStorage, reducer-based to stay hydration-safe —_
+      _same pattern `CartContext` already uses) + `hooks/useWishlist.ts`. PDP's "Save to_
+      _Wishlist" button now toggles real state (filled heart + "Saved to Wishlist" label_
+      _when active). New `/wishlist` page (`ROUTES.WISHLIST`, robots-disallowed/noindexed_
+      _like cart/checkout) lists saved items with "View Product" + "Remove" — deliberately_
+      _no "Add to Cart" from this page, since a `WishlistItem` doesn't carry the full ES_
+      _hit `CartItem.rawHit` needs for real backend cart sync; faking it would silently_
+      _fail the same way the PDP's fake related-products section did. New_
+      _`components/layout/WishlistButton.tsx` (heart + count badge) sits next to_
+      `CartButton` _in the Navbar for discovery regardless of login state — persistence_
+      _is intentionally device-local only (no cross-device sync possible without a_
+      _backend), called out directly in the page's own copy. Verified live end-to-end:_
+      _toggle, localStorage persistence, nav badge count, wishlist page listing, remove-_
+      _to-empty-state. Typecheck + lint clean (pre-existing unrelated errors confirmed via_
+      _diff)._
 - [ ] Social sharing — build or remove the dead "Share" button on the PDP.
 - [ ] Site-wide search UI — the ES backend already supports free-text query; just needs a
       search box added to the header/nav.

@@ -11,6 +11,7 @@ export const ROUTES = {
   PRODUCT: (handle: string) => `/product/${handle}`,
   CART: '/cart',
   CHECKOUT: '/checkout',
+  WISHLIST: '/wishlist',
   SITEMAP: '/sitemap.xml',
   ACCOUNT: {
     ROOT: '/my-account',

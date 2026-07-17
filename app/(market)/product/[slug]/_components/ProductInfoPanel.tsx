@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import type { ProductHit } from '@/types/product'
 import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
+import { useWishlist } from '@/hooks/useWishlist'
 import { getCustomFieldValue, isGenericDisplayHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
@@ -229,6 +230,7 @@ type Props = {
 export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVariantChange }: Props) {
 
   const { conflict: locationConflict, clearConflict: clearLocationConflict, addContainerToCart, clearCart } = useAddContainerToCart()
+  const { isWishlisted, toggleWishlist } = useWishlist()
 
   // The currently matched product — starts as the page product, updates on every option change
   const [activeProduct, setActiveProduct] = useState<ProductHit>(product)
@@ -493,6 +495,17 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
     setTimeout(() => setAdded(false), 2000)
   }
 
+  function handleToggleWishlist() {
+    toggleWishlist({
+      id:      activeProduct.objectID,
+      handle:  activeProduct.handle,
+      name:    activeProduct.title,
+      price:   activeProduct.sale_price,
+      image:   activeProduct.images?.[0]?.src,
+      addedAt: new Date().toISOString(),
+    })
+  }
+
   // ── render ──────────────────────────────────────────────────────────────────
 
   const layoutClass: Record<OptionsGroup['layout'], string> = {
@@ -631,7 +644,16 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
 
       {/* Actions row */}
       <div className="flex items-center gap-4 sm:gap-5 pt-3.5 border-t border-theme-border text-xs text-theme-muted flex-wrap">
-        <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><Heart className="w-3.5 h-3.5" /> Save to Wishlist</button>
+        <button
+          type="button"
+          onClick={handleToggleWishlist}
+          className={`flex items-center gap-1.5 transition-colors ${
+            isWishlisted(activeProduct.objectID) ? 'text-theme-primary' : 'hover:text-theme-primary'
+          }`}
+        >
+          <Heart className={`w-3.5 h-3.5 ${isWishlisted(activeProduct.objectID) ? 'fill-current' : ''}`} />
+          {isWishlisted(activeProduct.objectID) ? 'Saved to Wishlist' : 'Save to Wishlist'}
+        </button>
         <button type="button" className="flex items-center gap-1.5 hover:text-theme-primary transition-colors"><Share2 className="w-3.5 h-3.5" /> Share</button>
         <button
           type="button"
