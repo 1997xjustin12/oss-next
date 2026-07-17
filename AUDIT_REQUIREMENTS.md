@@ -444,7 +444,9 @@ don't delete completed items until the next full regeneration (so progress is vi
 
 ### Lower priority / needs a product decision first
 
-- [ ] Product comparison — build the feature or remove the dead "Compare" button on the PDP.
+- [x] Product comparison — build the feature or remove the dead "Compare" button on the PDP.
+      _Decided 2026-07-18 — no client requirement yet. Dead button removed (see_
+      _`ProductInfoPanel.tsx`, commit `1356d1c`) rather than left non-functional._
 - [x] Wishlist / save for later — build the feature (button + persistence) or remove the
       dead "Save to Wishlist" button.
       _Done 2026-07-18 — built client-side only, no backend exists for this. New_
