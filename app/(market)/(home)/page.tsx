@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache";
+import { JsonLd } from "@/components/shared/JsonLd";
 import { HeroSection } from "./_components/HeroSection";
 import { TrustStrip } from "./_components/TrustStrip";
 import { ContainerTypes } from "./_components/ContainerTypes";
@@ -81,10 +82,7 @@ export default async function Home() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
       {/* <HeroSection /> */}
       {/* <TrustStrip /> */}
       {/* <ContainerTypes /> */}

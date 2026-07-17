@@ -6,6 +6,7 @@ import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { BASE_URL } from '@/lib/helpers'
 import { getQuickSpecs } from '@/lib/data/pdpShippingContainers'
+import { JsonLd } from '@/components/shared/JsonLd'
 import { ProductDetail } from './_components/ProductDetail'
 import type { ProductHit } from '@/types/product'
 
@@ -146,10 +147,7 @@ async function ProductContent({ params }: Props) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(product, slug)) }}
-      />
+      <JsonLd data={buildJsonLd(product, slug)} />
       <ProductDetail product={product} relatedProducts={related_products} />
     </>
   )

@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { JsonLd } from '@/components/shared/JsonLd'
 import { LocationHeader } from './_components/LocationHeader'
 import { InstantSearchSection } from './_components/InstantSearchSection'
 
@@ -46,9 +47,29 @@ export default function SaleContainersPage({ searchParams }: Props) {
 
 async function SaleContainersContent({ searchParams }: Props) {
   const { ptype = 'buy', zipcode, location } = await searchParams
+  const isAccessories = ptype === 'accessories'
+
+  // Mirrors the visible breadcrumb below exactly, per this project's own SEO
+  // rule requiring BreadcrumbList structured data on listing pages.
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://onsitestorage.com' },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: isAccessories ? 'Container Accessories' : 'Product Pricing',
+        item: isAccessories
+          ? 'https://onsitestorage.com/sale-shipping-containers?ptype=accessories'
+          : 'https://onsitestorage.com/sale-shipping-containers',
+      },
+    ],
+  }
 
   return (
     <div className="min-h-screen bg-theme-subtle dark:bg-neutral-950">
+      <JsonLd data={breadcrumbJsonLd} />
       <nav aria-label="Breadcrumb" className="px-[5%] pt-4 pb-1">
         <ol className="flex items-center gap-1 text-xs text-theme-muted">
           <li>
@@ -56,7 +77,7 @@ async function SaleContainersContent({ searchParams }: Props) {
           </li>
           <li aria-hidden>/</li>
           <li className="dark:text-gray-400">
-            {ptype === 'accessories' ? 'Container Accessories' : 'Product Pricing'}
+            {isAccessories ? 'Container Accessories' : 'Product Pricing'}
           </li>
         </ol>
       </nav>

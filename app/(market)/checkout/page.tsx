@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { JsonLd } from '@/components/shared/JsonLd';
 import { CheckoutClient } from './_components/CheckoutClient';
 
 
@@ -28,10 +29,7 @@ const jsonLd = {
 export default function CheckoutPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
       <CheckoutClient />
     </>
   );

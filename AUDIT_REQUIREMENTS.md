@@ -249,8 +249,13 @@ don't delete completed items until the next full regeneration (so progress is vi
       _`AccountSidebar.tsx`'s nav so users can't reach dead pages. Verified live: both_
       _pages render correctly, sidebar shows exactly Dashboard/Orders/Addresses/Account_
       _Details/Logout. Typecheck + lint clean._
-- [ ] **Add JSON-LD `BreadcrumbList` to the PLP** — a visual breadcrumb exists but no
+- [x] **Add JSON-LD `BreadcrumbList` to the PLP** — a visual breadcrumb exists but no
       structured data, despite this project's own SEO rule requiring it on listing pages.
+      _Done 2026-07-17 — added alongside building the shared `<JsonLd>` component below,_
+      _since a 4th one-off inline script would've just meant migrating it again later._
+      _Mirrors the visible breadcrumb exactly for both `ptype` variants (Home > Product_
+      _Pricing / Home > Container Accessories). Verified live: both variants render the_
+      _correct `BreadcrumbList` with matching names/URLs._
 - [x] **Enrich the PDP's Product JSON-LD to match the real WordPress schema** —
       `sku`/`mpn`/`gtin` (gtin reuses sku, see §2), full `image` array, `itemCondition`
       (mapped from the real `condition` field), `additionalProperty` (Container Size,
@@ -265,8 +270,15 @@ don't delete completed items until the next full regeneration (so progress is vi
       ES index) and `hasMerchantReturnPolicy` (see §2). Verified live against a generic
       product, a real-location product, and an accessory — container-only fields correctly
       appear/disappear. _Done 2026-07-15._
-- [ ] **Build a shared `<JsonLd>` component** (`components/shared/JsonLd.tsx`) and migrate
+- [x] **Build a shared `<JsonLd>` component** (`components/shared/JsonLd.tsx`) and migrate
       the 3 existing hand-rolled inline JSON-LD blocks (home, PDP, checkout) to use it.
+      _Done 2026-07-17 — thin wrapper around the `<script type="application/ld+json">`_
+      _pattern all 4 spots (home, checkout, PDP, and the new PLP breadcrumb above) already_
+      _used identically; migrated all 4 to it, no behavior change. Verified live: all 4_
+      _pages still emit byte-identical JSON-LD output through the shared component._
+      _Typecheck + lint clean (pre-existing unused-import warnings on the homepage are_
+      _unrelated — commented-out sections awaiting the "decide the homepage's direction"_
+      _item below)._
 - [ ] **Create `config/routes.ts`** with typed path constants; replace the ~30 hardcoded
       internal path string literals found across the app.
 - [ ] **Wire real Suspense fallbacks on the PLP.** Both boundaries in
