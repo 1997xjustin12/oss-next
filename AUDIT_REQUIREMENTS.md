@@ -307,10 +307,17 @@ don't delete completed items until the next full regeneration (so progress is vi
       unlike container PDPs (`ProductVariantShell.tsx`). Found 2026-07-17 while tracing
       the routes.ts refactor above — not fixed there since it's a new UI addition, not a
       path-constant swap.
-- [ ] **Wire real Suspense fallbacks on the PLP.** Both boundaries in
+- [x] **Wire real Suspense fallbacks on the PLP.** Both boundaries in
       `sale-shipping-containers/page.tsx` currently have no `fallback` at all — and a
       fully-built, dimension-matched `PageSkeleton.tsx` component already exists right next
       to them, just not imported/used.
+      _Done 2026-07-17 — the page-level boundary (wraps the whole async page, fires before_
+      _anything including the real breadcrumb/header has rendered) now uses the full_
+      _`PageSkeleton`. Split a new `ResultsSkeleton` (sidebar + product grid only, no_
+      _breadcrumb/header) out of it for the inner boundary around_
+      _`InstantSearchSection`, so that one doesn't duplicate the real breadcrumb/header_
+      _already on screen by the time it could suspend. Typecheck + lint clean; page_
+      _verified live (200)._
 - [ ] **Improve the PDP's Suspense fallback** — currently a generic pulsing box, not shaped
       like the final content.
 - [ ] **Decide the homepage's direction**: it's almost entirely static marketing content,

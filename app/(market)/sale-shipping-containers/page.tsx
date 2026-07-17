@@ -5,6 +5,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { LocationHeader } from './_components/LocationHeader'
 import { InstantSearchSection } from './_components/InstantSearchSection'
+import { PageSkeleton, ResultsSkeleton } from './_components/PageSkeleton'
 
 type SearchParams = {
   zipcode?:  string
@@ -40,7 +41,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default function SaleContainersPage({ searchParams }: Props) {
   return (
-    <Suspense>
+    <Suspense fallback={<PageSkeleton />}>
       <SaleContainersContent searchParams={searchParams} />
     </Suspense>
   )
@@ -85,7 +86,7 @@ async function SaleContainersContent({ searchParams }: Props) {
 
       <LocationHeader location={location} zipcode={zipcode} ptype={ptype} />
 
-      <Suspense>
+      <Suspense fallback={<ResultsSkeleton />}>
         <InstantSearchSection />
       </Suspense>
     </div>
