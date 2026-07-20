@@ -71,6 +71,12 @@ don't re-flag these in future audit passes.
    - Payment methods stay **Braintree card-only** — no PayPal/Venmo/Apple Pay planned.
    - Live chat and newsletter signup UI are **still pending** a client decision (not
      resolved either way — don't mark done, but don't re-report as newly-found either).
+8. **`app/(market)/(home)/loading.tsx` is a deliberate exception, not a gap.** It's the one
+   in-scope area that actually uses the `loading.tsx` convention (a real branded full-viewport
+   preloader) — everywhere else, `loading.tsx` is correctly absent because PDP/PLP use
+   page-level `<Suspense>` instead, and cart/checkout/my-account use client-managed skeleton
+   state (see decision #5 above). Confirmed 2026-07-18 — don't flag Home as inconsistent with
+   the rest of the app; it's the deliberate one that actually needs this file.
 
 _(Add new confirmed decisions here as they come up, so they persist across future audits.)_
 
@@ -161,26 +167,28 @@ Every audit pass should produce:
 
 ---
 
-## 5. Latest Audit Results — 2026-07-17
+## 5. Latest Audit Results — 2026-07-18
 
-| Dimension | Score | 2026-07-15 baseline |
-|---|---|---|
-| **Overall (blended)** | **~75%** | ~65% |
-| Functional Completeness (8 areas) | ~81% | ~62% |
-| E-Commerce Feature Coverage (41 items) | ~62% | ~65% |
-| Core Web Vitals / PageSpeed / SEO | ~82% | ~68% |
+| Dimension | Score | 2026-07-17 | 2026-07-15 |
+|---|---|---|---|
+| **Overall (blended)** | **~79%** | ~75% | ~65% |
+| Functional Completeness (8 areas) | ~87% | ~81% | ~62% |
+| E-Commerce Feature Coverage (41 items) | ~62% | ~62% | ~65% |
+| Core Web Vitals / PageSpeed / SEO | ~89% | ~82% | ~68% |
 
-Functional Completeness and CWV/SEO both jumped materially — reflects the account/profile
-fix, guest cart capture, shared `<JsonLd>` + PLP breadcrumb, `config/routes.ts`, and the
-PLP/PDP Suspense fallback work, all done between the two audits.
+Functional Completeness and CWV/SEO both moved up again — reflects the homepage A/B/C
+rebuild (real `middleware.ts` + `VariantHero` Suspense, replacing the crawlable
+`/version2`/`/version3` duplicate-content routes), the wishlist feature, PDP social
+sharing, the checkout/cart metadata fixes, the checkout consent-link and thumbnail fixes,
+and the `braintree`/`cheerio` named-import fixes — all shipped between the two audits.
 
-E-Commerce Feature Coverage actually reads slightly **lower** than the baseline despite no
-regression — this pass scored two items more conservatively than before: the PDP's "You May
-Also Need" section was previously counted as legitimate-but-static, but is confirmed fully
-fake (hardcoded prices, dead CTAs) with real ES `related_products` data sitting unused right
-next to it; and Q&A/FAQ vs. frequently-bought-together were split into their own honest
-partial-credit rows instead of bundled optimistically. Nothing that worked on 2026-07-15
-stopped working.
+E-Commerce Feature Coverage holds flat at ~62% despite two genuine feature flips
+(**wishlist** and **social sharing** both went from ❌ to ✅) — those +2 points were offset
+by scoring several previously-generous items more conservatively this pass: the address
+book turns out to be exactly one billing + one shipping address baked into the profile,
+not a true multi-address book; and order history has no shipment/carrier tracking number,
+only order-status display. Nothing that worked before stopped working — this is stricter
+grading, not regression, same pattern as the 07-15→07-17 dip.
 
 Full per-area/per-item breakdown from this pass lives in the 3 parallel research reports
 that produced it (not persisted verbatim here, to avoid this file going stale) — §6 below is
@@ -582,3 +590,37 @@ don't delete completed items until the next full regeneration (so progress is vi
       _inside a group that already has its own `aria-label` ("Trusted organizations_
       _carousel"), which already conveys the meaning. Documented why in a code comment so_
       _this doesn't read as an oversight later._
+- [ ] **New 2026-07-18 — the `ref.md` scaffold-file sweep on 2026-07-17 was incomplete.**
+      Found by 2 independent research passes in this audit: 4 more stray reference files
+      still live inside `app/`, same "`app/` holds only route files" violation as the 2
+      already moved out — `app/(market)/checkout/ref.md`, `app/(market)/sale-shipping-
+      containers/ref.md`, `app/(market)/(home)/home-ref.html`, `app/(market)/(home)/home-
+      ref-mobile.html`. Same nature (genuine historical build-spec/design-mockup docs, not
+      dead code) and same fix applies — move to the repo root (e.g. `CHECKOUT_PAGE_REF.md`,
+      `PLP_PAGE_REF.md`, `HOME_PAGE_REF.html`, `HOME_PAGE_REF_MOBILE.html`).
+- [ ] **New 2026-07-18 — orphaned empty route scaffold**: `app/(market)/account/orders/`
+      contains only a `.gitkeep`, present since the initial commit. It matches the
+      *aspirational* folder structure documented in `AGENTS.md` (`app/(market)/account/
+      orders/`) rather than the app's real, actually-used convention (`my-account/orders/`).
+      Doesn't affect routing (no `page.tsx`), but could mislead a future contributor who
+      reads `AGENTS.md` literally. Low severity — delete the empty folder.
+- [ ] **New 2026-07-18 — Address book is not a true multi-address book.**
+      `app/(market)/my-account/edit-address/_components/AddressForm.tsx` supports exactly
+      one billing + one shipping address baked into the user profile (`ADDRESS_TYPES` is a
+      fixed 2-entry array) — no add/remove/multiple-saved-addresses, no default-address
+      selection. Fine as "edit your one address," not a real address book. Needs a product
+      decision on whether true multi-address support is ever wanted before building it —
+      would also need real backend support (the profile endpoint has no concept of
+      multiple addresses today).
+- [ ] **New 2026-07-18 — no shipment/carrier tracking number in Order History.**
+      `my-account/orders` shows real order status (pending/paid/shipped/delivered/etc.)
+      but no `tracking_number`/carrier field or link exists anywhere (confirmed via grep —
+      zero matches). Distinct from the existing "order status updates" item, which is
+      already real. Needs a product decision — likely also needs the backend to start
+      returning a tracking number/carrier field, which it may not do today.
+- [ ] **New 2026-07-18 — `Recaptcha.tsx` may be using the wrong `next/script` strategy.**
+      It's rendered with `strategy="lazyOnload"`, but its only 2 real usages
+      (`CheckoutClient.tsx`, `RegisterForm.tsx`) need the widget interactive *before* the
+      user submits the form — not the deferred analytics/chat-widget case AGENTS.md's own
+      rule 13 describes `lazyOnload` for. A fast-filling user could hit submit before the
+      widget's finished loading. Worth trying `strategy="afterInteractive"` instead.
