@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { Wrench, Ship, Maximize2, Snowflake } from 'lucide-react'
+import { Package } from 'lucide-react'
 import { isContainerHit } from '@/lib/pricing'
 import { resolveContainerVariant } from '@/lib/containerVariant'
 import { ROUTES } from '@/config/routes'
@@ -17,12 +18,7 @@ import { FaqAccordion } from './FaqAccordion'
 // import { CustomerReviews } from './CustomerReviews'
 import { ReviewsCarousel } from './ReviewsCarousel'
 
-const staticRelatedProducts = [
-  { Icon: Ship,     title: '40ft Standard Container',   desc: 'Double the space for larger projects and business storage.',        price: 'From $2,000',   cta: 'View' },
-  { Icon: Maximize2, title: '20ft High Cube',            desc: 'Extra 1ft of height — perfect for taller inventory and work spaces.', price: 'From $1,850',  cta: 'View' },
-  { Icon: Snowflake, title: '20ft Refrigerated',         desc: 'Temperature-controlled for food, pharma, and sensitive goods.',      price: 'Call for Price', cta: 'Inquire' },
-  { Icon: Wrench,   title: 'Container Accessories',     desc: 'Locks, ramps, vents, shelving, lighting kits, and more.',            price: 'From $29',      cta: 'Shop' },
-]
+const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 
 type Props = { product: ProductHit; relatedProducts: ProductHit[] }
 
@@ -36,6 +32,14 @@ export function ProductDetail({ product, relatedProducts }: Props) {
   }
 
   const containerVariant = resolveContainerVariant(activeProduct)
+
+  // Real ES-backed containers from the same location, excluding whichever
+  // variant is currently on screen — was previously a hardcoded array with
+  // fabricated prices and dead CTA buttons; this section is hidden entirely
+  // rather than shown empty/fake when there's nothing real to display.
+  const relatedToShow = relatedProducts
+    .filter((p) => p.objectID !== activeProduct.objectID)
+    .slice(0, 4)
 
   return (
     <div className="bg-theme-bg text-theme-dark">
@@ -51,31 +55,42 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       <BodyTabsSection variant={containerVariant} />
 
       {/* RELATED PRODUCTS */}
-      <section className="px-4 sm:px-[5%] py-10 sm:py-16">
-        <div className="flex items-baseline justify-between mb-6">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">You May Also Need</h2>
-          <Link href={ROUTES.PLP} className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
-            View All Containers →
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {staticRelatedProducts.map((p) => (
-            <div key={p.title} className="rounded-lg border border-theme-border bg-theme-bg overflow-hidden cursor-pointer hover:border-theme-primary hover:-translate-y-1 hover:shadow-lg transition-all">
-              <div className="h-32 flex items-center justify-center bg-theme-subtle">
-                <p.Icon className="w-10 h-10 text-theme-muted" strokeWidth={1.5} />
-              </div>
-              <div className="p-3.5">
-                <h4 className="font-extrabold text-base mb-1">{p.title}</h4>
-                <p className="text-xs text-theme-muted mb-3 leading-relaxed">{p.desc}</p>
-                <div className="flex items-center justify-between pt-2.5 border-t border-theme-border">
-                  <span className="font-extrabold text-base">{p.price}</span>
-                  <button className="bg-theme-dark text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-theme-primary transition-colors">{p.cta}</button>
+      {relatedToShow.length > 0 && (
+        <section className="px-4 sm:px-[5%] py-10 sm:py-16">
+          <div className="flex items-baseline justify-between mb-6">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">You May Also Need</h2>
+            <Link href={ROUTES.PLP} className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
+              View All Containers →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {relatedToShow.map((p) => (
+              <Link
+                key={p.objectID}
+                href={ROUTES.PRODUCT(p.handle)}
+                className="rounded-lg border border-theme-border bg-theme-bg overflow-hidden hover:border-theme-primary hover:-translate-y-1 hover:shadow-lg transition-all"
+              >
+                <div className="relative h-32 bg-theme-subtle">
+                  {p.images?.[0]?.src ? (
+                    <Image src={p.images[0].src} alt={p.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, 25vw" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="w-10 h-10 text-theme-muted" strokeWidth={1.5} />
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+                <div className="p-3.5">
+                  <h4 className="font-extrabold text-sm mb-2 line-clamp-2 leading-snug">{p.title}</h4>
+                  <div className="flex items-center justify-between pt-2.5 border-t border-theme-border">
+                    <span className="font-extrabold text-base">{fmt(p.sale_price)}</span>
+                    <span className="bg-theme-dark text-white text-xs font-bold px-3 py-1.5 rounded">View</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* REVIEWS */}
       <section id="reviews" className="px-4 sm:px-[5%] py-10 sm:py-16">

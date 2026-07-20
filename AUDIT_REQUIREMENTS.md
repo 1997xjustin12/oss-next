@@ -441,14 +441,21 @@ don't delete completed items until the next full regeneration (so progress is vi
       side by side right now for comparison; pick one before shipping.
       _Decided 2026-07-18 — retain both, for now. No code change; moved to §2 as a_
       _confirmed decision so future audits stop flagging this as pending._
-- [ ] **New 2026-07-17 — the PDP's "You May Also Need" section is fully fake, not just**
-      **static.** `ProductDetail.tsx` renders a hardcoded 4-item `staticRelatedProducts`
-      array with placeholder prices (`"From $2,000"`, `"Call for Price"`) and CTA buttons
-      with zero `onClick` handlers — while the page *does* fetch real `related_products`
-      from ES (`page.tsx`), which today is only consumed internally by `ProductInfoPanel`
-      for variant-swapping, never rendered as an actual related-items display. Either wire
-      the real data into this section or remove it — showing fabricated prices to real
-      customers is worse than showing nothing.
+- [x] **The PDP's "You May Also Need" section was fully fake, not just static.**
+      `ProductDetail.tsx` rendered a hardcoded 4-item `staticRelatedProducts` array with
+      placeholder prices (`"From $2,000"`, `"Call for Price"`) and CTA buttons with zero
+      `onClick` handlers — while the page *does* fetch real `related_products` from ES
+      (`page.tsx`), which was only consumed internally by `ProductInfoPanel` for variant-
+      swapping, never rendered as an actual related-items display.
+      _Done 2026-07-18 — now renders the real `relatedProducts` prop (same-location_
+      _containers from ES), filtering out whichever variant is currently on screen and_
+      _capping at 4. Each card is a real `<Link>` to the real PDP (`ROUTES.PRODUCT`),_
+      _with the real product image, title, and `sale_price` — no more fabricated data or_
+      _dead buttons. The whole section now hides itself when there's nothing real to show_
+      _(0 related products) rather than rendering empty or falling back to fake data._
+      _Verified live: 4 genuinely different real products with real prices/images/links,_
+      _confirmed via Playwright (not just curl, since this needs real rendering)._
+      _Typecheck + lint clean._
 - [ ] **New 2026-07-17 — `revalidateTag`/`updateTag` aren't wired to any real mutation.**
       `actions/cache.ts`'s `revalidateAll()`/`updateAll()` exist but are never called
       anywhere in the app (only referenced in AGENTS.md's own doc example); the only real
