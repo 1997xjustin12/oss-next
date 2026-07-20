@@ -60,14 +60,6 @@ async function WpContent({ params }: Props) {
   const page = await fetchWpPage(slug)
   if (!page) notFound()
 
-  // Theme CSS targets body classes (e.g. body.elementor-page-123) — add the
-  // original WP body classes so those selectors match. Additive, not a
-  // reassignment: the root layout and providers put their own classes on
-  // <body>, and clobbering them would break the surrounding app.
-  const bodyClassScript = page.body_classes?.length
-    ? `document.body.classList.add(${page.body_classes.map((c) => JSON.stringify(c)).join(', ')});`
-    : ''
-
   return (
     <>
       <link rel="preconnect" href={ASSET_CDN} />
@@ -75,18 +67,18 @@ async function WpContent({ params }: Props) {
         <link key={href} rel="preload" as="image" href={href} fetchPriority="high" />
       ))}
 
-      {/* Per-page pruned subset of the theme CSS (from the API) — falls back
-          to the full stylesheet on the CDN if the API didn't provide one. */}
-      {page.global_css ? (
-        <style dangerouslySetInnerHTML={{ __html: page.global_css }} />
-      ) : (
-        page.global_css_url && <link rel="stylesheet" href={page.global_css_url} />
-      )}
-      {page.css && <style dangerouslySetInnerHTML={{ __html: page.css }} />}
+      {/* Theme + per-page CSS, rewritten to apply only inside the wrapper
+          below. The WordPress stylesheet styles bare `a`/`span`/`div` with
+          !important, so injecting it unscoped restyles the app's own
+          TopBar/Navbar/Footer — hence the scoping in the service.
 
-      {bodyClassScript && <script dangerouslySetInnerHTML={{ __html: bodyClassScript }} />}
+          global_css_url is deliberately NOT used as a fallback: a plain
+          <link> can't be scoped and would leak over the chrome. */}
+      {page.scopedCss && <style dangerouslySetInnerHTML={{ __html: page.scopedCss }} />}
 
-      <div dangerouslySetInnerHTML={{ __html: page.content }} />
+      {/* Carries the original WP body classes, which scopeCss() rewrote
+          `body.foo` selectors to depend on. */}
+      <div className={page.wrapperClass} dangerouslySetInnerHTML={{ __html: page.content }} />
     </>
   )
 }

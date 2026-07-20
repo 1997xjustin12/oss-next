@@ -1,4 +1,6 @@
 import { load } from 'cheerio'
+import postcss from 'postcss'
+import safeParser from 'postcss-safe-parser'
 import { cacheLife, cacheTag } from 'next/cache'
 import { CACHE_TAGS } from '@/config/cache'
 
@@ -21,20 +23,79 @@ const API_KEY = process.env.NEXT_SOLANA_BACKEND_KEY
 export const ASSET_CDN = 'https://bbq-spaces.sfo3.cdn.digitaloceanspaces.com'
 
 /**
- * Site chrome baked into the converted markup by WordPress. The Next.js
- * (market) layout supplies TopBar/Navbar/Footer, so these are dropped to
- * avoid rendering two headers and two footers on the same page.
+ * Class applied to the wrapper the converted markup renders into. Every
+ * selector in the page's WordPress CSS is rewritten to sit under it.
  */
-const CHROME_SELECTORS = [
-  '[data-elementor-type="header"]',
-  '[data-elementor-type="footer"]',
-  '.elementor-location-header',
-  '.elementor-location-footer',
-  'header#masthead',
-  'footer#colophon',
-  '.site-header',
-  '.site-footer',
-].join(', ')
+export const SCOPE_CLASS = 'wp-content'
+
+const SCOPE = `.${SCOPE_CLASS}`
+
+/** Matches a leading html/body/:root, plus any classes/ids/attrs stuck to it. */
+const ROOT_SELECTOR = /^(?:html|body|:root)((?:[.#:[][^\s>+~,]*)*)/i
+
+/**
+ * Confine a WordPress stylesheet to the converted-content wrapper.
+ *
+ * The theme CSS is written for a standalone WordPress document, so it styles
+ * bare element selectors globally — including, with !important:
+ *
+ *   body, h1..h6, p, a, li, span, div:not(...) { font-family: 'Poppins' !important }
+ *
+ * Injected as-is that repaints the app's own TopBar/Navbar/Footer. Prefixing
+ * every selector with the wrapper keeps the converted page pixel-identical
+ * while leaving the surrounding React chrome untouched.
+ *
+ * html/body/:root collapse ONTO the wrapper rather than becoming descendants
+ * of it, so `body.elementor-page-123 .foo` still matches once the original
+ * body classes are applied to the wrapper itself.
+ */
+function scopeCss(css: string): string {
+  if (!css) return ''
+
+  // safeParser, not postcss.parse: the theme CSS from the API is not valid.
+  // Its minifier strips /* */ delimiters but leaves the comment text behind,
+  // and emits unbalanced braces, e.g.
+  //
+  //   once slick adds its class,show it smoothly .foo.slick-initialized{...}
+  //   }.slick-slide:not(.slick-active){opacity:0!important}
+  //
+  // Browsers error-recover from that; postcss.parse throws. Throwing here
+  // meant silently dropping the entire 400KB stylesheet and rendering the
+  // page unstyled, so we recover the way a browser would.
+  let root: postcss.Root
+  try {
+    root = safeParser(css)
+  } catch (err) {
+    // Should be unreachable — safeParser recovers rather than throwing. Warn
+    // rather than fail silently, since the fallback is an unstyled page.
+    console.error('[wp-pages] CSS parse failed, dropping stylesheet:', err)
+    return ''
+  }
+
+  root.walkRules((rule) => {
+    // Keyframe steps (`from`, `50%`) are not selectors — prefixing breaks them.
+    const parent = rule.parent
+    if (parent?.type === 'atrule' && /keyframes$/i.test((parent as postcss.AtRule).name)) {
+      return
+    }
+
+    rule.selectors = rule.selectors.map((selector) => {
+      const sel = selector.trim()
+      if (!sel) return selector
+
+      const rootMatch = sel.match(ROOT_SELECTOR)
+      if (rootMatch) {
+        const attached = rootMatch[1] ?? ''
+        const rest = sel.slice(rootMatch[0].length).trim()
+        return rest ? `${SCOPE}${attached} ${rest}` : `${SCOPE}${attached}`
+      }
+
+      return `${SCOPE} ${sel}`
+    })
+  })
+
+  return root.toString()
+}
 
 /** Shape returned by GET {BACKEND}/api/pages/detail/<path>/ */
 export interface WpPageDto {
@@ -53,10 +114,14 @@ export interface WpPageDto {
 }
 
 export interface WpPage extends WpPageDto {
-  /** Chrome-stripped, image-optimised markup ready for rendering. */
+  /** Image-optimised markup ready for rendering. */
   content: string
   /** Likely LCP images, emitted as <link rel="preload"> by the page. */
   preloads: string[]
+  /** Theme + per-page CSS, confined to the wrapper via scopeCss(). */
+  scopedCss: string
+  /** Wrapper classes: SCOPE_CLASS plus the page's original WP body classes. */
+  wrapperClass: string
 }
 
 /**
@@ -132,12 +197,24 @@ export async function fetchWpPage(segments: string[]): Promise<WpPage | null> {
   const page = (await res.json()) as WpPageDto
 
   const $ = load(page.html ?? '', null, false)
-  $(CHROME_SELECTORS).remove()
   optimiseImages($)
+
+  // Converted pages are content-only — the conversion drops the WordPress
+  // header/footer — so the (market) layout's TopBar/Navbar/Footer are the
+  // page's only chrome and nothing needs stripping here.
+  const scopedCss = [scopeCss(page.global_css ?? ''), scopeCss(page.css ?? '')]
+    .filter(Boolean)
+    .join('\n')
+
+  // The original body classes move onto the wrapper, because scopeCss()
+  // collapsed `body.foo` selectors down to `.wp-content.foo`.
+  const wrapperClass = [SCOPE_CLASS, ...(page.body_classes ?? [])].join(' ')
 
   return {
     ...page,
     content: $.html(),
     preloads: lcpCandidates($, page.css ?? ''),
+    scopedCss,
+    wrapperClass,
   }
 }
