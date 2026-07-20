@@ -588,7 +588,17 @@ don't delete completed items until the next full regeneration (so progress is vi
       _produce the correct boolean) plus code review of the 3 straightforward ternary_
       _branches. Typecheck + lint clean (pre-existing, unrelated findings confirmed via_
       _diff in `ProductInfoPanel.tsx`/`ProductImageGallery.tsx`)._
-- [ ] Evaluate whether any data needs the `cacheLife('seconds')` tier — currently unused.
+- [x] Evaluate whether any data needs the `cacheLife('seconds')` tier — currently unused.
+      _Done 2026-07-18 — mapped every `cacheLife()` call in the app_
+      _(`grep -rn "cacheLife(" services/ app/`): PLP search/listings (`cachedEsSearch`,_
+      _`cachedCustomFieldsSearch`) use `'minutes'`, individual product/order/WP-proxy/_
+      _reviews lookups use `'hours'`, geo/depot data uses `'days'`. This is a coherent_
+      _tiering that already matches each source's real update cadence — no data source in_
+      _this app has a genuine sub-minute freshness requirement, including the stock/qty_
+      _display just wired up (`isInStockHit`, same tracker file above), which reuses these_
+      _same cached functions and — by its own design — defaults safely rather than needing_
+      _real-time accuracy. Concluding "seconds" is correctly unused, not a gap; nothing to_
+      _implement._
 - [x] Fix 2 default-import style violations (`braintree` in `payment.service.ts`, `cheerio`
       in `wp-proxy.service.ts`) — cosmetic/convention only, both server-only, no bundle impact.
       _Done 2026-07-18 — `payment.service.ts` now imports `{ BraintreeGateway, Environment,_

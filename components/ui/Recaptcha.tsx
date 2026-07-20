@@ -29,6 +29,10 @@ type Props = {
 // grecaptcha.render() directly (rather than next/third-parties, which has no
 // reCAPTCHA v2 checkbox support) so the widget can be dropped anywhere in a
 // form without owning page-level script loading.
+//
+// strategy="afterInteractive" (not "lazyOnload") — this widget gates real
+// form submission (checkout, registration), not a deferred analytics/chat
+// case, so it needs to be ready well before a fast-filling user hits submit.
 export function Recaptcha({ siteKey, onChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [scriptReady, setScriptReady] = useState(false)
@@ -55,7 +59,7 @@ export function Recaptcha({ siteKey, onChange }: Props) {
     <>
       <Script
         src="https://www.google.com/recaptcha/api.js"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         onReady={() => setScriptReady(true)}
       />
       <div ref={containerRef} />
