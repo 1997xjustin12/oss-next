@@ -9,7 +9,7 @@ import {
 import type { ProductHit } from '@/types/product'
 import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import { getCustomFieldValue, isGenericDisplayHit } from '@/lib/pricing'
+import { getCustomFieldValue, isGenericDisplayHit, isInStockHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
 import { Stars } from '@/components/product/Stars'
@@ -467,6 +467,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
   // Hide Add to Cart in favor of the Quote/Call CTAs below, which stay
   // visible either way.
   const isGenericDisplay = isGenericDisplayHit(activeProduct)
+  const inStock = isInStockHit(activeProduct)
 
   function handleAddToCart() {
     if (isGenericDisplay) return // belt-and-suspenders — the button is hidden for these
@@ -543,11 +544,19 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       </div>
 
       {/* Availability */}
-      <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 rounded-md px-4 py-2.5 mb-5">
-        <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse shrink-0" />
-        <span className="text-sm font-bold text-emerald-700">In Stock — Ready to Ship</span>
-        <span className="text-xs text-emerald-600/80 ml-auto hidden sm:inline">Delivers in 1–5 business days</span>
-      </div>
+      {inStock ? (
+        <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 rounded-md px-4 py-2.5 mb-5">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse shrink-0" />
+          <span className="text-sm font-bold text-emerald-700">In Stock — Ready to Ship</span>
+          <span className="text-xs text-emerald-600/80 ml-auto hidden sm:inline">Delivers in 1–5 business days</span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2.5 bg-theme-subtle border border-theme-border rounded-md px-4 py-2.5 mb-5">
+          <span className="w-2.5 h-2.5 rounded-full bg-theme-muted shrink-0" />
+          <span className="text-sm font-bold text-theme-dark-2">Out of Stock</span>
+          <span className="text-xs text-theme-muted ml-auto hidden sm:inline">Call for availability</span>
+        </div>
+      )}
 
       {/* Price tabs */}
       <div className="grid grid-cols-3 border border-theme-border rounded-t-md overflow-hidden">

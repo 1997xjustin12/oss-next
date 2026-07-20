@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
-import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
+import { getCustomFieldValue, isContainerHit, isInStockHit } from '@/lib/pricing'
 import { getQuickSpecs } from '@/lib/data/pdpShippingContainers'
 import type { ProductHit } from '@/types/product'
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'
@@ -80,6 +80,7 @@ export function ProductVariantShell({ product, relatedProducts, activeProduct, o
             images={allImages}
             title={activeProduct.title}
             tag={promoTag}
+            inStock={isInStockHit(activeProduct)}
           />
           <div className="grid grid-cols-3 gap-3 mt-5 bg-theme-dark rounded-lg p-4 sm:p-5 text-center">
             {quickSpecs.map((s, index) => (

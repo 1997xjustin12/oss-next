@@ -568,8 +568,26 @@ don't delete completed items until the next full regeneration (so progress is vi
 - [ ] Newsletter signup UI — backend utility functions already exist (`lib/newsletter.ts`);
       revisit building a signup form now that checkout has more real estate.
       _2026-07-18 — still pending a client decision, not resolved either way._
-- [ ] Wire the PDP's stock/availability badge to the real `variants[].qty` field instead
+- [x] Wire the PDP's stock/availability badge to the real `variants[].qty` field instead
       of always showing a hardcoded "In Stock — Ready to Ship".
+      _Done 2026-07-18 — new shared `isInStockHit()` (`lib/pricing.ts`, alongside the_
+      _other `ProductHit` helpers): reads `variants[0].qty`, only an explicit `0` counts_
+      _as out of stock — missing/undefined defaults to in-stock, since a field simply not_
+      _populated on a hit is far more likely than a genuinely sold-out product in this_
+      _catalog, and a false "Out of Stock" costs a real sale. Wired into all 3 places that_
+      _previously hardcoded "In Stock": `ProductImageGallery`'s badge (shared by both_
+      _container and accessory PDPs), `ProductInfoPanel`'s availability banner (containers),_
+      _and `AccessoryDetail`'s own separate stock chip (accessories). Deliberately scoped_
+      _to the badge only, per the tracker item — did not also disable "Add to Cart" on_
+      _out-of-stock, a separate behavioral change not asked for here._
+      _Verified: real in-stock product (qty 25) renders unchanged. No genuinely out-of-_
+      _stock (`qty: 0`) product exists in the current catalog to test the other branch_
+      _live end-to-end (checked a 50-item sample), and the data is fetched server-side_
+      _directly from Elasticsearch, so it can't be intercepted/mocked via a browser-level_
+      _tool. Verified the boundary logic directly instead (undefined/null/0/positive all_
+      _produce the correct boolean) plus code review of the 3 straightforward ternary_
+      _branches. Typecheck + lint clean (pre-existing, unrelated findings confirmed via_
+      _diff in `ProductInfoPanel.tsx`/`ProductImageGallery.tsx`)._
 - [ ] Evaluate whether any data needs the `cacheLife('seconds')` tier — currently unused.
 - [x] Fix 2 default-import style violations (`braintree` in `payment.service.ts`, `cheerio`
       in `wp-proxy.service.ts`) — cosmetic/convention only, both server-only, no bundle impact.

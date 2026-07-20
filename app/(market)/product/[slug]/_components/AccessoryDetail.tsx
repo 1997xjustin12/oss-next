@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, Phone, MapPin, Tag, CheckCircle2, Star, ChevronRight } from 'lucide-react'
+import { ShoppingCart, Phone, MapPin, Tag, CheckCircle2, XCircle, Star, ChevronRight } from 'lucide-react'
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { useCart } from '@/hooks/useCart'
-import { getCustomFieldValue } from '@/lib/pricing'
+import { getCustomFieldValue, isInStockHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { ROUTES } from '@/config/routes'
@@ -33,6 +33,7 @@ export function AccessoryDetail({ product }: Props) {
     .map((c) => c.category_name)
     .filter((name) => !CONTAINER_CATEGORY_NAMES.includes(name))
   const promoTag = product.tags?.find((t) => !/stock/i.test(t))
+  const inStock = isInStockHit(product)
 
   function handleAddToCart() {
     addItem({
@@ -66,7 +67,7 @@ export function AccessoryDetail({ product }: Props) {
 
           {/* ── Gallery ── */}
           <div className="w-full">
-            <ProductImageGallery images={images} title={product.title} tag={promoTag} />
+            <ProductImageGallery images={images} title={product.title} tag={promoTag} inStock={inStock} />
           </div>
 
           {/* ── Info Panel ── */}
@@ -109,10 +110,17 @@ export function AccessoryDetail({ product }: Props) {
 
             {/* Stock · SKU · Location */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="inline-flex items-center gap-1.5 font-bold px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                In Stock
-              </span>
+              {inStock ? (
+                <span className="inline-flex items-center gap-1.5 font-bold px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  In Stock
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 font-bold px-2.5 py-1 rounded bg-theme-subtle text-theme-muted dark:bg-white/5">
+                  <XCircle className="w-3.5 h-3.5" />
+                  Out of Stock
+                </span>
+              )}
               {sku && (
                 <span className="text-theme-muted">
                   SKU: <span className="font-mono font-semibold text-theme-mid">{sku}</span>

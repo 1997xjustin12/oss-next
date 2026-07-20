@@ -82,6 +82,17 @@ export function isGenericDisplayHit(hit: ShippingContainerHit): boolean {
   return categories.includes('Generic Product Page') || location === DEFAULT_LOCATION
 }
 
+// Reads the first variant's qty — undefined/null (field simply not populated
+// on this hit) defaults to true (in stock) rather than a false "Out of
+// Stock", since a missing field is far more likely than a genuinely
+// sold-out product across this site's real catalog. Only an explicit 0
+// counts as out of stock.
+export function isInStockHit(hit: ShippingContainerHit): boolean {
+  const variants = hit.variants as { qty?: number }[] | undefined
+  const qty = variants?.[0]?.qty
+  return qty === undefined || qty === null || qty > 0
+}
+
 // Single place to inject computed/derived properties onto a raw ES hit before
 // it reaches any route handler or component — sale_price is guaranteed
 // present on the result.

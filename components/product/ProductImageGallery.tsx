@@ -9,9 +9,14 @@ type Props = {
   images: string[]
   title: string
   tag?: string
+  // Undefined/omitted (not the same as false) means the source data simply
+  // didn't carry a qty field — defaults to showing "In Stock" rather than a
+  // false "Out of Stock", since a missing field is far more likely than a
+  // genuinely sold-out product across this site's real catalog.
+  inStock?: boolean
 }
 
-export function ProductImageGallery({ images, title, tag }: Props) {
+export function ProductImageGallery({ images, title, tag, inStock = true }: Props) {
   const [active, setActive] = useState(0)
   const [lightbox, setLightbox] = useState(false)
   const [zoomed, setZoomed] = useState(false)
@@ -99,8 +104,8 @@ export function ProductImageGallery({ images, title, tag }: Props) {
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none z-10">
-            <span className="bg-emerald-600 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded shadow">
-              In Stock
+            <span className={`text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded shadow ${inStock ? 'bg-emerald-600' : 'bg-theme-muted'}`}>
+              {inStock ? 'In Stock' : 'Out of Stock'}
             </span>
             {tag && (
               <span className="bg-amber-500 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded shadow">
