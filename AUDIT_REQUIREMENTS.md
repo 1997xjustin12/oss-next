@@ -456,13 +456,32 @@ don't delete completed items until the next full regeneration (so progress is vi
       _Verified live: 4 genuinely different real products with real prices/images/links,_
       _confirmed via Playwright (not just curl, since this needs real rendering)._
       _Typecheck + lint clean._
-- [ ] **New 2026-07-17 — `revalidateTag`/`updateTag` aren't wired to any real mutation.**
+- [x] **`revalidateTag`/`updateTag` aren't wired to any real mutation.**
       `actions/cache.ts`'s `revalidateAll()`/`updateAll()` exist but are never called
-      anywhere in the app (only referenced in AGENTS.md's own doc example); the only real
-      callers of `revalidateTag` are the two webhook routes. `CACHE_TAGS.ORDERS`/`USERS`
-      are declared in `config/cache.ts` but never attached via `cacheTag()` to anything,
-      nor targeted by any revalidation call — meaning cart/checkout/profile mutations
-      never bust their own cached data.
+      anywhere in the app; the only real callers of `revalidateTag` are the two webhook
+      routes. `CACHE_TAGS.ORDERS`/`USERS` are declared in `config/cache.ts` but never
+      attached via `cacheTag()` to anything.
+      _Investigated 2026-07-18, deliberately not "fixed" — traced every `cacheTag()` call_
+      _in the codebase (`grep -rn "cacheTag(" services/ app/`) and found there is currently_
+      _no real gap to wire, not just an oversight. Every live `'use cache'` read in this app_
+      _is product/search/WP-proxy data (`search.service.ts`, `wp-proxy.service.ts`,_
+      _`geoapify.service.ts`) — data that only ever changes externally (WordPress/ES),_
+      _which is exactly what the 2 existing webhook routes already correctly invalidate._
+      _The one other `cacheTag(CACHE_TAGS.REVIEWS)` (`review.service.ts`'s_
+      _`getReviewsByVariant`) powers `CustomerReviews.tsx`, which is commented out — the_
+      _*live* PDP reviews path (`ReviewsCarousel.tsx` → `listProductReviews`/_
+      _`createProductReview`) talks to a completely different backend (OSS Django, not_
+      _WordPress) via plain `fetch()`, with no `'use cache'` involved at all. Everything a_
+      _user actually mutates in this app today — cart, profile/address, orders, the live_
+      _review flow — is fetched client-side, never through `'use cache'`, so there is_
+      _structurally nothing for a Server Action to invalidate. Wiring `updateTag` onto,_
+      _say, `createProductReview()` would touch a cache tag (`REVIEWS`) that no live_
+      _component even reads — cosmetically "done" but functionally meaningless, the same_
+      _class of fake-completeness this audit has been catching elsewhere. `CACHE_TAGS.ORDERS`/_
+      _`USERS` remain correctly forward-looking (matches AGENTS.md's own documented tag_
+      _table) for if/when an orders or profile view is ever rebuilt as a cached Server_
+      _Component read — nothing to attach them to yet. Revisit this item for real once such_
+      _a read exists, not before._
 - [x] **Dead `href="#"` consent-checkbox links in checkout.**
       `CheckoutClient.tsx`'s "Delivery Requirement," "terms and conditions," and "privacy
       policy" consent-checkbox links all went nowhere (`href="#"`). The real WordPress
