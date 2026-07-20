@@ -666,20 +666,18 @@ don't delete completed items until the next full regeneration (so progress is vi
       _inside a group that already has its own `aria-label` ("Trusted organizations_
       _carousel"), which already conveys the meaning. Documented why in a code comment so_
       _this doesn't read as an oversight later._
-- [ ] **New 2026-07-18 — the `ref.md` scaffold-file sweep on 2026-07-17 was incomplete.**
+- [x] **The `ref.md` scaffold-file sweep on 2026-07-17 was incomplete.**
       Found by 2 independent research passes in this audit: 4 more stray reference files
-      still live inside `app/`, same "`app/` holds only route files" violation as the 2
-      already moved out — `app/(market)/checkout/ref.md`, `app/(market)/sale-shipping-
-      containers/ref.md`, `app/(market)/(home)/home-ref.html`, `app/(market)/(home)/home-
-      ref-mobile.html`. Same nature (genuine historical build-spec/design-mockup docs, not
-      dead code) and same fix applies — move to the repo root (e.g. `CHECKOUT_PAGE_REF.md`,
-      `PLP_PAGE_REF.md`, `HOME_PAGE_REF.html`, `HOME_PAGE_REF_MOBILE.html`).
-- [ ] **New 2026-07-18 — orphaned empty route scaffold**: `app/(market)/account/orders/`
-      contains only a `.gitkeep`, present since the initial commit. It matches the
-      *aspirational* folder structure documented in `AGENTS.md` (`app/(market)/account/
-      orders/`) rather than the app's real, actually-used convention (`my-account/orders/`).
-      Doesn't affect routing (no `page.tsx`), but could mislead a future contributor who
-      reads `AGENTS.md` literally. Low severity — delete the empty folder.
+      still lived inside `app/`, same "`app/` holds only route files" violation as the 2
+      already moved out.
+      _Done 2026-07-18 — moved all 4 to the repo root: `CHECKOUT_PAGE_REF.md`,_
+      _`PLP_PAGE_REF.md`, `HOME_PAGE_REF.html`, `HOME_PAGE_REF_MOBILE.html`. Verified live:_
+      _`/checkout`, `/sale-shipping-containers`, and `/` all still return 200._
+- [x] **Orphaned empty route scaffold**: `app/(market)/account/orders/`
+      contained only a `.gitkeep`, present since the initial commit — matched the
+      *aspirational* folder structure documented in `AGENTS.md` rather than the app's
+      real, actually-used convention (`my-account/orders/`).
+      _Done 2026-07-18 — deleted the empty folder._
 - [ ] **New 2026-07-18 — Address book is not a true multi-address book.**
       `app/(market)/my-account/edit-address/_components/AddressForm.tsx` supports exactly
       one billing + one shipping address baked into the user profile (`ADDRESS_TYPES` is a
@@ -694,9 +692,12 @@ don't delete completed items until the next full regeneration (so progress is vi
       zero matches). Distinct from the existing "order status updates" item, which is
       already real. Needs a product decision — likely also needs the backend to start
       returning a tracking number/carrier field, which it may not do today.
-- [ ] **New 2026-07-18 — `Recaptcha.tsx` may be using the wrong `next/script` strategy.**
-      It's rendered with `strategy="lazyOnload"`, but its only 2 real usages
+- [x] **`Recaptcha.tsx` was using the wrong `next/script` strategy.**
+      It was rendered with `strategy="lazyOnload"`, but its only 2 real usages
       (`CheckoutClient.tsx`, `RegisterForm.tsx`) need the widget interactive *before* the
       user submits the form — not the deferred analytics/chat-widget case AGENTS.md's own
-      rule 13 describes `lazyOnload` for. A fast-filling user could hit submit before the
-      widget's finished loading. Worth trying `strategy="afterInteractive"` instead.
+      rule 13 describes `lazyOnload` for.
+      _Done 2026-07-18 — switched to `strategy="afterInteractive"`. Not independently_
+      _live-testable in this environment (`NEXT_PUBLIC_RECAPTCHA_SITE_KEY` is blank, so_
+      _the widget doesn't render at all today) — typecheck + lint clean on a single_
+      _well-documented Next.js prop value, no custom logic involved._
