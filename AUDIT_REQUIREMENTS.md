@@ -429,6 +429,13 @@ don't delete completed items until the next full regeneration (so progress is vi
 - [ ] **Decide the homepage's direction**: it's almost entirely static marketing content,
       including a `QuoteForm` whose submit button doesn't call any backend at all. Either
       wire it to a real lead-capture endpoint or explicitly accept it as decorative.
+      **Blocked, pending 2026-07-18** — worse than originally described: the submit button
+      (`onClick={() => setSubmitted(true)}`, `QuoteForm.tsx`) fakes a successful
+      submission ("✓ Quote Request Sent — We'll be in touch!") while the collected
+      name/email/phone/ZIP/container details go nowhere — actively misleading, not just
+      inert. Real fix is planned to be **Zoho Forms** integration, but the client hasn't
+      provided the Zoho account/form details yet. Not actionable until those arrive —
+      revisit once provided.
 - [x] **Decide between the two homepage reviews carousels** — `ReviewsSection.tsx`
       (static) and `ReviewsSectionLive.tsx` (real backend data) are intentionally rendered
       side by side right now for comparison; pick one before shipping.
