@@ -5,6 +5,7 @@ export const CACHE_TAGS = {
   SEARCH:     'search',   // Elasticsearch PLP results
   CATEGORIES: 'categories',
   HOMEPAGE:   'homepage',
+  PAGES:      'pages',    // Converted WordPress pages from the Django pages API
   ORDERS:     'orders',
   USERS:      'users',
   REVIEWS:    'reviews',

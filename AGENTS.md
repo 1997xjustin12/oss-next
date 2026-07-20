@@ -257,6 +257,7 @@ export async function getProducts() {
 | `CACHE_TAGS.PRODUCTS` | `'products'` | All product data |
 | `CACHE_TAGS.CATEGORIES` | `'categories'` | Category/navigation data |
 | `CACHE_TAGS.HOMEPAGE` | `'homepage'` | Homepage-specific content |
+| `CACHE_TAGS.PAGES` | `'pages'` | Converted WordPress pages (Django pages API) |
 | `CACHE_TAGS.ORDERS` | `'orders'` | Order data |
 | `CACHE_TAGS.USERS` | `'users'` | User/session data |
 
