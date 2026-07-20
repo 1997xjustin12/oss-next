@@ -108,7 +108,7 @@ export type CreateReviewPayload = {
   comment: string
 }
 
-// Query params confirmed via REVIEWS_FLOW.md: product_id (omit for a
+// Query params confirmed via docs/reference/REVIEWS_FLOW.md: product_id (omit for a
 // site-wide feed — not used by this app yet) + page (default 1, no
 // page_size ever sent). Response shape itself is still unconfirmed against
 // this app's own backend — table is empty, hasn't been exercised for real.

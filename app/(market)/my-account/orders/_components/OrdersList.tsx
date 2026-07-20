@@ -12,7 +12,7 @@ import type { Order, OrderStatus } from '@/types/order'
 import type { ProductHit } from '@/types/product'
 import type { Review } from '@/types/review'
 
-// Per REVIEWS_FLOW.md: the reference app only gates "write a review" on a
+// Per docs/reference/REVIEWS_FLOW.md: the reference app only gates "write a review" on a
 // delivered order in the Order History flow (its standalone PDP form has no
 // purchase check at all) — so this is the sole review entry point, not the PDP.
 const REVIEWABLE: OrderStatus[] = ['delivered']
@@ -126,7 +126,7 @@ export function OrdersList() {
   }
 
   // Checks for an existing review by this user on this product first (per
-  // REVIEWS_FLOW.md's duplicate-detection pattern: GET the product's reviews,
+  // docs/reference/REVIEWS_FLOW.md's duplicate-detection pattern: GET the product's reviews,
   // match by email) so the modal opens pre-filled for edit instead of create.
   async function openReviewForm(productId: string | number, productTitle: string) {
     setReviewLoadingFor(productId)

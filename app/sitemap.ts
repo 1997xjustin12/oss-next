@@ -4,7 +4,7 @@ import { getAllProductHandles } from '@/services/search.service'
 
 const origin = BASE_URL.replace(/\/$/, '')
 
-// Static in-scope routes + every real product's PDP, per AUDIT_REQUIREMENTS.md.
+// Static in-scope routes + every real product's PDP, per docs/audits/AUDIT_REQUIREMENTS.md.
 // Everything else (my-account, cart, checkout, and all WordPress-proxied
 // pages) is intentionally excluded — see app/robots.ts for the matching
 // disallow rules.

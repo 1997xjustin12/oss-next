@@ -6,7 +6,7 @@ import type { Review } from '@/types/review';
 // Same carousel mechanics/visual language as ReviewsSection.tsx (its
 // hardcoded sibling), but fetching the real, site-wide review feed from our
 // own backend instead — GET /api/reviews/list with no product_id, per
-// REVIEWS_FLOW.md ("omit to get a site-wide review feed"). Differences from
+// docs/reference/REVIEWS_FLOW.md ("omit to get a site-wide review feed"). Differences from
 // the static version: no avatar photo (OSS reviews carry none, so initials
 // are used instead) and no Google badge (these aren't Google reviews).
 // Rendered alongside ReviewsSection.tsx on the homepage for comparison —

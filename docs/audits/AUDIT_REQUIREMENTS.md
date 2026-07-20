@@ -2,7 +2,9 @@
 
 Single source of truth for re-running the completion audit and tracking the resulting task
 list. Update this file after every audit pass — don't let it go stale (same convention as
-`API_INTEGRATION_STATUS.md`/`API_TRIGGER_CHECKLIST.md` at the repo root).
+`API_INTEGRATION_STATUS.md`/`API_TRIGGER_CHECKLIST.md`, alongside this file in
+`docs/audits/`). Feature-build reference docs live in `docs/reference/`; audit PDFs in
+`docs/audits/pdf/`.
 
 ---
 
@@ -654,7 +656,7 @@ don't delete completed items until the next full regeneration (so progress is vi
       _instructions + starter code), not dead code — moved rather than deleted, matching_
       _this repo's own convention for this kind of doc (`MY_ACCOUNT_PROFILE.md`,_
       _`ABANDONED_CART_EXPLAINER.md`, etc.). Now `CART_PAGE_REF.md` and_
-      _`MY_ACCOUNT_PAGE_REF.md` at the repo root._
+      _`MY_ACCOUNT_PAGE_REF.md` — relocated to `docs/reference/` on 2026-07-20._
 - [x] **Cosmetic: `TrustedBySection.tsx`'s partner-logo alt text is generic**
       (`"Trusted partner logo 1"`–`"9"`), so authenticity of the social-proof claim can't
       be verified from the code alone — worth real, named alt text if these are genuine
@@ -670,8 +672,9 @@ don't delete completed items until the next full regeneration (so progress is vi
       Found by 2 independent research passes in this audit: 4 more stray reference files
       still lived inside `app/`, same "`app/` holds only route files" violation as the 2
       already moved out.
-      _Done 2026-07-18 — moved all 4 to the repo root: `CHECKOUT_PAGE_REF.md`,_
-      _`PLP_PAGE_REF.md`, `HOME_PAGE_REF.html`, `HOME_PAGE_REF_MOBILE.html`. Verified live:_
+      _Done 2026-07-18 — moved all 4 out of `app/`: `CHECKOUT_PAGE_REF.md`,_
+      _`PLP_PAGE_REF.md`, `HOME_PAGE_REF.html`, `HOME_PAGE_REF_MOBILE.html`_
+      _(relocated again to `docs/reference/` on 2026-07-20). Verified live:_
       _`/checkout`, `/sale-shipping-containers`, and `/` all still return 200._
 - [x] **Orphaned empty route scaffold**: `app/(market)/account/orders/`
       contained only a `.gitkeep`, present since the initial commit — matched the

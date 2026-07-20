@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     await createAbandonedCart(payload)
 
     // Only logged-in carts have a real cart_id to key the flag on — guest
-    // carts in this app never get one (see API_INTEGRATION_STATUS.md),
+    // carts in this app never get one (see docs/audits/API_INTEGRATION_STATUS.md),
     // so there's nothing to flag/resume for them, just the notify above.
     const cartId = (payload as { cart_id?: string }).cart_id
     const abandonedAt = cartId ? await setAbandonedCartFlag(cartId) : null

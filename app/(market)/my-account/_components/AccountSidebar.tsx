@@ -7,7 +7,7 @@ import { ROUTES } from '@/config/routes'
 // Downloads and Payment methods are intentionally not linked here — neither
 // has a real backend behind it (no digital products, no stored payment
 // methods API), so they're left as unlinked stub routes instead of being
-// deleted outright. See AUDIT_REQUIREMENTS.md.
+// deleted outright. See docs/audits/AUDIT_REQUIREMENTS.md.
 const NAV_ITEMS = [
   { href: ROUTES.ACCOUNT.ROOT, label: 'Dashboard' },
   { href: ROUTES.ACCOUNT.ORDERS, label: 'Orders' },

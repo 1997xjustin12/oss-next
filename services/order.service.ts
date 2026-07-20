@@ -50,7 +50,7 @@ export async function getOrderTotal(payload: GetOrderTotalPayload): Promise<Orde
   return data as OrderTotal
 }
 
-// No pagination — confirmed via ORDER_HISTORY_ANSWER.md that the reference
+// No pagination — confirmed via docs/reference/ORDER_HISTORY_ANSWER.md that the reference
 // app calls this with no page/limit params and treats the result as a
 // complete list. Response wrapper is unconfirmed both there and here (our
 // own test account saw `{ orders: [] }`; the reference app assumed a bare

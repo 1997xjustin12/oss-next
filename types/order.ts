@@ -27,7 +27,7 @@ export interface CheckoutPayload {
   transaction_id?: string
 }
 
-// Confirmed field names via ORDER_HISTORY_ANSWER.md (extracted from a working
+// Confirmed field names via docs/reference/ORDER_HISTORY_ANSWER.md (extracted from a working
 // reference implementation's OrdersPage.jsx, 2026-07-14) — not yet verified
 // against a real populated order on this app's own backend (this test
 // account has zero orders). `price` arrives as a string; parseFloat before

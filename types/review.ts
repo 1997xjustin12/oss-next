@@ -1,4 +1,4 @@
-// Confirmed field names via REVIEWS_FLOW.md (extracted from a working
+// Confirmed field names via docs/reference/REVIEWS_FLOW.md (extracted from a working
 // reference implementation, 2026-07-14) — not yet verified against this
 // app's own backend (its reviews table is still empty).
 export interface Review {
