@@ -537,8 +537,23 @@ don't delete completed items until the next full regeneration (so progress is vi
       _Verified live: menu opens, all 4 share links carry the correct encoded product_
       _title/URL, copy-link shows real "Copied!" confirmation when clipboard access is_
       _granted, closes on outside click and Escape. Typecheck + lint clean._
-- [ ] Site-wide search UI — the ES backend already supports free-text query; just needs a
+- [x] Site-wide search UI — the ES backend already supports free-text query; just needs a
       search box added to the header/nav.
+      _Decided 2026-07-18 — client doesn't need header/nav-level site-wide search:_
+      _containers are browsed by ZIP/location, not searched, and the catalog is only_
+      _containers + accessories + related items. Redirected to what's actually useful:_
+      _a search box scoped to the PLP's accessories view (`ptype=accessories`), which has_
+      _no location dimension and was the one real gap. New `AccessorySearchBox` in_
+      _`InstantSearchSection.tsx`, using `useSearchBox()` — `makeSearchClient()` already_
+      _forwarded `params.query` untouched, and `search.service.ts`'s ES query already did_
+      _a real `multi_match` fuzzy search (title/tags/sku/custom_fields/category) when_
+      _non-empty, so this was 100% a UI gap, not a backend one. 300ms-debounced, local_
+      _input state adjusted during render (not an effect) to stay in sync if_
+      _InstantSearch ever resets the query externally. Shown only on the accessories view,_
+      _confirmed absent on the container views. Verified live: searching "lock" correctly_
+      _returned real lock-related products (Block Lock, Lock Box, etc.) via fuzzy match._
+      _Typecheck + lint clean (2 pre-existing findings elsewhere in the file, confirmed_
+      _unrelated via diff)._
 - [x] Recently viewed products — net-new feature if wanted.
       _Decided 2026-07-18 — not required by the client. No action._
 - [ ] **Live chat — build or remove the marketing claim.** `TrustStrip.tsx` on the homepage

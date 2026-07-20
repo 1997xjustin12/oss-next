@@ -8,10 +8,11 @@ import {
   Configure,
   Pagination,
   useInstantSearch,
+  useSearchBox,
 } from 'react-instantsearch'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowUpRight, ChevronDown, Phone, SlidersHorizontal, Star, X } from 'lucide-react'
+import { ArrowUpRight, ChevronDown, Phone, Search, SlidersHorizontal, Star, X } from 'lucide-react'
 import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
 import { QuickViewModal } from './QuickViewModal'
@@ -173,6 +174,47 @@ function SearchRefresher({ onReady }: { onReady: (fn: () => void) => void }) {
   const { refresh } = useInstantSearch()
   useEffect(() => { onReady(refresh) }, [onReady, refresh])
   return null
+}
+
+// Accessories-only free-text search — containers are browsed by location/ZIP
+// instead (see ZipLookup, hidden for this view), but the flat accessories
+// catalog has no location dimension, so a search box fits here specifically.
+// The ES backend already supports free-text query (services/search.service.ts's
+// multi_match on title/tags/sku/custom_fields/category) — this just needed a
+// UI. useSearchBox()'s refine() flows straight into makeSearchClient()'s
+// request, which already forwards params.query untouched.
+function AccessorySearchBox() {
+  const { query, refine } = useSearchBox()
+  const [value, setValue] = useState(query)
+  // Adjusted during render (React's documented pattern for "reset state when
+  // a prop changes"), not in an effect — keeps the input in sync if
+  // InstantSearch resets the query out from under this component (e.g. a
+  // filters reset) without an extra render-after-commit round trip.
+  const [lastQuery, setLastQuery] = useState(query)
+  if (query !== lastQuery) {
+    setLastQuery(query)
+    setValue(query)
+  }
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  function handleChange(next: string) {
+    setValue(next)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => refine(next), 300)
+  }
+
+  return (
+    <div className="relative mb-4">
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-muted" />
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        placeholder="Search accessories — locks, ramps, vents, shelving..."
+        className="w-full rounded-lg border border-theme-border dark:border-neutral-700 bg-white dark:bg-neutral-900 py-3 pl-10 pr-4 text-sm text-theme-dark dark:text-white placeholder:text-theme-muted outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-colors"
+      />
+    </div>
+  )
 }
 
 // ─── Search client ────────────────────────────────────────────────────────────
@@ -721,6 +763,7 @@ export function InstantSearchSection() {
           </div>
 
           <div className="flex-1 min-w-0">
+            {selectedType === 'accessories' && <AccessorySearchBox />}
             <InstantSortBar
               currentSort={currentSort}
               onSortChange={handleSortChange}
