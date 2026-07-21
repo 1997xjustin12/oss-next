@@ -13,11 +13,11 @@ import { CACHE_TAGS } from '@/config/cache'
  * That keeps the markup server-rendered and indexable.
  *
  * The API is key-protected and only ever called server-side, so
- * NEXT_SOLANA_BACKEND_KEY never reaches the browser.
+ * NEXT_OSS_BACKEND_KEY never reaches the browser.
  */
 
 const BACKEND = (process.env.NEXT_OSS_BACKEND_URL ?? 'http://localhost:8000').replace(/\/+$/, '')
-const API_KEY = process.env.NEXT_SOLANA_BACKEND_KEY
+const API_KEY = process.env.NEXT_OSS_BACKEND_KEY
 
 /** CDN that serves the converted pages' images and theme assets. */
 export const ASSET_CDN = 'https://bbq-spaces.sfo3.cdn.digitaloceanspaces.com'
