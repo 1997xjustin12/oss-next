@@ -36,7 +36,7 @@ const NAV_LINKS: NavLink[] = [
         label: "Modifications",
       },
       {
-        href: `${BASE_URL}/shipping-container-accessory-products/`,
+        href: `${BASE_URL}/sale-shipping-containers/?ptype=accessories`,
         label: "Shipping Container Accessories",
       },
     ],
