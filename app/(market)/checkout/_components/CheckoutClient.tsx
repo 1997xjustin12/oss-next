@@ -744,42 +744,9 @@ export function CheckoutClient() {
               </p>
             )}
 
-            {attempted && !detailsComplete && !orderComplete && (
-              <div className="mt-4 flex items-center gap-2 rounded-md bg-amber-50 p-3 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                Please complete all required fields and confirm delivery details below.
-              </div>
-            )}
-
-            {submitError && (
-              <div className="mt-4 flex items-center gap-2 rounded-md border border-theme-primary/30 bg-theme-primary-light p-3 text-xs font-semibold text-theme-primary dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {submitError}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handlePlaceOrder}
-              disabled={orderComplete || submitting}
-              className={`mt-4 w-full rounded-md py-3.5 text-base font-extrabold uppercase tracking-wide text-white transition-all disabled:cursor-not-allowed ${
-                orderComplete
-                  ? 'cursor-default bg-theme-success-dark'
-                  : 'bg-theme-primary hover:-translate-y-0.5 hover:bg-theme-primary-dark hover:shadow-lg hover:shadow-theme-primary/25 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-none'
-              }`}
-            >
-              {orderComplete ? (
-                <span className="flex items-center justify-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" /> Order Placed — Confirmation Sent!
-                </span>
-              ) : submitting ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin" /> Placing Order…
-                </span>
-              ) : (
-                'Place Order'
-              )}
-            </button>
+            {/* Place Order lives at the end of the Payment section below, not
+                here — it depends on the card form, delivery confirmation and
+                terms checkbox, all of which render after this summary. */}
 
             <div className="mt-6 border-t border-theme-border pt-5 text-center dark:border-neutral-700">
               <p className="text-lg font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
@@ -910,6 +877,48 @@ export function CheckoutClient() {
                 </Link>
                 .
               </p>
+            </div>
+
+            {/* Submit — last element on the page, after every prerequisite it
+                validates (card form, delivery confirmation, terms). The error
+                blocks travel with it so failures surface next to the action. */}
+            <div className="p-6 pt-0">
+              {attempted && !detailsComplete && !orderComplete && (
+                <div className="mb-4 flex items-center gap-2 rounded-md bg-amber-50 p-3 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  Please complete all required fields above.
+                </div>
+              )}
+
+              {submitError && (
+                <div className="mb-4 flex items-center gap-2 rounded-md border border-theme-primary/30 bg-theme-primary-light p-3 text-xs font-semibold text-theme-primary dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {submitError}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handlePlaceOrder}
+                disabled={orderComplete || submitting}
+                className={`w-full rounded-md py-3.5 text-base font-extrabold uppercase tracking-wide text-white transition-all disabled:cursor-not-allowed ${
+                  orderComplete
+                    ? 'cursor-default bg-theme-success-dark'
+                    : 'bg-theme-primary hover:-translate-y-0.5 hover:bg-theme-primary-dark hover:shadow-lg hover:shadow-theme-primary/25 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-none'
+                }`}
+              >
+                {orderComplete ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" /> Order Placed — Confirmation Sent!
+                  </span>
+                ) : submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" /> Placing Order…
+                  </span>
+                ) : (
+                  'Place Order'
+                )}
+              </button>
             </div>
           </section>
         </div>
