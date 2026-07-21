@@ -3,10 +3,7 @@
 // through our own backend). Distinct from useGeoapify.ts/DeliveryZipCheck.tsx,
 // which finds the nearest depot for a given ZIP — this one only autofills an
 // address form's city/state.
-const COUNTRY_ISO2: Record<string, string> = {
-  'United States (US)': 'us',
-  'Canada (CA)': 'ca',
-}
+import { toAlpha2 } from './country'
 
 export type ZipLookupResult = {
   city: string
@@ -14,7 +11,7 @@ export type ZipLookupResult = {
 }
 
 export async function lookupZip(zip: string, country: string): Promise<ZipLookupResult | null> {
-  const iso2 = COUNTRY_ISO2[country]
+  const iso2 = toAlpha2(country)?.toLowerCase()
   if (!iso2 || !zip.trim()) return null
 
   try {

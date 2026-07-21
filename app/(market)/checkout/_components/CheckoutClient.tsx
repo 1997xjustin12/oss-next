@@ -25,6 +25,7 @@ import { BraintreeDropIn } from './BraintreeDropIn';
 import { Recaptcha } from '@/components/ui/Recaptcha';
 import type { BraintreeDropInHandle } from './BraintreeDropIn';
 import type { CartItem } from '@/types/cart';
+import { toAlpha2 } from '@/lib/country';
 import type { CheckoutPayload, GetOrderTotalPayload, OrderTotal } from '@/types/order';
 
 // Fallback only, used until /api/orders/get-total responds (or if it fails) —
@@ -67,6 +68,23 @@ const emptyAddress: AddressForm = {
   phone: '',
   email: '',
 };
+
+// Maps the on-page address form to Braintree's address shape, so transactions
+// carry the payer's identity in the control panel instead of just an amount.
+// Unlike the backend mapping below, Braintree has a dedicated second address
+// line (extendedAddress), so address1/address2 stay separate here.
+function addressToBraintree(form: AddressForm) {
+  return {
+    firstName: form.firstName,
+    lastName: form.lastName,
+    streetAddress: form.address1,
+    extendedAddress: form.address2,
+    locality: form.city,
+    region: form.state,
+    postalCode: form.zip,
+    countryCodeAlpha2: toAlpha2(form.country),
+  };
+}
 
 // Maps the on-page address form to the backend's flat billing_*/shipping_*
 // field names (same contract as CreateCartPayload) — address1/address2 fold
@@ -400,10 +418,26 @@ export function CheckoutClient() {
     try {
       const { nonce } = await dropinRef.current.requestPaymentMethod();
 
+      // Billing follows the "same as shipping" toggle, matching what the
+      // customer actually agreed to on the page.
+      const billingForm = sameBilling ? shipping : billing;
+
       const chargeRes = await fetch('/api/braintree_checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nonce, amount: total.toFixed(2), recaptchaToken }),
+        body: JSON.stringify({
+          nonce,
+          amount: total.toFixed(2),
+          recaptchaToken,
+          customer: {
+            firstName: billingForm.firstName,
+            lastName: billingForm.lastName,
+            email: billingForm.email,
+            phone: billingForm.phone,
+          },
+          billing: addressToBraintree(billingForm),
+          shipping: addressToBraintree(shipping),
+        }),
       });
       const chargeData = await chargeRes.json().catch(() => null);
       if (!chargeRes.ok) {
