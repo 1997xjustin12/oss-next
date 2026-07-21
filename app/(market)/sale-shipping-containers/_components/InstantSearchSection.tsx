@@ -17,6 +17,8 @@ import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
 import { QuickViewModal } from './QuickViewModal'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { normaliseRating } from '@/lib/ratings'
+import type { RawRatings } from '@/lib/ratings'
 import type { Accessory, BadgeTone } from '@/types/product'
 
 function cn(...classes: (string | false | null | undefined)[]) {
@@ -288,7 +290,7 @@ export type HitData = {
   images:           ProductImage[]
   product_category: ProductCategory[]
   custom_fields:    CustomField[]
-  ratings:          number | null
+  ratings:          RawRatings
   sale_price:       number
 }
 
@@ -313,8 +315,9 @@ function hitToAccessory(hit: HitData): Accessory {
     sku:          hit.variants?.[0]?.sku ?? '',
     category:     hit.product_category?.[0]?.category_name ?? '',
     badge:        { label: promoTag ?? 'In Stock', tone },
-    rating:       hit.ratings ?? 0,
-    reviews:      0,
+    rating:       normaliseRating(hit.ratings).value,
+    // review_count now ships with the index, so this is no longer hardcoded 0
+    reviews:      normaliseRating(hit.ratings).count,
   }
 }
 
@@ -356,7 +359,7 @@ function ProductHit({ hit }: { hit: HitData }) {
   const grade    = getCF(hit.custom_fields, 'grade')
   const sku      = variant?.sku ?? ''
   const href     = `/product/${hit.handle}`
-  const rating   = typeof hit.ratings === 'number' ? hit.ratings : 0
+  const { value: rating, count: reviewCount } = normaliseRating(hit.ratings)
 
   const badge = (() => {
     const tag = hit.tags?.find((t) => /best|popular/i.test(t)) ?? hit.tags?.[0] ?? ''
@@ -397,6 +400,11 @@ function ProductHit({ hit }: { hit: HitData }) {
         <div className="flex items-center gap-2 text-xs">
           <StarRow rating={rating} />
           <span className="text-theme-dark-2">{rating}</span>
+          {reviewCount > 0 && (
+            <span className="text-theme-muted">
+              ({reviewCount} review{reviewCount === 1 ? '' : 's'})
+            </span>
+          )}
         </div>
 
         {location && location !== DEFAULT_LOCATION && (

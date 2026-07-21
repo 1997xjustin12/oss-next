@@ -11,6 +11,7 @@ import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
 import { useWishlist } from '@/hooks/useWishlist'
 import { getCustomFieldValue, isGenericDisplayHit, isInStockHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { normaliseRating } from '@/lib/ratings'
 import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
 import { Stars } from '@/components/product/Stars'
 import { DeliveryZipCheck } from './DeliveryZipCheck'
@@ -460,7 +461,7 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
     }[selection.tab],
   }), [activeProduct.sale_price, selection.tab])
 
-  const rating = product.ratings ?? 0
+  const { value: rating, count: reviewCount } = normaliseRating(product.ratings)
 
   // Generic Product Page / "Various North America" listings are template
   // pages with no real depot behind them — not meant to be purchasable.
@@ -539,7 +540,10 @@ export function ProductInfoPanel({ product, categoryLabel, relatedProducts, onVa
       <div className="flex items-center gap-2 mb-5">
         <Stars count={Math.round(rating)} />
         <span className="text-sm text-theme-muted">
-          {rating.toFixed(1)} · <a href="#reviews" className="text-theme-primary underline underline-offset-2">Reviews</a>
+          {rating.toFixed(1)} ·{' '}
+          <a href="#reviews" className="text-theme-primary underline underline-offset-2">
+            {reviewCount > 0 ? `${reviewCount} Review${reviewCount === 1 ? '' : 's'}` : 'Reviews'}
+          </a>
         </span>
       </div>
 

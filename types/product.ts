@@ -1,3 +1,5 @@
+import type { RawRatings } from '@/lib/ratings'
+
 export type BadgeTone = 'red' | 'amber' | 'green'
 
 export interface Product {
@@ -165,7 +167,10 @@ export interface ProductHit {
   images: ProductHitImage[]
   product_category: ProductHitCategory[]
   custom_fields: ProductHitCustomField[]
-  ratings: number | null
+  // Object since the backend change ({ rating, review_count }); the union keeps
+  // documents not yet reindexed valid. Read it via normaliseRating() from
+  // lib/ratings.ts rather than touching it directly.
+  ratings: RawRatings
   sale_price: number
   // Index signature so a ProductHit satisfies ShippingContainerHit
   // (Record<string, unknown>) when passed into the shared pricing helpers.

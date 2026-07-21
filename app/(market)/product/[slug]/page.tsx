@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getProductByHandle } from '@/services/search.service'
 import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { normaliseRating } from '@/lib/ratings'
 import { BASE_URL } from '@/lib/helpers'
 import { getQuickSpecs } from '@/lib/data/pdpShippingContainers'
 import { JsonLd } from '@/components/shared/JsonLd'
@@ -82,6 +83,7 @@ function buildJsonLd(product: ProductHit, slug: string) {
   const condition = getCustomFieldValue(product, 'condition')
   const conditionSchema = CONDITION_SCHEMA[condition]
   const paymentType = getCustomFieldValue(product, 'payment_type')
+  const rating = normaliseRating(product.ratings)
 
   const additionalProperty = isContainer
     ? [
@@ -136,8 +138,19 @@ function buildJsonLd(product: ProductHit, slug: string) {
       // finalized into concrete terms (return window, conditions) yet.
       // Add this once that's settled; don't guess at it in the meantime.
     },
-    // No aggregateRating — the ES index only carries a bare `ratings`
-    // number, no reviewCount, and schema.org's AggregateRating requires one.
+    // The index now carries { rating, review_count }, so the reviewCount that
+    // AggregateRating requires finally exists. Emitted only when there is at
+    // least one real review — a 0-count aggregate is invalid structured data
+    // and Google treats inflated/empty ratings as a manual-action risk.
+    ...(rating.count > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: rating.value,
+        reviewCount: rating.count,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
   }
 }
 

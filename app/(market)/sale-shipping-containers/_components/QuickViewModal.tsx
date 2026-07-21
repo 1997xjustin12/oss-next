@@ -10,6 +10,7 @@ import { Stars } from '@/components/product/Stars'
 import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { normaliseRating } from '@/lib/ratings'
 import { ROUTES } from '@/config/routes'
 import type { HitData } from './InstantSearchSection'
 
@@ -32,7 +33,7 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
 
   const images     = hit.images?.length ? hit.images.map((img) => img.src) : []
   const sku        = hit.variants?.[0]?.sku ?? ''
-  const rating     = hit.ratings ?? 0
+  const { value: rating } = normaliseRating(hit.ratings)
   const price      = hit.sale_price ?? 0
   const paymentType = getCF(hit, 'payment_type')
   const priceSuffix = paymentType === 'rental' || paymentType === 'rto' ? '/mo' : ''

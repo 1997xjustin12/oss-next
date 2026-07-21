@@ -92,7 +92,9 @@ function buildSort(sortParam: string): object[] {
   switch (sortParam) {
     case 'price_asc':  return [{ 'variants.price': { order: 'asc',  mode: 'min' } }]
     case 'price_desc': return [{ 'variants.price': { order: 'desc', mode: 'max' } }]
-    case 'best_rated': return [{ ratings: { order: 'desc' } }]
+    // ratings is an object now ({ rating, review_count }) — sorting on the
+    // bare field no longer works, the score lives at ratings.rating.
+    case 'best_rated': return [{ 'ratings.rating': { order: 'desc' } }]
     case 'name_asc':   return [{ 'title.keyword': { order: 'asc' } }]
     case 'name_desc':  return [{ 'title.keyword': { order: 'desc' } }]
     default:           return []

@@ -8,6 +8,7 @@ import { useCart } from '@/hooks/useCart'
 import { getCustomFieldValue, isInStockHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CONTACT_NUMBER } from '@/lib/helpers'
+import { normaliseRating } from '@/lib/ratings'
 import { ROUTES } from '@/config/routes'
 import type { ProductHit } from '@/types/product'
 
@@ -25,7 +26,7 @@ export function AccessoryDetail({ product }: Props) {
   const [added, setAdded] = useState(false)
 
   const images = product.images?.length > 0 ? product.images.map((img) => img.src) : []
-  const ratingNum = product.ratings ?? 0
+  const { value: ratingNum } = normaliseRating(product.ratings)
   const sku = product.variants?.[0]?.sku ?? ''
   const condition = getCustomFieldValue(product, 'condition')
   const location = getCustomFieldValue(product, 'location')
