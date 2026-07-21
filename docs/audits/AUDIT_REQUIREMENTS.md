@@ -14,8 +14,16 @@ list. Update this file after every audit pass — don't let it go stale (same co
 Home, Product Detail Page (PDP), Product Listing Page (PLP), My Account + subpages,
 Login/Register, Cart, Checkout.
 
-**Out of scope**: everything else — served from the existing WordPress/WooCommerce site
-(onsitestorage.com) via the headless proxy at `app/(market)/[...slug]/page.tsx`.
+**Out of scope**: everything else — WordPress-authored content pages, rendered by
+`app/(market)/[...slug]/page.tsx`.
+
+> **Changed 2026-07-21.** These no longer come from a live scrape of onsitestorage.com
+> inside an iframe. They are pre-converted and served by the Django pages API
+> (`/api/pages/detail/<path>/`), rendered inline as part of the Next.js document, inside
+> the app's own TopBar/Navbar/Footer. The old iframe proxy (`/api/wp-proxy`,
+> `wp-proxy.service.ts`, `WpPageRenderer.tsx`) is deleted. Consequence for auditing: this
+> content is now server-rendered and indexable, so it is in scope for SEO/CWV checks in a
+> way the iframe never was.
 
 **Data sources**: Elasticsearch (product catalog/search), a separate Django REST backend
 (auth, cart, orders, reviews, newsletter).
@@ -79,6 +87,21 @@ don't re-flag these in future audit passes.
    page-level `<Suspense>` instead, and cart/checkout/my-account use client-managed skeleton
    state (see decision #5 above). Confirmed 2026-07-18 — don't flag Home as inconsistent with
    the rest of the app; it's the deliberate one that actually needs this file.
+
+9. **WordPress content pages render inline, not in an iframe, and use the app's own
+   chrome.** Confirmed 2026-07-21. The converted markup contains no WordPress
+   header/footer (verified against the homepage, `privacy-policy` and a nested gallery
+   page), so the `(market)` layout supplies the only chrome. The theme CSS it ships is
+   scoped to a `.wp-content` wrapper — it styles bare `a`/`span`/`div` with `!important`,
+   so unscoped injection repaints the app's own Navbar/Footer. Don't "simplify" that
+   scoping away, and don't reintroduce `global_css_url` as a `<link>` fallback: a plain
+   stylesheet link can't be scoped.
+
+10. **`ratings` is an object, not a number.** Confirmed 2026-07-21:
+    `{ "rating": 4, "review_count": 3 }`. Read it via `normaliseRating()`
+    (`lib/ratings.ts`), never directly — the helper also accepts the legacy bare
+    number/string so documents not yet reindexed keep rendering. Don't re-flag the old
+    "PLP review count is hardcoded 0" finding; that was fixed once `review_count` existed.
 
 _(Add new confirmed decisions here as they come up, so they persist across future audits.)_
 
@@ -169,14 +192,36 @@ Every audit pass should produce:
 
 ---
 
-## 5. Latest Audit Results — 2026-07-18
+## 5. Latest Audit Results — 2026-07-21
 
-| Dimension | Score | 2026-07-17 | 2026-07-15 |
-|---|---|---|---|
-| **Overall (blended)** | **~79%** | ~75% | ~65% |
-| Functional Completeness (8 areas) | ~87% | ~81% | ~62% |
-| E-Commerce Feature Coverage (41 items) | ~62% | ~62% | ~65% |
-| Core Web Vitals / PageSpeed / SEO | ~89% | ~82% | ~68% |
+| Dimension | Score | 2026-07-18 | 2026-07-17 | 2026-07-15 |
+|---|---|---|---|---|
+| **Overall (blended)** | **~81%** | ~79% | ~75% | ~65% |
+| Functional Completeness (8 areas) | ~88% | ~87% | ~81% | ~62% |
+| E-Commerce Feature Coverage (41 items) | ~64% | ~62% | ~62% | ~65% |
+| Core Web Vitals / PageSpeed / SEO | ~91% | ~89% | ~82% | ~68% |
+
+**This pass was event-driven, not a full three-dimension re-run.** It records what changed
+while integrating the converted-pages renderer and reacting to two backend changes, so
+treat the scores as a delta on 2026-07-18 rather than an independent re-scoring. A full
+methodology pass (§3) is still owed.
+
+Movement is small and specific:
+
+- **Feature Coverage +2** — "reviews & ratings" moves from 🟡 to ✅ on both PLP and PDP.
+  The backend started indexing `ratings: { rating, review_count }`, so review counts are
+  real instead of hardcoded `0`. This closes the long-standing "PLP ratings are NOT
+  connected to the reviews system" finding, which is now **obsolete** in
+  `API_INTEGRATION_STATUS.md`.
+- **CWV/SEO +2** — PDP `Product` JSON-LD now emits `aggregateRating` (blocked until
+  `review_count` existed), and WordPress content pages became server-rendered and
+  indexable instead of iframed, with LCP preloads and lazy-loading applied to their images.
+- **Functional +1** — checkout submit-order fix, Braintree payer details, and the PDP
+  crash fix, offset by two newly-found defects below.
+
+**Two findings this pass are more serious than the score movement suggests** — see the new
+High-priority items in §6: a client-controlled charge amount, and a charged-but-no-order
+state that the backend's checkout crash makes reachable on the very first real transaction.
 
 Functional Completeness and CWV/SEO both moved up again — reflects the homepage A/B/C
 rebuild (real `middleware.ts` + `VariantHero` Suspense, replacing the crawlable
@@ -206,6 +251,51 @@ don't delete completed items until the next full regeneration (so progress is vi
 
 ### High priority
 
+- [ ] **NEW 2026-07-21 — `/api/braintree_checkout` charges a client-supplied amount.**
+      The route reads `amount` straight from the request body and passes it to
+      `transaction.sale()`; nothing server-side reconciles it against the cart. A crafted
+      request charges $0.01 for a $3,000 container. Pre-existing, not introduced by the
+      payer-details change. **Fix before any live card processing**: recompute the total
+      server-side via the existing `/api/orders/get-total` (which already derives it from
+      cart + shipping address) and charge that, ignoring the client's number. Harmless in
+      sandbox; a real vulnerability the moment production credentials are set.
+
+- [ ] **NEW 2026-07-21 — a successful charge with a failed order-create shows a raw error.**
+      `handlePlaceOrder()` charges first, then POSTs `/api/orders/checkout`. If the second
+      call fails the customer has been charged with no confirmation and a raw error
+      message. This is not hypothetical: the Django checkout crash below fires on *every*
+      call, so this is the state the first real sandbox transaction will land in. Needs a
+      dedicated "payment taken, order needs attention" screen carrying the
+      `transaction_id`, plus a support path — independent of the backend fix, since network
+      failures can produce it in production regardless.
+
+- [x] **NEW 2026-07-21 — PDP crashed on every shipping-container page.**
+      The backend changed `ratings` from a number to `{ rating, review_count }`;
+      `ProductInfoPanel.tsx` threw `TypeError: rating.toFixed is not a function`,
+      rendering "Something Went Wrong" on the PDP and on every option change.
+      _Fixed — `lib/ratings.ts`'s `normaliseRating()` now fronts every read, tolerant of_
+      _the object, a bare number and a numeric string. Five call sites were affected;_
+      _**two failed silently rather than crashing**, which was the more dangerous half:_
+      _the PLP card's `typeof hit.ratings === 'number'` guard scored every product 0_
+      _forever, and the `best_rated` sort ordered on a field that is no longer a number._
+      _Both would have looked fine indefinitely. Verified live: PDP 200, renders 4.0 /_
+      _3 Reviews._
+
+- [x] **NEW 2026-07-21 — WordPress theme CSS repainted the app's own header/footer.**
+      Converted pages ship a theme stylesheet that styles bare `body`/`a`/`span`/`div`
+      with `!important`; injected unscoped it overrode the Navbar/Footer font.
+      _Fixed by scoping every selector to a `.wp-content` wrapper. Found a second, worse_
+      _bug while verifying: `postcss.parse` threw on the API's CSS and the `catch` silently_
+      _dropped the entire 400KB stylesheet, rendering pages nearly unstyled while the build_
+      _stayed green. Now uses `postcss-safe-parser`. See the backend item below._
+
+- [x] **NEW 2026-07-21 — finish the `NEXT_SOLANA_*` → `NEXT_OSS_*` env rename.**
+      _Done. Every other service had already migrated; `wp-pages.service.ts` was the last_
+      _holdout. `.env.local` carried both URL vars with byte-identical values — duplicate_
+      _dropped, key renamed to `NEXT_OSS_BACKEND_KEY`. `docs/reference/*` deliberately_
+      _still says `NEXT_SOLANA_BACKEND_URL`: those files document the original WordPress_
+      _app and cite its `src/pages/api/*.js` paths, so that is its variable name, not ours._
+
 - [x] **Fix the account-update endpoint — it was a wrong URL/verb on our side, not a**
       **missing backend feature.** Found 2026-07-15 while investigating whether
       `edit-address` could be built for real: `services/user.service.ts`'s
@@ -232,6 +322,25 @@ don't delete completed items until the next full regeneration (so progress is vi
       `app/orders/views.py` line 89 (`locale.currency(...)` with no server locale
       configured) — on EVERY call, and the order saves before the crash. Blocks real
       checkout entirely once Braintree credentials exist. **Backend fix, not fixable here.**
+      _Still open as of 2026-07-21. Now compounded by the charged-but-no-order item above:_
+      _this crash is what makes that state reachable on the first real transaction._
+
+- [ ] **NEW 2026-07-21 — the Django pages API serves malformed CSS. Backend fix.**
+      Its minifier strips `/* */` delimiters but leaves the comment text behind, and emits
+      unbalanced braces:
+      `once slick adds its class,show it smoothly .shipping-container-slider…{…}` followed
+      by a stray `}`. Strict parsers throw; browsers error-recover by **discarding rules
+      after the error point**. Worked around here with `postcss-safe-parser`, but this same
+      CSS is served to real browsers on the live WordPress site, which are silently losing
+      styling nobody has noticed. Fix in the Django CSS pipeline.
+
+- [ ] **NEW 2026-07-21 — `middleware.ts` is deprecated in Next 16; renaming it broke the
+      A/B test.** The build warns to use `proxy.ts` instead. A direct rename
+      (`middleware.ts` → `proxy.ts`, `export function middleware` → `proxy`) typechecks,
+      lints and builds clean, but silently empties `middleware-manifest.json` — the
+      homepage A/B/C variant assignment (§2 decision #6) stops running entirely, with no
+      error. Reverted rather than shipped. Needs the actual cause found before renaming;
+      a green build is not sufficient evidence here.
 - [x] **Add `sitemap.ts` and `robots.ts`** covering all static routes plus dynamic
       ES-backed PDP/PLP URLs. Currently zero SEO route declarations exist.
       _Done 2026-07-15 — new `getAllProductHandles()` in `search.service.ts` paginates_
@@ -610,8 +719,13 @@ don't delete completed items until the next full regeneration (so progress is vi
       _`/api/braintree_token` returns the same "not configured" error as before (no import_
       _crash), and `/terms` (which exercises `cheerio.load` through the WP proxy) still_
       _renders real content._
-- [ ] PLP ratings/review-count sync — already logged separately, see memory
-      `backend-reminder-plp-ratings.md` (backend-side fix, not frontend).
+- [x] PLP ratings/review-count sync — ~~see memory `backend-reminder-plp-ratings.md`~~
+      (that memory file no longer exists; the reference was dangling).
+      _Resolved 2026-07-21 by the backend, then wired here. The ES index now carries_
+      _`ratings: { rating, review_count }` instead of a bare number, so the PLP card's_
+      _hardcoded `reviews: 0` reads a real count and the PDP shows "4.0 · 3 Reviews"._
+      _Verified live end-to-end: ES → `/api/search` → PLP/PDP all carry the object._
+      _The shape change also **broke** the app until fixed — see the next item._
 - [x] **New 2026-07-17 — Account deletion / data export has zero implementation** anywhere
       (no route, form, or backend call). A standard GDPR/CCPA-style expectation for a real
       storefront; needs a product decision on whether/how to build it, not just a code fix.

@@ -65,7 +65,33 @@ Tracks every endpoint from the backend integration plan: whether the local Next.
 | `/api/reviews/list` *(homepage display)* | GET | ✅ Live, side-by-side for comparison | New `ReviewsSectionLive.tsx` (`app/(market)/(home)/_components/`) — same carousel look as the existing hardcoded `ReviewsSection.tsx`, but fetches the real, site-wide review feed (`GET /api/reviews/list`, no `product_id`, per `REVIEWS_FLOW.md`). Rendered directly below the static one on the homepage for comparison, not a replacement yet — both are live in `(home)/page.tsx`. Differences from the static version: initials avatar instead of a photo (OSS reviews carry none), no Google badge (these aren't Google reviews), and a "on {product.title}" line since this is the site-wide feed. **Bug found and fixed**: our own `/api/reviews/list` route + `listProductReviews()` required `product_id` and 400'd when it was omitted — both were only ever built for their first two consumers (Order History dup-check, PDP carousel), which always pass one, so the optional/site-wide case documented in `REVIEWS_FLOW.md` had never actually been implemented. Made `productId` optional in both; confirmed live against the real backend that omitting it genuinely returns a site-wide feed (`count: 2`, the real reviews the user added via backend admin). Verified live end-to-end in the browser — both real reviews now render correctly. |
 | `/api/reviews/list` *(PDP display)* | GET | ✅ Live | New `ReviewsCarousel.tsx` (`app/(market)/product/[slug]/_components/`) — same carousel structure as the homepage's `ReviewsSection.tsx` (auto-advance, snap-scroll, prev/next + dots), but fetches `GET /api/reviews/list?product_id=X` instead of hardcoded data. Now the active PDP reviews section. Verified live in the real browser: renders the correct empty state ("No reviews yet for this product") since the OSS table has no approved reviews yet — no console errors. Will need a second look once real approved reviews exist, to confirm the populated-carousel layout (avatars are initials-based since OSS reviews carry no photo, unlike the WordPress source). |
 
+> **⚠️ SUPERSEDED 2026-07-21 — read this first.** The paragraph below is kept for history
+> but is no longer accurate. The backend now indexes `ratings` as an object,
+> `{ "rating": 4, "review_count": 3 }`, instead of a bare number, so a real review count
+> reaches the PLP and PDP. The hardcoded `reviews: 0` is gone, the PDP shows
+> "4.0 · 3 Reviews", and `Product` JSON-LD emits `aggregateRating` (which was previously
+> impossible for exactly the reason given below — no `reviewCount`). Verified live:
+> ES → `/api/search` → PLP/PDP all carry the object. Read it via `normaliseRating()`
+> (`lib/ratings.ts`), never directly — the raw shape change crashed every PDP with
+> `TypeError: rating.toFixed is not a function` until that helper landed. The ES `ratings`
+> field is still populated at index time, so the "backend job syncs an aggregate" option
+> described below is what actually happened.
+
 **PLP ratings/reviews are NOT connected to this reviews system at all (confirmed 2026-07-15, not a caching issue).** The real PLP (`InstantSearchSection.tsx`, backed by `/api/search`) renders each card's rating as `hit.ratings ?? 0` — a static field baked into the Elasticsearch product document at index time, with zero live connection to `/api/reviews/list` or the OSS backend's reviews table. Review count is hardcoded to `0` on every card, full stop. Adding a review via the backend admin will never surface on PLP cards — there's no stale cache to bust, because the PLP never queries review data live at all. (Also found `ProductCard.tsx`/`services/product.service.ts`, a second, WordPress-sourced rating implementation — confirmed dead code, not imported/rendered anywhere, not the cause of anything.) User's call: leave as-is for now. If revisited later, the options are a live per-card `/api/reviews/list` lookup (simple, but a real per-card request cost on a list page) or a backend-side job that syncs a real rating aggregate into the ES `ratings` field.
+
+## Converted WordPress Pages (Django pages API)
+
+Added 2026-07-21. Replaces the live-scrape iframe proxy, which is deleted.
+
+| Endpoint | Method | Status | Actual route | Notes |
+|---|---|---|---|---|
+| `/api/pages/detail/<path>/` | GET | ✅ **Verified against real backend** (2026-07-21) | `app/(market)/[...slug]/page.tsx` via `services/wp-pages.service.ts` | Key-protected (`NEXT_OSS_BACKEND_KEY`, server-side only). Returns `html`, `css`, `global_css`, `body_classes`, `seo_*`/`og_*`, `canonical_url`. Rendered inline and indexable, not iframed. **Confirmed the converted markup contains no WordPress header/footer** (homepage, `privacy-policy`, nested gallery page), so the `(market)` layout supplies the only chrome. Theme CSS is scoped to a `.wp-content` wrapper — unscoped it repaints the app's own Navbar/Footer, since it styles bare `a`/`span`/`div` with `!important`. Cached with `'use cache'` + `cacheLife('minutes')` + `CACHE_TAGS.PAGES`, so Django can bust just this via `POST /api/revalidate {"tag":"pages"}`. |
+
+**Backend bug found — malformed CSS.** The API's CSS minifier strips `/* */` delimiters
+but keeps the comment text, and emits unbalanced braces. `postcss.parse` throws on it;
+we now use `postcss-safe-parser`, which recovers the way a browser does. Browsers on the
+live WordPress site silently discard every rule after the error point, so this is losing
+real styling in production today. Needs a Django-side fix.
 
 ## Newsletter
 
