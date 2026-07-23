@@ -42,7 +42,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!page) return { title: 'Not Found' }
 
   return {
-    title: page.seo_title || page.title,
+    // seo_title is the title WordPress already serves for this page, brand
+    // suffix included ("Privacy Policy | On-Site Storage Solutions"). The root
+    // layout's "%s | On-Site Storage Solutions" template would append a second
+    // one, so it's marked absolute to reproduce the live page exactly. The bare
+    // `title` fallback is unbranded, so that one does want the template.
+    title: page.seo_title ? { absolute: page.seo_title } : page.title,
     description: page.seo_description ?? undefined,
     alternates: page.canonical_url ? { canonical: page.canonical_url } : undefined,
     openGraph: {

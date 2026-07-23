@@ -167,7 +167,10 @@ function findBestMatch(
 // or condition → grade becomes invalid). Runs before setSelection so the first
 // click always lands in a consistent state.
 function clampSelection(next: Selection, pool: ProductHit[]): Selection {
-  let { sizeIdx, condIdx, gradeIdx } = next
+  // sizeIdx is the upstream dimension here — only the two downstream of it
+  // get clamped, so it never gets reassigned.
+  const { sizeIdx } = next
+  let { condIdx, gradeIdx } = next
 
   const condValid = pool.some(p => matchesSize(p, sizeIdx) && matchesCondition(p, condIdx))
   if (!condValid) {
