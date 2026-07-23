@@ -75,13 +75,23 @@ export async function chargeBraintreeCheckout(
   payer: BraintreePayer = {},
 ): Promise<Transaction> {
   const gateway = getGateway()
+
+  // Spread conditionally rather than assigning undefined. The SDK validates
+  // against bracketed paths (`billing[firstName]`), so a present-but-undefined
+  // `billing` key has no sub-keys to match and is rejected outright with
+  // "These keys are invalid: billing, shipping" — the charge fails before it
+  // ever reaches the gateway.
+  const customer = compact(payer.customer)
+  const billing = compact(payer.billing)
+  const shipping = compact(payer.shipping)
+
   const result = await gateway.transaction.sale({
     amount,
     paymentMethodNonce: nonce,
     options: { submitForSettlement: true },
-    customer: compact(payer.customer),
-    billing: compact(payer.billing),
-    shipping: compact(payer.shipping),
+    ...(customer && { customer }),
+    ...(billing && { billing }),
+    ...(shipping && { shipping }),
   })
 
   if (!result.success) {

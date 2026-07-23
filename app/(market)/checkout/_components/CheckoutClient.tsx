@@ -302,6 +302,56 @@ function OrderComplete() {
   );
 }
 
+/**
+ * Shown when the card was charged but /api/orders/checkout did not record the
+ * order. The customer's money has moved, so this deliberately offers no way to
+ * retry — a second attempt would charge them again. The Braintree transaction
+ * id is surfaced because it is the one reference support can trace the payment
+ * by, and it is the same value the backend receives as `transaction_id`.
+ */
+function PaymentTakenNoOrder({ transactionId, detail }: { transactionId?: string; detail?: string }) {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40">
+        <AlertCircle className="h-9 w-9 text-amber-600 dark:text-amber-400" />
+      </div>
+      <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
+        Payment received — your order needs attention
+      </h1>
+      <p className="mt-2 max-w-md text-sm text-theme-muted dark:text-neutral-400">
+        Your card was charged successfully, but we couldn&apos;t finish recording the order on our
+        side. <strong>Please don&apos;t try again</strong> — that would charge you a second time.
+        Call us with the reference below and we&apos;ll complete it for you right away.
+      </p>
+
+      {transactionId && (
+        <div className="mt-6 rounded-md border border-theme-border bg-theme-subtle px-5 py-3 dark:border-neutral-700 dark:bg-neutral-800/50">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-theme-muted dark:text-neutral-500">
+            Payment reference
+          </p>
+          <p className="mt-0.5 font-mono text-base font-bold text-theme-dark dark:text-neutral-100">
+            {transactionId}
+          </p>
+        </div>
+      )}
+
+      <a
+        href="tel:8889779085"
+        className="mt-8 inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark"
+      >
+        Call (888) 977-9085
+      </a>
+      <p className="mt-3 text-xs text-theme-muted dark:text-neutral-400">
+        Monday to Friday, 6 am to 5 pm PST
+      </p>
+
+      {detail && (
+        <p className="mt-6 max-w-md text-xs text-theme-muted dark:text-neutral-500">{detail}</p>
+      )}
+    </div>
+  );
+}
+
 /* ── Main Client Component ── */
 export function CheckoutClient() {
   const { cart, removeItem, updateQty, clearCart } = useCart();
@@ -322,6 +372,12 @@ export function CheckoutClient() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [orderComplete, setOrderComplete] = useState(false);
+  // Set only in the narrow window where the charge succeeded but the order
+  // failed to record — a state the customer must never be able to "retry".
+  const [paymentTaken, setPaymentTaken] = useState<{
+    transactionId?: string;
+    detail?: string;
+  } | null>(null);
   const [liveTotal, setLiveTotal] = useState<OrderTotal | null>(null);
 
   const updateShipping = (field: keyof AddressForm, value: string) =>
@@ -427,7 +483,13 @@ export function CheckoutClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nonce,
-          amount: total.toFixed(2),
+          // The server recomputes what to charge from these — it deliberately
+          // does not trust an amount from the browser. `expectedAmount` is only
+          // what we displayed, so it can refuse to charge more than that.
+          items: cartItemsToLineItems(items),
+          shipping_zip_code: shipping.zip,
+          shipping_country: shipping.country,
+          expectedAmount: total.toFixed(2),
           recaptchaToken,
           customer: {
             firstName: billingForm.firstName,
@@ -482,10 +544,18 @@ export function CheckoutClient() {
       });
       const orderData = await orderRes.json().catch(() => null);
       if (!orderRes.ok) {
-        throw new Error(
-          orderData?.error ??
-            'Payment succeeded, but the order could not be recorded. Please contact us with your confirmation.',
-        );
+        // The card has already been charged by this point. This must not fall
+        // through to the generic error path: that leaves the customer on a
+        // checkout page with a live Place Order button, and retrying would
+        // charge them a second time. The cart is deliberately left intact —
+        // no order was recorded, so it is still the only record of what they
+        // bought, and support may need it.
+        console.error('[checkout] charged but order not recorded', orderData);
+        setPaymentTaken({
+          transactionId: chargeData?.transaction?.id,
+          detail: orderData?.error,
+        });
+        return;
       }
 
       clearCart();
@@ -495,6 +565,19 @@ export function CheckoutClient() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // Checked before everything else: the customer has been charged, so this
+  // screen must win over the cart/checkout views regardless of cart state.
+  if (paymentTaken) {
+    return (
+      <div className="min-h-screen bg-theme-subtle dark:bg-neutral-950">
+        <PaymentTakenNoOrder
+          transactionId={paymentTaken.transactionId}
+          detail={paymentTaken.detail}
+        />
+      </div>
+    );
   }
 
   if (orderComplete) {
