@@ -9,6 +9,8 @@ export const ROUTES = {
   PLP: '/sale-shipping-containers',
   PLP_ACCESSORIES: '/sale-shipping-containers?ptype=accessories',
   PRODUCT: (handle: string) => `/product/${handle}`,
+  BLOGS: '/blogs',
+  BLOG: (slug: string) => `/blogs/${slug}`,
   CART: '/cart',
   CHECKOUT: '/checkout',
   WISHLIST: '/wishlist',

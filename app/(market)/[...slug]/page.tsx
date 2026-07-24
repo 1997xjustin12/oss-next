@@ -23,6 +23,7 @@ import { fetchWpPage, ASSET_CDN } from '@/services/wp-pages.service'
 // fall through to this catch-all.
 const NATIVE_ROUTE_PREFIXES = [
   'product',
+  'blogs',
   'cart',
   'checkout',
   'wishlist',

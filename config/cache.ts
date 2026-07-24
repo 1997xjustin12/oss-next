@@ -6,6 +6,7 @@ export const CACHE_TAGS = {
   CATEGORIES: 'categories',
   HOMEPAGE:   'homepage',
   PAGES:      'pages',    // Converted WordPress pages from the Django pages API
+  BLOG:       'blog',     // Headless WordPress blog posts (bbq-blog REST API)
   ORDERS:     'orders',
   USERS:      'users',
   REVIEWS:    'reviews',
