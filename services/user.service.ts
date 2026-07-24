@@ -62,6 +62,9 @@ function normalizeUser(rawUser: Record<string, unknown>, fallbackIdentifier: str
     lastName,
     displayName:
       (rawUser.displayName as string | undefined) ?? ([firstName, lastName].filter(Boolean).join(' ') || undefined),
+    // Backend profile flag; left undefined if the response omits it, so callers
+    // can distinguish "not subscribed" from "unknown".
+    isSubscribed: rawUser.is_subscribed as boolean | undefined,
     profile,
   }
 }

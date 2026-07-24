@@ -726,15 +726,20 @@ don't delete completed items until the next full regeneration (so progress is vi
       states and a Subscribe/Unsubscribe button wired to the existing `lib/newsletter.ts`.
       Route registers and renders (200, noindex); auth-gated via `AccountPageShell` like the
       other account pages.
-      _**Still open — the public homepage widget**: deferred pending the new homepage design,_
-      _which is expected to drive this feature._
-      _**Backend dependency surfaced**: there is no endpoint to READ a subscriber's status_
-      _(only subscribe/unsubscribe POSTs), and the profile carries no newsletter flag — so_
-      _the panel's displayed state is best-effort, remembered per-account in localStorage,_
-      _defaulting to not-subscribed (the safe default; both actions are idempotent). An_
-      _authoritative status read needs a backend GET endpoint. Untested against the real_
-      _backend end-to-end — the subscribe/unsubscribe routes were `🆕 Created, not verified`_
-      _per `API_INTEGRATION_STATUS.md`, and subscribing a real email has a real side effect._
+      State is authoritative, not guessed: the panel reads `user.isSubscribed`, mapped from
+      the backend profile's `is_subscribed` field (`normalizeUser` in `user.service.ts`), and
+      writes the new value back through the auth context after a toggle so it persists.
+      _**Correction to the first 2026-07-24 note:** the "no way to read status" gap was mine —_
+      _`is_subscribed` was on the profile all along, our normalizer just dropped it. The_
+      _client confirmed it's a real backend field (traced end-to-end in the reference app),_
+      _and it's the property every newsletter surface there keys on. The localStorage_
+      _best-effort was replaced with this. Verified by build/typecheck; not re-verified_
+      _against a live authenticated profile fetch here (no test login), and subscribe/_
+      _unsubscribe still have a real side effect so weren't test-fired._
+      _**Still open — the public homepage widget**: deferred pending the new homepage design._
+      _**Residual (not blocking this page):** `is_subscribed` only exists for logged-in users;_
+      _there's still no way to read a **guest's** status by email (the subscriber routes are_
+      _write-only). The account page doesn't need it — a public/guest widget eventually would._
 - [x] Wire the PDP's stock/availability badge to the real `variants[].qty` field instead
       of always showing a hardcoded "In Stock — Ready to Ship".
       _Done 2026-07-18 — new shared `isInStockHit()` (`lib/pricing.ts`, alongside the_

@@ -22,6 +22,10 @@ export interface User {
   firstName?: string
   lastName?: string
   displayName?: string
+  // Authoritative newsletter state, straight off the backend profile
+  // (`is_subscribed`). Only exists for logged-in users — a guest who subscribed
+  // by email has no profile to read it from.
+  isSubscribed?: boolean
   profile?: UserProfile
 }
 

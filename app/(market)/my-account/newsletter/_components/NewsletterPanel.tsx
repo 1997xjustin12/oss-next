@@ -5,37 +5,23 @@ import { Mail, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { subscribeToNewsletter, unsubscribeFromNewsletter } from '@/lib/newsletter'
 
-// Two states, subscribed / not-subscribed, with the matching action button.
-//
-// Caveat: the backend exposes only subscribe and unsubscribe (both POST) — no
-// endpoint to READ a subscriber's current status, and the user profile carries
-// no newsletter flag. So the displayed state reflects the last action taken
-// here (remembered per-account in localStorage), not an authoritative read.
-// It defaults to not-subscribed, which is the safe default: it never wrongly
-// claims someone is subscribed, and both actions are idempotent on the backend.
-// A real status read needs a backend GET endpoint — tracked in the audit.
-
-type SubState = 'subscribed' | 'unsubscribed'
-
-function storageKey(email: string): string {
-  return `oss-newsletter:${email.toLowerCase()}`
-}
+// Subscription state is read from the backend profile flag `user.isSubscribed`
+// (surfaced via normalizeUser in user.service.ts) — authoritative for a
+// logged-in user, which is the only kind this account page serves. After a
+// successful toggle we write the new value back through the auth context so it
+// persists and every other newsletter surface sees it immediately, rather than
+// keeping a separate local copy that could drift from the profile.
 
 export function NewsletterPanel() {
-  const { user } = useAuth()
+  const { user, token, login } = useAuth()
   const email = user?.email ?? ''
 
-  const [state, setState] = useState<SubState>(() => {
-    if (typeof window === 'undefined' || !email) return 'unsubscribed'
-    return localStorage.getItem(storageKey(email)) === 'subscribed' ? 'subscribed' : 'unsubscribed'
-  })
+  const [subscribed, setSubscribed] = useState<boolean>(user?.isSubscribed ?? false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
 
-  const subscribed = state === 'subscribed'
-
-  async function toggle(next: SubState) {
+  async function toggle(next: boolean) {
     if (!email) {
       setError('No email on your account.')
       return
@@ -44,15 +30,16 @@ export function NewsletterPanel() {
     setError(null)
     setFlash(null)
 
-    const result =
-      next === 'subscribed'
-        ? await subscribeToNewsletter(email)
-        : await unsubscribeFromNewsletter(email)
+    const result = next
+      ? await subscribeToNewsletter(email)
+      : await unsubscribeFromNewsletter(email)
 
     if (result.ok) {
-      setState(next)
-      localStorage.setItem(storageKey(email), next)
-      setFlash(next === 'subscribed' ? 'You’re subscribed.' : 'You’ve been unsubscribed.')
+      setSubscribed(next)
+      // Persist to the auth session so the flag survives navigation and matches
+      // what a fresh profile fetch would return.
+      if (user && token) login({ user: { ...user, isSubscribed: next }, token })
+      setFlash(next ? 'You’re subscribed.' : 'You’ve been unsubscribed.')
     } else {
       setError(result.error)
     }
@@ -108,7 +95,7 @@ export function NewsletterPanel() {
           <button
             type="button"
             disabled={busy}
-            onClick={() => toggle('unsubscribed')}
+            onClick={() => toggle(false)}
             className="inline-flex items-center gap-2 rounded-md border border-theme-border bg-white px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-theme-dark transition-colors hover:bg-theme-subtle disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Unsubscribe
@@ -117,7 +104,7 @@ export function NewsletterPanel() {
           <button
             type="button"
             disabled={busy}
-            onClick={() => toggle('subscribed')}
+            onClick={() => toggle(true)}
             className="inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Subscribe
