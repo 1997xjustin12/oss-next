@@ -205,7 +205,19 @@ Every audit pass should produce:
 hardening checkout and adding the maintenance wall. Treat the scores as a delta on
 2026-07-21. A full methodology pass (§3) is still owed.
 
-Task list: **47 done / 9 open** (was 42 / 12). Five items closed this pass, none regressed.
+Task list: **49 done / 1 partial / 6 open** (was 42 / 0 / 12 on 2026-07-21). Nothing regressed.
+
+A second batch of closures landed 2026-07-24 on client answers:
+- **Order confirmation emails** — client confirmed Django owns them; no Next.js email code
+  expected. Closed.
+- **Address book** — client confirmed edit-address stays singular; multi-address not wanted.
+  Not a gap, closed.
+- **Newsletter** — now partial: built `/my-account/newsletter` (registered-user
+  subscribe/unsubscribe, in the account nav); the public homepage widget is deferred to the
+  new homepage design. Surfaced a backend dependency — no endpoint reads subscription
+  status, so the panel's state is best-effort local.
+- Checkout now also sends `status: "paid"` (only created post-charge), leaving the backend
+  to honor/verify it — see the checkout row in `API_INTEGRATION_STATUS.md`.
 
 - **Functional +2** — the two payment defects from the 07-21 pass are fixed and verified
   end-to-end against the real Braintree sandbox: `/api/braintree_checkout` now charges a
@@ -708,9 +720,21 @@ don't delete completed items until the next full regeneration (so progress is vi
 - [x] Multiple payment methods — the Braintree Drop-in is currently configured card-only;
       enabling PayPal/Venmo/Apple Pay may be cheap since the infra already exists.
       _Decided 2026-07-18 — Braintree card-only for now. No action._
-- [ ] Newsletter signup UI — backend utility functions already exist (`lib/newsletter.ts`);
-      revisit building a signup form now that checkout has more real estate.
-      _2026-07-18 — still pending a client decision, not resolved either way._
+- [~] Newsletter signup UI — **partially done 2026-07-24.**
+      Built the registered-user half the client asked for: `/my-account/newsletter`
+      (`NewsletterPanel.tsx`), linked in the account sidebar, with subscribed/not-subscribed
+      states and a Subscribe/Unsubscribe button wired to the existing `lib/newsletter.ts`.
+      Route registers and renders (200, noindex); auth-gated via `AccountPageShell` like the
+      other account pages.
+      _**Still open — the public homepage widget**: deferred pending the new homepage design,_
+      _which is expected to drive this feature._
+      _**Backend dependency surfaced**: there is no endpoint to READ a subscriber's status_
+      _(only subscribe/unsubscribe POSTs), and the profile carries no newsletter flag — so_
+      _the panel's displayed state is best-effort, remembered per-account in localStorage,_
+      _defaulting to not-subscribed (the safe default; both actions are idempotent). An_
+      _authoritative status read needs a backend GET endpoint. Untested against the real_
+      _backend end-to-end — the subscribe/unsubscribe routes were `🆕 Created, not verified`_
+      _per `API_INTEGRATION_STATUS.md`, and subscribing a real email has a real side effect._
 - [x] Wire the PDP's stock/availability badge to the real `variants[].qty` field instead
       of always showing a hardcoded "In Stock — Ready to Ship".
       _Done 2026-07-18 — new shared `isInStockHit()` (`lib/pricing.ts`, alongside the_
@@ -769,11 +793,11 @@ don't delete completed items until the next full regeneration (so progress is vi
       _Decided 2026-07-18 — not required by the client; if built at all, it's expected to_
       _be a backend-driven subscriber notification (for users already subscribed), not a_
       _frontend feature. No action here._
-- [ ] **New 2026-07-17 — clarify who owns order confirmation emails.** No email-sending
-      code (SendGrid/nodemailer/SMTP/etc.) exists anywhere in this Next.js app — if
-      confirmation emails are sent today, it's entirely a Django-backend responsibility
-      with zero visibility from here. Worth confirming with the backend team rather than
-      silently assuming it's covered.
+- [x] **New 2026-07-17 — clarify who owns order confirmation emails.** No email-sending
+      code (SendGrid/nodemailer/SMTP/etc.) exists anywhere in this Next.js app.
+      _Answered 2026-07-24 (client): **YES, Django handles order confirmation emails.** So_
+      _no email code is expected on the Next.js side — the front end's job ends at creating_
+      _the order; Django owns the notification. Closed._
 - [x] **Dead "View All FAQs →" link on the PDP** (`ProductDetail.tsx`, `href="#"`).
       _Done 2026-07-18 — links to the real WordPress FAQ page (`/shipping-container-faqs`,_
       _confirmed live, real content) in a new tab. Verified live._
@@ -827,14 +851,12 @@ don't delete completed items until the next full regeneration (so progress is vi
       *aspirational* folder structure documented in `AGENTS.md` rather than the app's
       real, actually-used convention (`my-account/orders/`).
       _Done 2026-07-18 — deleted the empty folder._
-- [ ] **New 2026-07-18 — Address book is not a true multi-address book.**
+- [x] **New 2026-07-18 — Address book is not a true multi-address book.**
       `app/(market)/my-account/edit-address/_components/AddressForm.tsx` supports exactly
-      one billing + one shipping address baked into the user profile (`ADDRESS_TYPES` is a
-      fixed 2-entry array) — no add/remove/multiple-saved-addresses, no default-address
-      selection. Fine as "edit your one address," not a real address book. Needs a product
-      decision on whether true multi-address support is ever wanted before building it —
-      would also need real backend support (the profile endpoint has no concept of
-      multiple addresses today).
+      one billing + one shipping address baked into the user profile.
+      _Decided 2026-07-24 (client): **edit-address stays singular** — one billing + one_
+      _shipping, as built. Multi-address support is not wanted, so this is not a gap; it's_
+      _the intended design. Closed._
 - [ ] **New 2026-07-18 — no shipment/carrier tracking number in Order History.**
       `my-account/orders` shows real order status (pending/paid/shipped/delivered/etc.)
       but no `tracking_number`/carrier field or link exists anywhere (confirmed via grep —

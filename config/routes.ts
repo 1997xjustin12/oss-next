@@ -16,6 +16,7 @@ export const ROUTES = {
   ACCOUNT: {
     ROOT: '/my-account',
     ORDERS: '/my-account/orders',
+    NEWSLETTER: '/my-account/newsletter',
     EDIT_ACCOUNT: '/my-account/edit-account',
     EDIT_ADDRESS: '/my-account/edit-address',
     DOWNLOADS: '/my-account/downloads',

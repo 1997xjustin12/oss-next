@@ -97,8 +97,9 @@ real styling in production today. Needs a Django-side fix.
 
 | Endpoint (per plan) | Method | Status | Notes |
 |---|---|---|---|
-| `/api/subscribers/subscribe` | POST | 🆕 Created | Calls `subscribeToNewsletter()` (`services/subscriber.service.ts`). Client-side counterpart now exists too — `lib/newsletter.ts`'s `subscribeToNewsletter(email)` — for any future form to call directly. No signup form wired yet. |
-| `/api/subscribers/unsubscribe` | POST | 🆕 Created | Calls `unsubscribeFromNewsletter()` (`services/subscriber.service.ts`). Client-side counterpart in `lib/newsletter.ts` too. No unsubscribe page wired yet. |
+| `/api/subscribers/subscribe` | POST | 🟡 Wired, not verified | Calls `subscribeToNewsletter()` (`services/subscriber.service.ts`). **Now wired to real UI (2026-07-24):** `/my-account/newsletter` (`NewsletterPanel.tsx`, in the account nav) calls `lib/newsletter.ts`'s `subscribeToNewsletter(email)`. Response shape still unconfirmed against the real backend (subscribing a real email has a real side effect, so not test-fired). |
+| `/api/subscribers/unsubscribe` | POST | 🟡 Wired, not verified | Calls `unsubscribeFromNewsletter()`. Wired into the same `/my-account/newsletter` panel's Unsubscribe action. Unconfirmed against the real backend for the same reason. |
+| `/api/subscribers/status` *(does not exist)* | GET | ⛔ **Missing — backend needed** | There is **no endpoint to read a subscriber's current status**, and the user profile carries no newsletter flag. So `NewsletterPanel.tsx` can't authoritatively show subscribed vs not — it defaults to not-subscribed and remembers the last action per-account in `localStorage` (safe default; both actions are idempotent). A real status read needs a Django `GET` endpoint (or a `newsletter_subscribed` field on the profile). |
 
 ---
 

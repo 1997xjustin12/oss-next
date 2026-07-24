@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: ROUTES.ACCOUNT.ROOT, label: 'Dashboard' },
   { href: ROUTES.ACCOUNT.ORDERS, label: 'Orders' },
   { href: ROUTES.ACCOUNT.EDIT_ADDRESS, label: 'Addresses' },
+  { href: ROUTES.ACCOUNT.NEWSLETTER, label: 'Newsletter' },
   { href: ROUTES.ACCOUNT.EDIT_ACCOUNT, label: 'Account Details' },
 ]
 
