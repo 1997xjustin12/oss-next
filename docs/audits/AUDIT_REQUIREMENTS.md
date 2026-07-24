@@ -205,17 +205,17 @@ Every audit pass should produce:
 hardening checkout and adding the maintenance wall. Treat the scores as a delta on
 2026-07-21. A full methodology pass (§3) is still owed.
 
-Task list: **49 done / 1 partial / 6 open** (was 42 / 0 / 12 on 2026-07-21). Nothing regressed.
+Task list: **50 done / 0 partial / 6 open** (was 42 / 0 / 12 on 2026-07-21). Nothing regressed.
 
 A second batch of closures landed 2026-07-24 on client answers:
 - **Order confirmation emails** — client confirmed Django owns them; no Next.js email code
   expected. Closed.
 - **Address book** — client confirmed edit-address stays singular; multi-address not wanted.
   Not a gap, closed.
-- **Newsletter** — now partial: built `/my-account/newsletter` (registered-user
-  subscribe/unsubscribe, in the account nav); the public homepage widget is deferred to the
-  new homepage design. Surfaced a backend dependency — no endpoint reads subscription
-  status, so the panel's state is best-effort local.
+- **Newsletter** — done: built `/my-account/newsletter` (registered-user
+  subscribe/unsubscribe, in the account nav), reading the authoritative `is_subscribed`
+  profile flag; client confirmed it works live. The public homepage widget was descoped by
+  the client (not wanted for now; backend handles status), so there's no open work left.
 - Checkout now also sends `status: "paid"` (only created post-charge), leaving the backend
   to honor/verify it — see the checkout row in `API_INTEGRATION_STATUS.md`.
 
@@ -720,8 +720,8 @@ don't delete completed items until the next full regeneration (so progress is vi
 - [x] Multiple payment methods — the Braintree Drop-in is currently configured card-only;
       enabling PayPal/Venmo/Apple Pay may be cheap since the infra already exists.
       _Decided 2026-07-18 — Braintree card-only for now. No action._
-- [~] Newsletter signup UI — **partially done 2026-07-24.**
-      Built the registered-user half the client asked for: `/my-account/newsletter`
+- [x] Newsletter signup UI — **done 2026-07-24 (scope settled with the client).**
+      Built the registered-user half: `/my-account/newsletter`
       (`NewsletterPanel.tsx`), linked in the account sidebar, with subscribed/not-subscribed
       states and a Subscribe/Unsubscribe button wired to the existing `lib/newsletter.ts`.
       Route registers and renders (200, noindex); auth-gated via `AccountPageShell` like the
@@ -736,10 +736,12 @@ don't delete completed items until the next full regeneration (so progress is vi
       _best-effort was replaced with this. **Confirmed working by the client 2026-07-24** —_
       _the page reads `is_subscribed` correctly and the subscribe/unsubscribe toggle behaves_
       _against the real backend._
-      _**Still open — the public homepage widget**: deferred pending the new homepage design._
-      _**Residual (not blocking this page):** `is_subscribed` only exists for logged-in users;_
-      _there's still no way to read a **guest's** status by email (the subscriber routes are_
-      _write-only). The account page doesn't need it — a public/guest widget eventually would._
+      _**Public homepage widget — descoped 2026-07-24 (client):** not wanted for now. The_
+      _backend handles subscription status, and the registered-user page above is all the_
+      _client requires at this point, so there's no open frontend work left here._
+      _**Residual (not needed, noted for the future):** `is_subscribed` only exists for_
+      _logged-in users; a guest's status by email still isn't readable (subscriber routes are_
+      _write-only). Only relevant if a public/guest widget is ever wanted._
 - [x] Wire the PDP's stock/availability badge to the real `variants[].qty` field instead
       of always showing a hardcoded "In Stock — Ready to Ship".
       _Done 2026-07-18 — new shared `isInStockHit()` (`lib/pricing.ts`, alongside the_
