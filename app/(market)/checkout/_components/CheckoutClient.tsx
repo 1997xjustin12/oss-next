@@ -532,6 +532,11 @@ export function CheckoutClient() {
         shipping_zip_code: shipTo.zipCode,
         payment_method: 'braintree',
         transaction_id: chargeData?.transaction?.id,
+        // This code path only runs after a successful Braintree charge, so an
+        // order created here is paid on arrival. Every later status (shipped,
+        // delivered, refunded…) is the backend's to manage. The backend should
+        // still confirm transaction_id before trusting this — see B2.
+        status: 'paid',
       };
 
       const orderRes = await fetch('/api/orders/checkout', {

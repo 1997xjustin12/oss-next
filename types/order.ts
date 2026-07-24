@@ -25,6 +25,10 @@ export interface CheckoutPayload {
   shipping_zip_code: string
   payment_method?: string
   transaction_id?: string
+  // The frontend only creates an order after a successful charge, so it always
+  // sends 'paid'. Typed to OrderStatus for consistency, though checkout never
+  // sends any other value.
+  status?: OrderStatus
 }
 
 // Confirmed field names via docs/reference/ORDER_HISTORY_ANSWER.md (extracted from a working
