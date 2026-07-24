@@ -53,9 +53,9 @@ function handleMaintenance(request: NextRequest): NextResponse | null {
   // Avoid rewriting the maintenance page onto itself (would loop).
   if (pathname === MAINTENANCE_PATH) return null
 
-  // The toggle route must never be walled — otherwise turning the wall ON locks
-  // you out of turning it back OFF (and out of checking status).
-  if (pathname === '/api/maintenance') return null
+  // The toggle route and its browser control page must never be walled —
+  // otherwise turning the wall ON locks you out of turning it back OFF.
+  if (pathname === '/api/maintenance' || pathname === '/maintenance-control') return null
 
   // API clients expect JSON, not an HTML page — answer them with a 503 JSON
   // body rather than rewriting the route to the maintenance markup.
