@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isMaintenanceMode } from '@/lib/maintenance'
 
 // ── Maintenance wall ────────────────────────────────────────────────────────
-// Manual, env-var driven. When MAINTENANCE_MODE is on, every request is served
-// the /maintenance page with a 503, EXCEPT a holder of the bypass cookie (so
-// you and QA can verify the live site while the wall is up for everyone else).
+// When the wall is up, every request is served the /maintenance page with a
+// 503, EXCEPT a holder of the bypass cookie (so you and QA can verify the live
+// site while it's walled for everyone else).
 //
-// Trade-off, chosen deliberately: because this reads an env var, flipping it
-// requires a redeploy. A redeploy mid-incident is slow — if instant toggling
-// ever matters, move the flag to a runtime store (the Upstash Redis already
-// configured here) and read it below instead.
-//
-// Values treated as "on": 1, true, on (case-insensitive). Anything else is off,
-// so an unset or empty var means the site runs normally.
-const MAINTENANCE_ON = /^(1|true|on)$/i.test(process.env.MAINTENANCE_MODE ?? '')
+// State comes from lib/maintenance.ts, which layers a Redis flag (flip it in
+// seconds via POST /api/maintenance, no redeploy) under an env kill-switch
+// (MAINTENANCE_MODE, which forces the wall on even if Redis is down). The Redis
+// read is cached with a short TTL, so this is not a per-request round-trip.
 const MAINTENANCE_PATH = '/maintenance'
 const BYPASS_COOKIE = 'maintenance-bypass'
 // Visiting ?maintenance-bypass=<token> sets the cookie, then subsequent
@@ -56,6 +53,10 @@ function handleMaintenance(request: NextRequest): NextResponse | null {
   // Avoid rewriting the maintenance page onto itself (would loop).
   if (pathname === MAINTENANCE_PATH) return null
 
+  // The toggle route must never be walled — otherwise turning the wall ON locks
+  // you out of turning it back OFF (and out of checking status).
+  if (pathname === '/api/maintenance') return null
+
   // API clients expect JSON, not an HTML page — answer them with a 503 JSON
   // body rather than rewriting the route to the maintenance markup.
   if (pathname.startsWith('/api/')) {
@@ -97,8 +98,8 @@ function handleAbTest(request: NextRequest): NextResponse {
   return response
 }
 
-export function proxy(request: NextRequest) {
-  if (MAINTENANCE_ON) {
+export async function proxy(request: NextRequest) {
+  if (await isMaintenanceMode()) {
     const maintenance = handleMaintenance(request)
     if (maintenance) return maintenance
     // bypass holder — fall through to normal handling below
