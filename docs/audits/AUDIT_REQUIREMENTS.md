@@ -733,9 +733,9 @@ don't delete completed items until the next full regeneration (so progress is vi
       _`is_subscribed` was on the profile all along, our normalizer just dropped it. The_
       _client confirmed it's a real backend field (traced end-to-end in the reference app),_
       _and it's the property every newsletter surface there keys on. The localStorage_
-      _best-effort was replaced with this. Verified by build/typecheck; not re-verified_
-      _against a live authenticated profile fetch here (no test login), and subscribe/_
-      _unsubscribe still have a real side effect so weren't test-fired._
+      _best-effort was replaced with this. **Confirmed working by the client 2026-07-24** —_
+      _the page reads `is_subscribed` correctly and the subscribe/unsubscribe toggle behaves_
+      _against the real backend._
       _**Still open — the public homepage widget**: deferred pending the new homepage design._
       _**Residual (not blocking this page):** `is_subscribed` only exists for logged-in users;_
       _there's still no way to read a **guest's** status by email (the subscriber routes are_
