@@ -192,36 +192,39 @@ Every audit pass should produce:
 
 ---
 
-## 5. Latest Audit Results — 2026-07-21
+## 5. Latest Audit Results — 2026-07-24
 
-| Dimension | Score | 2026-07-18 | 2026-07-17 | 2026-07-15 |
+| Dimension | Score | 2026-07-21 | 2026-07-18 | 2026-07-15 |
 |---|---|---|---|---|
-| **Overall (blended)** | **~81%** | ~79% | ~75% | ~65% |
-| Functional Completeness (8 areas) | ~88% | ~87% | ~81% | ~62% |
-| E-Commerce Feature Coverage (41 items) | ~64% | ~62% | ~62% | ~65% |
-| Core Web Vitals / PageSpeed / SEO | ~91% | ~89% | ~82% | ~68% |
+| **Overall (blended)** | **~83%** | ~81% | ~79% | ~65% |
+| Functional Completeness (8 areas) | ~90% | ~88% | ~87% | ~62% |
+| E-Commerce Feature Coverage (41 items) | ~64% | ~64% | ~62% | ~65% |
+| Core Web Vitals / PageSpeed / SEO | ~91% | ~91% | ~89% | ~68% |
 
-**This pass was event-driven, not a full three-dimension re-run.** It records what changed
-while integrating the converted-pages renderer and reacting to two backend changes, so
-treat the scores as a delta on 2026-07-18 rather than an independent re-scoring. A full
-methodology pass (§3) is still owed.
+**Event-driven pass, not a full three-dimension re-run** — it records what changed while
+hardening checkout and adding the maintenance wall. Treat the scores as a delta on
+2026-07-21. A full methodology pass (§3) is still owed.
 
-Movement is small and specific:
+Task list: **47 done / 9 open** (was 42 / 12). Five items closed this pass, none regressed.
 
-- **Feature Coverage +2** — "reviews & ratings" moves from 🟡 to ✅ on both PLP and PDP.
-  The backend started indexing `ratings: { rating, review_count }`, so review counts are
-  real instead of hardcoded `0`. This closes the long-standing "PLP ratings are NOT
-  connected to the reviews system" finding, which is now **obsolete** in
-  `API_INTEGRATION_STATUS.md`.
-- **CWV/SEO +2** — PDP `Product` JSON-LD now emits `aggregateRating` (blocked until
-  `review_count` existed), and WordPress content pages became server-rendered and
-  indexable instead of iframed, with LCP preloads and lazy-loading applied to their images.
-- **Functional +1** — checkout submit-order fix, Braintree payer details, and the PDP
-  crash fix, offset by two newly-found defects below.
+- **Functional +2** — the two payment defects from the 07-21 pass are fixed and verified
+  end-to-end against the real Braintree sandbox: `/api/braintree_checkout` now charges a
+  server-recomputed total (a crafted request could previously buy a $3,000 container for a
+  cent), and a charge that fails to record an order now lands on a dedicated
+  "payment received, order needs attention" screen instead of a raw error beside a live —
+  and re-chargeable — Place Order button. The `middleware.ts` → `proxy.ts` deprecation is
+  resolved with the A/B test verified still running.
+- **New capability** — a site-wide maintenance wall (env kill-switch + runtime Redis
+  toggle + browser control page), gated in the proxy so it covers native and WP catch-all
+  routes uniformly. Not scored against the 41-item e-commerce rubric (it's operational
+  tooling, not a storefront feature), but recorded in §6.
+- **Feature Coverage / CWV flat** — no storefront features flipped state this pass; the
+  ratings/`aggregateRating`/inline-WP-render gains were already booked on 2026-07-21.
 
-**Two findings this pass are more serious than the score movement suggests** — see the new
-High-priority items in §6: a client-controlled charge amount, and a charged-but-no-order
-state that the backend's checkout crash makes reachable on the very first real transaction.
+**The most serious open item is unchanged and remains the Django checkout crash** (§6,
+Backend). With the two front-end payment defects now closed and Braintree credentials
+configured, that single backend bug is the last thing between here and a working purchase —
+three further items sit behind it. See `BLOCKERS_2026-07-24.pdf`.
 
 Functional Completeness and CWV/SEO both moved up again — reflects the homepage A/B/C
 rebuild (real `middleware.ts` + `VariantHero` Suspense, replacing the crawlable
@@ -251,23 +254,30 @@ don't delete completed items until the next full regeneration (so progress is vi
 
 ### High priority
 
-- [ ] **NEW 2026-07-21 — `/api/braintree_checkout` charges a client-supplied amount.**
-      The route reads `amount` straight from the request body and passes it to
-      `transaction.sale()`; nothing server-side reconciles it against the cart. A crafted
-      request charges $0.01 for a $3,000 container. Pre-existing, not introduced by the
-      payer-details change. **Fix before any live card processing**: recompute the total
-      server-side via the existing `/api/orders/get-total` (which already derives it from
-      cart + shipping address) and charge that, ignoring the client's number. Harmless in
-      sandbox; a real vulnerability the moment production credentials are set.
+- [x] **NEW 2026-07-21 — `/api/braintree_checkout` charged a client-supplied amount.**
+      The route read `amount` straight from the request body and passed it to
+      `transaction.sale()`; nothing server-side reconciled it against the cart. A crafted
+      request charged $0.01 for a $3,000 container.
+      _Fixed 2026-07-24 — the route recomputes the total server-side via_
+      _`/api/orders/get-total` and never charges the client's number. Confirmed the obvious_
+      _follow-up attack is also dead: the backend prices from `product_id` and ignores item_
+      _price fields, verified by tampering an item to 0.01 and watching sub_total stay 3100._
+      _The client sends the displayed total only as `expectedAmount`; if the server figure_
+      _is higher it 409s rather than overcharging. Verified end-to-end against the real_
+      _Braintree sandbox: attack with a usable nonce → 409 no charge; honest purchase →_
+      _200 charged 3425.50; AVS M/M. Also fixed a latent bug in the payer-details commit —_
+      _`compact()` returned undefined for a blank address but the key was still passed, and_
+      _the SDK rejects a present-but-undefined `billing`/`shipping` outright._
 
-- [ ] **NEW 2026-07-21 — a successful charge with a failed order-create shows a raw error.**
+- [x] **NEW 2026-07-21 — a successful charge with a failed order-create showed a raw error.**
       `handlePlaceOrder()` charges first, then POSTs `/api/orders/checkout`. If the second
-      call fails the customer has been charged with no confirmation and a raw error
-      message. This is not hypothetical: the Django checkout crash below fires on *every*
-      call, so this is the state the first real sandbox transaction will land in. Needs a
-      dedicated "payment taken, order needs attention" screen carrying the
-      `transaction_id`, plus a support path — independent of the backend fix, since network
-      failures can produce it in production regardless.
+      call failed, the customer was charged and left on the checkout page with a live Place
+      Order button — retrying would charge them twice.
+      _Fixed 2026-07-24 — routes to a dedicated "payment received, order needs attention"_
+      _screen with no retry, showing the Braintree `transaction_id` as the support_
+      _reference. The cart is left intact (no order was recorded, so it's still the only_
+      _record of what they bought). Independent of the backend crash below, since a network_
+      _failure can produce the same state in production._
 
 - [x] **NEW 2026-07-21 — PDP crashed on every shipping-container page.**
       The backend changed `ratings` from a number to `{ rating, review_count }`;
@@ -334,13 +344,35 @@ don't delete completed items until the next full regeneration (so progress is vi
       CSS is served to real browsers on the live WordPress site, which are silently losing
       styling nobody has noticed. Fix in the Django CSS pipeline.
 
-- [ ] **NEW 2026-07-21 — `middleware.ts` is deprecated in Next 16; renaming it broke the
-      A/B test.** The build warns to use `proxy.ts` instead. A direct rename
-      (`middleware.ts` → `proxy.ts`, `export function middleware` → `proxy`) typechecks,
-      lints and builds clean, but silently empties `middleware-manifest.json` — the
-      homepage A/B/C variant assignment (§2 decision #6) stops running entirely, with no
-      error. Reverted rather than shipped. Needs the actual cause found before renaming;
-      a green build is not sufficient evidence here.
+- [x] **NEW 2026-07-21 — `middleware.ts` is deprecated in Next 16.** The build warned to use
+      `proxy.ts` instead. An earlier same-name rename attempt silently emptied
+      `middleware-manifest.json` and disabled the homepage A/B/C assignment (§2 decision #6)
+      with a green build, and was reverted.
+      _Done 2026-07-24 — renamed `middleware.ts` → `proxy.ts` and `export function_
+      _middleware` → `export function proxy` (Next 16's convention; verified against the_
+      _installed docs). The manifest now registers the proxy correctly and the A/B variant_
+      _cookie is assigned on `/` again — the failure mode was a stale prior attempt, not the_
+      _rename itself. The proxy has since taken on the maintenance wall too (see below)._
+- [x] **NEW 2026-07-24 — Maintenance wall (net-new capability, client-requested).**
+      A site-wide maintenance mode was added end to end. `app/maintenance/page.tsx` is a
+      self-contained 503 page (no backend, no cache — it must not depend on what's down).
+      The gate lives in `proxy.ts`, so it covers every route uniformly, native and WP
+      `[...slug]` catch-all alike — verified live that WP content pages return 503 with the
+      maintenance body exactly as native routes do. State is layered: a Redis flag
+      (`oss-next:maintenance`, flipped in seconds via `POST /api/maintenance` with the
+      `x-revalidate-token` secret, cached ~20s in the proxy) under a `MAINTENANCE_MODE` env
+      kill-switch that forces the wall on even if Redis is down; a failed Redis read fails
+      OPEN so a blip can't wall the site. `/maintenance-control` is a token-gated browser
+      page with On/Off buttons. `MAINTENANCE_BYPASS_TOKEN` enables a preview cookie so
+      admins/QA can view the live site while it's walled. The toggle route and control page
+      are exempt from the wall (else turning it on would lock you out of turning it off) —
+      a lockout that live testing caught and fixed. Full on→off cycle verified against real
+      Redis and the Braintree sandbox.
+- [x] **NEW 2026-07-24 — Converted page titles were double-branded.** WordPress `seo_title`
+      already carries the brand suffix ("… | On-Site Storage Solutions"), and the root
+      layout's title template appended a second one.
+      _Done — the WP catch-all marks `seo_title` as `absolute` so the template doesn't_
+      _re-brand it, while the unbranded bare-`title` fallback still uses the template._
 - [x] **Add `sitemap.ts` and `robots.ts`** covering all static routes plus dynamic
       ES-backed PDP/PLP URLs. Currently zero SEO route declarations exist.
       _Done 2026-07-15 — new `getAllProductHandles()` in `search.service.ts` paginates_
