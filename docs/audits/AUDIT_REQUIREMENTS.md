@@ -205,13 +205,15 @@ Every audit pass should produce:
 hardening checkout and adding the maintenance wall. Treat the scores as a delta on
 2026-07-21. A full methodology pass (§3) is still owed.
 
-Task list: **50 done / 0 partial / 6 open** (was 42 / 0 / 12 on 2026-07-21). Nothing regressed.
+Task list: **51 done / 0 partial / 5 open** (was 42 / 0 / 12 on 2026-07-21). Nothing regressed.
 
 A second batch of closures landed 2026-07-24 on client answers:
 - **Order confirmation emails** — client confirmed Django owns them; no Next.js email code
   expected. Closed.
 - **Address book** — client confirmed edit-address stays singular; multi-address not wanted.
   Not a gap, closed.
+- **Shipment tracking number** — client confirmed not wanted; order status alone is enough.
+  Never built, so nothing to remove. Closed.
 - **Newsletter** — done: built `/my-account/newsletter` (registered-user
   subscribe/unsubscribe, in the account nav), reading the authoritative `is_subscribed`
   profile flag; client confirmed it works live. The public homepage widget was descoped by
@@ -864,12 +866,11 @@ don't delete completed items until the next full regeneration (so progress is vi
       _Decided 2026-07-24 (client): **edit-address stays singular** — one billing + one_
       _shipping, as built. Multi-address support is not wanted, so this is not a gap; it's_
       _the intended design. Closed._
-- [ ] **New 2026-07-18 — no shipment/carrier tracking number in Order History.**
-      `my-account/orders` shows real order status (pending/paid/shipped/delivered/etc.)
-      but no `tracking_number`/carrier field or link exists anywhere (confirmed via grep —
-      zero matches). Distinct from the existing "order status updates" item, which is
-      already real. Needs a product decision — likely also needs the backend to start
-      returning a tracking number/carrier field, which it may not do today.
+- [x] **New 2026-07-18 — no shipment/carrier tracking number in Order History.**
+      `my-account/orders` shows real order status but no `tracking_number`/carrier field.
+      _Decided 2026-07-24 (client): **not wanted** — order status alone is sufficient, no_
+      _tracking-number display required. Nothing to remove (it was never built); closed as a_
+      _product decision. Order status updates remain real and unaffected._
 - [x] **`Recaptcha.tsx` was using the wrong `next/script` strategy.**
       It was rendered with `strategy="lazyOnload"`, but its only 2 real usages
       (`CheckoutClient.tsx`, `RegisterForm.tsx`) need the widget interactive *before* the
