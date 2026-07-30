@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ShoppingCart, RefreshCw, Truck } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { cartItemsToLineItems } from '@/lib/cart'
+import { applyEnrichParams } from '@/lib/linkEnrich'
 import { ROUTES } from '@/config/routes'
 import { CartItemRow } from '@/components/cart/CartItemRow'
 import { CartSummary } from '@/components/cart/CartSummary'
@@ -126,6 +127,18 @@ export function CartPageClient() {
 }
 
 function EmptyCart() {
+  // Carry the visitor's zip/depot onto the PLP link so "Shop Containers" lands
+  // on a location-scoped listing, not an empty-zip page — same enrichment the
+  // Navbar and ZipLookup apply. Lazy-read from localStorage: this component only
+  // renders once the parent has mounted (client-side), so there's no SSR pass to
+  // mismatch against, and applyEnrichParams no-ops when nothing is stored.
+  const [href] = useState<string>(() => {
+    if (typeof window === 'undefined') return ROUTES.PLP
+    const zipcode = localStorage.getItem('zipcode') ?? ''
+    const location = localStorage.getItem('zipcode_depot') ?? ''
+    return applyEnrichParams(ROUTES.PLP, zipcode, location)
+  })
+
   return (
     <div className="rounded-xl border border-theme-border bg-white p-10 sm:p-16 text-center">
       <ShoppingCart className="w-14 h-14 mx-auto text-theme-border mb-4" />
@@ -134,7 +147,7 @@ function EmptyCart() {
         Browse our containers and add items to get started.
       </p>
       <Link
-        href={ROUTES.PLP}
+        href={href}
         className="rounded-md bg-theme-primary hover:bg-theme-primary-dark text-white font-semibold px-6 py-3 text-sm transition-colors inline-block"
       >
         Shop Containers
