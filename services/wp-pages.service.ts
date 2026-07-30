@@ -197,6 +197,21 @@ export async function fetchWpPage(segments: string[]): Promise<WpPage | null> {
   const page = (await res.json()) as WpPageDto
 
   const $ = load(page.html ?? '', null, false)
+
+  // Strip the converted markup's own <script> tags. The Django conversion keeps
+  // the original WordPress page's third-party form scripts — Google reCAPTCHA,
+  // Zoho web-to-contact, geo-blocking snippets. Because this HTML is injected
+  // via server-side dangerouslySetInnerHTML, those scripts run during the
+  // browser's initial parse (unlike client-inserted scripts, which don't), and
+  // reCAPTCHA in particular installs global state that then throws
+  // "reCAPTCHA placeholder element must be empty" on the next client-side
+  // navigation — surfacing as the app's error boundary. These are marketing
+  // pages: they render from HTML + scoped CSS, and their JS never ran on
+  // soft-navigated visits anyway, so removing it is consistent, not a loss.
+  // (Embedded lead-capture forms need a native reimplementation — see the Zoho
+  // quote-form item in the audit.)
+  $('script').remove()
+
   optimiseImages($)
 
   // Converted pages are content-only — the conversion drops the WordPress
