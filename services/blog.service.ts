@@ -18,6 +18,29 @@ function toText(html: string | undefined): string {
   return load(html).text().replace(/\s+/g, ' ').trim()
 }
 
+/**
+ * Prepare a post's raw HTML body for inline rendering:
+ *  - Remove <script>/<iframe> tags. Injected via server-side
+ *    dangerouslySetInnerHTML, embedded scripts run on initial parse and can
+ *    crash client-side navigation (same reCAPTCHA class fixed for the WP
+ *    catch-all in wp-pages.service.ts). Content is first-party, but this keeps
+ *    the two render paths consistent and safe.
+ *  - Lazy-load and async-decode in-body images that don't already declare it,
+ *    to avoid layout shift / eager loading (the article hero is a real
+ *    next/image; this only touches images inside the WP HTML).
+ */
+function processContent(html: string | undefined): string {
+  if (!html) return ''
+  const $ = load(html, null, false)
+  $('script, iframe').remove()
+  $('img').each((_, el) => {
+    const img = $(el)
+    if (!img.attr('loading')) img.attr('loading', 'lazy')
+    if (!img.attr('decoding')) img.attr('decoding', 'async')
+  })
+  return $.html()
+}
+
 function normalizeSummary(post: WpPost): BlogSummary {
   const media = post._embedded?.['wp:featuredmedia']?.[0]
   const hasImage = post.featured_media > 0 && !!media?.source_url
@@ -49,8 +72,8 @@ function normalizeSeo(y: WpYoast | undefined) {
 function normalizePost(post: WpPost): BlogPost {
   return {
     ...normalizeSummary(post),
-    // Rendered as-is (first-party content) inside a scoped container on the page.
-    contentHtml: post.content?.rendered ?? '',
+    // Scripts stripped and in-body images lazy-loaded — see processContent.
+    contentHtml: processContent(post.content?.rendered),
     seo: normalizeSeo(post.yoast_head_json),
   }
 }
@@ -186,4 +209,38 @@ export async function fetchRelatedPosts(excludeId: number): Promise<BlogSummary[
     .map(normalizeSummary)
     .filter((p) => p.id !== excludeId)
     .slice(0, 4)
+}
+
+/**
+ * Every post's slug + last-modified for the sitemap — paginated across the
+ * category (WP caps per_page at 100). Fetches only the fields the sitemap
+ * needs. Returns [] on any failure so a blog-API blip can't break the sitemap.
+ */
+export async function getAllBlogSlugs(): Promise<{ slug: string; modified?: string }[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.BLOG)
+
+  const categoryId = await getBlogCategoryId()
+  const out: { slug: string; modified?: string }[] = []
+
+  // Cap at 20 pages (2,000 posts) as a runaway guard.
+  for (let page = 1; page <= 20; page++) {
+    const url = `${POSTS_API}&categories=${categoryId}&per_page=100&page=${page}&_fields=slug,modified`
+    let res: Response
+    try {
+      res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT) })
+    } catch {
+      break
+    }
+    // 400 = past the last page (rest_post_invalid_page_number) — done.
+    if (!res.ok) break
+
+    const rows = (await res.json()) as { slug?: string; modified?: string }[]
+    if (!Array.isArray(rows) || rows.length === 0) break
+    for (const r of rows) if (r.slug) out.push({ slug: r.slug, modified: r.modified })
+    if (rows.length < 100) break
+  }
+
+  return out
 }

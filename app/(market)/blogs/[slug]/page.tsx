@@ -72,7 +72,8 @@ async function ArticleContent({ params }: Props) {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    // <div>, not <main> — the (market) layout owns the single <main> landmark.
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <JsonLd data={jsonLd} />
 
       <nav aria-label="Breadcrumb" className="mb-6 text-sm">
@@ -110,13 +111,13 @@ async function ArticleContent({ params }: Props) {
       <Suspense fallback={<RelatedPostsSkeleton />}>
         <RelatedPosts currentId={post.id} />
       </Suspense>
-    </main>
+    </div>
   )
 }
 
 function ArticleSkeleton() {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14" aria-hidden>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14" aria-hidden>
       <div className="mb-6 h-4 w-28 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
       <div className="mb-2 h-3 w-32 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
       <div className="mb-3 h-9 w-full animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
@@ -127,6 +128,6 @@ function ArticleSkeleton() {
           <div key={i} className="h-4 w-full animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
         ))}
       </div>
-    </main>
+    </div>
   )
 }

@@ -35,8 +35,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default function BlogsPage({ searchParams }: Props) {
+  // The (market) layout already provides the page's single <main> landmark, so
+  // this is a <div>, not a nested <main>.
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <header className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-theme-dark sm:text-4xl dark:text-white">
@@ -52,7 +54,7 @@ export default function BlogsPage({ searchParams }: Props) {
       <Suspense fallback={<BlogListSkeleton />}>
         <BlogListContent searchParams={searchParams} />
       </Suspense>
-    </main>
+    </div>
   )
 }
 
