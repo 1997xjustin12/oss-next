@@ -192,20 +192,38 @@ Every audit pass should produce:
 
 ---
 
-## 5. Latest Audit Results — 2026-07-24
+## 5. Latest Audit Results — 2026-07-31 (full three-dimension pass)
 
-| Dimension | Score | 2026-07-21 | 2026-07-18 | 2026-07-15 |
+| Dimension | Score | 2026-07-24 | 2026-07-21 | 2026-07-15 |
 |---|---|---|---|---|
-| **Overall (blended)** | **~83%** | ~81% | ~79% | ~65% |
-| Functional Completeness (8 areas) | ~90% | ~88% | ~87% | ~62% |
-| E-Commerce Feature Coverage (41 items) | ~64% | ~64% | ~62% | ~65% |
-| Core Web Vitals / PageSpeed / SEO | ~91% | ~91% | ~89% | ~68% |
+| **Overall (blended)** | **~88%** | ~83% | ~81% | ~65% |
+| Functional Completeness (8 areas) | ~93% | ~90% | ~88% | ~62% |
+| E-Commerce Feature Coverage (41 items) | ~83% | ~64% | ~64% | ~65% |
+| Core Web Vitals / PageSpeed / SEO | ~91% | ~91% | ~91% | ~68% |
 
-**Event-driven pass, not a full three-dimension re-run** — it records what changed while
-hardening checkout and adding the maintenance wall. Treat the scores as a delta on
-2026-07-21. A full methodology pass (§3) is still owed.
+**This was a real §3 methodology pass** — three parallel dimension scans (Functional,
+Feature-Coverage, CWV/SEO) verifying against the live code, not a delta. Two things drove
+the jump:
 
-Task list: **51 done / 0 partial / 5 open** (was 42 / 0 / 12 on 2026-07-21). Nothing regressed.
+- **Feature Coverage ~64% → ~83%.** Prior passes counted every client-excluded item
+  (recently-viewed, comparison, multi-payment, account-deletion, tracking, back-in-stock/
+  price-drop alerts, address-book-multi) as an uncovered gap. Scored on an *is-it-addressed*
+  basis: **28/41 done, 7 not-required (client-confirmed), 4 partial-by-design, 2 real gaps**
+  (live chat, coupons). The storefront was always more complete than the old number implied.
+- **Functional +3** — the Django **checkout crash (B1) is fixed and verified live** (201 on
+  a real POST), which was the single blocker to an end-to-end purchase; the blog, WP catch-all
+  and maintenance wall all verified LIVE.
+
+The scan found **6 genuinely new issues, all on our side**; the **4 blog issues are fixed**
+this pass (duplicate `<main>`, missing sitemap entries, un-stripped scripts, unoptimized
+images). The other 2 are very-low/cosmetic (SearchAction target to verify; a dead
+`getHomeData()` stub) and left as noted.
+
+Task list: **53 done / 0 partial / 5 open** (was 51/0/5 on 2026-07-24; +2 net closed after
+opening the SearchAction-verify item). **The 5 open are not ours to unilaterally close:**
+B3 malformed CSS (backend), live chat + Zoho quote form (client decisions), the PLP
+image-priority nit (deliberate — search library exposes no item index), and the low-severity
+SearchAction check. Nothing regressed.
 
 A second batch of closures landed 2026-07-24 on client answers:
 - **Order confirmation emails** — client confirmed Django owns them; no Next.js email code
@@ -341,13 +359,17 @@ don't delete completed items until the next full regeneration (so progress is vi
       _verified end-to-end (name-only save → address-only save → re-fetch → restore),_
       _confirming each save preserves the fields the other form owns and data genuinely_
       _persists. Typecheck + lint clean._
-- [ ] **Fix the Django backend checkout crash.** `/api/orders/checkout` throws
-      `ValueError: Currency formatting is not possible using the 'C' locale` in
-      `app/orders/views.py` line 89 (`locale.currency(...)` with no server locale
-      configured) — on EVERY call, and the order saves before the crash. Blocks real
-      checkout entirely once Braintree credentials exist. **Backend fix, not fixable here.**
-      _Still open as of 2026-07-21. Now compounded by the charged-but-no-order item above:_
-      _this crash is what makes that state reachable on the first real transaction._
+- [x] **Fix the Django backend checkout crash.** `/api/orders/checkout` threw
+      `ValueError: Currency formatting is not possible using the 'C' locale` on every call.
+      _**Fixed by the backend team; verified live 2026-07-31.** A direct POST of a real_
+      _payload to `${BACKEND}/api/orders/checkout` returned `201 Created` with a full order_
+      _(`order_number`, `total_price`, `status:"paid"`) — no locale error. This was the single_
+      _blocker to an end-to-end purchase; it's clear. Our checkout wiring needs no change to_
+      _consume it. Bonus finding: the response carries a separate `payment_status: false` for_
+      _an unverified `transaction_id` — the backend correctly isn't trusting an unverified_
+      _transaction, which is the right half of the B2 concern (see `API_INTEGRATION_STATUS.md`)._
+      _Residual: the populated `Order` response shape is still worth one real end-to-end_
+      _transaction to confirm (services/order.service.ts still carries a TODO)._
 
 - [ ] **NEW 2026-07-21 — the Django pages API serves malformed CSS. Backend fix.**
       Its minifier strips `/* */` delimiters but leaves the comment text behind, and emits
@@ -357,6 +379,23 @@ don't delete completed items until the next full regeneration (so progress is vi
       after the error point**. Worked around here with `postcss-safe-parser`, but this same
       CSS is served to real browsers on the live WordPress site, which are silently losing
       styling nobody has noticed. Fix in the Django CSS pipeline.
+
+- [x] **NEW 2026-07-31 (audit pass) — blog feature gaps fixed.** A three-dimension scan of
+      the headless blog surfaced four in-our-control issues, all fixed in one commit:
+      _(1) **Duplicate `<main>`** — both blog pages nested a `<main>` inside the (market)_
+      _layout's, the same landmark bug the audit had closed for PDP/my-account; now `<div>`._
+      _(2) **Blog absent from `sitemap.ts`** — `/blogs` and all posts were indexable but not_
+      _emitted; added `getAllBlogSlugs()` and wired blog URLs (verified: /blogs + 50 posts)._
+      _(3) **Blog content not script-stripped** — unlike the WP catch-all, the blog rendered_
+      _`content.rendered` raw, so a post embedding a script would reintroduce the reCAPTCHA_
+      _nav-crash class; `processContent()` now strips `<script>`/`<iframe>`._
+      _(4) **Blog in-body images unoptimized** — same helper adds `loading=lazy`/`decoding`._
+      _Verified against the populated solana category, then reverted to onsite-storage._
+- [ ] **NEW 2026-07-31 — verify the home `WebSite` SearchAction target.** The homepage
+      JSON-LD `SearchAction` points at `onsitestorage.com/products?q=`. The JSON-LD describes
+      the production WordPress site (every `@id` uses that domain), so it may be correct
+      there — but this app has no `/products` route. Very low severity; left unchanged pending
+      confirmation of whether production has that search endpoint. Change or remove once known.
 
 - [x] **NEW 2026-07-21 — `middleware.ts` is deprecated in Next 16.** The build warned to use
       `proxy.ts` instead. An earlier same-name rename attempt silently emptied
