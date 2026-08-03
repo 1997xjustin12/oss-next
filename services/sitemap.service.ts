@@ -17,9 +17,19 @@ export interface SitemapProduct {
   lastmod: string | null
 }
 
+/** One content-page row from GET /api/sitemap/?type=page. */
+export interface SitemapPage {
+  path: string
+  lastmod: string | null
+}
+
 interface ProductSitemapResponse {
   products?: SitemapProduct[]
   counts?: { products?: number }
+}
+
+interface PageSitemapResponse {
+  pages?: SitemapPage[]
 }
 
 /**
@@ -48,6 +58,36 @@ export async function fetchProductSitemap(): Promise<SitemapProduct[]> {
     return Array.isArray(data.products) ? data.products : []
   } catch (err) {
     console.error('[sitemap] products fetch failed:', err)
+    return []
+  }
+}
+
+/**
+ * Converted-WordPress content pages (GET /api/sitemap/?type=page). These render
+ * via the app's catch-all and are indexable, but weren't in the sitemap. Each
+ * row carries an absolute-from-root `path` and `lastmod`. Fails soft to [].
+ */
+export async function fetchPageSitemap(): Promise<SitemapPage[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
+
+  try {
+    const res = await fetch(`${BACKEND}/api/sitemap/?type=page`, {
+      headers: {
+        Authorization: `Api-Key ${API_KEY}`,
+        'X-Store-Domain': STORE_DOMAIN ?? '',
+      },
+      signal: AbortSignal.timeout(20_000),
+    })
+    if (!res.ok) {
+      console.error(`[sitemap] pages ${res.status}`)
+      return []
+    }
+    const data = (await res.json()) as PageSitemapResponse
+    return Array.isArray(data.pages) ? data.pages : []
+  } catch (err) {
+    console.error('[sitemap] pages fetch failed:', err)
     return []
   }
 }
