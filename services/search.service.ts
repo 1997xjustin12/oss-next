@@ -3,7 +3,7 @@ import { Client } from '@elastic/elasticsearch'
 import { CACHE_TAGS } from '@/config/cache'
 import { DEFAULT_LOCATION, SHIPPING_CONTAINER_CATEGORIES } from '@/lib/constants'
 import { formatProduct, getCustomFieldValue, isContainerHit } from '@/lib/pricing'
-import type { ProductDetailResponse, ProductHit } from '@/types/product'
+import type { FormattedContainerHit, ProductDetailResponse, ProductHit, ShippingContainerHit } from '@/types/product'
 
 function cleanEnv(val: string | undefined): string {
   return (val ?? '').split('#')[0].trim().replace(/\/$/, '')
@@ -289,6 +289,45 @@ export async function getAllProductHandles(): Promise<ProductHandleEntry[]> {
   }
 
   return entries
+}
+
+/**
+ * Every published product with the fields a product feed needs — same
+ * search_after pagination as getAllProductHandles, but full-enough _source to
+ * build a Google Merchant item, and run through formatProduct so `sale_price`
+ * (rental/RTO monthly rate included) is populated. Heavy (~10k docs); cached.
+ */
+export async function getAllProductsForFeed(): Promise<FormattedContainerHit[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  const PAGE_SIZE = 1000
+  const out: FormattedContainerHit[] = []
+  let searchAfter: (string | number)[] | undefined
+
+  for (;;) {
+    const esResponse = await client.search({
+      index: INDEX,
+      size: PAGE_SIZE,
+      query: { term: { status: 'publish' } },
+      _source: ['objectID', 'title', 'handle', 'variants', 'images', 'product_category', 'custom_fields'],
+      sort: [{ _doc: { order: 'asc' } }],
+      ...(searchAfter ? { search_after: searchAfter } : {}),
+    })
+
+    const hits = esResponse.hits.hits
+    if (hits.length === 0) break
+
+    for (const hit of hits) {
+      if (hit._source) out.push(formatProduct(hit._source as ShippingContainerHit))
+    }
+
+    if (hits.length < PAGE_SIZE) break
+    searchAfter = hits[hits.length - 1].sort as (string | number)[]
+  }
+
+  return out
 }
 
 // Each unique combination of inputs gets its own cache entry.
