@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isMaintenanceMode } from '@/lib/maintenance'
+import { isAdminEnabled, isAdminPath } from '@/lib/admin'
 
 // ── Maintenance wall ────────────────────────────────────────────────────────
 // When the wall is up, every request is served the /maintenance page with a
@@ -26,8 +27,11 @@ const RETRY_AFTER = '3600'
 // canonical + hand-rolled JSON-LD. The proxy assigns a sticky variant per
 // visitor and forwards it as a request header; (home)/page.tsx reads that
 // header to pick which Hero variant to render.
+// The three Hero designs used to be the /version2 and /version3 routes; they
+// now live as branches inside (home)/_components/Hero.tsx.
 const VARIANT_COOKIE = 'ab-home-variant'
 const VARIANT_HEADER = 'x-ab-home-variant'
+const VARIANT_PARAM = 'variant'
 const VARIANTS = ['1', '2', '3']
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
@@ -76,6 +80,22 @@ function handleMaintenance(request: NextRequest): NextResponse | null {
 }
 
 function handleAbTest(request: NextRequest): NextResponse {
+  // Preview escape hatch: /?variant=2 forces that Hero, so all three designs
+  // can be reviewed on demand. Without it there is no way to see the other two
+  // — assignment is random on first visit and then pinned for 30 days.
+  //
+  // Gated to dev/preview by the same check that gates /admin. In production the
+  // param is ignored entirely, so it can neither skew live A/B numbers nor hand
+  // a crawler a second URL for the homepage.
+  const forced = request.nextUrl.searchParams.get(VARIANT_PARAM)
+  if (forced && VARIANTS.includes(forced) && isAdminEnabled()) {
+    const previewHeaders = new Headers(request.headers)
+    previewHeaders.set(VARIANT_HEADER, forced)
+    // Deliberately does not touch the cookie — previewing a variant must not
+    // change which one you're actually enrolled in.
+    return NextResponse.next({ request: { headers: previewHeaders } })
+  }
+
   const existing = request.cookies.get(VARIANT_COOKIE)?.value
   const variant =
     existing && VARIANTS.includes(existing)
@@ -99,6 +119,15 @@ function handleAbTest(request: NextRequest): NextResponse {
 }
 
 export async function proxy(request: NextRequest) {
+  // ── Admin gate ────────────────────────────────────────────────────────────
+  // The (admin) layout 404s on its own, and each Server Action re-checks; this
+  // is the outermost of those three layers, so an admin URL never reaches the
+  // app at all in production. Checked before maintenance so the result is the
+  // same either way — a plain 404, with nothing that hints the route exists.
+  if (isAdminPath(request.nextUrl.pathname) && !isAdminEnabled()) {
+    return new NextResponse(null, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+  }
+
   if (await isMaintenanceMode()) {
     const maintenance = handleMaintenance(request)
     if (maintenance) return maintenance

@@ -2,7 +2,9 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { JsonLd } from '@/components/shared/JsonLd'
+import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ROUTES } from '@/config/routes'
+import { resolvePageMetadata } from '@/lib/seo'
 import { LocationHeader } from './_components/LocationHeader'
 import { InstantSearchSection } from './_components/InstantSearchSection'
 import { PageSkeleton, ResultsSkeleton } from './_components/PageSkeleton'
@@ -15,35 +17,42 @@ type SearchParams = {
 
 type Props = { searchParams: Promise<SearchParams> }
 
+// The title and description vary with the visitor's location, so this page
+// computes its own defaults rather than taking the static ones from
+// config/pageSeoDefaults.ts. An override saved in the admin Page Configurator
+// still wins over whatever is computed here — that's the point of setting one.
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { location = 'Near You', ptype = 'buy' } = await searchParams
 
   if (ptype === 'accessories') {
     const title       = `Shipping Container Accessories ${location}`
     const description = `Shop locks, ramps, vents, shelving kits, and more near ${location}. Fast shipping, low prices.`
-    return {
+    return resolvePageMetadata(ROUTES.PLP, {
       title,
       description,
-      alternates: { canonical: ROUTES.PLP_ACCESSORIES },
-      openGraph:  { title, description, images: ['/images/og-containers.jpg'] },
-    }
+      canonical: ROUTES.PLP_ACCESSORIES,
+      openGraph: { title, description, images: ['/images/og-containers.jpg'] },
+    })
   }
 
   const title       = `Shipping Containers for Sale ${location}`
   const description = `Buy used and new shipping containers near ${location}. 20ft, 40ft, high cube, and more. Best prices guaranteed — no tax, fast delivery.`
-  return {
+  return resolvePageMetadata(ROUTES.PLP, {
     title,
     description,
-    alternates: { canonical: ROUTES.PLP },
-    openGraph:  { title, description, images: ['/images/og-containers.jpg'] },
-  }
+    canonical: ROUTES.PLP,
+    openGraph: { title, description, images: ['/images/og-containers.jpg'] },
+  })
 }
 
 export default function SaleContainersPage({ searchParams }: Props) {
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <SaleContainersContent searchParams={searchParams} />
-    </Suspense>
+    <>
+      <PageHeadScripts path={ROUTES.PLP} />
+      <Suspense fallback={<PageSkeleton />}>
+        <SaleContainersContent searchParams={searchParams} />
+      </Suspense>
+    </>
   )
 }
 

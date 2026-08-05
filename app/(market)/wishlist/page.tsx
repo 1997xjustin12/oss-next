@@ -1,18 +1,17 @@
-import type { Metadata } from 'next'
 import { ROUTES } from '@/config/routes'
+import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
+import { resolvePageMetadata } from '@/lib/seo'
 import { WishlistPageClient } from './_components/WishlistPageClient'
 
-const TITLE = 'My Wishlist'
-const DESCRIPTION = 'Containers and accessories you\'ve saved for later on On-Site Storage Solutions.'
-
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: ROUTES.WISHLIST },
-  robots: { index: false, follow: true },
-  openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
+export function generateMetadata() {
+  return resolvePageMetadata(ROUTES.WISHLIST)
 }
 
 export default function WishlistPage() {
-  return <WishlistPageClient />
+  return (
+    <>
+      <PageHeadScripts path={ROUTES.WISHLIST} />
+      <WishlistPageClient />
+    </>
+  )
 }

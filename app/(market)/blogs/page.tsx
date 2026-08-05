@@ -1,37 +1,42 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { fetchBlogList } from '@/services/blog.service'
+import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ROUTES } from '@/config/routes'
+import { PAGE_SEO_DEFAULTS } from '@/config/pageSeoDefaults'
+import { resolvePageMetadata } from '@/lib/seo'
 import { BlogCard } from './_components/BlogCard'
 import { Pager } from './_components/Pager'
 import { BlogSearch } from './_components/BlogSearch'
 import { BlogListSkeleton } from './_components/BlogListSkeleton'
 
-const TITLE = 'Blog'
-const DESCRIPTION =
-  'Guides, tips, and updates on shipping containers, storage, and delivery from On-Site Storage Solutions.'
+// Also the visible <h1> and intro copy below — one source, so the page heading
+// can't drift from what the configurator shows as the default.
+const { title: TITLE, description: DESCRIPTION } = PAGE_SEO_DEFAULTS[ROUTES.BLOGS]
 
 type Props = {
   searchParams: Promise<{ page?: string; search?: string }>
 }
 
+// The title varies with the search term, so this page computes its own defaults
+// rather than taking the static ones. An admin override still wins.
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { search } = await searchParams
   // A list page should carry its own title, not a post's. We borrow the first
   // post's OG image (via the list fetch) purely so shares have a picture.
   const first = (await fetchBlogList(1, search).catch(() => null))?.posts[0]
   const title = search ? `Search: ${search} — ${TITLE}` : TITLE
-  return {
+  return resolvePageMetadata(ROUTES.BLOGS, {
     title,
     description: DESCRIPTION,
-    alternates: { canonical: ROUTES.BLOGS },
+    canonical: ROUTES.BLOGS,
     openGraph: {
       title,
       description: DESCRIPTION,
       type: 'website',
       images: first?.imageUrl ? [{ url: first.imageUrl }] : undefined,
     },
-  }
+  })
 }
 
 export default function BlogsPage({ searchParams }: Props) {
@@ -39,6 +44,7 @@ export default function BlogsPage({ searchParams }: Props) {
   // this is a <div>, not a nested <main>.
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+      <PageHeadScripts path={ROUTES.BLOGS} />
       <header className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-theme-dark sm:text-4xl dark:text-white">

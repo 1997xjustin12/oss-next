@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { AccentText } from '@/components/shared/AccentText';
+import { HOME_HEADING_DEFAULTS } from '@/config/homeContent';
 import type { Review } from '@/types/review';
 
 // Same carousel mechanics/visual language as ReviewsSection.tsx (its
@@ -96,7 +98,13 @@ function ReviewCard({ review, colorIndex }: { review: Review; colorIndex: number
   );
 }
 
-export function ReviewsSectionLive() {
+// Shares the static section's heading — one edit updates both, since this is a
+// side-by-side comparison of the same section, not a second one.
+export function ReviewsSectionLive({
+  heading = HOME_HEADING_DEFAULTS['reviews.h2'],
+}: {
+  heading?: string;
+}) {
   const [loaded, setLoaded] = useState<Review[] | null>(null);
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -159,7 +167,7 @@ export function ReviewsSectionLive() {
     <section className="py-10 sm:py-16 bg-[#F7F7F7] dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-5 sm:px-10">
         <h2 className="text-[28px] sm:text-[36px] font-bold text-center mb-8 sm:mb-10 dark:text-white">
-          What Our <span className="text-[#C60C29]">Customers</span> Say
+          <AccentText text={heading} accentClassName="text-[#C60C29]" />
           <span className="block text-sm font-normal text-gray-500 dark:text-gray-400 mt-2">
             (live from our backend — for comparison)
           </span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 
 const POINTS = [
   "No obligation — free pricing always",
@@ -15,7 +16,13 @@ const INPUT_CLS =
 const LABEL_CLS =
   "text-[12px] font-bold text-theme-dark-2 dark:text-gray-300 uppercase tracking-[.04em]";
 
-export function QuoteForm() {
+// Client Component, so it can't read the copy itself — (home)/page.tsx resolves
+// it on the server and passes it in.
+export function QuoteForm({
+  heading = HOME_HEADING_DEFAULTS["quoteForm.h2"],
+}: {
+  heading?: string;
+}) {
   const [submitted, setSubmitted] = useState(false);
 
   return (
@@ -132,7 +139,7 @@ export function QuoteForm() {
             id="quote-title"
             className="text-[36px] sm:text-[42px] font-bold text-white leading-[1.05] mb-[14px] tracking-[-0.02em]"
           >
-            Get Your Free Container Quote in Minutes
+            {heading}
           </h2>
           <p className="text-[15px] text-white/[.78] leading-[1.65] mb-[22px] capitalize">
             Tell us your size, location, and needs — we'll respond with an

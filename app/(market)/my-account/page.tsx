@@ -1,22 +1,16 @@
-import type { Metadata } from 'next'
 import { ROUTES } from '@/config/routes'
+import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
+import { resolvePageMetadata } from '@/lib/seo'
 import { AccountView } from './_components/AccountView'
 
-const TITLE = 'My Account'
-const DESCRIPTION =
-  'Log in to your On-Site Storage Solutions account or register for exclusive discounts, live inventory access, and dedicated support.'
-
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: ROUTES.ACCOUNT.ROOT },
-  openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
-  robots: { index: false, follow: true },
+export function generateMetadata() {
+  return resolvePageMetadata(ROUTES.ACCOUNT.ROOT)
 }
 
 export default function MyAccountPage() {
   return (
     <div className="bg-white px-[5%] py-10 sm:py-14 dark:bg-gray-900">
+      <PageHeadScripts path={ROUTES.ACCOUNT.ROOT} />
       <div className="mx-auto max-w-6xl">
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-theme-dark mb-8 sm:mb-12 dark:text-white">
           My Account

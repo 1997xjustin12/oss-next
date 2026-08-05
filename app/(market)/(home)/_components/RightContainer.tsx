@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BASE_URL } from "@/lib/helpers";
+import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 
 type Product = {
   image: string;
@@ -80,12 +81,18 @@ function Card({ item }: { item: Product }) {
   );
 }
 
-export function RightContainer() {
+// Headings default to their shipped copy, so this still renders standalone;
+// (home)/page.tsx passes the admin-authored text in. See config/homeContent.ts.
+export function RightContainer({
+  heading = HOME_HEADING_DEFAULTS['rightContainer.h2'],
+}: {
+  heading?: string;
+}) {
   return (
     <section className="p-5 sm:p-10 dark:bg-gray-950">
       <div className="max-w-[1280px] mx-auto flex flex-col gap-[10px] items-center">
         <h2 className="font-extrabold text-3xl sm:text-[40px] lg:text-[46px] leading-tight text-center dark:text-white">
-          Find The Right Container For Your Needs
+          {heading}
         </h2>
         <p className="font-light text-lg sm:text-[20px] leading-relaxed text-center text-gray-700 dark:text-gray-300">
           From Compact 20ft Units To Oversized High Cubes And

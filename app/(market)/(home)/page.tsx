@@ -1,10 +1,12 @@
 import { Suspense } from "react";
 import { headers } from "next/headers";
-import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache";
 import { ROUTES } from "@/config/routes";
+import { resolvePageMetadata } from "@/lib/seo";
+import { getHomeHeadings } from "@/lib/content";
 import { JsonLd } from "@/components/shared/JsonLd";
+import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
 import { HeroSection } from "./_components/HeroSection";
 import { TrustStrip } from "./_components/TrustStrip";
 import { ContainerTypes } from "./_components/ContainerTypes";
@@ -22,25 +24,11 @@ import { TrustedBySection } from "./_components/TrustedBySection";
 import { ReviewsSection } from "./_components/ReviewsSection";
 import { ReviewsSectionLive } from "./_components/ReviewsSectionLive";
 
-export const metadata: Metadata = {
-  title: "Shipping Containers For Sale | Lowest Price Shipping Containers",
-  description:
-    "Buy or rent new and used shipping containers across the USA & Canada. 20ft, 40ft, high cube, reefer & more. 130+ depots, nationwide delivery, lowest prices guaranteed since 2002.",
-  alternates: {
-    canonical: ROUTES.HOME,
-  },
-  openGraph: {
-    title: "Shipping Containers For Sale | Lowest Price Shipping Containers",
-    description:
-      "We have the biggest range of shipping containers for sale and rent in the USA and Canada. Call us now for the best pricing and fast delivery.",
-    type: "website",
-    url: "https://onsitestorage.com/",
-    images: [{ url: "/images/og-home.jpg", width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: "summary_large_image",
-  },
-};
+// Copy lives in config/pageSeoDefaults.ts so the admin Page Configurator can
+// show it as the placeholder behind each field.
+export function generateMetadata() {
+  return resolvePageMetadata(ROUTES.HOME);
+}
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -86,19 +74,26 @@ async function getHomeData() {
 // even on a visitor's very first request, before the cookie exists yet).
 // Isolated in its own component + Suspense boundary since headers() is a
 // dynamic API — this keeps the rest of the homepage statically cacheable.
-async function VariantHero() {
+async function VariantHero({ h1, h2 }: { h1: string; h2: string }) {
   const h = await headers();
   const raw = h.get("x-ab-home-variant");
   const version = raw === "2" ? 2 : raw === "3" ? 3 : 1;
-  return <Hero version={version} />;
+  return <Hero version={version} h1={h1} h2={h2} />;
 }
 
 export default async function Home() {
   await getHomeData();
 
+  // Every heading on the page, resolved once here and passed down. Doing it in
+  // the shell keeps the fetch to a single cached read and lets the three Client
+  // Components below receive their copy as props — they can't read Redis
+  // themselves. See config/homeContent.ts for the registry.
+  const copy = await getHomeHeadings();
+
   return (
     <>
       <JsonLd data={jsonLd} />
+      <PageHeadScripts path={ROUTES.HOME} />
       {/* <HeroSection /> */}
       {/* <TrustStrip /> */}
       {/* <ContainerTypes /> */}
@@ -106,17 +101,33 @@ export default async function Home() {
       {/* <Reviews /> */}
 
       <Suspense fallback={<HeroSkeleton />}>
-        <VariantHero />
+        <VariantHero h1={copy["hero.h1"]} h2={copy["hero.h2"]} />
       </Suspense>
-      <RightContainer />
-      <HowItWorks />
-      <OnsiteDifference />
-      <TrustedBySection />
-      <QuoteForm />
-      <ReviewsSection />
+      <RightContainer heading={copy["rightContainer.h2"]} />
+      <HowItWorks
+        heading={copy["howItWorks.h2"]}
+        stepTitles={[
+          copy["howItWorks.step1"],
+          copy["howItWorks.step2"],
+          copy["howItWorks.step3"],
+          copy["howItWorks.step4"],
+        ]}
+      />
+      <OnsiteDifference
+        heading={copy["onsiteDifference.h2"]}
+        itemTitles={[
+          copy["onsiteDifference.item1"],
+          copy["onsiteDifference.item2"],
+          copy["onsiteDifference.item3"],
+          copy["onsiteDifference.item4"],
+        ]}
+      />
+      <TrustedBySection heading={copy["trustedBy.h2"]} />
+      <QuoteForm heading={copy["quoteForm.h2"]} />
+      <ReviewsSection heading={copy["reviews.h2"]} />
       {/* Rendered alongside the static one above for comparison, per request — not a final placement decision. */}
-      <ReviewsSectionLive />
-      <StatesSection />
+      <ReviewsSectionLive heading={copy["reviews.h2"]} />
+      <StatesSection heading={copy["states.h2"]} />
     </>
   );
 }

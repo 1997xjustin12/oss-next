@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { AccentText } from "@/components/shared/AccentText";
+import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 
 // Deliberately alt="" on every logo below (not a placeholder) — the CDN
 // filenames carry no real company names to attribute, and the carousel's own
@@ -46,7 +48,11 @@ const LOGOS: Logo[] = [
   },
 ];
 
-export function TrustedBySection() {
+export function TrustedBySection({
+  heading = HOME_HEADING_DEFAULTS['trustedBy.h2'],
+}: {
+  heading?: string;
+}) {
   return (
     <section className="py-8 sm:py-10 overflow-hidden dark:bg-gray-950">
       <style>{`
@@ -64,7 +70,7 @@ export function TrustedBySection() {
 
       <div className="max-w-[1280px] mx-auto px-5 sm:px-10 mb-6 sm:mb-8">
         <h2 className="text-lg sm:text-[20px] font-bold dark:text-white">
-          <span className="text-theme-primary">Trusted By </span>Organizations Like
+          <AccentText text={heading} accentClassName="text-theme-primary" />
         </h2>
       </div>
 

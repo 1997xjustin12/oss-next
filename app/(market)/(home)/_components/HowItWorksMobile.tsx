@@ -1,6 +1,12 @@
 import { HOW_IT_WORKS_STEPS } from "@/app/(market)/(home)/_components/howItWorksSteps";
 
-export function HowItWorksMobile() {
+// Mirrors HowItWorks' desktop grid — both render the same step titles, so both
+// take the same indexed overrides.
+export function HowItWorksMobile({
+  stepTitles,
+}: {
+  stepTitles?: readonly (string | undefined)[];
+}) {
   return (
     <div className="flex flex-col">
       {HOW_IT_WORKS_STEPS.map((step, index) => {
@@ -24,7 +30,7 @@ export function HowItWorksMobile() {
             </div>
             <div className={isLast ? "pt-3" : "pt-3 pb-10"}>
               <h4 className="text-[16.5px] font-bold text-white mb-[7px]">
-                {step.title}
+                {stepTitles?.[index] ?? step.title}
               </h4>
               <p className="text-[13px] text-white/50 leading-[1.55]">
                 {step.desc}

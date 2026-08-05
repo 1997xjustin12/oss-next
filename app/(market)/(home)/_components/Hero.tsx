@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { BASE_URL } from "@/lib/helpers";
+import { AccentText } from "@/components/shared/AccentText";
+import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 import { ZipLookup1 } from "@/app/(market)/(home)/_components/ZipLookup1";
 
 const BANNER_IMAGE = "/images/home-banners/hero-image.webp";
@@ -114,7 +116,17 @@ const STATS: StatData[] = [
   { stats: "85%", Desc: LocationStat },
 ];
 
-export function Hero({ version: version = 1 }: { version?: number }) {
+// All three layout variants render the same two headings — the A/B test is on
+// layout, not wording — so one h1/h2 pair feeds every branch below.
+export function Hero({
+  version = 1,
+  h1 = HOME_HEADING_DEFAULTS["hero.h1"],
+  h2 = HOME_HEADING_DEFAULTS["hero.h2"],
+}: {
+  version?: number;
+  h1?: string;
+  h2?: string;
+}) {
   if (version === 3) {
     return (
       <section className="relative flex flex-col lg:flex-row min-h-120 sm:min-h-150">
@@ -138,16 +150,10 @@ export function Hero({ version: version = 1 }: { version?: number }) {
 
             <div className="flex flex-col gap-4 text-center lg:text-left">
               <h1 className="text-shadow-lg text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white">
-                Local Shipping Containers Delivered Nationwide &amp; Canada
+                {h1}
               </h1>
               <h2 className="text-shadow-lg text-white text-lg sm:text-2xl lg:text-[28px] leading-relaxed font-medium">
-                Whether You Want to{" "}
-                <span className="text-[#F4BF3C] font-extrabold">Buy</span>,{" "}
-                <span className="text-[#F4BF3C] font-extrabold">Rent</span>, Or{" "}
-                <span className="text-[#F4BF3C] font-extrabold">
-                  Rent-To-Own
-                </span>
-                , We Deliver From A Local Hub To Save You Money On Mileage.
+                <AccentText text={h2} accentClassName="text-[#F4BF3C] font-extrabold" />
               </h2>
             </div>
 
@@ -197,16 +203,10 @@ export function Hero({ version: version = 1 }: { version?: number }) {
 
             <div className="flex flex-col gap-4 text-center lg:text-left">
               <h1 className="text-shadow-lg text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white">
-                Local Shipping Containers Delivered Nationwide &amp; Canada
+                {h1}
               </h1>
               <h2 className="text-shadow-lg text-white text-lg sm:text-2xl lg:text-[28px] leading-relaxed font-medium">
-                Whether You Want to{" "}
-                <span className="text-[#F4BF3C] font-extrabold">Buy</span>,{" "}
-                <span className="text-[#F4BF3C] font-extrabold">Rent</span>, Or{" "}
-                <span className="text-[#F4BF3C] font-extrabold">
-                  Rent-To-Own
-                </span>
-                , We Deliver From A Local Hub To Save You Money On Mileage.
+                <AccentText text={h2} accentClassName="text-[#F4BF3C] font-extrabold" />
               </h2>
             </div>
 
@@ -274,16 +274,10 @@ export function Hero({ version: version = 1 }: { version?: number }) {
 
             <div className="flex flex-col gap-4">
               <h1 className="text-shadow-lg text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-center text-white">
-                Local Shipping Containers Delivered Nationwide &amp; Canada
+                {h1}
               </h1>
               <h2 className="text-shadow-lg text-white text-lg sm:text-2xl lg:text-[28px] leading-relaxed font-medium text-center">
-                Whether You Want to{" "}
-                <span className="text-[#F4BF3C] font-extrabold">Buy</span>,{" "}
-                <span className="text-[#F4BF3C] font-extrabold">Rent</span>, Or{" "}
-                <span className="text-[#F4BF3C] font-extrabold">
-                  Rent-To-Own
-                </span>
-                , We Deliver From A Local Hub To Save You Money On Mileage.
+                <AccentText text={h2} accentClassName="text-[#F4BF3C] font-extrabold" />
               </h2>
             </div>
 

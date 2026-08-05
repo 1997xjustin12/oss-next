@@ -6,6 +6,8 @@ export const CACHE_TAGS = {
   CATEGORIES: 'categories',
   HOMEPAGE:   'homepage',
   PAGES:      'pages',    // Converted WordPress pages from the Django pages API
+  SEO:        'seo',      // Per-page SEO overrides from the admin Page Configurator
+  CONTENT:    'content',  // Visible on-page copy from the admin Content Editor
   BLOG:       'blog',     // Headless WordPress blog posts (bbq-blog REST API)
   ORDERS:     'orders',
   USERS:      'users',

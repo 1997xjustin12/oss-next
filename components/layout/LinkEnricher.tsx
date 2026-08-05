@@ -3,8 +3,10 @@
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
+import { ADMIN_PATHS } from '@/lib/admin'
 
-const EXCLUDED_PATHS: string[] = ['/admin']
+// Storefront link rewriting has no business running over the admin UI.
+const EXCLUDED_PATHS: string[] = [...ADMIN_PATHS]
 
 export function LinkEnricher() {
   const pathname = usePathname()

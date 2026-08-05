@@ -1,7 +1,17 @@
 import { HOW_IT_WORKS_STEPS } from "@/app/(market)/(home)/_components/howItWorksSteps";
 import { HowItWorksMobile } from "@/app/(market)/(home)/_components/HowItWorksMobile";
+import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 
-export function HowItWorks() {
+// `stepTitles` is indexed to HOW_IT_WORKS_STEPS. An index with no entry keeps
+// the step's own title, so the component still renders if the admin registry
+// and the step list ever fall out of sync.
+export function HowItWorks({
+  heading = HOME_HEADING_DEFAULTS["howItWorks.h2"],
+  stepTitles,
+}: {
+  heading?: string;
+  stepTitles?: readonly (string | undefined)[];
+}) {
   return (
     <section
       className="bg-theme-dark py-18 px-[5%]"
@@ -16,7 +26,7 @@ export function HowItWorks() {
             id="hiw-title"
             className="text-[32px] sm:text-[38px] font-black text-white leading-[1.05] mb-3 tracking-[-0.02em]"
           >
-            How It Works
+            {heading}
           </h2>
           <p className="text-[15px] text-white/50 leading-[1.65] max-w-145 mx-auto">
             Order a container in four simple steps — we manage every detail from
@@ -25,7 +35,7 @@ export function HowItWorks() {
         </div>
 
         <div className="lg:hidden">
-          <HowItWorksMobile />
+          <HowItWorksMobile stepTitles={stepTitles} />
         </div>
 
         <div className="hidden lg:grid lg:grid-cols-4 gap-0 relative">
@@ -35,7 +45,7 @@ export function HowItWorks() {
             aria-hidden="true"
           />
 
-          {HOW_IT_WORKS_STEPS.map((step) => (
+          {HOW_IT_WORKS_STEPS.map((step, index) => (
             <div key={step.n} className="text-center px-3 relative z-[1]">
               <div
                 className={`w-[54px] h-[54px] rounded-full mx-auto mb-4 text-[21px] font-black flex items-center justify-center border-2 transition-colors ${
@@ -48,7 +58,7 @@ export function HowItWorks() {
                 {step.n}
               </div>
               <h4 className="text-[16.5px] font-bold text-white mb-[7px]">
-                {step.title}
+                {stepTitles?.[index] ?? step.title}
               </h4>
               <p className="text-[13px] text-white/50 leading-[1.55]">
                 {step.desc}

@@ -21,8 +21,9 @@ oss-next/
 │   │   ├── checkout/
 │   │   └── account/
 │   │       └── orders/
-│   ├── (admin)/                  # Admin dashboard route group (auth-gated)
-│   │   ├── layout.tsx
+│   ├── admin/                    # Admin dashboard — dev/preview only, never production
+│   │   ├── layout.tsx            # Sidenav shell + the render-time half of the gate
+│   │   ├── page-configurator/    # Per-page SEO overrides (title, meta, OG, scripts)
 │   │   ├── dashboard/
 │   │   ├── products/
 │   │   ├── orders/
@@ -89,6 +90,7 @@ oss-next/
 - Route-specific components that are **not** reused elsewhere live co-located inside their route folder (e.g. `app/(market)/checkout/_components/`).
 - `components/` is for components shared across two or more routes.
 - Never import from `app/` into `components/`, `lib/`, `hooks/`, etc. — dependency flows inward only.
+- Everything under `app/admin/` is **unreachable in production** and has no authentication. Three layers enforce this: `proxy.ts` 404s the `/admin` prefix, `app/admin/layout.tsx` refuses to render, and each admin Server Action re-checks (a form's POST target is its own endpoint — a layout gate does not cover it). Gate logic lives in `lib/admin.ts`. Add real auth before relaxing any of it.
 
 ---
 
@@ -258,6 +260,7 @@ export async function getProducts() {
 | `CACHE_TAGS.CATEGORIES` | `'categories'` | Category/navigation data |
 | `CACHE_TAGS.HOMEPAGE` | `'homepage'` | Homepage-specific content |
 | `CACHE_TAGS.PAGES` | `'pages'` | Converted WordPress pages (Django pages API) |
+| `CACHE_TAGS.SEO` | `'seo'` | Per-page SEO overrides from the admin Page Configurator |
 | `CACHE_TAGS.ORDERS` | `'orders'` | Order data |
 | `CACHE_TAGS.USERS` | `'users'` | User/session data |
 

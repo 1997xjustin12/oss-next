@@ -1,22 +1,17 @@
-import type { Metadata } from 'next'
 import { FileDown } from 'lucide-react'
 import { ROUTES } from '@/config/routes'
+import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
+import { resolvePageMetadata } from '@/lib/seo'
 import { AccountPageShell } from '../_components/AccountPageShell'
 
-const TITLE = 'Downloads'
-const DESCRIPTION = 'Access your downloadable files from On-Site Storage Solutions.'
-
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: ROUTES.ACCOUNT.DOWNLOADS },
-  openGraph: { title: TITLE, description: DESCRIPTION, images: ['/images/logo/oss-logo.webp'] },
-  robots: { index: false, follow: true },
+export function generateMetadata() {
+  return resolvePageMetadata(ROUTES.ACCOUNT.DOWNLOADS)
 }
 
 export default function DownloadsPage() {
   return (
     <div className="bg-white px-[5%] py-10 sm:py-14 dark:bg-gray-900">
+      <PageHeadScripts path={ROUTES.ACCOUNT.DOWNLOADS} />
       <div className="mx-auto max-w-6xl">
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-theme-dark mb-8 sm:mb-12 dark:text-white">
           My Account

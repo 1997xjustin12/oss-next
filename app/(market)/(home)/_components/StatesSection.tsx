@@ -1,3 +1,5 @@
+import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
+
 const STATES = [
   "California",
   "Texas",
@@ -25,7 +27,11 @@ const STATES = [
   "+ All 50 States",
 ];
 
-export function StatesSection() {
+export function StatesSection({
+  heading = HOME_HEADING_DEFAULTS["states.h2"],
+}: {
+  heading?: string;
+}) {
   return (
     <section
       className="bg-theme-dark py-[52px] px-[5%] text-center"
@@ -39,7 +45,7 @@ export function StatesSection() {
           id="states-title"
           className="text-[32px] sm:text-[38px] font-black text-white leading-[1.05] mb-2 tracking-[-0.02em]"
         >
-          Delivering Across All 50 States
+          {heading}
         </h2>
         <p className="text-[15px] text-white/50 leading-[1.65] max-w-[580px] mx-auto mb-[26px]">
           With 130+ depots nationwide, we deliver to residences, construction

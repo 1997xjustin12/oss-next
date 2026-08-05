@@ -9,6 +9,7 @@ import { LinkEnricher } from "@/components/layout/LinkEnricher";
 import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
 import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
 import { ROUTES } from "@/config/routes";
+import { ADMIN_PATHS } from "@/lib/admin";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,6 +48,7 @@ export default function RootLayout({
             ROUTES.CART,
             ROUTES.ACCOUNT.ROOT,
             ROUTES.WISHLIST,
+            ...ADMIN_PATHS,
           ]} />
         </Suspense>
       </body>

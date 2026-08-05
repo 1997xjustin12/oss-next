@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { AccentText } from '@/components/shared/AccentText';
+import { HOME_HEADING_DEFAULTS } from '@/config/homeContent';
 
 type Review = {
   name: string;
@@ -147,7 +149,12 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
-export function ReviewsSection() {
+// Client Component — (home)/page.tsx resolves the heading and passes it in.
+export function ReviewsSection({
+  heading = HOME_HEADING_DEFAULTS['reviews.h2'],
+}: {
+  heading?: string;
+}) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [visibleCount, setVisibleCount] = useState(3);
@@ -196,7 +203,7 @@ export function ReviewsSection() {
     <section className="py-10 sm:py-16 bg-[#F7F7F7] dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-5 sm:px-10">
         <h2 className="text-[28px] sm:text-[36px] font-bold text-center mb-8 sm:mb-10 dark:text-white">
-          What Our <span className="text-[#C60C29]">Customers</span> Say
+          <AccentText text={heading} accentClassName="text-[#C60C29]" />
         </h2>
 
         <div className="relative">
