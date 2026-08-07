@@ -67,6 +67,12 @@ const POLICY_LINKS = [
 ];
 
 export function Footer() {
+  // Computed per render rather than at module scope: at module scope this would
+  // be evaluated once when the module first loads and then stay frozen for the
+  // life of the server process. The (market) pages carry a 1h revalidate, so
+  // the notice rolls over within an hour of New Year with no redeploy.
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer
       className="bg-theme-footer pt-[54px] px-[5%] pb-[22px]"
@@ -131,7 +137,7 @@ export function Footer() {
               >
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" />
               </svg>
-              Wildomar, California 92595
+              21050 Union Street Suite 4, Wildomar, CA 92595
             </a>
           </div>
         </div>
@@ -208,7 +214,7 @@ export function Footer() {
 
       <div className="border-t border-[#1f1f1f] pt-5 flex justify-between items-center flex-wrap gap-3">
         <p className="text-xs text-[#444]">
-          © 2025 On-Site Storage Solutions · All Rights Reserved ·{" "}
+          © {currentYear} On-Site Storage Solutions, Inc. | All Rights Reserved ·{" "}
           <Link
             href="/privacy"
             className="text-[#555] transition-colors hover:text-[#888]"
