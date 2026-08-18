@@ -9,6 +9,7 @@ import { LinkEnricher } from "@/components/layout/LinkEnricher";
 import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
 import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
 import { ROUTES } from "@/config/routes";
+import { SITE_URL } from "@/config/site";
 import { ADMIN_PATHS } from "@/lib/admin";
 
 const inter = Inter({
@@ -18,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://onsitestorage.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Shipping Containers For Sale | Lowest Price | On-Site Storage Solutions",
     template: "%s | On-Site Storage Solutions",
@@ -33,6 +34,20 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body suppressHydrationWarning>
+        {/* Machine-readable representations of the site, advertised so an agent
+            that doesn't guess the well-known paths can still find them. React
+            hoists these into <head>. Declared here rather than via the
+            metadata object's `alternates.types` because a page that sets its
+            own `alternates.canonical` replaces the whole alternates object,
+            which would drop these links from nearly every page. */}
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="Site index for language models" />
+        <link rel="alternate" type="text/plain" href="/llms-full.txt" title="Site index with full page text" />
+        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+        {/* `service-desc` is the registered IANA relation for an API
+            description document — how a tool is meant to discover an OpenAPI
+            spec without being handed the URL. */}
+        <link rel="service-desc" type="application/json" href="/openapi.json" title="Agent API description" />
+
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>

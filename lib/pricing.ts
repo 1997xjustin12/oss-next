@@ -59,6 +59,44 @@ export function calculateProductPrice(input: ProductPriceInput): number {
   return round2(basePrice)
 }
 
+/**
+ * What a product's `sale_price` actually means.
+ *
+ * This is the single most dangerous ambiguity in the catalog for a machine
+ * consumer. Roughly 8,000 of the ~10,000 products are rental or rent-to-own,
+ * and their `sale_price` is a **monthly** figure — so a 40ft container reads as
+ * "$232.14" where the buy-outright equivalent is several thousand. A human sees
+ * the surrounding "per month" in the page design; a feed, a JSON-LD `offers`
+ * block or a Markdown table has no design to lean on, and an assistant will
+ * quote the number as the price of the container.
+ *
+ * Every machine-facing surface (Merchant feed, JSON-LD, agent API, Markdown)
+ * must describe price through this, never by printing `sale_price` bare.
+ */
+export type PriceBasis = {
+  /** 'one-time' for purchase, 'monthly' for rental and rent-to-own. */
+  period: 'one-time' | 'monthly'
+  /** Human label, e.g. "Monthly rent-to-own payment". */
+  label: string
+  /** Suffix for a rendered amount, e.g. "/month". Empty for one-time. */
+  suffix: string
+  /** Contract length in months, when the product carries one. */
+  termMonths?: number
+}
+
+export function getPriceBasis(hit: ShippingContainerHit): PriceBasis {
+  const paymentType = getCustomFieldValue(hit, 'payment_type')
+  const termMonths = Number(getCustomFieldValue(hit, 'payment_term').match(/\d+/)?.[0] ?? '') || undefined
+
+  if (paymentType === 'rental') {
+    return { period: 'monthly', label: 'Monthly rental', suffix: '/month', termMonths }
+  }
+  if (paymentType === 'rto') {
+    return { period: 'monthly', label: 'Monthly rent-to-own payment', suffix: '/month', termMonths }
+  }
+  return { period: 'one-time', label: 'Price', suffix: '' }
+}
+
 export function getCustomFieldValue(hit: ShippingContainerHit, name: string): string {
   const fields = hit.custom_fields as CustomField[] | undefined
   return fields?.find((f) => f.name === name)?.value ?? ''

@@ -2,20 +2,14 @@ import type { MetadataRoute } from 'next'
 import { BASE_URL } from '@/lib/helpers'
 import { fetchProductSitemap, fetchPageSitemap } from '@/services/sitemap.service'
 import { getAllBlogSlugs } from '@/services/blog.service'
-import { ROUTES } from '@/config/routes'
+import { ROUTES, isNativePath } from '@/config/routes'
 
 const origin = BASE_URL.replace(/\/$/, '')
 
 // Content-page paths whose first segment belongs to a native route are dropped:
-// the catch-all notFound()s them, so they'd 404. Mirrors NATIVE_ROUTE_PREFIXES
-// in app/(market)/[...slug]/page.tsx, plus the already-listed static routes.
-const NATIVE_FIRST_SEGMENTS = new Set([
-  '', 'product', 'blogs', 'cart', 'checkout', 'wishlist', 'my-account', 'sale-shipping-containers',
-])
-
-function isNativePath(path: string): boolean {
-  return NATIVE_FIRST_SEGMENTS.has(path.replace(/^\/+/, '').split('/')[0])
-}
+// the catch-all notFound()s them, so they'd 404. `isNativePath` is shared with
+// that catch-all (config/routes.ts) so the two can no longer disagree — this
+// file previously kept its own copy of the list, and it had already drifted.
 
 // Static in-scope routes + every real product's PDP, per docs/audits/AUDIT_REQUIREMENTS.md.
 // Everything else (my-account, cart, checkout, and all WordPress-proxied

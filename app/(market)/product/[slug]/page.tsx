@@ -2,14 +2,15 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getProductByHandle } from '@/services/search.service'
-import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
+import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
-import { normaliseRating } from '@/lib/ratings'
-import { BASE_URL } from '@/lib/helpers'
-import { getQuickSpecs } from '@/lib/data/pdpShippingContainers'
+import { resolveContainerVariant } from '@/lib/containerVariant'
+import { PDP_SHIPPING_CONTAINERS } from '@/lib/data/pdpShippingContainers'
+import { breadcrumbNode, faqNode, graph, productNode, siteNodes } from '@/lib/schema'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { ProductDetail } from './_components/ProductDetail'
+import { NoScriptDetails } from './_components/NoScriptDetails'
 import { PdpSkeleton } from './_components/PdpSkeleton'
 import type { ProductHit } from '@/types/product'
 
@@ -19,9 +20,20 @@ type Props = { params: Promise<{ slug: string }> }
 // below, so the two can never drift apart and describe the same product
 // two different ways.
 function buildProductDescription(product: ProductHit, location: string): string {
+  // "$232.14" on a rental product is a MONTHLY figure. Left unqualified here it
+  // reaches the meta description and the JSON-LD description as the apparent
+  // price of a 40ft container. getPriceBasis() is the single place that knows
+  // which it is — see lib/pricing.ts.
+  const basis = getPriceBasis(product)
+  const price = `$${product.sale_price}${basis.suffix}`
+  const qualified =
+    basis.period === 'monthly'
+      ? `${price} (${basis.label.toLowerCase()}${basis.termMonths ? `, ${basis.termMonths}-month term` : ''})`
+      : `${price}`
+
   return isContainerHit(product)
-    ? `Buy or rent a ${product.title}${location ? ` in ${location}` : ''}. Starting at $${product.sale_price}. Nationwide delivery in 1-5 days from 130+ depot locations.`
-    : `${product.title} — starting at $${product.sale_price}. Fast nationwide shipping.`
+    ? `Buy or rent a ${product.title}${location ? ` in ${location}` : ''}. From ${qualified}. Nationwide delivery in 1-5 days from 130+ depot locations.`
+    : `${product.title} — from ${qualified}. Fast nationwide shipping.`
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -50,108 +62,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// schema.org's condition enum — only emitted when our own `condition`
-// custom_fields value actually maps to one of these three real states.
-const CONDITION_SCHEMA: Record<string, string> = {
-  New: 'https://schema.org/NewCondition',
-  Used: 'https://schema.org/UsedCondition',
-  Refurbished: 'https://schema.org/RefurbishedCondition',
-}
-
-const PAYMENT_TYPE_LABEL: Record<string, string> = {
-  buy: 'Buy',
-  rental: 'Rental',
-  rto: 'Rent-to-Own',
-}
-
-// lib/data/pdpShippingContainers.ts's lbsTare is a reference figure, either a
-// single value ("4,914") or a manufacturer-variance range ("8,000–8,400") —
-// schema.org's weight.value wants one number, so a range is averaged rather
-// than guessed at or dropped.
-function parseTareWeight(lbsTare: string): number | undefined {
-  const nums = lbsTare.replace(/,/g, '').match(/\d+(\.\d+)?/g)
-  if (!nums || nums.length === 0) return undefined
-  const values = nums.map(Number)
-  return Math.round(values.reduce((a, b) => a + b, 0) / values.length)
-}
-
+/**
+ * The page's whole graph: the shared site entities, the product itself, the
+ * breadcrumb trail, and — for containers — the FAQ.
+ *
+ * The FAQ array is the very same one FaqAccordion renders from, keyed off the
+ * same resolveContainerVariant() call, so the structured data can never claim a
+ * question the page doesn't show. Google treats FAQ markup with no visible
+ * counterpart as a policy violation, so that isn't just tidiness.
+ */
 function buildJsonLd(product: ProductHit, slug: string) {
-  const sku = product.variants?.[0]?.sku
-  const isContainer = isContainerHit(product)
   const location = getCustomFieldValue(product, 'location')
   const realLocation = location && location !== DEFAULT_LOCATION ? location : undefined
-  const condition = getCustomFieldValue(product, 'condition')
-  const conditionSchema = CONDITION_SCHEMA[condition]
-  const paymentType = getCustomFieldValue(product, 'payment_type')
-  const rating = normaliseRating(product.ratings)
+  const description = buildProductDescription(product, realLocation ?? '')
+  const isContainer = isContainerHit(product)
 
-  const additionalProperty = isContainer
-    ? [
-        { '@type': 'PropertyValue', name: 'Container Size', value: getCustomFieldValue(product, 'length_width') },
-        { '@type': 'PropertyValue', name: 'Grade', value: getCustomFieldValue(product, 'grade') },
-        { '@type': 'PropertyValue', name: 'Height Type', value: getCustomFieldValue(product, 'height') },
-        { '@type': 'PropertyValue', name: 'Material', value: 'Corten Steel' },
-        ...(PAYMENT_TYPE_LABEL[paymentType]
-          ? [{ '@type': 'PropertyValue', name: 'Payment Type', value: PAYMENT_TYPE_LABEL[paymentType] }]
-          : []),
-        ...(realLocation ? [{ '@type': 'PropertyValue', name: 'Delivery Location', value: realLocation }] : []),
-      ].filter((p) => p.value)
-    : undefined
+  const faqs = isContainer ? PDP_SHIPPING_CONTAINERS[resolveContainerVariant(product)].faq : []
 
-  const tareWeight = isContainer ? parseTareWeight(getQuickSpecs(product).lbsTare) : undefined
-
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.title,
-    ...(sku && { sku, mpn: sku, gtin: sku }), // no real GTIN data exists — reusing the SKU, same as mpn
-    description: buildProductDescription(product, realLocation ?? ''),
-    image: product.images?.map((img) => img.src).filter(Boolean),
-    ...(conditionSchema && { itemCondition: conditionSchema }),
-    brand: { '@type': 'Brand', name: 'On-Site Storage Solutions' },
-    ...(additionalProperty && additionalProperty.length > 0 && { additionalProperty }),
-    ...(tareWeight && { weight: { '@type': 'QuantitativeValue', value: tareWeight, unitCode: 'LBR' } }),
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'USD',
-      price: product.sale_price,
-      availability: 'https://schema.org/InStock',
-      ...(conditionSchema && { itemCondition: conditionSchema }),
-      // A rolling window rather than a fixed date so this never goes stale —
-      // container pricing is reviewed well within a year.
-      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-      url: `${BASE_URL.replace(/\/$/, '')}/product/${slug}`,
-      seller: { '@type': 'Organization', name: 'On-Site Storage Solutions' },
-      ...(isContainer && {
-        shippingDetails: {
-          '@type': 'OfferShippingDetails',
-          shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'US' },
-          deliveryTime: {
-            '@type': 'ShippingDeliveryTime',
-            handlingTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 2, unitCode: 'DAY' },
-            transitTime: { '@type': 'QuantitativeValue', minValue: 3, maxValue: 5, unitCode: 'DAY' },
-          },
-        },
-      }),
-      // No hasMerchantReturnPolicy — the real return policy (a money-back
-      // guarantee minus shipping, per the PDP Warranty tab) hasn't been
-      // finalized into concrete terms (return window, conditions) yet.
-      // Add this once that's settled; don't guess at it in the meantime.
-    },
-    // The index now carries { rating, review_count }, so the reviewCount that
-    // AggregateRating requires finally exists. Emitted only when there is at
-    // least one real review — a 0-count aggregate is invalid structured data
-    // and Google treats inflated/empty ratings as a manual-action risk.
-    ...(rating.count > 0 && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: rating.value,
-        reviewCount: rating.count,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    }),
-  }
+  return graph([
+    ...siteNodes(),
+    productNode(product, slug, description),
+    breadcrumbNode([
+      { name: 'Home', path: ROUTES.HOME },
+      { name: 'Shipping Containers', path: ROUTES.PLP },
+      { name: product.title },
+    ]),
+    faqNode(faqs),
+  ])
 }
 
 async function ProductContent({ params }: Props) {
@@ -164,6 +101,11 @@ async function ProductContent({ params }: Props) {
     <>
       <JsonLd data={buildJsonLd(product, slug)} />
       <ProductDetail product={product} relatedProducts={related_products} />
+      {/* Specs and FAQ for consumers that don't run JS — the tabbed UI renders
+          neither until hydration. See NoScriptDetails for why. */}
+      {isContainerHit(product) && (
+        <NoScriptDetails variant={resolveContainerVariant(product)} />
+      )}
     </>
   )
 }

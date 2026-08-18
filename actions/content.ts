@@ -5,20 +5,20 @@ import { notFound, redirect } from 'next/navigation';
 import { ADMIN_ROUTES } from '@/config/admin';
 import { CACHE_TAGS } from '@/config/cache';
 import { findContentPageById } from '@/config/homeContent';
-import { isAdminEnabled } from '@/lib/admin';
+import { hasAdminAccess } from '@/lib/adminGuard';
 import { deletePageContent, savePageContent } from '@/services/content.service';
 import type { PageContent } from '@/types/content';
 
 // Mutations behind the admin Content Editor. Mirrors actions/seo.ts.
 
-function assertAdmin(): void {
+async function assertAdmin(): Promise<void> {
   // The layout already refuses to render in production, but a Server Action is
   // its own endpoint — it has to check for itself.
-  if (!isAdminEnabled()) notFound();
+  if (!(await hasAdminAccess())) notFound();
 }
 
 export async function savePageContentAction(formData: FormData): Promise<void> {
-  assertAdmin();
+  await assertAdmin();
 
   const page = findContentPageById(String(formData.get('pageId') ?? ''));
   if (!page) notFound();
@@ -47,7 +47,7 @@ export async function savePageContentAction(formData: FormData): Promise<void> {
 }
 
 export async function resetPageContentAction(formData: FormData): Promise<void> {
-  assertAdmin();
+  await assertAdmin();
 
   const page = findContentPageById(String(formData.get('pageId') ?? ''));
   if (!page) notFound();

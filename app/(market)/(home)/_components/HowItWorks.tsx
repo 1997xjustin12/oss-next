@@ -57,9 +57,9 @@ export function HowItWorks({
               >
                 {step.n}
               </div>
-              <h4 className="text-[16.5px] font-bold text-white mb-[7px]">
+              <h3 className="text-[16.5px] font-bold text-white mb-[7px]">
                 {stepTitles?.[index] ?? step.title}
-              </h4>
+              </h3>
               <p className="text-[13px] text-white/50 leading-[1.55]">
                 {step.desc}
               </p>

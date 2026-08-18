@@ -1,5 +1,20 @@
-import { getCustomFieldValue, isContainerHit, isGenericDisplayHit, isInStockHit } from '@/lib/pricing'
+import { getCustomFieldValue, getPriceBasis, isContainerHit, isGenericDisplayHit, isInStockHit } from '@/lib/pricing'
 import type { FormattedContainerHit, ProductHit } from '@/types/product'
+
+/**
+ * Include rental and rent-to-own listings in the Merchant feed.
+ *
+ * ~8,000 of the ~10,000 products are priced PER MONTH, and Google Shopping's
+ * `g:price` means a one-time price. Everything below makes that unmistakable in
+ * the title, the description and a custom label — but the number in `g:price`
+ * is still monthly, which Merchant may disapprove.
+ *
+ * Flip this to `false` and the feed becomes purchase-only: fewer listings, no
+ * ambiguity, no disapprovals. That is a commercial call (it removes ~8,000
+ * products from Shopping), so it is left ON and surfaced here rather than
+ * decided in code. See T6.1 in docs/audits/AGENTIC_READINESS.md.
+ */
+const INCLUDE_MONTHLY_LISTINGS = true
 
 // Builds a Google Merchant Center product feed (RSS 2.0 + g: namespace) from
 // formatted ES product hits. Pure string building — no I/O — so it's easy to
@@ -55,7 +70,14 @@ function itemXml(hit: FormattedContainerHit, origin: string): string | null {
 
   const container = isContainerHit(hit)
   const paymentType = getCustomFieldValue(hit, 'payment_type')
-  const monthly = paymentType === 'rental' || paymentType === 'rto'
+
+  // Single source of truth for "is this number monthly?" — the same helper the
+  // agent API, the JSON-LD and the Markdown views use, so the feed can't drift
+  // from them.
+  const basis = getPriceBasis(hit)
+  const monthly = basis.period === 'monthly'
+  if (monthly && !INCLUDE_MONTHLY_LISTINGS) return null
+
   const cadence = paymentType === 'rto' ? 'Rent-to-Own' : 'Rental'
   const condition = mapCondition(getCustomFieldValue(hit, 'condition'), container)
   const grade = getCustomFieldValue(hit, 'grade')
@@ -65,13 +87,24 @@ function itemXml(hit: FormattedContainerHit, origin: string): string | null {
 
   const displayTitle = truncate(monthly ? `${title} — ${cadence} (monthly)` : title, TITLE_MAX)
 
+  // For a monthly listing the description states the monthly figure AND the
+  // full-term total. A shopper (or an assistant reading the feed) seeing only
+  // "$232.14" on a 40ft container would otherwise take it for the purchase
+  // price — the single most damaging misreading this catalog allows.
+  const termTotal =
+    monthly && basis.termMonths ? `${(price * basis.termMonths).toFixed(2)} ${CURRENCY}` : ''
+
   const description = truncate(
     [
       title + '.',
       `${condition === 'new' ? 'New' : 'Used'}${grade ? ` (${grade})` : ''}${
         location ? `, available in ${location}` : ''
       }.`,
-      monthly ? `Priced per month (${cadence}).` : '',
+      monthly
+        ? `PRICE SHOWN IS PER MONTH (${cadence}), not the purchase price.${
+            basis.termMonths ? ` ${basis.termMonths}-month term; ${termTotal} over the full term.` : ''
+          }`
+        : '',
     ]
       .filter(Boolean)
       .join(' '),
@@ -91,6 +124,15 @@ function itemXml(hit: FormattedContainerHit, origin: string): string | null {
     // Shipping containers have no GTIN/MPN — tell Google so it doesn't require one.
     ['g:identifier_exists', 'no'],
     ...(category ? [['g:product_type', category] as [string, string]] : []),
+    // Machine-readable price basis. `custom_label_0` is the one field Merchant
+    // lets you filter and exclude on inside a campaign, so this is what makes
+    // "run Shopping ads on purchase listings only" a setting rather than a
+    // feed rebuild — and it is a flat, unambiguous signal for anything else
+    // consuming the feed.
+    ['g:custom_label_0', monthly ? (paymentType === 'rto' ? 'rent_to_own' : 'rental') : 'purchase'],
+    ...(monthly && basis.termMonths
+      ? ([['g:custom_label_1', `${basis.termMonths}_month_term`]] as [string, string][])
+      : []),
   ] as [string, string][]
 
   const body = rows.map(([tag, val]) => `    <${tag}>${esc(String(val))}</${tag}>`).join('\n')

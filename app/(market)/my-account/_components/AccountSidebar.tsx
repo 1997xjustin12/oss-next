@@ -2,7 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ShieldCheck } from 'lucide-react'
+import { ADMIN_ROUTES } from '@/config/admin'
 import { ROUTES } from '@/config/routes'
+import { isAdminIdentity } from '@/lib/admin'
+import { useAuth } from '@/hooks/useAuth'
 
 // Downloads and Payment methods are intentionally not linked here — neither
 // has a real backend behind it (no digital products, no stored payment
@@ -18,6 +22,13 @@ const NAV_ITEMS = [
 
 export function AccountSidebar() {
   const pathname = usePathname()
+  const { user } = useAuth()
+
+  // Presentation only. Hiding this link protects nothing — /admin is gated in
+  // the proxy, the layout and every admin action — it just spares the other
+  // ~everyone a link that would 404 for them. The same allowlist is used so the
+  // link and the gate cannot disagree about who should see it.
+  const showAdmin = isAdminIdentity(user?.username, user?.email)
 
   return (
     <nav
@@ -44,6 +55,18 @@ export function AccountSidebar() {
             </li>
           )
         })}
+        {showAdmin && (
+          <li>
+            <Link
+              href={ADMIN_ROUTES.ROOT}
+              className="flex items-center gap-2 px-5 py-3 text-sm font-semibold text-theme-dark-2 transition-colors
+                         hover:bg-white/70 hover:text-theme-primary dark:text-gray-300 dark:hover:bg-gray-900/60 dark:hover:text-red-400"
+            >
+              <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+              Store Admin
+            </Link>
+          </li>
+        )}
         <li>
           <Link
             href={ROUTES.ACCOUNT.LOGOUT}

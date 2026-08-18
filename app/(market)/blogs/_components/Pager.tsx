@@ -7,8 +7,9 @@ type Props = {
   search?: string
 }
 
-/** Server-rendered pager built from X-WP-TotalPages. Hidden below 2 pages.
- *  Preserves the active search across page links. */
+/** Server-rendered pager built from the list response's resolved totalPages.
+ *  Hidden below 2 pages, so an empty category can't render bare disabled
+ *  arrows. Preserves the active search across page links. */
 export function Pager({ page, totalPages, search }: Props) {
   if (totalPages < 2) return null
 

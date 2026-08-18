@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "audit:agentic": "node scripts/audit-agentic.mjs"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^8.19.1",

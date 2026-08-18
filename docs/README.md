@@ -33,6 +33,7 @@ API shapes, but **always verify live against the real backend before shipping.**
 | File | Tracks |
 |---|---|
 | `AUDIT_REQUIREMENTS.md` | **Start here.** Audit method + the live task list. Read before any gap-analysis work. |
+| `AGENTIC_READINESS.md` | Making the app legible to AI agents (LLM crawlers, shopping agents, MCP). Phased task tracker. |
 | `API_INTEGRATION_STATUS.md` | Per-endpoint status: wired, verified live, or blocked |
 | `API_TRIGGER_CHECKLIST.md` | Per-user-action status: does the page/component exist and is it wired? |
 

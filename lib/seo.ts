@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PAGE_SEO_DEFAULTS } from '@/config/pageSeoDefaults';
+import { isDisallowedPath } from '@/config/crawlers';
 import { getPageSeo } from '@/services/seo.service';
 import type { PageSeoDefaults } from '@/types/seo';
 
@@ -14,6 +15,20 @@ import type { PageSeoDefaults } from '@/types/seo';
 const FALLBACK_OG_IMAGE = '/images/logo/oss-logo.webp';
 
 export type { PageSeoDefaults };
+
+/**
+ * The agent-facing summary for a native page: admin override, then the built-in
+ * default, then the meta description as a last resort.
+ *
+ * Separate from resolvePageMetadata() because the consumers are different —
+ * /llms.txt and the JSON-LD WebPage node want this one string, not a whole
+ * Metadata object, and they read it for many pages at once.
+ */
+export async function resolveAgentSummary(path: string): Promise<string | undefined> {
+  const defaults = PAGE_SEO_DEFAULTS[path];
+  const override = await getPageSeo(path);
+  return override?.agentSummary || defaults?.agentSummary || defaults?.description;
+}
 
 /**
  * Builds the final Metadata for a native page.
@@ -44,7 +59,14 @@ export async function resolvePageMetadata(
   const description = override?.description || defaults.description;
   const canonical = override?.canonical || defaults.canonical;
   const keywords = override?.keywords?.length ? override.keywords : defaults.keywords;
-  const robots = override?.robots ?? defaults.robots;
+
+  // Paths disallowed in robots.txt are non-negotiably noindex, whatever the
+  // defaults or the admin override say. Without this, ticking "index" in the
+  // Page Configurator would publish the cart or checkout page — and the two
+  // signals (robots.txt, meta robots) would contradict each other.
+  const robots = isDisallowedPath(path)
+    ? { index: false, follow: true }
+    : (override?.robots ?? defaults.robots);
 
   const ogImage = override?.openGraph?.image;
   const images = ogImage ? [ogImage] : (defaults.openGraph?.images ?? [FALLBACK_OG_IMAGE]);

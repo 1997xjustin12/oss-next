@@ -29,9 +29,9 @@ export function HowItWorksMobile({
               )}
             </div>
             <div className={isLast ? "pt-3" : "pt-3 pb-10"}>
-              <h4 className="text-[16.5px] font-bold text-white mb-[7px]">
+              <h3 className="text-[16.5px] font-bold text-white mb-[7px]">
                 {stepTitles?.[index] ?? step.title}
-              </h4>
+              </h3>
               <p className="text-[13px] text-white/50 leading-[1.55]">
                 {step.desc}
               </p>

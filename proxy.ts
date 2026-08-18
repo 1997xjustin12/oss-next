@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isMaintenanceMode } from '@/lib/maintenance'
-import { isAdminEnabled, isAdminPath } from '@/lib/admin'
+import { isAdminOpenEnv, isAdminPath, isPreviewOrDev } from '@/lib/admin'
+import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/adminSession'
+import { wpPathMayExist } from '@/lib/wpPaths'
+import { blogSlugMayExist } from '@/lib/blogSlugs'
+import { ROUTES } from '@/config/routes'
+import { recordAgentHit } from '@/lib/agentLog'
+import { isNativePath } from '@/config/routes'
 
 // ── Maintenance wall ────────────────────────────────────────────────────────
 // When the wall is up, every request is served the /maintenance page with a
@@ -34,6 +40,126 @@ const VARIANT_HEADER = 'x-ab-home-variant'
 const VARIANT_PARAM = 'variant'
 const VARIANTS = ['1', '2', '3']
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
+
+// ── Markdown representation ─────────────────────────────────────────────────
+// Every page is also available as Markdown, two ways:
+//
+//   GET /privacy-policy.md
+//   GET /privacy-policy      Accept: text/markdown
+//
+// Both rewrite to /api/md/<path>, so the Markdown view is an implementation
+// detail rather than a second set of public URLs competing for canonicalisation.
+// A rewrite, not a redirect: the URL the consumer asked for is the URL it keeps.
+const MD_SUFFIX = '.md'
+const MD_HANDLER = '/api/md'
+
+/** Does this client explicitly prefer Markdown over HTML? */
+function wantsMarkdown(request: NextRequest): boolean {
+  const accept = request.headers.get('accept') ?? ''
+  if (!/text\/markdown/i.test(accept)) return false
+  // A browser sends `text/html,...,*/*` — the wildcard must not count as a
+  // request for Markdown, so HTML winning anywhere in the header disqualifies.
+  return !/text\/html/i.test(accept)
+}
+
+function handleMarkdown(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl
+
+  // Never negotiate away from the API or Next internals — those already speak
+  // their own content types, and /api/md would rewrite onto itself.
+  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) return null
+
+  // `/` becomes `/api/md` with no trailing segment, which is why the handler is
+  // an optional catch-all — the homepage has a Markdown view too.
+  const toHandler = (path: string) => `${MD_HANDLER}${path.replace(/\/+$/, '')}`
+
+  if (pathname.endsWith(MD_SUFFIX)) {
+    return NextResponse.rewrite(
+      new URL(toHandler(pathname.slice(0, -MD_SUFFIX.length)), request.url),
+    )
+  }
+
+  if (wantsMarkdown(request)) {
+    return NextResponse.rewrite(new URL(toHandler(pathname), request.url))
+  }
+
+  return null
+}
+
+/**
+ * Turn a missing WordPress path into a real 404 before anything streams.
+ *
+ * Scope is deliberately narrow — only paths that would fall through to the
+ * catch-all. Native routes, the API, Next internals and the Markdown handler
+ * all own their own responses and must not be second-guessed here.
+ *
+ * `wpPathMayExist` fails open, so a backend blip degrades this to the previous
+ * behaviour (a noindex'd Not Found page with a 200) rather than to a site that
+ * 404s everything.
+ */
+async function handleMissingWpPath(request: NextRequest): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl
+
+  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) return null
+
+  // Strip the Markdown suffix first: /foo.md exists exactly when /foo does.
+  const target = pathname.endsWith(MD_SUFFIX)
+    ? pathname.slice(0, -MD_SUFFIX.length) || '/'
+    : pathname
+
+  // /blogs/{slug} is a native route, so the WordPress list can't answer for it
+  // — it has its own list and its own check.
+  const blogPath = await handleBlogPath(request, target)
+  if (blogPath !== undefined) return blogPath
+
+  if (isNativePath(target)) return null
+  if (await wpPathMayExist(target)) return null
+
+  return notFoundRewrite(request)
+}
+
+/**
+ * Verdict for a path under `/blogs/`.
+ *
+ * `undefined` means "not mine, keep checking"; `null` means "let it through";
+ * a response means 404. Three states rather than two because this handler sits
+ * in the middle of a chain and "no opinion" is different from "allow".
+ */
+async function handleBlogPath(
+  request: NextRequest,
+  pathname: string,
+): Promise<NextResponse | null | undefined> {
+  const prefix = `${ROUTES.BLOGS}/`
+  if (!pathname.startsWith(prefix)) return undefined
+
+  const rest = pathname.slice(prefix.length).replace(/\/+$/, '')
+
+  // `/blogs/` — a trailing slash on the index. Next normalises it; not ours.
+  if (!rest) return null
+
+  // Deeper than one segment: no route file matches, so this is a certain 404
+  // and needs no list to decide.
+  if (rest.includes('/')) return notFoundRewrite(request)
+
+  let slug: string
+  try {
+    slug = decodeURIComponent(rest)
+  } catch {
+    // Malformed percent-encoding can't name a real post, but let the route
+    // answer for it rather than guessing here.
+    return null
+  }
+
+  return (await blogSlugMayExist(slug)) ? null : notFoundRewrite(request)
+}
+
+/**
+ * Rewrite rather than a bare body, so the visitor gets the app's real not-found
+ * page (chrome, styling, navigation) with an honest status.
+ */
+function notFoundRewrite(request: NextRequest): NextResponse {
+  return NextResponse.rewrite(new URL('/_not-found', request.url), { status: 404 })
+}
 
 function handleMaintenance(request: NextRequest): NextResponse | null {
   const { pathname, searchParams } = request.nextUrl
@@ -88,7 +214,7 @@ function handleAbTest(request: NextRequest): NextResponse {
   // param is ignored entirely, so it can neither skew live A/B numbers nor hand
   // a crawler a second URL for the homepage.
   const forced = request.nextUrl.searchParams.get(VARIANT_PARAM)
-  if (forced && VARIANTS.includes(forced) && isAdminEnabled()) {
+  if (forced && VARIANTS.includes(forced) && isPreviewOrDev()) {
     const previewHeaders = new Headers(request.headers)
     previewHeaders.set(VARIANT_HEADER, forced)
     // Deliberately does not touch the cookie — previewing a variant must not
@@ -120,11 +246,13 @@ function handleAbTest(request: NextRequest): NextResponse {
 
 export async function proxy(request: NextRequest) {
   // ── Admin gate ────────────────────────────────────────────────────────────
-  // The (admin) layout 404s on its own, and each Server Action re-checks; this
-  // is the outermost of those three layers, so an admin URL never reaches the
-  // app at all in production. Checked before maintenance so the result is the
-  // same either way — a plain 404, with nothing that hints the route exists.
-  if (isAdminPath(request.nextUrl.pathname) && !isAdminEnabled()) {
+  // The admin layout refuses to render on its own, and each Server Action
+  // re-checks; this is the outermost of those three layers, so an admin URL
+  // never reaches the app at all without a session. Checked before maintenance
+  // so the result is the same either way — a plain 404, with nothing that hints
+  // the route exists, whether the visitor is a stranger or a signed-in customer
+  // who simply isn't on the allowlist.
+  if (isAdminPath(request.nextUrl.pathname) && !(await hasAdminSession(request))) {
     return new NextResponse(null, { status: 404, headers: { 'Cache-Control': 'no-store' } })
   }
 
@@ -134,10 +262,58 @@ export async function proxy(request: NextRequest) {
     // bypass holder — fall through to normal handling below
   }
 
+  // Real 404s for missing WordPress paths. Must happen here, before anything
+  // streams: once the catch-all's Suspense boundary flushes, the status line is
+  // already sent and notFound() can only change the body. See lib/wpPaths.ts.
+  const notFoundResponse = await handleMissingWpPath(request)
+  if (notFoundResponse) {
+    await logAgent(request, 404)
+    return notFoundResponse
+  }
+
+  // After maintenance (a walled site must not serve content as Markdown either)
+  // and before the A/B branch, so `/?...` with Accept: text/markdown gets the
+  // Markdown homepage rather than being handed a Hero variant it can't render.
+  const markdown = handleMarkdown(request)
+  if (markdown) return markdown
+
+  // Logged last, so the status recorded is the one actually returned. Only
+  // known agents cost anything here — see lib/agentLog.ts.
+  await logAgent(request, 200)
+
   // A/B assignment only concerns the homepage.
   if (request.nextUrl.pathname === '/') return handleAbTest(request)
 
   return NextResponse.next()
+}
+
+/**
+ * May this request see the admin section?
+ *
+ * Open on a local dev box; everywhere else it takes the signed cookie that
+ * /api/auth/login issues to allowlisted accounts. No network call and no
+ * session-token decoding — just one HMAC verification, and only on /admin
+ * paths, so ordinary traffic pays nothing for this.
+ */
+async function hasAdminSession(request: NextRequest): Promise<boolean> {
+  if (isAdminOpenEnv()) return true
+
+  const token = request.cookies.get(ADMIN_COOKIE)?.value
+  return (await verifyAdminToken(token)) !== null
+}
+
+/**
+ * Record a request if it came from a crawler we track.
+ *
+ * Awaited rather than fired-and-forgotten: an un-awaited promise in a proxy can
+ * be killed when the response is returned, which would make the counters
+ * silently lossy — and a metric you can't trust is worse than no metric. The
+ * cost lands only on identified agents, never on human traffic.
+ */
+async function logAgent(request: NextRequest, status: number): Promise<void> {
+  const userAgent = request.headers.get('user-agent')
+  if (!userAgent) return
+  await recordAgentHit(userAgent, request.nextUrl.pathname, status)
 }
 
 // Broadened from just '/' so the maintenance wall can gate every route. Excludes

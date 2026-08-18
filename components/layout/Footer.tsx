@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cacheLife } from "next/cache";
 import { BASE_URL } from "@/lib/helpers";
+import { DEPOT_INDEX_PATH } from "@/lib/locations";
 import { ROUTES } from "@/config/routes";
 
 const CONTAINER_LINKS = [
@@ -66,12 +68,24 @@ const POLICY_LINKS = [
   {href:`${BASE_URL}/shipping-policy/`, label:"Shipping Policy"},
 ];
 
-export function Footer() {
-  // Computed per render rather than at module scope: at module scope this would
-  // be evaluated once when the module first loads and then stay frozen for the
-  // life of the server process. The (market) pages carry a 1h revalidate, so
-  // the notice rolls over within an hour of New Year with no redeploy.
-  const currentYear = new Date().getFullYear();
+// Computed per render rather than at module scope: at module scope this would
+// be evaluated once when the module first loads and then stay frozen for the
+// life of the server process.
+//
+// Behind 'use cache' because under cacheComponents a bare `new Date()` in a
+// Server Component is a prerender error — reading the current time makes the
+// component impossible to prerender, and the build fails on it. Caching the
+// read gives the same rollover behaviour the comment above describes (the
+// value refreshes within the cache window, so the notice rolls over within a
+// day of New Year with no redeploy) while keeping the page prerenderable.
+async function getCurrentYear(): Promise<number> {
+  "use cache";
+  cacheLife("days");
+  return new Date().getFullYear();
+}
+
+export async function Footer() {
+  const currentYear = await getCurrentYear();
 
   return (
     <footer
@@ -124,8 +138,15 @@ export function Footer() {
               </svg>
               info@onsitestorage.com
             </a>
-            <a
-              href="/locations"
+            {/* Was <a href="/locations">, which 404s: the /locations family
+                does not exist in the pages API. It returned HTTP 200 with the
+                Not Found page, so it never showed up as a broken link — see
+                F1/F8 in docs/audits/AGENTIC_READINESS.md. The per-city depot
+                pages live under /where-to-buy-shipping-containers, which is
+                real, in the sitemap, and carries the LocalBusiness markup.
+                <Link>, not <a>, per the project's own navigation rule. */}
+            <Link
+              href={DEPOT_INDEX_PATH}
               className="text-[13px] text-[#888] flex items-center gap-[7px] transition-colors hover:text-white"
             >
               <svg
@@ -138,14 +159,14 @@ export function Footer() {
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" />
               </svg>
               21050 Union Street Suite 4, Wildomar, CA 92595
-            </a>
+            </Link>
           </div>
         </div>
 
         <div>
-          <h4 className="text-[12.5px] font-bold text-[#ccc] uppercase tracking-[.06em] mb-[13px]">
+          <h2 className="text-[12.5px] font-bold text-[#ccc] uppercase tracking-[.06em] mb-[13px]">
             Containers
-          </h4>
+          </h2>
           {CONTAINER_LINKS.map(({ href, label }, index) => {
             return (
               <Link
@@ -160,9 +181,9 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-[12.5px] font-bold text-[#ccc] uppercase tracking-[.06em] mb-[13px]">
+          <h2 className="text-[12.5px] font-bold text-[#ccc] uppercase tracking-[.06em] mb-[13px]">
             Resources
-          </h4>
+          </h2>
           {RESOURCES_LINKS.map(({href, label}, index) => {
             return (
               <Link
@@ -177,9 +198,9 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-[12.5px] font-bold text-[#ccc] uppercase tracking-[.06em] mb-[13px]">
+          <h2 className="text-[12.5px] font-bold text-[#ccc] uppercase tracking-[.06em] mb-[13px]">
             Company
-          </h4>
+          </h2>
           {COMPANY_LINKS.map(({href, label}, index) => {
             return (
               <Link
@@ -194,9 +215,9 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-[12.5px] font-bold text-[#ccc] uppercase tracking-[.06em] mb-[13px]">
+          <h2 className="text-[12.5px] font-bold text-[#ccc] uppercase tracking-[.06em] mb-[13px]">
             Policy
-          </h4>
+          </h2>
           {POLICY_LINKS.map(({href, label}, index) => {
             return (
               <Link

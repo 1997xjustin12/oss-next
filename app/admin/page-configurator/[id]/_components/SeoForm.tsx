@@ -202,6 +202,26 @@ export function SeoForm({ page, seo, defaults }: Props) {
           </div>
 
           <div>
+            <label className={LABEL_CLASS} htmlFor="agentSummary">
+              Agent summary
+            </label>
+            <textarea
+              id="agentSummary"
+              name="agentSummary"
+              rows={3}
+              defaultValue={seo?.agentSummary ?? ''}
+              placeholder={defaults.agentSummary ?? defaults.description}
+              className={`mt-1 ${INPUT_CLASS}`}
+            />
+            <p className={HELP_CLASS}>
+              Plain-language description of what this page covers, for AI assistants — it
+              feeds <code>/llms.txt</code> and the page&apos;s structured data. Unlike the meta
+              description this is not competing for clicks, so write two or three plain
+              sentences that actually explain the page. Length is not constrained.
+            </p>
+          </div>
+
+          <div>
             <label className={LABEL_CLASS} htmlFor="keywords">
               Keywords
             </label>

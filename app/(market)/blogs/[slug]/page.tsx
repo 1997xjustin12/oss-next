@@ -3,10 +3,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { fetchBlogPost } from '@/services/blog.service'
+import { getCachedBlog } from '@/services/blog.service'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
-import { BASE_URL } from '@/lib/helpers'
+import { blogPostingNode, breadcrumbNode, graph, siteNodes } from '@/lib/schema'
 import { formatBlogDate } from '@/lib/blog'
 import { ArticleBody } from './_components/ArticleBody'
 import { RelatedPosts, RelatedPostsSkeleton } from './_components/RelatedPosts'
@@ -17,30 +17,38 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const post = await fetchBlogPost(slug)
+  const post = await getCachedBlog(slug)
   if (!post) return { title: 'Article Not Found' }
 
+  // The post carries its own `seo` object, so none of this has to be dug out of
+  // the body markup. Each field falls back to the post's own equivalent.
   const { seo } = post
   const title = seo.title || post.title
   const description = seo.description || post.excerpt || undefined
-  const ogImage = seo.ogImage || post.imageUrl
+  const ogImage = seo.ogImage?.trim() || post.imageUrl
 
   return {
     title,
     description,
-    alternates: { canonical: ROUTES.BLOG(post.slug) },
+    // The backend may pin a canonical (e.g. a post syndicated from elsewhere);
+    // our own URL is the fallback, not an override.
+    alternates: { canonical: seo.canonicalUrl || ROUTES.BLOG(post.slug) },
     openGraph: {
       title: seo.ogTitle || title,
       description: seo.ogDescription || description,
       type: 'article',
       publishedTime: post.date,
+      modifiedTime: post.updatedAt || undefined,
       images: ogImage ? [{ url: ogImage }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
-      title: seo.twitterTitle || title,
-      description: seo.twitterDescription || description,
-      images: seo.twitterImage ? [seo.twitterImage] : ogImage ? [ogImage] : undefined,
+      // The backend's seo object has no Twitter-specific fields, so the
+      // OpenGraph values carry over — which is what Twitter falls back to
+      // anyway when the card tags are absent.
+      title: seo.ogTitle || title,
+      description: seo.ogDescription || description,
+      images: ogImage ? [ogImage] : undefined,
     },
   }
 }
@@ -53,23 +61,36 @@ export default function BlogPostPage({ params }: Props) {
   )
 }
 
+/**
+ * A missing or foreign slug calls notFound() here — but by the time this runs
+ * the Suspense boundary above has already flushed the status line, so this
+ * alone would answer 200 with not-found markup. The real 404 status comes from
+ * proxy.ts, which checks the slug before anything renders (see
+ * lib/blogSlugs.ts); resolving the post above the boundary instead is not an
+ * option, because cacheComponents rejects a route that blocks its whole shell
+ * on a per-request fetch. Both layers are needed: the proxy check fails open,
+ * and this is what catches the cases it lets through.
+ */
 async function ArticleContent({ params }: Props) {
   const { slug } = await params
-  const post = await fetchBlogPost(slug)
+  const post = await getCachedBlog(slug)
   if (!post) notFound()
 
-  const canonical = `${BASE_URL.replace(/\/$/, '')}${ROUTES.BLOG(post.slug)}`
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    image: post.imageUrl ? [post.imageUrl] : undefined,
-    datePublished: post.date,
-    description: post.seo.description || post.excerpt || undefined,
-    mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
-    author: { '@type': 'Organization', name: 'On-Site Storage Solutions' },
-    publisher: { '@type': 'Organization', name: 'On-Site Storage Solutions' },
-  }
+  const jsonLd = graph([
+    ...siteNodes(),
+    blogPostingNode({
+      title: post.title,
+      slug: post.slug,
+      description: post.seo.description || post.excerpt || undefined,
+      imageUrl: post.imageUrl,
+      datePublished: post.date,
+    }),
+    breadcrumbNode([
+      { name: 'Home', path: ROUTES.HOME },
+      { name: 'Blog', path: ROUTES.BLOGS },
+      { name: post.title },
+    ]),
+  ])
 
   return (
     // <div>, not <main> — the (market) layout owns the single <main> landmark.
@@ -109,11 +130,12 @@ async function ArticleContent({ params }: Props) {
       </article>
 
       <Suspense fallback={<RelatedPostsSkeleton />}>
-        <RelatedPosts currentId={post.id} />
+        <RelatedPosts currentSlug={post.slug} />
       </Suspense>
     </div>
   )
 }
+
 
 function ArticleSkeleton() {
   return (
@@ -122,7 +144,7 @@ function ArticleSkeleton() {
       <div className="mb-2 h-3 w-32 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
       <div className="mb-3 h-9 w-full animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
       <div className="mb-8 h-9 w-3/4 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
-      <div className="mb-8 aspect-[16/9] animate-pulse rounded-lg bg-theme-subtle dark:bg-neutral-800" />
+      <div className="mb-8 aspect-video animate-pulse rounded-lg bg-theme-subtle dark:bg-neutral-800" />
       <div className="space-y-3">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="h-4 w-full animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />

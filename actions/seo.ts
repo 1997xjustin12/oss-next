@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { ADMIN_ROUTES, MAX_PAGE_SCRIPTS } from '@/config/admin';
 import { CACHE_TAGS } from '@/config/cache';
 import { findNativePageById } from '@/config/pages';
-import { isAdminEnabled } from '@/lib/admin';
+import { hasAdminAccess } from '@/lib/adminGuard';
 import { deletePageSeo, savePageSeo } from '@/services/seo.service';
 import type { HeadScript, PageSeo, ScriptStrategy } from '@/types/seo';
 
@@ -90,15 +90,15 @@ function parseScripts(formData: FormData): HeadScript[] | undefined {
   return scripts.length ? scripts : undefined;
 }
 
-function assertAdmin(): void {
+async function assertAdmin(): Promise<void> {
   // The layout already 404s in production, but a Server Action is its own
   // endpoint — it has to check for itself, or the form's POST target stays
   // live even though nothing renders the form.
-  if (!isAdminEnabled()) notFound();
+  if (!(await hasAdminAccess())) notFound();
 }
 
 export async function savePageSeoAction(formData: FormData): Promise<void> {
-  assertAdmin();
+  await assertAdmin();
 
   const page = findNativePageById(String(formData.get('pageId') ?? ''));
   if (!page) notFound();
@@ -113,6 +113,7 @@ export async function savePageSeoAction(formData: FormData): Promise<void> {
   const seo: PageSeo = {
     title: text(formData, 'title'),
     description: text(formData, 'description'),
+    agentSummary: text(formData, 'agentSummary'),
     keywords: parseKeywords(text(formData, 'keywords')),
     canonical: text(formData, 'canonical'),
     robots: parseRobots(text(formData, 'robots')),
@@ -128,7 +129,7 @@ export async function savePageSeoAction(formData: FormData): Promise<void> {
 }
 
 export async function resetPageSeoAction(formData: FormData): Promise<void> {
-  assertAdmin();
+  await assertAdmin();
 
   const page = findNativePageById(String(formData.get('pageId') ?? ''));
   if (!page) notFound();

@@ -59,6 +59,16 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     openGraph: { type: 'website' },
   },
 
+  [ROUTES.AGENTS]: {
+    title: 'AI Agent Policy and Developer Access',
+    description:
+      'How AI assistants and automated clients may use On-Site Storage Solutions: crawler policy, machine-readable endpoints, the agent API, the MCP server, rate limits and attribution.',
+    canonical: ROUTES.AGENTS,
+    agentSummary:
+      'Policy and access documentation for AI agents. Lists every machine-readable surface (llms.txt, per-page Markdown, the JSON agent API, the MCP server, the product feeds), the crawler policy, rate limits, attribution expectations, and how to request a higher limit. Read this before building an integration against this site.',
+    openGraph: { type: 'website' },
+  },
+
   [ROUTES.CART]: {
     title: 'Shopping Cart',
     description:

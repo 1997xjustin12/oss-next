@@ -21,7 +21,7 @@ oss-next/
 │   │   ├── checkout/
 │   │   └── account/
 │   │       └── orders/
-│   ├── admin/                    # Admin dashboard — dev/preview only, never production
+│   ├── admin/                    # Admin dashboard — allowlisted logged-in users only
 │   │   ├── layout.tsx            # Sidenav shell + the render-time half of the gate
 │   │   ├── page-configurator/    # Per-page SEO overrides (title, meta, OG, scripts)
 │   │   ├── dashboard/
@@ -90,7 +90,10 @@ oss-next/
 - Route-specific components that are **not** reused elsewhere live co-located inside their route folder (e.g. `app/(market)/checkout/_components/`).
 - `components/` is for components shared across two or more routes.
 - Never import from `app/` into `components/`, `lib/`, `hooks/`, etc. — dependency flows inward only.
-- Everything under `app/admin/` is **unreachable in production** and has no authentication. Three layers enforce this: `proxy.ts` 404s the `/admin` prefix, `app/admin/layout.tsx` refuses to render, and each admin Server Action re-checks (a form's POST target is its own endpoint — a layout gate does not cover it). Gate logic lives in `lib/admin.ts`. Add real auth before relaxing any of it.
+- Everything under `app/admin/` requires an **admin session**: a signed, httpOnly cookie issued by `/api/auth/login` only when the backend authenticated the credentials *and* the returned identity is in `ADMIN_USERNAMES` (`config/admin.ts`). Anyone else — logged out, or logged in but not allowlisted — gets a real 404, never a redirect or a permission message. A local `next dev` box is open; preview deploys and production both require the cookie.
+- Three layers enforce it, and all three are load-bearing: `proxy.ts` 404s the `/admin` prefix before anything renders, `app/admin/layout.tsx` refuses to render, and each admin Server Action re-checks (a form's POST target is its own endpoint — a layout gate does not cover it). Gate logic lives in `lib/admin.ts` (+ `lib/adminSession.ts` for the cookie, `lib/adminGuard.ts` for the Server Component/Action side).
+- `ADMIN_SESSION_SECRET` must be set in every non-local environment or no admin session can be issued or verified there. Rotating it signs every admin out immediately.
+- Never gate anything on the `isLoggedIn` cookie: it is `httpOnly: false` by design, so any visitor can set it.
 
 ---
 

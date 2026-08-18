@@ -42,6 +42,17 @@ export type SeoOpenGraph = {
 export type PageSeo = {
   title?: string;
   description?: string;
+  /**
+   * Plain-language summary of what this page covers, written for an AI agent
+   * rather than for a search result. Feeds the page's entry in `/llms.txt` and
+   * the `description` of its JSON-LD WebPage node.
+   *
+   * Separate from `description` on purpose: a meta description is ~155
+   * characters of marketing copy tuned for click-through, while this can be two
+   * or three plain sentences that actually explain the page. Conflating them
+   * would force one to be bad at its job.
+   */
+  agentSummary?: string;
   /** Rendered as <meta name="keywords">. */
   keywords?: string[];
   /** Overrides alternates.canonical. Root-relative or absolute. */
@@ -62,6 +73,8 @@ export type PageSeo = {
 export type PageSeoDefaults = {
   title: string;
   description: string;
+  /** Built-in agent summary; see PageSeo.agentSummary. */
+  agentSummary?: string;
   /** Root-relative path, e.g. ROUTES.CART. Resolved against metadataBase. */
   canonical: string;
   keywords?: string[];

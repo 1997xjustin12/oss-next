@@ -17,19 +17,23 @@ export function LocationHeader({ location, zipcode, ptype = 'buy' }: Props) {
   const heading = PTYPE_HEADINGS[ptype] ?? PTYPE_HEADINGS.buy
   return (
     <div className="px-[5%] py-4">
-      <div className="text-2xl font-extrabold text-theme-dark dark:text-gray-100">
+      {/* Was a styled <div>. The product listing page — the site's main
+          commercial landing page — therefore shipped with NO <h1> at all, which
+          an outline audit picked up (T7.2). Classes are unchanged, so this is a
+          semantics fix with no visual change. */}
+      <h1 className="text-2xl font-extrabold text-theme-dark dark:text-gray-100">
         {heading}
-      </div>
-      <div className="flex items-center gap-1.5 mt-1">
+      </h1>
+      <p className="flex items-center gap-1.5 mt-1">
         {location && (
           <>
-            <MapPin className="w-5 h-5 text-theme-primary shrink-0" />
-            <div className="text-3xl sm:text-4xl font-black text-theme-primary">
+            <MapPin className="w-5 h-5 text-theme-primary shrink-0" aria-hidden="true" />
+            <span className="text-3xl sm:text-4xl font-black text-theme-primary">
               {location}
-            </div>
+            </span>
           </>
         )}
-      </div>
+      </p>
       {/* {zipcode && (
         <div className="text-sm text-theme-muted mt-0.5">ZIP: {zipcode}</div>
       )} */}

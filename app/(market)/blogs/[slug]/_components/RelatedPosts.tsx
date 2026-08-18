@@ -1,10 +1,14 @@
-import { fetchRelatedPosts } from '@/services/blog.service'
+import { RELATED_COUNT } from '@/config/blog'
+import { getRelatedPosts } from '@/services/blog.service'
 import { BlogCard } from '../../_components/BlogCard'
 
 // Own async component so it streams behind its own Suspense boundary — the
 // article renders without waiting on this second fetch.
-export async function RelatedPosts({ currentId }: { currentId: number }) {
-  const posts = await fetchRelatedPosts(currentId)
+//
+// Excluded by slug rather than id: the slug is what the route already has, so
+// this needs nothing from the article fetch to start.
+export async function RelatedPosts({ currentSlug }: { currentSlug: string }) {
+  const posts = await getRelatedPosts(currentSlug, RELATED_COUNT)
   if (posts.length === 0) return null
 
   return (

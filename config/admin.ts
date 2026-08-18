@@ -15,12 +15,14 @@ export const ADMIN_ROUTES = {
   PAGE_CONFIGURATOR_EDIT: (id: string) => `/admin/page-configurator/${id}`,
   CONTENT_EDITOR: '/admin/content-editor',
   CONTENT_EDITOR_EDIT: (id: string) => `/admin/content-editor/${id}`,
+  AGENT_TRAFFIC: '/admin/agent-traffic',
+  QUOTE_REQUESTS: '/admin/quote-requests',
 } as const;
 
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -41,6 +43,18 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     icon: 'Type',
     hint: 'On-page headings',
   },
+  {
+    href: ADMIN_ROUTES.AGENT_TRAFFIC,
+    label: 'Agent Traffic',
+    icon: 'Bot',
+    hint: 'Which AI crawlers visit',
+  },
+  {
+    href: ADMIN_ROUTES.QUOTE_REQUESTS,
+    label: 'Quote Requests',
+    icon: 'Inbox',
+    hint: 'Leads submitted by agents',
+  },
 ];
 
 /**
@@ -49,3 +63,33 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
  * agree, or a row past the action's limit would be silently dropped on save.
  */
 export const MAX_PAGE_SCRIPTS = 24;
+
+/**
+ * Who may reach /admin.
+ *
+ * This is the list to edit when someone joins or leaves — the gate logic in
+ * lib/admin.ts reads it and needs no changes. Entries may be either a username
+ * or an email address; both are compared against the identity the backend
+ * returns after it has authenticated the password, never against anything the
+ * browser sent.
+ *
+ * Being on this list grants nothing on its own. A visitor still has to log in
+ * through the storefront form at /my-account with a working password; the list
+ * only decides whether that successful login also mints an admin session.
+ */
+export const ADMIN_USERNAMES: readonly string[] = [
+  'denver@onsitestorage.com',
+  'denver_admin',
+  'onsite_jhie',
+  'onsite_justin',
+  'oss_aira',
+];
+
+/**
+ * How long an admin session lasts before the user has to log in again.
+ *
+ * Matched to the `isLoggedIn` cookie the storefront login already sets, so both
+ * expire together — an admin whose storefront session is alive but whose admin
+ * cookie quietly expired would just get 404s with no explanation.
+ */
+export const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days

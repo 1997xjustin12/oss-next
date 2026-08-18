@@ -185,7 +185,7 @@ function SearchRefresher({ onReady }: { onReady: (fn: () => void) => void }) {
 // multi_match on title/tags/sku/custom_fields/category) — this just needed a
 // UI. useSearchBox()'s refine() flows straight into makeSearchClient()'s
 // request, which already forwards params.query untouched.
-function AccessorySearchBox() {
+function CatalogSearchBox({ placeholder, onQueryChange }: { placeholder: string; onQueryChange: (q: string) => void }) {
   const { query, refine } = useSearchBox()
   const [value, setValue] = useState(query)
   // Adjusted during render (React's documented pattern for "reset state when
@@ -202,7 +202,16 @@ function AccessorySearchBox() {
   function handleChange(next: string) {
     setValue(next)
     clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => refine(next), 300)
+    debounceRef.current = setTimeout(() => {
+      refine(next)
+      // Mirror the query into the URL on the same debounce. Without this the
+      // search is invisible to anything that isn't the browser session that
+      // typed it: not shareable, not bookmarkable, and — the reason this
+      // exists — not addressable by the WebSite SearchAction that tells search
+      // engines and assistants how to search this site. See T3.9 in
+      // docs/audits/AGENTIC_READINESS.md.
+      onQueryChange(next)
+    }, 300)
   }
 
   return (
@@ -212,7 +221,8 @@ function AccessorySearchBox() {
         type="search"
         value={value}
         onChange={(e) => handleChange(e.target.value)}
-        placeholder="Search accessories — locks, ramps, vents, shelving..."
+        placeholder={placeholder}
+        aria-label="Search the catalog"
         className="w-full rounded-lg border border-theme-border dark:border-neutral-700 bg-white dark:bg-neutral-900 py-3 pl-10 pr-4 text-sm text-theme-dark dark:text-white placeholder:text-theme-muted outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20 transition-colors"
       />
     </div>
@@ -619,6 +629,9 @@ export function InstantSearchSection() {
   const location                = searchParams.get('location') ?? DEFAULT_LOCATION
   const zipcode                 = searchParams.get('zipcode') ?? undefined
   const currentSort             = searchParams.get('isort') ?? 'default'
+  // Free-text query, in the URL so a search is shareable and — the point of
+  // T3.9 — so the WebSite SearchAction has a real target to point at.
+  const query                   = searchParams.get('q') ?? ''
   const accessoryCategory       = searchParams.get('accat') ?? null
   const selectedSizes           = useMemo(() => parseMulti(searchParams.get('size')),      [searchParams])
   const selectedConditions      = useMemo(() => parseMulti(searchParams.get('condition')), [searchParams])
@@ -717,6 +730,12 @@ export function InstantSearchSection() {
     updateUrl('isort', sort === 'default' ? null : sort)
   }, [updateUrl])
 
+  // An empty query drops ?q= entirely rather than leaving ?q= behind, so the
+  // canonical unfiltered listing keeps one URL.
+  const handleQueryChange = useCallback((next: string) => {
+    updateUrl('q', next.trim() || null)
+  }, [updateUrl])
+
   const handleToggle = useCallback((param: FilterParam, value: string) => {
     const current = parseMulti(searchParams.get(param))
     const next    = current.includes(value)
@@ -754,6 +773,10 @@ export function InstantSearchSection() {
         searchClient={searchClient}
         indexName={INDEX}
         future={{ preserveSharedStateOnUnmount: true }}
+        // Seeds the query from ?q= on mount — and on remount, which is what
+        // makes a shared or crawler-followed /sale-shipping-containers?q=40ft
+        // land on filtered results instead of the unfiltered catalog.
+        initialUiState={{ [INDEX]: { query } }}
       >
         <SearchRefresher onReady={captureRefresh} />
         <Configure hitsPerPage={12} />
@@ -771,7 +794,18 @@ export function InstantSearchSection() {
           </div>
 
           <div className="flex-1 min-w-0">
-            {selectedType === 'accessories' && <AccessorySearchBox />}
+            {/* Now rendered for every product type, not just accessories. The
+                ES query already searched title/tags/SKU/category for all of
+                them — only the UI was accessories-only, which left containers
+                unsearchable and the site with no addressable search at all. */}
+            <CatalogSearchBox
+              placeholder={
+                selectedType === 'accessories'
+                  ? 'Search accessories — locks, ramps, vents, shelving...'
+                  : 'Search containers — 40ft high cube, cargo worthy, reefer...'
+              }
+              onQueryChange={handleQueryChange}
+            />
             <InstantSortBar
               currentSort={currentSort}
               onSortChange={handleSortChange}

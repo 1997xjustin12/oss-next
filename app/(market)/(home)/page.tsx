@@ -3,7 +3,9 @@ import { headers } from "next/headers";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache";
 import { ROUTES } from "@/config/routes";
-import { resolvePageMetadata } from "@/lib/seo";
+import { SITE } from "@/config/site";
+import { graph, siteNodes, webPageNode } from "@/lib/schema";
+import { resolveAgentSummary, resolvePageMetadata } from "@/lib/seo";
 import { getHomeHeadings } from "@/lib/content";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
@@ -30,37 +32,23 @@ export function generateMetadata() {
   return resolvePageMetadata(ROUTES.HOME);
 }
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": "https://onsitestorage.com/#org",
-      name: "On-Site Storage Solutions",
-      url: "https://onsitestorage.com",
-      telephone: "+18889779085",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Wildomar",
-        addressRegion: "CA",
-        postalCode: "92595",
-        addressCountry: "US",
-      },
-    },
-    {
-      "@type": "WebSite",
-      "@id": "https://onsitestorage.com/#website",
-      url: "https://onsitestorage.com",
-      name: "On-Site Storage Solutions",
-      publisher: { "@id": "https://onsitestorage.com/#org" },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: "https://onsitestorage.com/products?q={search_term_string}",
-        "query-input": "required name=search_term_string",
-      },
-    },
-  ],
-};
+// Organization + WebSite, built from config/site.ts so every other page's
+// schema can reference the same two @ids instead of restating them.
+//
+// The WebPage description is the admin-editable agent summary rather than a
+// constant, so the same sentence a reader gets from /llms.txt is the one in the
+// structured data — and an author can change both from the Page Configurator
+// without a deploy.
+async function buildHomeJsonLd() {
+  return graph([
+    ...siteNodes(),
+    webPageNode({
+      path: ROUTES.HOME,
+      name: SITE.name,
+      description: (await resolveAgentSummary(ROUTES.HOME)) ?? SITE.tagline,
+    }),
+  ]);
+}
 
 async function getHomeData() {
   "use cache";
@@ -89,6 +77,7 @@ export default async function Home() {
   // Components below receive their copy as props — they can't read Redis
   // themselves. See config/homeContent.ts for the registry.
   const copy = await getHomeHeadings();
+  const jsonLd = await buildHomeJsonLd();
 
   return (
     <>
