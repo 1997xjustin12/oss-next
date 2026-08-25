@@ -12,11 +12,12 @@ import {
 } from 'react-instantsearch'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowUpRight, ChevronDown, Phone, Search, SlidersHorizontal, Star, X } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, ChevronDown, Phone, Search, SlidersHorizontal, Star, X } from 'lucide-react'
 import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
 import { QuickViewModal } from './QuickViewModal'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { CONTACT_NUMBER } from '@/lib/helpers'
 import { normaliseRating } from '@/lib/ratings'
 import type { RawRatings } from '@/lib/ratings'
 import type { Accessory, BadgeTone } from '@/types/product'
@@ -231,8 +232,43 @@ function CatalogSearchBox({ placeholder, onQueryChange }: { placeholder: string;
 
 // ─── Search client ────────────────────────────────────────────────────────────
 
-function makeSearchClient(filtersRef: React.MutableRefObject<AllFilters>) {
+type ISearchRequest = { indexName: string; params?: Record<string, unknown> }
+
+/**
+ * A valid, empty result per request.
+ *
+ * InstantSearch pairs replies to queries by position and reads `.hits` off each
+ * one without checking. Handing it anything shorter than the request list — or
+ * nothing at all — throws a TypeError that escapes into the route's error
+ * boundary and replaces the whole listing page with "Something Went Wrong".
+ * The server guarantees this shape too; this is the client's own floor, so no
+ * response can ever crash the page.
+ */
+function emptyResults(requests: ISearchRequest[]) {
   return {
+    results: requests.map((request) => ({
+      hits: [],
+      nbHits: 0,
+      page: (request.params?.page as number) ?? 0,
+      nbPages: 0,
+      hitsPerPage: (request.params?.hitsPerPage as number) ?? 20,
+      processingTimeMS: 0,
+      query: (request.params?.query as string) ?? '',
+      params: '',
+      index: request.indexName,
+      facets: {},
+      facets_stats: {},
+    })),
+  }
+}
+
+type SearchClientProp = React.ComponentProps<typeof InstantSearch>['searchClient']
+
+function makeSearchClient(
+  filtersRef: React.MutableRefObject<AllFilters>,
+  onSearchError: (failed: boolean) => void,
+): SearchClientProp {
+  const client = {
     search(requests: unknown[]) {
       const f = filtersRef.current
       const enriched = (requests as Array<{ indexName: string; params?: Record<string, unknown> }>)
@@ -252,13 +288,69 @@ function makeSearchClient(filtersRef: React.MutableRefObject<AllFilters>) {
             ...(f.terms.length                      ? { termFilter:              f.terms }              : {}),
           },
         }))
-      return fetch('/api/search', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ requests: enriched }),
-      }).then((res) => res.json())
+      return runSearch(enriched, onSearchError)
     },
   }
+
+  // One cast, at the one place it belongs. Our responses are Algolia-shaped but
+  // are not built from their generated types; before this, the same gap was
+  // being papered over by the implicit `any` that `res.json()` returns.
+  return client as unknown as SearchClientProp
+}
+
+/**
+ * POST the queries, once, and retry a single time before giving up.
+ *
+ * The retry is what makes a one-off blip invisible: a dropped connection, a
+ * cold serverless function, a node rebalancing. A second consecutive failure is
+ * a real outage, and the caller shows a notice rather than pretending the
+ * catalogue is empty.
+ *
+ * This function never rejects and never returns a malformed body — an
+ * exception here would land in the page's error boundary, which is the bug this
+ * whole path exists to prevent.
+ */
+async function runSearch(
+  requests: ISearchRequest[],
+  onSearchError: (failed: boolean) => void,
+) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requests }),
+      })
+
+      // Checked explicitly. Without this a 500 body was parsed as if it were a
+      // success, which is exactly how the page used to crash.
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const data = (await res.json()) as { results?: unknown }
+      // Trust the shape only if it can actually satisfy every query.
+      if (!Array.isArray(data.results) || data.results.length < requests.length) {
+        throw new Error('malformed search response')
+      }
+
+      onSearchError(false)
+      return data
+    } catch (err) {
+      const lastAttempt = attempt === 1
+      if (!lastAttempt) {
+        // A short pause — long enough for a transient blip to clear, short
+        // enough that the visitor reads it as the search being slow.
+        await new Promise((resolve) => setTimeout(resolve, 400))
+        continue
+      }
+
+      console.error('[plp] search failed after retry:', err)
+      onSearchError(true)
+      return emptyResults(requests)
+    }
+  }
+
+  // Unreachable — the loop either returns or falls into the catch above.
+  return emptyResults(requests)
 }
 
 // ─── Types matching the actual Elasticsearch document ────────────────────────
@@ -664,7 +756,11 @@ export function InstantSearchSection() {
   // while a genuine filter change still triggers refresh().
   const lastRunKey = useRef<string | null>(null)
 
-  const searchClient = useMemo(() => makeSearchClient(filtersRef), [])
+  // Set when a search fails twice in a row. The setter is stable, so the client
+  // below is still built exactly once.
+  const [searchFailed, setSearchFailed] = useState(false)
+
+  const searchClient = useMemo(() => makeSearchClient(filtersRef, setSearchFailed), [])
 
   // instantsearch.js disposes its search instance shortly after this
   // subtree is hidden (a debounced cleanup meant for fast unmount/remount
@@ -811,6 +907,23 @@ export function InstantSearchSection() {
               onSortChange={handleSortChange}
               sortOptions={selectedType === 'accessories' ? ACCESSORY_SORT_OPTIONS : CONTAINER_SORT_OPTIONS}
             />
+
+            {/* Shown rather than letting an empty grid imply we have nothing in
+                stock. The rest of the page — filters, navigation, the
+                server-rendered content — is unaffected by a search outage. */}
+            {searchFailed && (
+              <div
+                role="alert"
+                className="mb-4 flex items-start gap-2.5 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300"
+              >
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                <span>
+                  <strong className="font-bold">Search is temporarily unavailable.</strong> This is a
+                  problem on our side, not an empty catalogue — try again in a moment, or call{' '}
+                  {CONTACT_NUMBER} and we will look it up for you.
+                </span>
+              </div>
+            )}
 
             <Hits
               hitComponent={({ hit }) =>

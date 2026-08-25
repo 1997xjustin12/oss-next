@@ -278,7 +278,7 @@ function lcpCandidates($: ReturnType<typeof load>, css: string): string[] {
  */
 async function fetchWpPageDto(segments: string[]): Promise<WpPageDto | null> {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('days')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
 
   const suffix = segments.length ? `${segments.map(encodeURIComponent).join('/')}/` : ''
@@ -311,7 +311,7 @@ export async function fetchWpPageMarkdown(
   segments: string[],
 ): Promise<{ title: string; description?: string; markdown: string } | null> {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('days')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
 
   const page = await fetchWpPageDto(segments)
@@ -333,7 +333,7 @@ export async function fetchWpPageMarkdown(
 
 export async function fetchWpPage(segments: string[]): Promise<WpPage | null> {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('days')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
 
   const page = await fetchWpPageDto(segments)

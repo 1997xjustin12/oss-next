@@ -1,5 +1,6 @@
 import type { ShippingContainerHit, FormattedContainerHit } from '@/types/product'
 import { SHIPPING_CONTAINER_CATEGORIES, DEFAULT_LOCATION } from '@/lib/constants'
+import { formatDescTitle, formatLocTitle, formatSizeTitle } from '@/lib/productTitle'
 
 type CustomField = { name: string; value: string }
 type ContainerVariant = { price?: string }
@@ -150,7 +151,30 @@ export function formatProduct(hit: ShippingContainerHit): FormattedContainerHit 
     height:      getCustomFieldValue(hit, 'height'),
   })
 
-  return { ...hit, sale_price }
+  // Assembled here, alongside sale_price, for the same reason: one place
+  // derives it, so a listing tile, a chat card and the PDP cannot describe the
+  // same container differently. Containers only — see lib/productTitle.ts.
+  const paymentType = getCustomFieldValue(hit, 'payment_type')
+
+  const desc_title = formatDescTitle({
+    condition:   getCustomFieldValue(hit, 'condition'),
+    grade:       getCustomFieldValue(hit, 'grade'),
+    size:        getCustomFieldValue(hit, 'length_width'),
+    height:      getCustomFieldValue(hit, 'height'),
+    paymentType,
+  })
+
+  const loc_title = formatLocTitle({
+    location: getCustomFieldValue(hit, 'location'),
+    paymentType,
+  })
+
+  const size_title = formatSizeTitle({
+    size:   getCustomFieldValue(hit, 'length_width'),
+    height: getCustomFieldValue(hit, 'height'),
+  })
+
+  return { ...hit, sale_price, desc_title, loc_title, size_title }
 }
 
 // The dimensions that identify "the same container" independent of where

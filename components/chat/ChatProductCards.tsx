@@ -9,14 +9,16 @@ import { useCart } from '@/hooks/useCart'
 import type { ChatProductCard } from '@/app/api/chat/products/route'
 
 /**
- * The products the assistant is *currently* recommending.
+ * The products one reply recommended, rendered directly beneath it.
  *
- * Deliberately a single shelf at the foot of the panel rather than cards inside
- * the transcript: the conversation above stays a plain back-and-forth, and the
- * products are always in the same place instead of buried at whatever scroll
- * position their reply happens to occupy.
+ * Attached to the message rather than collected into a single shelf at the foot
+ * of the panel. A shelf can only ever show the *latest* recommendation, so
+ * scrolling back through a conversation — or restoring one from history — left
+ * every earlier answer stripped of the products it was talking about. Anchoring
+ * the cards to their own reply means a restored thread looks exactly like the
+ * live one did.
  */
-export function ChatProductShelf({ products }: { products: ChatProductCard[] }) {
+export function ChatProductCards({ products }: { products: ChatProductCard[] }) {
   const { addContainerToCart } = useAddContainerToCart()
   const { addItem } = useCart()
   // Keyed by handle so two cards never share a spinner.
@@ -46,14 +48,7 @@ export function ChatProductShelf({ products }: { products: ChatProductCard[] }) 
   }
 
   return (
-    <section
-      aria-label="Recommended products"
-      className="border-t border-theme-border bg-theme-subtle/60 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-900/60"
-    >
-      <h3 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-theme-muted dark:text-neutral-500">
-        Mentioned above
-      </h3>
-
+    <section aria-label="Products mentioned in this reply" className="mt-2 max-w-[85%]">
       <ul className="flex snap-x gap-2 overflow-x-auto pb-1">
         {products.map((card) => (
           <li

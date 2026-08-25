@@ -12,6 +12,15 @@ function cleanEnv(val: string | undefined): string {
 const client = new Client({
   node: cleanEnv(process.env.ELASTIC_URL) || 'http://localhost:9200',
   auth: { apiKey: cleanEnv(process.env.ELASTIC_API_KEY) },
+  // Bounded on purpose. Without these a single slow Elasticsearch response
+  // holds the request open until the platform kills it, which the listing page
+  // experiences as a hard failure rather than a slow one. 8s is far longer than
+  // a healthy query (tens of milliseconds) and short enough to retry inside a
+  // request the visitor is still waiting on.
+  requestTimeout: 8_000,
+  // One retry covers the common case — a dropped connection or a node briefly
+  // rebalancing. More would multiply the worst-case wait.
+  maxRetries: 1,
 })
 
 const INDEX = cleanEnv(process.env.NEXT_PUBLIC_SEARCH_INDEX) || 'onsite_products_index'

@@ -14,7 +14,7 @@ import { TrustStrip } from "./_components/TrustStrip";
 import { ContainerTypes } from "./_components/ContainerTypes";
 import { HowItWorks } from "./_components/HowItWorks";
 import { WhyUs } from "./_components/WhyUs";
-import { QuoteForm } from "./_components/QuoteForm";
+import { QuoteForm } from "@/components/shared/QuoteForm";
 import { Reviews } from "./_components/Reviews";
 import { StatesSection } from "./_components/StatesSection";
 

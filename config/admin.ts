@@ -17,12 +17,13 @@ export const ADMIN_ROUTES = {
   CONTENT_EDITOR_EDIT: (id: string) => `/admin/content-editor/${id}`,
   AGENT_TRAFFIC: '/admin/agent-traffic',
   QUOTE_REQUESTS: '/admin/quote-requests',
+  CACHE: '/admin/cache',
 } as const;
 
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -54,6 +55,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'Quote Requests',
     icon: 'Inbox',
     hint: 'Leads submitted by agents',
+  },
+  {
+    href: ADMIN_ROUTES.CACHE,
+    label: 'Cache',
+    icon: 'DatabaseZap',
+    hint: 'Purge cached pages',
   },
 ];
 

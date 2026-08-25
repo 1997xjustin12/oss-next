@@ -6,7 +6,10 @@ import {
   AVAILABILITY_KEY,
   DISCLAIMER,
   GREETING,
+  HISTORY_FETCH_LIMIT,
   MAX_MESSAGE_CHARS,
+  MAX_PRODUCT_HANDLES,
+  MAX_RESOLVED_HANDLES,
 } from '@/config/chat'
 import { extractProductHandles, stripProductUrls } from '@/lib/chatText'
 import {
@@ -15,11 +18,12 @@ import {
   loadHistory,
   pruneExpiredHistory,
   saveHistory,
+  turnsToMessages,
   type ChatIdentity,
 } from '@/lib/chatHistory'
 import { useAuth } from '@/hooks/useAuth'
 import { RichText } from './RichText'
-import { ChatProductShelf } from './ChatProductShelf'
+import { ChatProductCards } from './ChatProductCards'
 import type { ChatProductCard } from '@/app/api/chat/products/route'
 
 /**
@@ -48,7 +52,19 @@ const TYPE_INTERVAL_MS = 12
 const TYPE_CHARS_PER_TICK = 3
 
 export function AiChatWidget() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, token, isAuthenticated } = useAuth()
+
+  /**
+   * Only a signed-in visitor has a token to send.
+   *
+   * Depends on `token` rather than reading a ref written during render: the
+   * token rotates every ten minutes in the background, and this has to pick up
+   * the new one. The callbacks that use it list it as a dependency.
+   */
+  const authHeaders = useCallback(
+    (): Record<string, string> => (token ? { Authorization: `Bearer ${token}` } : {}),
+    [token],
+  )
 
   /**
    * `null` until the region check answers.
@@ -66,7 +82,8 @@ export function AiChatWidget() {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [products, setProducts] = useState<ChatProductCard[]>([])
+  /** Cards keyed by the assistant message that recommended them. */
+  const [productsByMessage, setProductsByMessage] = useState<Record<string, ChatProductCard[]>>({})
 
   const sessionIdRef = useRef<string | undefined>(undefined)
   /**
@@ -86,6 +103,8 @@ export function AiChatWidget() {
   /** `undefined` = auth has not settled yet; `null` = guest. Different states. */
   const previousIdentity = useRef<ChatIdentity | undefined>(undefined)
   const savedCountRef = useRef(0)
+  /** Bumped whenever something newer supersedes an in-flight history fetch. */
+  const hydrationRef = useRef(0)
 
   const nextId = useCallback(() => `m${(messageSeq.current += 1)}`, [])
 
@@ -134,9 +153,98 @@ export function AiChatWidget() {
     }
   }, [])
 
+  // ── Product cards, per message ────────────────────────────────────────────
+
+  /**
+   * Resolve handles to cards, in chunks the endpoint will accept.
+   *
+   * De-duplicated across the whole request set, so a container mentioned in
+   * three different replies is looked up once and its card shared. Chunks run
+   * in parallel; a failed chunk simply contributes nothing.
+   */
+  const resolveCards = useCallback(async (handles: string[]): Promise<Map<string, ChatProductCard>> => {
+    const unique = [...new Set(handles)].slice(0, MAX_RESOLVED_HANDLES)
+    const byHandle = new Map<string, ChatProductCard>()
+    if (unique.length === 0) return byHandle
+
+    const chunks: string[][] = []
+    for (let i = 0; i < unique.length; i += MAX_PRODUCT_HANDLES) {
+      chunks.push(unique.slice(i, i + MAX_PRODUCT_HANDLES))
+    }
+
+    const results = await Promise.all(
+      chunks.map(async (chunk) => {
+        try {
+          const res = await fetch(`/api/chat/products?handles=${encodeURIComponent(chunk.join(','))}`)
+          if (!res.ok) return []
+          const data = (await res.json()) as { products?: ChatProductCard[] }
+          return Array.isArray(data.products) ? data.products : []
+        } catch {
+          // Cards that never arrive are a smaller problem than an error banner
+          // over a perfectly good answer.
+          return []
+        }
+      }),
+    )
+
+    for (const card of results.flat()) byHandle.set(card.handle, card)
+    return byHandle
+  }, [])
+
+  /** Cards for one freshly-arrived reply. */
+  const attachProducts = useCallback(
+    async (replyId: string, handles: string[]) => {
+      if (handles.length === 0) return
+
+      const byHandle = await resolveCards(handles)
+      const cards = handles.map((h) => byHandle.get(h)).filter((c): c is ChatProductCard => !!c)
+      if (cards.length === 0) return
+
+      setProductsByMessage((prev) => ({ ...prev, [replyId]: cards }))
+    },
+    [resolveCards],
+  )
+
+  /**
+   * Cards for every restored assistant message that recommended something.
+   *
+   * This is what makes a restored conversation match the live one. Handles are
+   * persisted (locally and by the backend) but resolved products never are, so
+   * each card is re-priced from the catalogue on the way back in rather than
+   * showing what something cost a week ago.
+   *
+   * Newest messages first, so if the handle budget is reached it is the oldest
+   * replies that go without.
+   */
+  const attachRestoredProducts = useCallback(
+    async (restored: Message[]) => {
+      const withHandles = restored.filter((m) => m.role === 'assistant' && m.handles?.length)
+      if (withHandles.length === 0) return
+
+      const generation = hydrationRef.current
+      const ordered = [...withHandles].reverse()
+      const byHandle = await resolveCards(ordered.flatMap((m) => m.handles ?? []))
+      if (byHandle.size === 0) return
+
+      // A newer restore or a sent message has superseded this thread.
+      if (generation !== hydrationRef.current) return
+
+      const next: Record<string, ChatProductCard[]> = {}
+      for (const message of withHandles) {
+        const cards = (message.handles ?? [])
+          .map((h) => byHandle.get(h))
+          .filter((c): c is ChatProductCard => !!c)
+        if (cards.length) next[message.id] = cards
+      }
+
+      setProductsByMessage((prev) => ({ ...prev, ...next }))
+    },
+    [resolveCards],
+  )
+
   // ── Identity transitions ──────────────────────────────────────────────────
 
-  const restore = useCallback((who: ChatIdentity) => {
+  const restore = useCallback((who: ChatIdentity): Message[] => {
     const record = loadHistory(who)
     const restored = record?.messages ?? []
 
@@ -149,16 +257,74 @@ export function AiChatWidget() {
         return n > max ? n : max
       }, 0)
       sessionIdRef.current = record?.sessionId
-      setMessages(restored.map((m) => ({ ...m, full: m.text })))
+      const hydrated = restored.map((m) => ({ ...m, full: m.text }))
+      setMessages(hydrated)
       savedCountRef.current = restored.length
-      return
+      return hydrated
     }
 
     sessionIdRef.current = undefined
     messageSeq.current = 0
     setMessages([{ id: `m${(messageSeq.current += 1)}`, role: 'assistant', text: GREETING, full: GREETING }])
     savedCountRef.current = 0
+    return []
   }, [])
+
+  /**
+   * Replace the locally restored thread with the account's stored one.
+   *
+   * Runs after `restore()` rather than instead of it, so the panel paints
+   * immediately from the browser's copy and the server's version takes over
+   * when it lands — the account's conversation is the authority, but waiting
+   * on a network round trip to show anything would be worse.
+   *
+   * Only for signed-in visitors: a guest has no token, and the backend has no
+   * way to identify them. Their thread stays in this browser.
+   */
+  const hydrateFromServer = useCallback(async () => {
+    if (!token) return
+
+    const generation = ++hydrationRef.current
+
+    try {
+      const res = await fetch(`/api/chat/history?limit=${HISTORY_FETCH_LIMIT}`, { headers: authHeaders() })
+      if (!res.ok) return
+
+      const data = (await res.json()) as {
+        conversations?: { session_id?: string; started_at?: string; messages?: { user?: string; assistant?: string }[] }[]
+      }
+
+      // A newer hydration (or a sent message) started while this was in flight.
+      if (generation !== hydrationRef.current) return
+
+      const conversations = Array.isArray(data.conversations) ? data.conversations : []
+      if (conversations.length === 0) return
+
+      // Resume the most recent thread. The backend's ordering is not part of
+      // the contract, so sort rather than trusting the first entry.
+      const newest = [...conversations].sort(
+        (a, b) => Date.parse(b.started_at ?? '') - Date.parse(a.started_at ?? ''),
+      )[0]
+
+      const restored = turnsToMessages(newest?.messages ?? [], extractProductHandles, stripProductUrls)
+      if (restored.length === 0) return
+
+      messageSeq.current = restored.length
+      sessionIdRef.current = newest?.session_id
+      const hydrated: Message[] = restored.map((m) => ({ ...m, full: m.text }))
+      setMessages([{ id: 'm0', role: 'assistant', text: GREETING, full: GREETING }, ...hydrated])
+      // The account thread replaced whatever was on screen, so its cards
+      // replace the previous set outright rather than merging into it.
+      setProductsByMessage({})
+      void attachRestoredProducts(hydrated)
+      // Counted as already saved so the persistence effect does not immediately
+      // write the server's copy back into localStorage as if it were new.
+      savedCountRef.current = restored.length + 1
+    } catch {
+      // History is a convenience. A failure here leaves the local thread in
+      // place, which is exactly the old behaviour.
+    }
+  }, [token, authHeaders, attachRestoredProducts])
 
   /**
    * Restore the right thread when identity settles or changes.
@@ -184,7 +350,8 @@ export function AiChatWidget() {
       // Signed out has to mean gone, however it happened — including a logout
       // that never ran through this component.
       if (identity === null) clearAccountHistories()
-      restore(identity)
+      void attachRestoredProducts(restore(identity))
+      void hydrateFromServer()
     } else if (previous === null && identity !== null) {
       // A guest signed in. Carry the in-progress thread across rather than
       // dropping it mid-conversation.
@@ -192,20 +359,24 @@ export function AiChatWidget() {
       if (guest?.messages.length) {
         clearHistory(null)
         saveHistory(identity, { messages: guest.messages, sessionId: guest.sessionId })
-        restore(identity)
+        void attachRestoredProducts(restore(identity))
       } else {
-        restore(identity)
+        void attachRestoredProducts(restore(identity))
       }
+      // Per the design note: the account’s stored conversation wins over the
+      // thread carried across from the guest session.
+      void hydrateFromServer()
     } else if (previous !== identity) {
       // Signed out, or a different account. A logged-in thread that survived a
       // logout would be readable by whoever uses the computer next.
       clearHistory(previous)
-      setProducts([])
-      restore(identity)
+      setProductsByMessage({})
+      void attachRestoredProducts(restore(identity))
+      void hydrateFromServer()
     }
 
     previousIdentity.current = identity
-  }, [available, identity, restore])
+  }, [available, identity, restore, hydrateFromServer, attachRestoredProducts])
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // ── Persistence ───────────────────────────────────────────────────────────
@@ -273,25 +444,6 @@ export function AiChatWidget() {
     [stopTyping],
   )
 
-  // ── Product shelf ─────────────────────────────────────────────────────────
-
-  const attachProducts = useCallback(async (replyId: string, handles: string[]) => {
-    if (handles.length === 0) return
-
-    try {
-      const res = await fetch(`/api/chat/products?handles=${encodeURIComponent(handles.join(','))}`)
-      if (!res.ok) return
-      const data = (await res.json()) as { products?: ChatProductCard[] }
-
-      // A slow lookup for an older answer must not overwrite a newer one.
-      if (latestReplyRef.current !== replyId) return
-      setProducts(Array.isArray(data.products) ? data.products : [])
-    } catch {
-      // A shelf that does not appear is a smaller problem than an error banner
-      // over a perfectly good answer.
-    }
-  }, [])
-
   // ── Sending ───────────────────────────────────────────────────────────────
 
   async function send() {
@@ -300,15 +452,20 @@ export function AiChatWidget() {
 
     setError(null)
     setInput('')
-    setProducts([])
     setSending(true)
+    // Supersede any in-flight history hydration: it would otherwise land a
+    // moment later and replace the message just sent with the stored thread.
+    hydrationRef.current += 1
 
     setMessages((prev) => [...prev, { id: nextId(), role: 'user', text: message, full: message }])
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        // The token is what lets the backend file this conversation under the
+        // signed-in user. Without it the exchange is stored anonymously and
+        // never appears in their history.
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           message,
           ...(sessionIdRef.current ? { session_id: sessionIdRef.current } : {}),
@@ -354,7 +511,7 @@ export function AiChatWidget() {
     messageSeq.current = 0
     savedCountRef.current = 0
     latestReplyRef.current = null
-    setProducts([])
+    setProductsByMessage({})
     setError(null)
     setMessages([{ id: `m${(messageSeq.current += 1)}`, role: 'assistant', text: GREETING, full: GREETING }])
   }
@@ -384,10 +541,10 @@ export function AiChatWidget() {
   }, [open])
 
   useEffect(() => {
-    // `products` is in here because the shelf lands after the reply renders and
-    // would otherwise sit below the fold.
+    // `productsByMessage` is in here because cards land after their reply
+    // renders and would otherwise sit below the fold.
     transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages, sending, error, products])
+  }, [messages, sending, error, productsByMessage])
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -461,7 +618,7 @@ export function AiChatWidget() {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={message.role === 'user' ? 'flex justify-end' : 'flex justify-start'}
+                  className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
                   <div
                     className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
@@ -472,6 +629,11 @@ export function AiChatWidget() {
                   >
                     <RichText text={message.text} />
                   </div>
+
+                  {/* Anchored to this reply, so scrolling back through a
+                      conversation and restoring one from history both keep
+                      every answer beside the products it recommended. */}
+                  <ChatProductCards products={productsByMessage[message.id] ?? []} />
                 </div>
               ))}
 
@@ -495,8 +657,6 @@ export function AiChatWidget() {
                 </p>
               )}
             </div>
-
-            <ChatProductShelf products={products} />
 
             <div className="border-t border-theme-border px-3 py-3 dark:border-neutral-800">
               <div className="flex items-end gap-2">

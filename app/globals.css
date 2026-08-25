@@ -6,9 +6,20 @@
    Font tokens  → font-primary, font-sans
 ──────────────────────────────────────────────────────────────────────── */
 @theme inline {
-  /* Typography — next/font injects --font-inter via layout className */
-  --font-primary: var(--font-inter, 'Inter', Arial, sans-serif);
+  /* Typography — next/font injects --font-roboto and --font-anton-src via the
+     className on <html> in app/layout.tsx.
+
+     Each entry here also becomes a Tailwind utility, because v4 maps the
+     --font-* namespace onto font-*: --font-anton gives `font-anton`,
+     --font-primary gives `font-primary`, and so on. The fallbacks are real
+     stacks rather than decoration — they are what renders during the swap, and
+     everything a visitor sees before the webfont arrives. */
+  --font-primary: var(--font-roboto, 'Roboto', Arial, sans-serif);
   --font-sans:    var(--font-primary);
+
+  /* Display face. Anton is a single-weight condensed face, so the fallbacks are
+     the narrowest common system fonts rather than a default sans. */
+  --font-anton:   var(--font-anton-src, 'Anton', 'Arial Narrow', Impact, sans-serif);
 
   /* Brand */
   --color-theme-primary:       #BD112A;

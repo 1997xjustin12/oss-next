@@ -201,7 +201,7 @@ function nativeStaticMarkdown(path: string): PageMarkdown | null {
 
 export async function getPageMarkdown(segments: string[]): Promise<PageMarkdown | null> {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('days')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES, CACHE_TAGS.PRODUCTS, CACHE_TAGS.BLOG)
 
   const path = `/${segments.join('/')}`.replace(/\/+$/, '') || '/'

@@ -49,8 +49,8 @@ export function BodyTabsSection({ variant }: Props) {
           <button
             key={`body-tabs-${t.id}-${index}`}
             onClick={() => setBodyTab(t.id)}
-            className={`relative font-bold text-sm sm:text-base px-3 sm:px-5 py-3.5 whitespace-nowrap transition-colors
-              ${bodyTab === t.id ? 'text-theme-primary' : 'text-theme-muted hover:text-theme-dark'}`}
+            className={`relative font-bold text-sm sm:text-base px-3 sm:px-5 py-1 whitespace-nowrap transition-colors
+              ${bodyTab === t.id ? 'text-white bg-theme-primary rounded-tr-[15px]' : 'text-theme-muted hover:text-theme-dark'}`}
           >
             {t.label}
             {bodyTab === t.id && <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-theme-primary rounded-t" />}

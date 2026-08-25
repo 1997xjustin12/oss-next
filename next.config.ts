@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'onsitestorage.com' },
       { protocol: 'https', hostname: 'bbq-blog.onsitestorage.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      // YouTube poster frames for the PDP video facades (lib/productVideos.ts)
+      { protocol: 'https', hostname: 'i.ytimg.com' },
       { protocol: 'https', hostname: 'secure.gravatar.com' },
     ],
   },

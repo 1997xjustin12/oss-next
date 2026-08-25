@@ -92,7 +92,7 @@ export async function fetchSaleProducts(
   opts: FetchProductsOptions = {},
 ): Promise<{ products: Product[]; maxPages: number }> {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
   const paymentType = PTYPE_MAP[opts.ptype ?? 'buy'] ?? 'buy'
@@ -142,7 +142,7 @@ export async function fetchAccessories(opts: {
   category?: string
 } = {}): Promise<{ accessories: Accessory[]; maxPages: number }> {
   'use cache'
-  cacheLife('minutes')
+  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
   const params = new URLSearchParams({

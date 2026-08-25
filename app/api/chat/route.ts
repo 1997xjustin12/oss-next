@@ -2,6 +2,7 @@ import { connection } from 'next/server'
 import { BACKEND_TIMEOUT_MS, MAX_MESSAGE_CHARS, REGION_MESSAGE } from '@/config/chat'
 import { allowedCountries, chatRegion } from '@/lib/chatRegion'
 import { clientIp } from '@/lib/clientIp'
+import { userTokenFrom } from '@/lib/chatAuth'
 import { checkRateLimit, rateLimitHeaders } from '@/lib/agentApi'
 
 /**
@@ -107,6 +108,13 @@ export async function POST(request: Request): Promise<Response> {
     Authorization: `Api-Key ${API_KEY}`,
     'X-Store-Domain': STORE_DOMAIN,
   }
+
+  // Attribution happens **here**, at write time — not when history is read.
+  // A message sent without this header is stored against no user, and no
+  // amount of correct calling on /api/chat/history will ever surface it. A
+  // guest simply has no token, and their conversation stays anonymous.
+  const userToken = userTokenFrom(request)
+  if (userToken) outbound['X-User-Token'] = userToken
 
   // The backend logs and reasons about the visitor's address. Omitted entirely
   // when unknown — a blank value is not a fallback, it is a wrong answer that

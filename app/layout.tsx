@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Anton, Roboto } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
@@ -12,9 +12,25 @@ import { ROUTES } from "@/config/routes";
 import { SITE_URL } from "@/config/site";
 import { ADMIN_PATHS } from "@/lib/admin";
 
-const inter = Inter({
+// The default face for the whole storefront, wired to `--font-primary` (and so
+// to `font-sans`) in globals.css.
+const roboto = Roboto({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-roboto",
+  display: "swap",
+});
+
+// Display face, used via the `font-anton` utility. Anton ships a single weight,
+// so `weight` is required — it is not a variable font and next/font rejects it
+// without one.
+//
+// The variable is named `--font-anton-src` rather than `--font-anton` because
+// globals.css maps the Tailwind token `--font-anton` onto it; naming both the
+// same would make that mapping refer to itself.
+const anton = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton-src",
   display: "swap",
 });
 
@@ -32,7 +48,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${roboto.variable} ${anton.variable}`}>
       <body suppressHydrationWarning>
         {/* Machine-readable representations of the site, advertised so an agent
             that doesn't guess the well-known paths can still find them. React

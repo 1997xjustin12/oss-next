@@ -25,12 +25,46 @@ type ISParams = {
 
 type ISRequest = { indexName: string; params?: ISParams }
 
+/**
+ * A valid, empty result for one request.
+ *
+ * The InstantSearch protocol pairs replies to queries **by position**, so the
+ * response must always carry exactly one entry per request. Returning a bare
+ * `{ results: [] }` on failure — as this route used to — left the client
+ * dereferencing `results[0].hits` on `undefined`, which crashed the whole
+ * listing page into the error boundary instead of showing an empty grid.
+ *
+ * The status code still says 500 so failures stay visible in logs and to the
+ * client; this only makes the body impossible to crash on.
+ */
+function emptyResult(request: ISRequest) {
+  const params = request?.params ?? {}
+  return {
+    hits: [],
+    nbHits: 0,
+    page: (params.page as number) ?? 0,
+    nbPages: 0,
+    hitsPerPage: (params.hitsPerPage as number) ?? 20,
+    processingTimeMS: 0,
+    query: (params.query as string) ?? '',
+    params: '',
+    index: INDEX,
+    facets: {},
+    facets_stats: {},
+  }
+}
+
 export async function POST(req: NextRequest) {
+  // Parsed outside the try so the failure path can still mirror the request
+  // count. Defaults to a single request, which is what InstantSearch sends.
+  let parsedRequests: ISRequest[] = [{ indexName: INDEX }]
+
   try {
     const { requests } = (await req.json()) as { requests: ISRequest[] }
+    if (Array.isArray(requests) && requests.length) parsedRequests = requests
 
     const results = await Promise.all(
-      requests.map(async ({ params = {} }) => {
+      parsedRequests.map(async ({ params = {} }) => {
         const {
           query               = '',
           hitsPerPage         = 20,
@@ -88,7 +122,11 @@ export async function POST(req: NextRequest) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[/api/search] error:', msg)
     return NextResponse.json(
-      { results: [], error: process.env.NODE_ENV !== 'production' ? msg : 'Search unavailable' },
+      {
+        // One well-formed empty result per request — see emptyResult().
+        results: parsedRequests.map(emptyResult),
+        error: process.env.NODE_ENV !== 'production' ? msg : 'Search unavailable',
+      },
       { status: 500 },
     )
   }

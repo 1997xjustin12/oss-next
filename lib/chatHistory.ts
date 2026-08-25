@@ -19,6 +19,44 @@ export type StoredMessage = {
   handles?: string[]
 }
 
+/**
+ * Flatten the backend's stored conversation into the widget's message list.
+ *
+ * The backend stores one **turn pair** per entry — `{at, user, assistant}` —
+ * rather than two role-tagged messages, so each entry becomes two.
+ *
+ * Product URLs are stripped and their handles extracted here, exactly as they
+ * are for a live reply: a restored shelf is then re-priced from the catalogue
+ * rather than showing what something cost a week ago.
+ */
+export function turnsToMessages(
+  turns: { user?: string; assistant?: string }[],
+  extractHandles: (reply: string) => string[],
+  stripUrls: (reply: string) => string,
+): StoredMessage[] {
+  const messages: StoredMessage[] = []
+
+  for (const turn of turns) {
+    const question = typeof turn.user === 'string' ? turn.user.trim() : ''
+    const answer = typeof turn.assistant === 'string' ? turn.assistant : ''
+
+    if (question) {
+      messages.push({ id: `m${messages.length + 1}`, role: 'user', text: question })
+    }
+    if (answer.trim()) {
+      const handles = extractHandles(answer)
+      messages.push({
+        id: `m${messages.length + 1}`,
+        role: 'assistant',
+        text: stripUrls(answer),
+        ...(handles.length ? { handles } : {}),
+      })
+    }
+  }
+
+  return messages
+}
+
 type HistoryRecord = {
   v: number
   savedAt: number
