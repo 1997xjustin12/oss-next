@@ -29,6 +29,52 @@ const fmt = (n: number) =>
     maximumFractionDigits: 0,
   });
 
+type IdealForItem = {
+  id: string;
+  image: string;
+  title: string;
+};
+
+/**
+ * The uses shown in the "Ideal for" strip.
+ *
+ * Six entries to match the six-column grid. `title` doubles as the image's alt
+ * text, so it has to read as a description of the picture and not just a label
+ * — which it does, since each image is a photograph of the use it names.
+ */
+const IDEAL_FOR: IdealForItem[] = [
+  {
+    id: "residential-storage",
+    image: "/images/pdp-ideal-for-section/residential-storage.webp",
+    title: "Residential Storage",
+  },
+  {
+    id: "construction-sites",
+    image: "/images/pdp-ideal-for-section/construction-sites.webp",
+    title: "Construction Sites",
+  },
+  {
+    id: "disaster-relief",
+    image: "/images/pdp-ideal-for-section/disaster-relief.webp",
+    title: "Disaster Relief",
+  },
+  {
+    id: "workshop-space",
+    image: "/images/pdp-ideal-for-section/workshop-space.webp",
+    title: "Workshop Space",
+  },
+  {
+    id: "pop-up-retail",
+    image: "/images/pdp-ideal-for-section/pop-up-retail.webp",
+    title: "Pop-Up Retail",
+  },
+  {
+    id: "farm-and-agri",
+    image: "/images/pdp-ideal-for-section/farm-and-agri.webp",
+    title: "Farm & Agriculture",
+  },
+];
+
 type Props = { product: ProductHit; relatedProducts: ProductHit[] };
 
 export function ProductDetail({ product, relatedProducts }: Props) {
@@ -66,14 +112,30 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       <section className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex flex-col gap-[10px]">
           <h2 className="text-[24px] font-bold">Ideal for:</h2>
-          <div className="grid grid-cols-6 gap-[10px]">
-            <div className="aspect-square bg-stone-200 rounded-[10px]"></div>
-            <div className="aspect-square bg-stone-200 rounded-[10px]"></div>
-            <div className="aspect-square bg-stone-200 rounded-[10px]"></div>
-            <div className="aspect-square bg-stone-200 rounded-[10px]"></div>
-            <div className="aspect-square bg-stone-200 rounded-[10px]"></div>
-            <div className="aspect-square bg-stone-200 rounded-[10px]"></div>
-          </div>
+          <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[10px]">
+            {IDEAL_FOR.map((item) => (
+              <li
+                key={item.id}
+                className="relative aspect-square overflow-hidden rounded-[10px] bg-stone-200"
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  // Six across on desktop, three on tablet, two on mobile —
+                  // tells the browser how small these actually render, so it
+                  // doesn't fetch a full-width image for a thumbnail.
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                  className="object-cover"
+                />
+                {/* Gradient sits behind the caption so white text stays legible
+                    whatever the photograph underneath happens to be. */}
+                <div className="absolute right-[10px] bottom-[10px] bg-[#E7EDF9] px-2 py-1 border-[0.5px] border-[#A3A3A3] rounded-[5px] text-[10px] font-semibold leading-tight text-[#00318C]">
+                  <div>{item.title}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
