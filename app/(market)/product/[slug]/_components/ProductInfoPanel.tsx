@@ -991,14 +991,23 @@ export function ProductInfoPanel({
     // Mirrors the Summary row: a resolved route over $1,000 is withheld
     // upstream, and saying "Call for rate" is the honest version of that.
     lines.push({
-      label: "Delivery",
+      // Names the method once it is known — "Tilt Bed Delivery" is the
+      // difference between a number the customer can check and one they have
+      // to take on trust.
+      label: deliveryOption ? `Delivery · ${deliveryOption.label}` : "Delivery",
       value: isGenericDisplay
         ? "Varies by depot"
-        : deliveryOption
-          ? `${formatPrice(deliveryTotal)}${selection.tab === "buy" ? "" : " (one-time)"}`
-          : zipcode
-            ? "Call for rate"
-            : "Enter a ZIP code for a rate",
+        : deliveryLoading
+          ? // A lookup still in flight is not the same answer as one that came
+            // back empty. Without this the quote says "Call for rate" for the
+            // second or two before the rate lands — which is a different, and
+            // often wrong, thing to tell someone.
+            "Calculating…"
+          : deliveryOption
+            ? `$${formatPrice(deliveryTotal)}${selection.tab === "buy" ? "" : " (one-time)"}`
+            : zipcode
+              ? "Call for rate"
+              : "Enter a ZIP code for a rate",
       muted: !deliveryOption,
     });
 
@@ -1019,6 +1028,7 @@ export function ProductInfoPanel({
     priceDisplay,
     quantity,
     deliveryOption,
+    deliveryLoading,
     deliveryTotal,
     deliveryMiles,
     deliveryRates,
