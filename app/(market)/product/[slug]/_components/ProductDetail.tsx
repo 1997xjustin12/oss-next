@@ -21,7 +21,7 @@ import { ReviewsCarousel } from "./ReviewsCarousel";
 import { YouMayAlsoNeed } from "./YouMayAlsoNeed";
 import { QuoteForm } from "@/components/shared/QuoteForm";
 import { StatesSection } from "@/app/(market)/(home)/_components/StatesSection";
-import { ReviewsSection } from "@/app/(market)/(home)/_components/ReviewsSection";
+import { CustomerReviewsSection } from "./CustomerReviewsSection";
 
 const fmt = (n: number) =>
   n.toLocaleString("en-US", {
@@ -264,7 +264,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       </section>
 
       {/* REVIEWS */}
-      <ReviewsSection heading={"Customer Reviews"} />
+      <CustomerReviewsSection />
 
       {/* <section id="reviews" className="px-4 sm:px-[5%] py-10 sm:py-16">
         No "Write a Review" entry point here on purpose — review submission

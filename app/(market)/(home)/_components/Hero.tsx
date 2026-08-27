@@ -4,12 +4,12 @@ import type { ReactNode } from "react";
 import { BASE_URL } from "@/lib/helpers";
 import { AccentText } from "@/components/shared/AccentText";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
+import { GoogleReviewsBadge } from "@/components/shared/GoogleReviewsBadge";
 import { ZipLookup1 } from "@/app/(market)/(home)/_components/ZipLookup1";
 
 const BANNER_IMAGE = "/images/home-banners/hero-image.webp";
 const BANNER_MAP_IMAGE = "/images/home-banners/home-hero-map.webp";
 
-const GOOGLE_REVIEWS_IMAGE = "/images/google-reviews.webp";
 
 type PayOption = { label: string; href: string };
 type StatData = { stats: string; Desc: () => ReactNode };
@@ -47,54 +47,6 @@ function StatItem({ stats }: { stats: StatData }) {
   );
 }
 
-
-function GoogleReviews() {
-  return (
-    <div className="flex items-center gap-3">
-      <Image
-        src={GOOGLE_REVIEWS_IMAGE}
-        alt="Google Reviews"
-        width={100}
-        height={50}
-        className="w-20 h-auto sm:w-30"
-      />
-      <div className="text-white text-shadow-lg">
-        <div className="flex items-center gap-1.5 text-base sm:text-lg font-bold">
-          <span>4.8</span>
-          <div className="flex items-center">
-            {[...Array(4)].map((_, i) => (
-              <svg
-                key={i}
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
-                  fill="#FBBC04"
-                />
-              </svg>
-            ))}
-            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-              <defs>
-                <linearGradient id="partial-star" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="80%" stopColor="#FBBC04" />
-                  <stop offset="80%" stopColor="#9CA3AF" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
-                fill="url(#partial-star)"
-              />
-            </svg>
-          </div>
-        </div>
-        <div className="text-xs sm:text-sm">(151) reviews</div>
-      </div>
-    </div>
-  );
-}
 
 const PAY_OPTIONS: PayOption[] = [
   {
@@ -168,7 +120,7 @@ export function Hero({
         <div className="relative w-full lg:w-[40%] min-h-150 bg-black">
           <div className="relative z-10 flex h-full flex-col gap-5 sm:gap-7.5 p-5 sm:p-10">
             <div className="flex justify-end">
-              <GoogleReviews />
+              <GoogleReviewsBadge tone="onDark" showRating />
             </div>
 
             <div className="flex flex-1 flex-col items-stretch justify-center gap-6">
@@ -233,7 +185,7 @@ export function Hero({
 
           <div className="relative z-10 flex h-full flex-col gap-5 sm:gap-7.5 p-5 sm:p-10">
             <div className="flex justify-end">
-              <GoogleReviews />
+              <GoogleReviewsBadge tone="onDark" showRating />
             </div>
 
             <div className="flex flex-1 items-center justify-center">
@@ -261,7 +213,7 @@ export function Hero({
 
       <div className="relative z-10 flex flex-col gap-5 sm:gap-7.5">
         <div className="flex justify-end">
-          <GoogleReviews />
+          <GoogleReviewsBadge tone="onDark" showRating />
         </div>
 
         <div className="flex justify-center">
