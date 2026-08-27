@@ -16,6 +16,7 @@ import {
 import type { ProductHit } from "@/types/product";
 import { useAddContainerToCart } from "@/hooks/useAddContainerToCart";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useAuth } from "@/hooks/useAuth";
 import {
   getCustomFieldValue,
   isGenericDisplayHit,
@@ -24,12 +25,18 @@ import {
 import { DEFAULT_LOCATION } from "@/lib/constants";
 import { normaliseRating } from "@/lib/ratings";
 import { CartLocationConflictModal } from "@/components/cart/CartLocationConflictModal";
+import { GuestLeadModal } from "@/components/cart/GuestLeadModal";
+import { getGuestLead, setGuestLead } from "@/lib/guestCapture";
+import type { GuestLead } from "@/lib/guestCapture";
 import { Stars } from "@/components/product/Stars";
 import { DeliveryZipCheck } from "./DeliveryZipCheck";
+import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { ShareButton } from "@/components/product/ShareButton";
 import { CONTACT_NUMBER } from "@/lib/helpers";
 import Link from "next/link";
 import { formatPrice } from "@/lib/formatters";
+import { useDeliveryRates } from "@/hooks/useDeliveryRates";
+import { cheapestDeliveryOption } from "@/lib/delivery";
 
 // ─── option layer types ───────────────────────────────────────────────────────
 
@@ -125,25 +132,25 @@ function CartIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M4 4H5.62563C6.193 4 6.47669 4 6.70214 4.12433C6.79511 4.17561 6.87933 4.24136 6.95162 4.31912C7.12692 4.50769 7.19573 4.7829 7.33333 5.33333L7.51493 6.05972C7.616 6.46402 7.66654 6.66617 7.74455 6.83576C8.01534 7.42449 8.5546 7.84553 9.19144 7.96546C9.37488 8 9.58326 8 10 8"
-        stroke="white"
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
       />
       <path
         d="M18 17H7.55091C7.40471 17 7.33162 17 7.27616 16.9938C6.68857 16.928 6.28605 16.3695 6.40945 15.7913C6.42109 15.7367 6.44421 15.6674 6.49044 15.5287C6.54177 15.3747 6.56743 15.2977 6.59579 15.2298C6.88607 14.5342 7.54277 14.0608 8.29448 14.0054C8.3679 14 8.44906 14 8.61137 14H14"
-        stroke="white"
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M14.5279 14H10.9743C9.75838 14 9.15042 14 8.68147 13.7246C8.48343 13.6083 8.30689 13.4588 8.15961 13.2825C7.81087 12.8652 7.71092 12.2655 7.51103 11.0662C7.30849 9.85093 7.20722 9.2433 7.44763 8.79324C7.54799 8.60536 7.68722 8.44101 7.85604 8.31113C8.26045 8 8.87646 8 10.1085 8H16.7639C18.2143 8 18.9395 8 19.2326 8.47427C19.5257 8.94854 19.2014 9.59717 18.5528 10.8944L18.1056 11.7889C17.5677 12.8647 17.2987 13.4026 16.8154 13.7013C16.3321 14 15.7307 14 14.5279 14Z"
-        stroke="white"
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
       />
-      <circle cx="17" cy="20" r="1" fill="white" />
-      <circle cx="9" cy="20" r="1" fill="white" />
+      <circle cx="17" cy="20" r="1" fill="currentColor" />
+      <circle cx="9" cy="20" r="1" fill="currentColor" />
     </svg>
   );
 }
@@ -153,7 +160,7 @@ function QuoteIcon() {
     <svg width="13" height="16" viewBox="0 0 13 16" fill="none" aria-hidden="true">
       <path
         d="M1 4.6C1 3.33988 1 2.70982 1.24524 2.22852C1.46095 1.80516 1.80516 1.46095 2.22852 1.24524C2.70982 1 3.33988 1 4.6 1H7.9C9.16015 1 9.79015 1 10.2715 1.24524C10.6949 1.46095 11.0391 1.80516 11.2548 2.22852C11.5 2.70982 11.5 3.33988 11.5 4.6V14.5L6.25 11.5L1 14.5V4.6Z"
-        stroke="white"
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -167,7 +174,7 @@ function PhoneIcon() {
     <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true">
       <path
         d="M10.1336 9.44073L11.6542 11.5077C11.9487 11.908 11.863 12.4713 11.4626 12.7658C9.29838 14.358 6.29269 14.1165 4.41043 12.1991L4.3007 12.0874C2.88088 10.6411 1.67382 9.00034 0.715752 7.21436L0.641711 7.07634C-0.628409 4.70865 0.0357438 1.76733 2.20001 0.175136C2.60032 -0.119363 3.16358 -0.033586 3.45807 0.366725L4.97872 2.43373C5.30599 2.87859 5.21067 3.50454 4.7658 3.83182L3.32341 4.89295C3.05461 5.0907 2.94251 5.43826 3.04511 5.7558C3.63821 7.59142 4.81068 9.18515 6.38654 10.2978C6.65914 10.4903 7.02431 10.4867 7.29311 10.289L8.7355 9.22782C9.18037 8.90054 9.80632 8.99587 10.1336 9.44073Z"
-        fill="white"
+        fill="currentColor"
       />
     </svg>
   );
@@ -418,17 +425,20 @@ function OptionBtn({
       type="button"
       disabled={!entry.available}
       onClick={entry.onSelect}
-      className={`text-left border rounded-lg p-3 transition-all ${className} ${
+      // Styling restored from the pre-Figma version: a red outline and tint for
+      // the selected option instead of the dark inset-shadow treatment. Kept
+      // deliberately, so the two branches differ only in look and not behaviour.
+      className={`text-left border-2 rounded-lg p-3 transition-all ${className} ${
         !entry.available
           ? "opacity-35 cursor-not-allowed border-theme-border bg-theme-bg"
           : entry.active
-            ? "rounded-[5px] bg-[#474747] border-stone-500 shadow-[0_0_0_1px_rgba(71,71,71,0.10),inset_-2px_0_0_0_rgba(255,255,255,0.20),inset_2px_0_0_0_rgba(255,255,255,0.20),inset_0_4px_0_-1px_rgba(255,255,255,0.20),inset_0_-2px_0_1px_rgba(0,0,0,0.20),inset_0_0_0_0.5px_rgba(0,0,0,0.15)]"
-            : "rounded-[5px] border-stone-500 bg-[#F5F5F5] shadow-[0_0_0_1px_#F5F5F5,inset_-2px_0_0_0_rgba(255,255,255,0.20),inset_2px_0_0_0_rgba(255,255,255,0.20),inset_0_2px_0_0_rgba(255,255,255,0.20),inset_0_-2px_0_0_rgba(0,0,0,0.05),inset_0_0_0_0.5px_rgba(0,0,0,0.15)]"
+            ? "border-theme-primary bg-theme-primary-light"
+            : "border-theme-border bg-theme-bg hover:border-theme-primary hover:-translate-y-0.5"
       }`}
     >
       {group !== "size" && (
         <span
-          className={`flex items-center justify-center font-extrabold text-sm ${entry.active && entry.available ? "text-white" : "text-theme-dark"}`}
+          className={`block font-extrabold text-sm ${entry.active && entry.available ? "text-theme-primary" : "text-theme-dark"}`}
         >
           {entry.label}
         </span>
@@ -436,12 +446,14 @@ function OptionBtn({
       {group === "size" && (
         <div className="flex items-center justify-between gap-[20px]">
           <span
-            className={`flex items-center justify-center font-extrabold text-sm ${entry.active && entry.available ? "text-white" : "text-theme-dark"}`}
+            className={`block font-extrabold text-sm ${entry.active && entry.available ? "text-theme-primary" : "text-theme-dark"}`}
           >
             {entry.label}
           </span>
+          {/* The gold used on the dark button would be illegible on this light
+              tint, so the price simply follows the label's colour. */}
           <span
-            className={`flex items-center justify-even font-extrabold text-sm whitespace-nowrap ${entry.active && entry.available ? "text-[#F4BF3C]" : "text-theme-dark"}`}
+            className={`block font-extrabold text-sm whitespace-nowrap ${entry.active && entry.available ? "text-theme-primary" : "text-theme-dark"}`}
           >
             {entry.price}
           </span>
@@ -458,6 +470,8 @@ type Props = {
   categoryLabel: string;
   relatedProducts: ProductHit[];
   onVariantChange?: (product: ProductHit) => void;
+  /** Passed straight to the ZIP field — see LocationChangeStrategy. */
+  locationChange?: LocationChangeStrategy;
 };
 
 export function ProductInfoPanel({
@@ -465,6 +479,7 @@ export function ProductInfoPanel({
   categoryLabel,
   relatedProducts,
   onVariantChange,
+  locationChange,
 }: Props) {
   const {
     conflict: locationConflict,
@@ -503,6 +518,24 @@ export function ProductInfoPanel({
    * change nobody notices until the wrong order arrives.
    */
   const [quantity, setQuantity] = useState(1);
+
+  /**
+   * Destination for the delivery quote. Seeded from the ZIP the visitor has
+   * already given elsewhere on the site, so someone arriving from the listing
+   * page sees a rate without re-entering it.
+   */
+  const [zipcode, setZipcode] = useState("");
+  useEffect(() => {
+    try {
+      setZipcode(localStorage.getItem("zipcode") ?? "");
+    } catch {
+      // Storage unavailable — the ZIP field above still works.
+    }
+  }, []);
+
+  const { isAuthenticated } = useAuth();
+  /** Open only while a signed-out visitor is being asked for their details. */
+  const [leadModalOpen, setLeadModalOpen] = useState(false);
 
   // When the shell swaps to a different product, reset both states
   useEffect(() => {
@@ -835,22 +868,6 @@ export function ProductInfoPanel({
     [activeProduct.sale_price, selection.tab],
   );
 
-  /**
-   * Unit price × quantity, already formatted.
-   *
-   * Rounded in whole cents rather than multiplied straight: 232.14 × 3 is
-   * 696.4200000000001 in binary floating point, and formatPrice would round it
-   * to two decimals anyway — doing it here keeps the number that reaches the
-   * cart and the number on screen identical.
-   *
-   * Keeps priceDisplay's suffix, so three rentals read as "$696.42/mo" rather
-   * than looking like a one-off total.
-   */
-  const subtotal = useMemo(() => {
-    const total = Math.round(activeProduct.sale_price * quantity * 100) / 100;
-    return `$${formatPrice(total)}`;
-  }, [activeProduct.sale_price, quantity]);
-
   const { value: rating, count: reviewCount } = normaliseRating(
     product.ratings,
   );
@@ -862,7 +879,92 @@ export function ProductInfoPanel({
   const isGenericDisplay = isGenericDisplayHit(activeProduct);
   const inStock = isInStockHit(activeProduct);
 
-  function handleAddToCart() {
+  /**
+   * Delivery quote for the current selection. Keyed on the active product's
+   * handle, so changing size, condition or grade re-prices delivery too — a
+   * different variant can sit at a different depot.
+   *
+   * Skipped for generic display listings: they have no real depot, so the
+   * lookup can only ever come back empty.
+   */
+  const {
+    rates: deliveryRates,
+    loading: deliveryLoading,
+    error: deliveryError,
+  } = useDeliveryRates({
+    slug: typeof activeProduct.handle === "string" ? activeProduct.handle : undefined,
+    zipcode,
+    enabled: !isGenericDisplay,
+  });
+
+  const deliveryOption = deliveryRates ? cheapestDeliveryOption(deliveryRates) : null;
+  const deliveryMiles = deliveryRates?.distance_miles ?? null;
+
+  /**
+   * Delivery for the whole order.
+   *
+   * Multiplied by quantity because a tilt bed carries one container: upstream
+   * quotes for a single unit (its `quantity` is always 1 from here) and derives
+   * trucks from total length, so two containers is two trips. An approximation,
+   * but a closer one than charging a single delivery for an order of five.
+   */
+  const deliveryTotal = (deliveryOption?.rate ?? 0) * quantity;
+
+  /**
+   * The part of delivery that belongs in the subtotal — purchases only.
+   *
+   * Rent and rent-to-own quote a *monthly* payment, and delivery is a one-time
+   * charge: folding it in would render "$967.84/mo" and overstate every month
+   * after the first. Rent also already includes delivery and pickup in the
+   * monthly figure (see priceDisplay.note), so adding it there bills it twice.
+   */
+  const deliveryInSubtotal = selection.tab === "buy" ? deliveryTotal : 0;
+
+  /**
+   * Order total: unit price × quantity, plus delivery where it applies.
+   *
+   * Rounded in whole cents rather than multiplied straight: 232.14 × 3 is
+   * 696.4200000000001 in binary floating point, and formatPrice would round it
+   * to two decimals anyway — doing it here keeps the number that reaches the
+   * cart and the number on screen identical.
+   *
+   * Keeps priceDisplay's suffix, so three rentals read as "$696.42/mo" rather
+   * than looking like a one-off total. That suffix is also why delivery stays
+   * out of it for rent and rent-to-own — see deliveryInSubtotal.
+   */
+  const subtotal = useMemo(() => {
+    const total =
+      Math.round((activeProduct.sale_price * quantity + deliveryInSubtotal) * 100) / 100;
+    return `$${formatPrice(total)}`;
+  }, [activeProduct.sale_price, quantity, deliveryInSubtotal]);
+
+  /**
+   * The visible Add to cart action.
+   *
+   * A signed-out visitor who has not given us their details is asked for them
+   * first; everyone else goes straight into the cart. The check is deliberately
+   * one-shot — once a lead is stored, or the person is signed in, this never
+   * interrupts again. Asking on every add is how a useful prompt becomes the
+   * reason someone leaves.
+   */
+  function handleAddToCartClick() {
+    if (isGenericDisplay) return;
+
+    if (!isAuthenticated && !getGuestLead()) {
+      setLeadModalOpen(true);
+      return;
+    }
+    addSelectedToCart();
+  }
+
+  /** Captures the details, then completes the add the visitor started. */
+  function handleLeadSubmit(lead: Omit<GuestLead, "capturedAt">) {
+    setGuestLead(lead);
+    setLeadModalOpen(false);
+    addSelectedToCart();
+  }
+
+  function addSelectedToCart() {
     if (isGenericDisplay) return; // belt-and-suspenders — the button is hidden for these
 
     const orderType =
@@ -964,7 +1066,11 @@ export function ProductInfoPanel({
             </div>
           </div>
           {/* Delivery ZIP */}
-          <DeliveryZipCheck product={activeProduct} />
+          <DeliveryZipCheck
+            product={activeProduct}
+            onZipChange={setZipcode}
+            locationChange={locationChange}
+          />
         </div>
         <p className="text-xs text-theme-muted">{priceDisplay.note}</p>
 
@@ -1018,14 +1124,17 @@ export function ProductInfoPanel({
       )} */}
 
       {/* Price tabs */}
-      <div className="grid grid-cols-3 rounded-t-md overflow-hidden mt-2">
+      {/* Styling restored from the pre-Figma version: a bordered segmented
+          control rather than raised shadowed keys. The copy underneath each
+          label is the current one and is unchanged. */}
+      <div className="grid grid-cols-3 border border-theme-border rounded-t-md overflow-hidden mt-2">
         {(["buy", "rent", "rto"] as PriceTab[]).map((key) => (
           <button
             key={key}
             type="button"
             onClick={() => handleSelect({ tab: key })}
-            className={`py-[16px] px-[48px] text-center rounded-[5px] transition-colors
-              ${selection.tab === key ? "bg-theme-primary text-white shadow-[inset_0_2px_2px_0_#BD112A,inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2px_0_rgba(255,255,255,0.50),0_4px_15px_0_rgba(0,0,0,0.15)]" : "mx-[1px] my-[3px] rounded-[2px] bg-[#D9D9D9] shadow-[inset_0_2px_2px_0_#D9D9D9,inset_0_-2px_6px_0_rgba(0,0,0,0.20),inset_0_2px_2px_0_rgba(255,255,255,0.50),0_4px_15px_0_rgba(0,0,0,0.15)]"}`}
+            className={`py-2.5 px-1 text-center border-r last:border-r-0 border-theme-border transition-colors
+              ${selection.tab === key ? "bg-theme-primary text-white" : "bg-theme-bg text-theme-muted hover:bg-theme-subtle"}`}
           >
             <span className="block font-bold text-sm">
               {key === "buy"
@@ -1077,132 +1186,248 @@ export function ProductInfoPanel({
         </div>
       ))}
 
-      {/* SUMMARY */}
-      <div className="border-t-[3px] border-t-theme-primary">
-        <div className="bg-[#F4F4F4] text-[14px] font-semibold py-2">
-          Selected Container Summary
+      {/* ── Selected container ───────────────────────────────────────────────
+          One flat card holding the configuration, the total and the actions,
+          replacing the summary block and the navy slab that followed it.
+
+          The previous treatment read as dated for three specific reasons, all
+          fixed here rather than restyled around: multi-layer inset shadows on
+          every control (a glossy bevel), a palette of one-off hexes (#0F3A59,
+          #E7EDF9, #F4F4F4) that belonged to no other component on the site, and
+          two competing accent colours with no hierarchy between them.
+
+          The spec rows are set like a container's own data plate — labels left,
+          values right, hairline rules, and tabular figures so digits line up
+          down the column. That last part is legibility, not decoration: it lets
+          someone compare a unit price to a total at a glance. */}
+      <div className="mt-6 overflow-hidden rounded-lg border border-theme-border bg-theme-bg">
+        <div className="border-b border-theme-border px-4 py-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-muted">
+            Selected container
+          </h3>
         </div>
-        <ul className="text-[14px] py-3">
+
+        <ul className="divide-y divide-theme-border/60 px-4 text-[13px] tabular-nums">
           {/* All three read activeProduct, not product: `product` is whatever
               the page loaded with, so the summary would keep describing that
               variant while the buttons above changed the selection. */}
-          <li className="flex justify-between">
-            <div className="font-light">Unit</div>
-            <div>{activeProduct.desc_title || activeProduct.title}</div>
+          <li className="flex items-baseline justify-between gap-6 py-2.5">
+            <span className="shrink-0 text-theme-muted">Unit</span>
+            <span className="text-right font-medium text-theme-dark">
+              {activeProduct.desc_title || activeProduct.title}
+            </span>
           </li>
-          <li className="flex justify-between">
-            <div className="font-light">Condition</div>
-            <div>
+          <li className="flex items-baseline justify-between gap-6 py-2.5">
+            <span className="shrink-0 text-theme-muted">Condition</span>
+            <span className="text-right font-medium text-theme-dark">
               {[
                 getCustomFieldValue(activeProduct, "condition"),
                 getCustomFieldValue(activeProduct, "grade"),
               ]
                 .filter(Boolean)
                 .join(" · ") || "—"}
-            </div>
+            </span>
           </li>
-          <li className="flex justify-between">
-            <div className="font-light">Unit Price</div>
+          <li className="flex items-baseline justify-between gap-6 py-2.5">
+            <span className="shrink-0 text-theme-muted">Unit price</span>
             {/* Carries the /mo suffix for rent and rent-to-own — the figure is
                 a monthly payment there, and a bare amount reads as the price of
                 the container. */}
-            <div>
+            <span className="text-right font-medium text-theme-dark">
               {priceDisplay.price}
               {priceDisplay.suffix}
-            </div>
+            </span>
           </li>
-          <li className="flex justify-between">
-            <div className="font-light">Delivery</div>
-            <div className="font-thin">Calculated at Checkout</div>
+          {/* Delivery. Four states, because "no price" has four different
+              meanings here and they call for different things from the
+              visitor: no ZIP yet (give us one), still loading, a real quote,
+              or no quotable rate (call us). Collapsing them into one grey
+              placeholder is what this row used to do. */}
+          <li className="flex items-baseline justify-between gap-6 py-2.5">
+            <span className="shrink-0 text-theme-muted">
+              Delivery
+              {deliveryOption && (
+                <span className="ml-1.5 text-[11px] text-theme-muted">
+                  ({deliveryOption.label})
+                </span>
+              )}
+            </span>
+
+            {!zipcode ? (
+              <span className="text-right text-theme-muted">
+                Enter a ZIP code above
+              </span>
+            ) : deliveryLoading ? (
+              <span
+                aria-live="polite"
+                className="h-4 w-24 animate-pulse rounded bg-theme-subtle"
+              >
+                <span className="sr-only">Calculating delivery…</span>
+              </span>
+            ) : deliveryOption ? (
+              <span className="text-right font-medium tabular-nums text-theme-dark">
+                ${formatPrice(deliveryTotal)}
+                {/* On rent and rent-to-own the figure above is monthly and this
+                    one is not, so the two cannot simply be added. Saying so is
+                    what keeps the subtotal from looking like an arithmetic
+                    error. */}
+                {selection.tab !== "buy" && (
+                  <span className="ml-1 text-[11px] font-normal text-theme-muted">
+                    one-time
+                  </span>
+                )}
+              </span>
+            ) : (
+              // Includes a resolved route whose rate exceeds $1,000 — withheld
+              // upstream in favour of a conversation, not an error.
+              <Link
+                href={`tel:${CONTACT_TEL}`}
+                className="text-right font-medium text-theme-primary hover:underline"
+              >
+                Call for rate
+              </Link>
+            )}
           </li>
-          <li className="flex justify-between">
-            <div className="font-light">Sales Tax</div>
-            <div className="font-thin">Calculated at Checkout</div>
+
+          {/* Distance, once there is a route to describe. Sits under Delivery
+              rather than beside it: it explains the number above, and pairing
+              a price with the miles behind it is what stops a delivery charge
+              reading as arbitrary. */}
+          {deliveryMiles !== null && !deliveryLoading && (
+            <li className="flex items-baseline justify-between gap-6 py-2.5">
+              <span className="shrink-0 text-theme-muted">Distance</span>
+              <span className="text-right font-medium tabular-nums text-theme-dark">
+                {Math.round(deliveryMiles).toLocaleString()} mi
+                {deliveryRates?.depot.stores[0] && (
+                  <span className="font-normal text-theme-muted">
+                    {" "}
+                    from {deliveryRates.depot.stores[0]}
+                  </span>
+                )}
+              </span>
+            </li>
+          )}
+
+          {/* Only shown when the visitor gave a ZIP and we still could not
+              price it — otherwise it is noise on a page that is working. */}
+          {deliveryError && zipcode && !deliveryLoading && (
+            <li className="py-2.5 text-[12px] leading-relaxed text-theme-muted">
+              {deliveryError.message}
+            </li>
+          )}
+          <li className="flex items-baseline justify-between gap-6 py-2.5">
+            <span className="shrink-0 text-theme-muted">Sales tax</span>
+            <span className="text-right text-theme-muted">
+              Calculated at checkout
+            </span>
           </li>
         </ul>
-      </div>
 
-      {/* NEW CTA */}
-      <div className="bg-[#0F3A59] rounded-bl-[30px] rounded-br-[30px] py-[10px] px-[30px]">
-        <div className="flex justify-between">
-          {/* quantity */}
+        {/* Total band. A quiet fill separates it from the spec rows above
+            without introducing another colour. */}
+        <div className="flex items-end justify-between gap-4 border-t border-theme-border bg-theme-subtle px-4 py-3">
           <div>
-            <div className="text-left text-[#E7EDF9] text-[12px]">Quantity</div>
-            <div className="bg-[#E7EDF9]/20 flex items-center justify-between rounded-[3px] p-1 w-[73px] h-[23px] mt-[6px]">
+            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-muted">
+              Quantity
+            </div>
+            <div className="mt-1.5 inline-flex items-center overflow-hidden rounded-md border border-theme-border bg-theme-bg">
               {/* Real buttons, not divs: a div is unreachable by keyboard and
                   invisible to assistive tech, and these change what gets
                   ordered. */}
+              {/* Real buttons, not divs: a div is unreachable by keyboard and
+                  invisible to assistive tech, and these change what gets
+                  ordered. Sized at 32px rather than the previous 18px so they
+                  are a usable target on a touchscreen. */}
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1}
                 aria-label="Decrease quantity"
-                className="text-center bg-[#E7EDF9]/30 w-[18px] h-[18px] rounded-[3px] flex items-center justify-center text-white border-[0.5px] border-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex h-8 w-8 items-center justify-center text-lg leading-none text-theme-muted transition-colors hover:bg-theme-subtle hover:text-theme-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
               >
-                -
+                &minus;
               </button>
-              <div aria-live="polite" className="text-center text-white font-light">
+              <span
+                aria-live="polite"
+                className="w-9 border-x border-theme-border py-1 text-center text-sm font-semibold tabular-nums text-theme-dark"
+              >
                 {quantity}
-              </div>
+              </span>
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
                 disabled={quantity >= MAX_QUANTITY}
                 aria-label="Increase quantity"
-                className="text-center bg-[#E7EDF9]/30 w-[18px] h-[18px] rounded-[3px] flex items-center justify-center text-white border-[0.5px] border-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex h-8 w-8 items-center justify-center text-lg leading-none text-theme-muted transition-colors hover:bg-theme-subtle hover:text-theme-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
               >
                 +
               </button>
             </div>
           </div>
-          {/* subtotal */}
-          <div>
-            <div className="text-right text-[#E7EDF9] text-[12px]">Subtotal</div>
-            <div className="text-right text-[22px] font-semibold text-white">
+
+          <div className="text-right">
+            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-muted">
+              Subtotal
+            </div>
+            <div className="text-[26px] font-bold leading-tight tabular-nums tracking-tight text-theme-dark">
               {subtotal}
-              {priceDisplay.suffix}
+              {priceDisplay.suffix && (
+                <span className="ml-0.5 text-sm font-semibold text-theme-muted">
+                  {priceDisplay.suffix}
+                </span>
+              )}
             </div>
           </div>
         </div>
-        <div className="px-[20px] pt-[10px] flex flex-col gap-[10px]">
-              {/* Disabled for reference-only listings (no real depot behind
-                  them) and for out-of-stock units — the same two guards
-                  handleAddToCart re-checks for itself. */}
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={isGenericDisplay || !inStock}
-                className="w-full font-semibold text-[14px] rounded-[10px] bg-[#BD112A] shadow-[inset_0_2px_2px_0_#BD112A,inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2px_0_rgba(255,255,255,0.50),0_4px_15px_0_rgba(0,0,0,0.15)] flex h-[34px] items-center justify-center gap-2 text-[14px] text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <CartIcon />
-                {added
-                  ? "Added to cart"
-                  : !inStock
-                    ? "Out of stock"
-                    : "Add to cart"}
-              </button>
-              <div className="flex items-center gap-[20px]">
-                <button
-                  type="button"
-                  className="w-full text-[12px] font-semibold h-[34px] text-white rounded-[10px] border border-white bg-[#0F3A59] shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] flex items-center justify-center gap-2"
-                >
-                  <QuoteIcon />
-                  Save Quote
-                </button>
-                {/* A link, not a button: this dials rather than acting on the
-                    page, so it belongs in the browser's normal navigation
-                    affordances — long-press to copy, right-click, and the
-                    keyboard behaviour a link already has. */}
-                <Link
-                  href={CONTACT_TEL}
-                  aria-label={`Call ${CONTACT_NUMBER} for expert help`}
-                  className="w-full text-[12px] font-semibold h-[34px] text-white rounded-[10px] border border-white bg-[#0F3A59] shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] flex items-center justify-center gap-2"
-                >
-                  <PhoneIcon />
-                  Get expert help
-                </Link>
-              </div>
-              <div className="text-center text-[#F6F9FF] font-extralight text-[12px]">Price locked for 48 hrs when you save this quote</div>
+        {/* Actions. One filled button carries the accent; the two supporting
+            actions are outlined, so the eye lands on the primary path without a
+            second colour competing for attention. */}
+        <div className="flex flex-col gap-2.5 border-t border-theme-border px-4 py-4">
+          {/* A reference listing has no real depot behind it, so there is
+              nothing to add. A greyed-out button with no explanation just looks
+              broken — say why, and leave the two routes that do work. */}
+          {isGenericDisplay ? (
+            <p className="rounded-md border border-theme-border bg-theme-subtle px-3 py-2.5 text-[13px] leading-relaxed text-theme-mid">
+              This is a reference listing. Pricing and stock vary by depot — save
+              a quote or call us for what&rsquo;s available near you.
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAddToCartClick}
+              disabled={!inStock}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-theme-primary text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <CartIcon />
+              {added ? "Added to cart" : !inStock ? "Out of stock" : "Add to cart"}
+            </button>
+          )}
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              className="flex h-10 items-center justify-center gap-2 rounded-md border border-theme-border bg-theme-bg text-[13px] font-semibold text-theme-dark transition-colors hover:border-theme-primary hover:text-theme-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary"
+            >
+              <QuoteIcon />
+              Save quote
+            </button>
+            {/* A link, not a button: this dials rather than acting on the page,
+                so it belongs in the browser's normal navigation affordances —
+                long-press to copy, right-click, and the keyboard behaviour a
+                link already has. */}
+            <Link
+              href={CONTACT_TEL}
+              aria-label={`Call ${CONTACT_NUMBER} for expert help`}
+              className="flex h-10 items-center justify-center gap-2 rounded-md border border-theme-border bg-theme-bg text-[13px] font-semibold text-theme-dark transition-colors hover:border-theme-primary hover:text-theme-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary"
+            >
+              <PhoneIcon />
+              Get expert help
+            </Link>
+          </div>
+
+          <p className="text-center text-[11px] text-theme-muted">
+            Price held for 48 hours when you save this quote
+          </p>
         </div>
       </div>
 
@@ -1289,6 +1514,20 @@ export function ProductInfoPanel({
           <Printer className="w-3.5 h-3.5" /> Print Spec Sheet
         </button>
       </div> */}
+
+      {/* Sits with the location-conflict modal so both cart-blocking dialogs
+          live in one place. */}
+      <GuestLeadModal
+        open={leadModalOpen}
+        productTitle={activeProduct.desc_title || activeProduct.title}
+        priceLabel={`${priceDisplay.price}${priceDisplay.suffix ?? ""}`}
+        onSubmit={handleLeadSubmit}
+        onSkip={() => {
+          setLeadModalOpen(false);
+          addSelectedToCart();
+        }}
+        onDismiss={() => setLeadModalOpen(false)}
+      />
 
       {locationConflict && (
         <CartLocationConflictModal

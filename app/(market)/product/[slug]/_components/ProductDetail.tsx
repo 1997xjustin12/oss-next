@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Package } from "lucide-react";
-import { isContainerHit } from "@/lib/pricing";
+import { findEquivalentContainer, isContainerHit } from "@/lib/pricing";
 import { resolveContainerVariant } from "@/lib/containerVariant";
 import { ROUTES } from "@/config/routes";
 import type { ProductHit } from "@/types/product";
 import { ProductVariantShell } from "./ProductVariantShell";
+import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { AccessoryDetail } from "./AccessoryDetail";
 import { BodyTabsSection } from "./BodyTabsSection";
 import { FaqAccordion } from "./FaqAccordion";
@@ -82,6 +83,81 @@ export function ProductDetail({ product, relatedProducts }: Props) {
   // they all react to whichever variant the shopper currently has selected.
   const [activeProduct, setActiveProduct] = useState(product);
 
+  /**
+   * The depot's container pool, and the product the option pickers treat as
+   * their starting point.
+   *
+   * Both arrive as server props but are held in state because a location change
+   * replaces them wholesale: every size, condition and grade option is derived
+   * from this pool, so switching depot means switching the entire option layer,
+   * not just the product on screen.
+   */
+  const [pool, setPool] = useState(relatedProducts);
+  const [baseProduct, setBaseProduct] = useState(product);
+  const [swapping, setSwapping] = useState(false);
+  const [locationNotice, setLocationNotice] = useState<string | null>(null);
+
+  /**
+   * Move the page to the equivalent container at another depot, without
+   * navigating.
+   *
+   * The alternative — and what this replaces at the call site — is
+   * `router.push` to the other product's URL. That works, but it tears down and
+   * rebuilds the whole page for what is really one more axis of the same
+   * selection the size and condition pickers already change in place.
+   *
+   * Deliberately conservative when the depot has no exact match: it keeps the
+   * visitor's chosen spec and explains, rather than quietly substituting a
+   * different container. Silently changing someone's selection is worse than
+   * telling them it isn't stocked.
+   */
+  const swapToLocation = useCallback(
+    async (location: string) => {
+      setSwapping(true);
+      setLocationNotice(null);
+      try {
+        const res = await fetch(
+          `/api/shipping-containers/by-location?location=${encodeURIComponent(location)}`,
+        );
+        if (!res.ok) throw new Error(`by-location responded ${res.status}`);
+
+        const json = (await res.json()) as { data?: ProductHit[] };
+        const nextPool = json.data ?? [];
+        const match = findEquivalentContainer(nextPool, activeProduct);
+
+        if (!match?.handle) {
+          setLocationNotice(
+            `${location} doesn't stock this exact container right now — showing the original depot. Try a different size or grade, or call us.`,
+          );
+          return;
+        }
+
+        setPool(nextPool);
+        setBaseProduct(match);
+        setActiveProduct(match);
+
+        // replaceState, not pushState: picking a ZIP is a selection, not a
+        // navigation, and a visitor who tries three ZIPs should still be one
+        // Back press from where they came in.
+        window.history.replaceState(null, "", ROUTES.PRODUCT(String(match.handle)));
+      } catch {
+        setLocationNotice(
+          "Couldn't load containers for that location. Please try again, or call us.",
+        );
+      } finally {
+        setSwapping(false);
+      }
+    },
+    [activeProduct],
+  );
+
+  const locationChange: LocationChangeStrategy = {
+    mode: "swap",
+    onChange: (location) => void swapToLocation(location),
+    loading: swapping,
+    notice: locationNotice,
+  };
+
   if (!isContainerHit(product)) {
     return <AccessoryDetail product={product} />;
   }
@@ -92,7 +168,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
   // variant is currently on screen — was previously a hardcoded array with
   // fabricated prices and dead CTA buttons; this section is hidden entirely
   // rather than shown empty/fake when there's nothing real to display.
-  const relatedToShow = relatedProducts
+  const relatedToShow = pool
     .filter((p) => p.objectID !== activeProduct.objectID)
     .slice(0, 4);
 
@@ -100,10 +176,11 @@ export function ProductDetail({ product, relatedProducts }: Props) {
     <div className="bg-theme-bg text-theme-dark">
       {/* Breadcrumb + product grid */}
       <ProductVariantShell
-        product={product}
-        relatedProducts={relatedProducts}
+        product={baseProduct}
+        relatedProducts={pool}
         activeProduct={activeProduct}
         onVariantChange={setActiveProduct}
+        locationChange={locationChange}
       />
 
       {/* BODY TABS */}

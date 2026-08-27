@@ -12,6 +12,7 @@ import { getQuickSpecs } from "@/lib/data/pdpShippingContainers";
 import type { ProductHit } from "@/types/product";
 import { ProductImageGallery } from "@/components/product/ProductImageGallery";
 import { ProductInfoPanel } from "./ProductInfoPanel";
+import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { BASE_URL } from "@/lib/helpers";
 import { ROUTES } from "@/config/routes";
 import { capitalizeWords } from "@/lib/utils";
@@ -99,6 +100,8 @@ type Props = {
   relatedProducts: ProductHit[];
   activeProduct: ProductHit;
   onVariantChange: (product: ProductHit) => void;
+  /** Forwarded to ProductInfoPanel's ZIP field — see LocationChangeStrategy. */
+  locationChange?: LocationChangeStrategy;
 };
 
 export function ProductVariantShell({
@@ -106,6 +109,7 @@ export function ProductVariantShell({
   relatedProducts,
   activeProduct,
   onVariantChange,
+  locationChange,
 }: Props) {
   // Update URL without triggering navigation when variant changes
   useEffect(() => {
@@ -168,7 +172,14 @@ export function ProductVariantShell({
         <section className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-8 lg:gap-10">
           {/* Gallery + quick specs */}
           <div className="lg:sticky lg:top-6 self-start w-full">
+            {/* Keyed on the product so the gallery remounts when the variant
+                or depot changes. It holds the selected image index in its own
+                state and never resets it on an `images` change — harmless back
+                when a location change was a full navigation, but a swap keeps
+                the component alive, so a visitor on image 4 of a six-image
+                container would land on images[4] of a two-image one. */}
             <ProductImageGallery
+              key={String(activeProduct.objectID)}
               images={allImages}
               title={activeProduct.title}
               tag={promoTag}
@@ -223,6 +234,7 @@ export function ProductVariantShell({
             relatedProducts={relatedProducts}
             categoryLabel={crumb.label}
             onVariantChange={onVariantChange}
+            locationChange={locationChange}
           />
         </section>
       </section>
