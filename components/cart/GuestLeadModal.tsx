@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { Phone, X } from 'lucide-react'
+import { MapPin, Phone, X } from 'lucide-react'
+import { useGeoapify } from '@/hooks/useGeoapify'
+import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import Link from 'next/link'
 import { ROUTES } from '@/config/routes'
 import { CONTACT_NUMBER } from '@/lib/helpers'
@@ -52,6 +54,15 @@ type Props = {
   onAddToCart: () => void
   /** Close without adding — the X, Escape, or the backdrop. */
   onDismiss: () => void
+  /**
+   * Fires when the visitor picks a delivery address, with its bare postcode.
+   *
+   * Lets the caller re-price delivery for where the container is actually
+   * going. Without it the quote on step 2 would still be priced to whatever ZIP
+   * was in the page's own field — which is the wrong number wearing the right
+   * label, and worse than showing none.
+   */
+  onAddressZipChange?: (postcode: string) => void
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -77,6 +88,7 @@ export function GuestLeadModal({
   onSubmit,
   onAddToCart,
   onDismiss,
+  onAddressZipChange,
 }: Props) {
   const [step, setStep] = useState<Step>('details')
   const [fullName, setFullName] = useState('')
@@ -84,8 +96,32 @@ export function GuestLeadModal({
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [addressOpen, setAddressOpen] = useState(false)
 
   const firstFieldRef = useRef<HTMLInputElement>(null)
+
+  // Same postcode lookup the PDP's ZIP field uses, so an address typed here is
+  // resolved the same way as one typed there.
+  const {
+    results: addressResults,
+    loading: addressLoading,
+    error: addressError,
+    clear: clearAddress,
+  } = useGeoapify(address, {
+    type: 'postcode',
+    countries: 'us,ca',
+    debounceMs: 300,
+    limit: 5,
+  })
+
+  function selectAddress(result: GeoapifyResult) {
+    setAddress(result.formatted)
+    setAddressOpen(false)
+    // Deliberately not persisted to localStorage and no depot swap: this is a
+    // form field, and silently relocating the page behind the modal would be a
+    // surprising thing for typing an address to do.
+    onAddressZipChange?.(result.postcode)
+  }
 
   useEffect(() => {
     if (!open) return
@@ -243,18 +279,79 @@ export function GuestLeadModal({
                     />
                   </div>
 
-                  <div>
+                  <div className="relative">
                     <label htmlFor="guest-address" className={LABEL}>
                       Delivery address
                     </label>
                     <input
                       id="guest-address"
-                      autoComplete="street-address"
+                      autoComplete="postal-code"
+                      inputMode="numeric"
                       value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="City or ZIP is enough for now"
+                      onChange={(e) => {
+                        setAddress(e.target.value)
+                        setAddressOpen(true)
+                      }}
+                      onFocus={() => setAddressOpen(true)}
+                      // Deferred so a click on a suggestion lands before the
+                      // list unmounts.
+                      onBlur={() => setTimeout(() => setAddressOpen(false), 150)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setAddressOpen(false)
+                          clearAddress()
+                        }
+                        if (e.key === 'Enter' && addressResults.length === 1) {
+                          e.preventDefault()
+                          selectAddress(addressResults[0])
+                        }
+                      }}
+                      aria-autocomplete="list"
+                      placeholder="Enter your ZIP code"
                       className={FIELD}
                     />
+
+                    {/* Opens downward, capped below the 226px the slide
+                        track leaves under this field — the track clips
+                        overflow, so an uncapped list would be cut off. Upward
+                        fits too, but lands squarely on the Email input and
+                        reads as that field's suggestions rather than this
+                        one's. */}
+                    {addressOpen &&
+                      (addressResults.length > 0 || addressLoading || !!addressError) && (
+                        <ul
+                          role="listbox"
+                          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-y-auto rounded-md border border-theme-border bg-theme-bg shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
+                        >
+                          {addressLoading && addressResults.length === 0 && (
+                            <li className="px-3 py-2.5 text-sm text-theme-muted">Searching…</li>
+                          )}
+                          {addressError && !addressLoading && (
+                            <li className="px-3 py-2.5 text-sm text-theme-primary">
+                              {addressError}
+                            </li>
+                          )}
+                          {addressResults.map((r) => (
+                            <li key={r.placeId} role="option" aria-selected={false}>
+                              <button
+                                type="button"
+                                onMouseDown={() => selectAddress(r)}
+                                className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm transition-colors hover:bg-theme-subtle dark:hover:bg-white/10"
+                              >
+                                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-theme-primary" />
+                                <span>
+                                  <span className="font-semibold text-theme-dark dark:text-white">
+                                    {r.formatted}
+                                  </span>
+                                  <span className="block text-[11px] text-theme-muted">
+                                    {r.country}
+                                  </span>
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                   </div>
                 </div>
 

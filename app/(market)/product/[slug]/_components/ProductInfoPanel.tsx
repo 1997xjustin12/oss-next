@@ -1597,6 +1597,7 @@ export function ProductInfoPanel({
           addSelectedToCart();
         }}
         onDismiss={() => setLeadModalOpen(false)}
+        onAddressZipChange={setPickedZip}
       />
 
       {locationConflict && (
