@@ -74,6 +74,27 @@ export function setGuestEmail(email: string): void {
   }
 }
 
+/**
+ * Forget everything we know about this guest.
+ *
+ * Clears the captured lead, the email the exit-intent prompt reads, and the
+ * dismissal cooldown — so the next add-to-cart asks again from scratch.
+ *
+ * Exists for demos and testing. The capture is deliberately one-shot, which
+ * makes it awkward to show twice: without this you are clearing localStorage
+ * by hand in DevTools, which is not something to do in front of an audience or
+ * on a phone. Only ever touches this browser's own storage.
+ */
+export function resetGuestCapture(): void {
+  try {
+    localStorage.removeItem(LEAD_KEY)
+    localStorage.removeItem(EMAIL_KEY)
+    localStorage.removeItem(DISMISSED_AT_KEY)
+  } catch {
+    // Storage unavailable — nothing was stored to begin with.
+  }
+}
+
 export function dismissGuestCapture(): void {
   try {
     localStorage.setItem(DISMISSED_AT_KEY, Date.now().toString())

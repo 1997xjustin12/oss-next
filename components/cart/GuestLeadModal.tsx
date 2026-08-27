@@ -137,7 +137,13 @@ export function GuestLeadModal({
     if (!open) return
 
     function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') onDismiss()
+      if (event.key !== 'Escape') return
+      // Rewind here too, not just in the close button's handler: this fires the
+      // prop directly, so without it Escape on the quote view leaves the step
+      // behind and the next visitor to open the modal lands on a stale quote
+      // instead of the form.
+      setStep('details')
+      onDismiss()
     }
     window.addEventListener('keydown', onKey)
 
