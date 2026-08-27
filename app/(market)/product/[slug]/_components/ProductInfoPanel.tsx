@@ -26,6 +26,7 @@ import { DEFAULT_LOCATION } from "@/lib/constants";
 import { normaliseRating } from "@/lib/ratings";
 import { CartLocationConflictModal } from "@/components/cart/CartLocationConflictModal";
 import { GuestLeadModal } from "@/components/cart/GuestLeadModal";
+import type { QuoteLine } from "@/components/cart/GuestLeadModal";
 import { getGuestLead, setGuestLead } from "@/lib/guestCapture";
 import type { GuestLead } from "@/lib/guestCapture";
 import { Stars } from "@/components/product/Stars";
@@ -956,11 +957,71 @@ export function ProductInfoPanel({
     addSelectedToCart();
   }
 
-  /** Captures the details, then completes the add the visitor started. */
+  /**
+   * The quote shown in the modal's second step.
+   *
+   * Built from the same values as the Summary card below, so the figure the
+   * visitor is quoted and the figure on the page behind the modal cannot
+   * disagree — which they would within a day if the modal formatted its own.
+   */
+  const quoteLines: QuoteLine[] = useMemo(() => {
+    const lines: QuoteLine[] = [];
+
+    const condition = [
+      getCustomFieldValue(activeProduct, "condition"),
+      getCustomFieldValue(activeProduct, "grade"),
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    if (condition) lines.push({ label: "Condition", value: condition });
+
+    lines.push({
+      label: "Unit price",
+      value: `${priceDisplay.price}${priceDisplay.suffix ?? ""}`,
+    });
+    lines.push({ label: "Quantity", value: String(quantity) });
+
+    // Mirrors the Summary row: a resolved route over $1,000 is withheld
+    // upstream, and saying "Call for rate" is the honest version of that.
+    lines.push({
+      label: "Delivery",
+      value: deliveryOption
+        ? `$${formatPrice(deliveryTotal)}${selection.tab === "buy" ? "" : " (one-time)"}`
+        : zipcode
+          ? "Call for rate"
+          : "Enter a ZIP code for a rate",
+      muted: !deliveryOption,
+    });
+
+    if (deliveryMiles !== null) {
+      lines.push({
+        label: "Distance",
+        value: `${Math.round(deliveryMiles).toLocaleString()} mi${
+          deliveryRates?.depot.stores[0] ? ` from ${deliveryRates.depot.stores[0]}` : ""
+        }`,
+        muted: true,
+      });
+    }
+
+    return lines;
+  }, [
+    activeProduct,
+    priceDisplay,
+    quantity,
+    deliveryOption,
+    deliveryTotal,
+    deliveryMiles,
+    deliveryRates,
+    zipcode,
+    selection.tab,
+  ]);
+
+  /**
+   * Stores the details. The modal then slides to the quote itself — it does
+   * not add to the cart here, because the visitor has not asked to yet.
+   */
   function handleLeadSubmit(lead: Omit<GuestLead, "capturedAt">) {
     setGuestLead(lead);
-    setLeadModalOpen(false);
-    addSelectedToCart();
   }
 
   function addSelectedToCart() {
@@ -1527,8 +1588,11 @@ export function ProductInfoPanel({
         open={leadModalOpen}
         productTitle={activeProduct.desc_title || activeProduct.title}
         priceLabel={`${priceDisplay.price}${priceDisplay.suffix ?? ""}`}
+        quoteLines={quoteLines}
+        quoteTotal={subtotal}
+        quoteTotalSuffix={priceDisplay.suffix}
         onSubmit={handleLeadSubmit}
-        onSkip={() => {
+        onAddToCart={() => {
           setLeadModalOpen(false);
           addSelectedToCart();
         }}
