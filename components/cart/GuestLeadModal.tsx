@@ -63,6 +63,15 @@ type Props = {
    * label, and worse than showing none.
    */
   onAddressZipChange?: (postcode: string) => void
+  /**
+   * Whether this container can actually reach the cart.
+   *
+   * False for a reference listing, which has no depot, no SKU and a
+   * placeholder location. The quote is then the whole outcome, so the second
+   * step drops the Add to cart button rather than offering an action that
+   * would put an un-fulfillable line into the cart.
+   */
+  canAddToCart?: boolean
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -89,6 +98,7 @@ export function GuestLeadModal({
   onAddToCart,
   onDismiss,
   onAddressZipChange,
+  canAddToCart = true,
 }: Props) {
   const [step, setStep] = useState<Step>('details')
   const [fullName, setFullName] = useState('')
@@ -399,7 +409,9 @@ export function GuestLeadModal({
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
                 {fullName ? `Thanks, ${fullName.split(' ')[0]}. ` : ''}
-                Here&rsquo;s what you selected
+                {canAddToCart
+                  ? "Here’s what you selected"
+                  : "Here’s what you asked about — a specialist will follow up"}
                 {email ? <> — we&rsquo;ve got you at <span className="font-semibold text-theme-dark dark:text-white">{email}</span></> : null}.
               </p>
 
@@ -442,17 +454,29 @@ export function GuestLeadModal({
               </div>
 
               <p className="mt-3 text-xs leading-relaxed text-theme-muted">
-                Delivery is an estimate until we confirm site access. Sales tax is
-                calculated at checkout.
+                {canAddToCart
+                  ? 'Delivery is an estimate until we confirm site access. Sales tax is calculated at checkout.'
+                  : 'This is a reference listing, so these figures are a guide. We’ll come back with real pricing and availability at the depot nearest you.'}
               </p>
 
               <div className="mt-6 flex flex-col gap-2.5 sm:flex-row-reverse">
-                <button type="button" onClick={addToCart} className={PRIMARY_BUTTON}>
-                  Add to cart
-                </button>
-                <Link href={ROUTES.PLP} className={SECONDARY_BUTTON}>
-                  Continue shopping
-                </Link>
+                {canAddToCart ? (
+                  <>
+                    <button type="button" onClick={addToCart} className={PRIMARY_BUTTON}>
+                      Add to cart
+                    </button>
+                    <Link href={ROUTES.PLP} className={SECONDARY_BUTTON}>
+                      Continue shopping
+                    </Link>
+                  </>
+                ) : (
+                  // Nothing to add, so the only action is to keep looking —
+                  // shown as the primary, since a lone outlined button reads
+                  // like the real one is missing.
+                  <Link href={ROUTES.PLP} className={PRIMARY_BUTTON}>
+                    Continue shopping
+                  </Link>
+                )}
               </div>
 
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-theme-border pt-4 dark:border-neutral-800">

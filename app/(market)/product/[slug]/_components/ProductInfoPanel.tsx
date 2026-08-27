@@ -948,7 +948,14 @@ export function ProductInfoPanel({
    * reason someone leaves.
    */
   function handleAddToCartClick() {
-    if (isGenericDisplay) return;
+    // A reference listing cannot reach the cart at all — it has no depot, no
+    // SKU and a placeholder location — so the quote is the only outcome
+    // available, and it is offered to signed-in visitors too. Checked before
+    // the stored-lead shortcut, or a returning guest would click into nothing.
+    if (isGenericDisplay) {
+      setLeadModalOpen(true);
+      return;
+    }
 
     if (!isAuthenticated && !getGuestLead()) {
       setLeadModalOpen(true);
@@ -985,11 +992,13 @@ export function ProductInfoPanel({
     // upstream, and saying "Call for rate" is the honest version of that.
     lines.push({
       label: "Delivery",
-      value: deliveryOption
-        ? `$${formatPrice(deliveryTotal)}${selection.tab === "buy" ? "" : " (one-time)"}`
-        : zipcode
-          ? "Call for rate"
-          : "Enter a ZIP code for a rate",
+      value: isGenericDisplay
+        ? "Varies by depot"
+        : deliveryOption
+          ? `${formatPrice(deliveryTotal)}${selection.tab === "buy" ? "" : " (one-time)"}`
+          : zipcode
+            ? "Call for rate"
+            : "Enter a ZIP code for a rate",
       muted: !deliveryOption,
     });
 
@@ -1006,6 +1015,7 @@ export function ProductInfoPanel({
     return lines;
   }, [
     activeProduct,
+    isGenericDisplay,
     priceDisplay,
     quantity,
     deliveryOption,
@@ -1450,25 +1460,32 @@ export function ProductInfoPanel({
             actions are outlined, so the eye lands on the primary path without a
             second colour competing for attention. */}
         <div className="flex flex-col gap-2.5 border-t border-theme-border px-4 py-4">
-          {/* A reference listing has no real depot behind it, so there is
-              nothing to add. A greyed-out button with no explanation just looks
-              broken — say why, and leave the two routes that do work. */}
-          {isGenericDisplay ? (
+          {/* A reference listing has no real depot behind it, so nothing can
+              actually be added — the button opens the quote form instead. The
+              note stays above it so the click lands somewhere the visitor was
+              already told about, rather than feeling like a switch. */}
+          {isGenericDisplay && (
             <p className="rounded-md border border-theme-border bg-theme-subtle px-3 py-2.5 text-[13px] leading-relaxed text-theme-mid">
-              This is a reference listing. Pricing and stock vary by depot — save
+              This is a reference listing. Pricing and stock vary by depot — get
               a quote or call us for what&rsquo;s available near you.
             </p>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAddToCartClick}
-              disabled={!inStock}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-theme-primary text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
-            >
-              <CartIcon />
-              {added ? "Added to cart" : !inStock ? "Out of stock" : "Add to cart"}
-            </button>
           )}
+
+          <button
+            type="button"
+            onClick={handleAddToCartClick}
+            disabled={!isGenericDisplay && !inStock}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-theme-primary text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <CartIcon />
+            {isGenericDisplay
+              ? "Add to cart"
+              : added
+                ? "Added to cart"
+                : !inStock
+                  ? "Out of stock"
+                  : "Add to cart"}
+          </button>
 
           <div className="grid grid-cols-2 gap-2.5">
             <button
@@ -1591,6 +1608,7 @@ export function ProductInfoPanel({
         quoteLines={quoteLines}
         quoteTotal={subtotal}
         quoteTotalSuffix={priceDisplay.suffix}
+        canAddToCart={!isGenericDisplay}
         onSubmit={handleLeadSubmit}
         onAddToCart={() => {
           setLeadModalOpen(false);
