@@ -36,6 +36,7 @@ import { CONTACT_NUMBER } from "@/lib/helpers";
 import Link from "next/link";
 import { formatPrice } from "@/lib/formatters";
 import { useDeliveryRates } from "@/hooks/useDeliveryRates";
+import { useStoredZip } from "@/hooks/useStoredZip";
 import { cheapestDeliveryOption } from "@/lib/delivery";
 
 // ─── option layer types ───────────────────────────────────────────────────────
@@ -520,18 +521,16 @@ export function ProductInfoPanel({
   const [quantity, setQuantity] = useState(1);
 
   /**
-   * Destination for the delivery quote. Seeded from the ZIP the visitor has
-   * already given elsewhere on the site, so someone arriving from the listing
-   * page sees a rate without re-entering it.
+   * Destination for the delivery quote.
+   *
+   * Falls back to the ZIP the visitor has already given elsewhere on the site,
+   * so someone arriving from the listing page gets a rate without re-entering
+   * it. Derived rather than seeded into state, which keeps the stored value and
+   * the picked one from racing on first paint.
    */
-  const [zipcode, setZipcode] = useState("");
-  useEffect(() => {
-    try {
-      setZipcode(localStorage.getItem("zipcode") ?? "");
-    } catch {
-      // Storage unavailable — the ZIP field above still works.
-    }
-  }, []);
+  const storedZip = useStoredZip();
+  const [pickedZip, setPickedZip] = useState<string | null>(null);
+  const zipcode = pickedZip ?? storedZip.postcode;
 
   const { isAuthenticated } = useAuth();
   /** Open only while a signed-out visitor is being asked for their details. */
@@ -1050,7 +1049,11 @@ export function ProductInfoPanel({
       </div>
 
       <div className="flex flex-col">
-        <div className="flex gap-[20px]">
+        {/* Wraps rather than compressing. The ZIP field shares this row with
+            the price, and on a phone the two together left it 199px wide —
+            narrower than its own placeholder. Below sm it takes its own line
+            instead. */}
+        <div className="flex flex-wrap gap-[20px]">
           {/* Price display — driven by activeProduct */}
           <div className="flex flex-col gap-0">
             <div className="uppercase text-[12px]">Price Starts At</div>
@@ -1065,12 +1068,15 @@ export function ProductInfoPanel({
               )}
             </div>
           </div>
-          {/* Delivery ZIP */}
-          <DeliveryZipCheck
-            product={activeProduct}
-            onZipChange={setZipcode}
-            locationChange={locationChange}
-          />
+          {/* Delivery ZIP. Full width on its own line below sm, then shares
+              the row with a floor wide enough to hold the field. */}
+          <div className="@container w-full min-w-0 sm:w-auto sm:flex-1 sm:basis-64">
+            <DeliveryZipCheck
+              product={activeProduct}
+              onZipChange={setPickedZip}
+              locationChange={locationChange}
+            />
+          </div>
         </div>
         <p className="text-xs text-theme-muted">{priceDisplay.note}</p>
 
