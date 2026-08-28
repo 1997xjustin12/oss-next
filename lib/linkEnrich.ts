@@ -1,3 +1,5 @@
+import { readVisitorZip } from '@/lib/visitorZip'
+
 const ENRICHED_PREFIXES = ['/sale-shipping-containers']
 
 function getPathAndParams(href: string): { path: string; params: URLSearchParams; isAbsolute: boolean } | null {
@@ -43,8 +45,10 @@ export function applyEnrichParams(href: string, zipcode: string, location: strin
 export function enrichSaleLinks() {
   if (typeof window === 'undefined') return
 
-  const zipcode  = localStorage.getItem('zipcode')       ?? ''
-  const location = localStorage.getItem('zipcode_depot') ?? ''
+  // Same resolution as everything else, so a page reached with ?zipcode= has
+  // its links enriched with that ZIP rather than the one this browser happens
+  // to remember from an earlier visit.
+  const { postcode: zipcode, depot: location } = readVisitorZip()
   if (!zipcode && !location) return
 
   document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((a) => {

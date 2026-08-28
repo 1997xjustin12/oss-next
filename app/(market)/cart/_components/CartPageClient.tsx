@@ -6,6 +6,7 @@ import { ShoppingCart, RefreshCw, Truck } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { cartItemsToLineItems } from '@/lib/cart'
 import { applyEnrichParams } from '@/lib/linkEnrich'
+import { readVisitorZip } from '@/lib/visitorZip'
 import { ROUTES } from '@/config/routes'
 import { CartItemRow } from '@/components/cart/CartItemRow'
 import { CartSummary } from '@/components/cart/CartSummary'
@@ -134,9 +135,8 @@ function EmptyCart() {
   // mismatch against, and applyEnrichParams no-ops when nothing is stored.
   const [href] = useState<string>(() => {
     if (typeof window === 'undefined') return ROUTES.PLP
-    const zipcode = localStorage.getItem('zipcode') ?? ''
-    const location = localStorage.getItem('zipcode_depot') ?? ''
-    return applyEnrichParams(ROUTES.PLP, zipcode, location)
+    const { postcode, depot } = readVisitorZip()
+    return applyEnrichParams(ROUTES.PLP, postcode, depot)
   })
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Phone } from "lucide-react";
@@ -8,6 +8,7 @@ import { CartButton } from "@/components/layout/CartButton";
 import { WishlistButton } from "@/components/layout/WishlistButton";
 import { BASE_URL } from "@/lib/helpers";
 import { applyEnrichParams } from "@/lib/linkEnrich";
+import { useStoredZip } from "@/hooks/useStoredZip";
 import { ROUTES } from "@/config/routes";
 
 type NavChild = { href: string; label: string };
@@ -80,18 +81,17 @@ export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [activeLink, setActiveLink] = useState<string | null>(null);
   const [dropdownLeft, setDropdownLeft] = useState(0);
-  const [enrichZip, setEnrichZip] = useState('');
-  const [enrichLoc, setEnrichLoc] = useState('');
   const navRef = useRef<HTMLElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    setEnrichZip(localStorage.getItem('zipcode') ?? '');
-    setEnrichLoc(localStorage.getItem('zipcode_depot') ?? '');
-  }, []);
+  // Read straight from the hook rather than copied into state: it already
+  // holds the resolved value, and mirroring it only adds a render and a second
+  // copy that can lag behind.
+  const visitorZip = useStoredZip();
 
   // Enrich a single href using stored location data
-  const e = (href: string) => applyEnrichParams(href, enrichZip, enrichLoc);
+  const e = (href: string) =>
+    applyEnrichParams(href, visitorZip.postcode, visitorZip.depot);
 
   const activeNavLink = NAV_LINKS.find((l) => l.href === activeLink);
 
