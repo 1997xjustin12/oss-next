@@ -31,6 +31,7 @@ import { getGuestLead, setGuestLead } from "@/lib/guestCapture";
 import type { GuestLead } from "@/lib/guestCapture";
 import { Stars } from "@/components/product/Stars";
 import { DeliveryZipCheck } from "./DeliveryZipCheck";
+import { ZipGateModal } from "./ZipGateModal";
 import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { ShareButton } from "@/components/product/ShareButton";
 import { CONTACT_NUMBER } from "@/lib/helpers";
@@ -532,6 +533,21 @@ export function ProductInfoPanel({
   const storedZip = useStoredZip();
   const [pickedZip, setPickedZip] = useState<string | null>(null);
   const zipcode = pickedZip ?? storedZip.postcode;
+
+  /**
+   * Ask for a ZIP on arrival when nothing else has supplied one.
+   *
+   * useStoredZip resolves the URL parameter and storage on mount, so this can
+   * only be judged once it has settled — `resolved` distinguishes "no ZIP" from
+   * "not looked yet", which are the same empty string otherwise and would flash
+   * the modal at every visitor for a frame.
+   *
+   * Dismissal is remembered for the page view only. Someone who closes it can
+   * still use the ZIP field in the panel, and refusing once should not mean the
+   * site never offers again on a later visit.
+   */
+  const [zipAsked, setZipAsked] = useState(false);
+  const zipGateOpen = storedZip.resolved && !zipcode && !zipAsked;
 
   const { isAuthenticated } = useAuth();
   /** Open only while a signed-out visitor is being asked for their details. */
@@ -1611,6 +1627,16 @@ export function ProductInfoPanel({
 
       {/* Sits with the location-conflict modal so both cart-blocking dialogs
           live in one place. */}
+      {/* Sits with the other cart-blocking dialogs. */}
+      <ZipGateModal
+        open={zipGateOpen}
+        onResolved={(postcode) => {
+          setPickedZip(postcode);
+          setZipAsked(true);
+        }}
+        onDismiss={() => setZipAsked(true)}
+      />
+
       <GuestLeadModal
         open={leadModalOpen}
         productTitle={activeProduct.desc_title || activeProduct.title}
