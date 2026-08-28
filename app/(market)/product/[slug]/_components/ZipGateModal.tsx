@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { Loader2, X } from 'lucide-react'
+import { Loader2, MapPin, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
+import type { GeoapifyResult } from '@/hooks/useGeoapify'
 
 /**
  * Asks for a ZIP code on arrival, when we have no idea where the visitor is.
@@ -35,6 +36,15 @@ type Props = {
 export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
   const [zip, setZip] = useState('')
   const [touched, setTouched] = useState(false)
+  const [listOpen, setListOpen] = useState(false)
+  /**
+   * The suggestion the visitor actually chose.
+   *
+   * Tracked rather than assuming the first result: once the list is visible
+   * they can pick any row, and submitting `results[0]` would quietly resolve a
+   * different place than the one they clicked.
+   */
+  const [chosen, setChosen] = useState<GeoapifyResult | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -69,8 +79,11 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
   // already the source of truth for whether this ZIP exists, and copying its
   // outcome into an effect only creates a second version that can disagree.
   const trimmed = zip.trim()
-  const match = results[0]
+  // What submitting will use: the row they clicked, or the best guess when they
+  // typed a full ZIP and pressed the button without opening the list.
+  const match = chosen ?? results[0]
   const busy = loading && trimmed.length > 1
+  const showList = listOpen && !chosen && (results.length > 0 || busy)
   // Only complain once enough has been typed to be a real attempt, and only
   // after the search has settled — not while it is still running.
   const message =
@@ -80,9 +93,16 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
         ? "We couldn't find that ZIP code. Check it and try again."
         : null
 
+  function pick(result: GeoapifyResult) {
+    setChosen(result)
+    setZip(result.formatted)
+    setListOpen(false)
+  }
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setTouched(true)
+    setListOpen(false)
     // No match yet: `message` above explains why, rather than the button
     // sitting greyed out with nothing said.
     if (!match) return
@@ -131,7 +151,27 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
               onChange={(e) => {
                 setZip(e.target.value)
                 setTouched(true)
+                setListOpen(true)
+                // Typing after choosing means they are choosing again.
+                setChosen(null)
               }}
+              onFocus={() => setListOpen(true)}
+              // Deferred so a click on a suggestion lands before it unmounts.
+              onBlur={() => setTimeout(() => setListOpen(false), 150)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape' && showList) {
+                  // Close the list, not the modal — the window handler above
+                  // would otherwise take Escape as "dismiss the whole thing".
+                  e.stopPropagation()
+                  setListOpen(false)
+                }
+                if (e.key === 'Enter' && showList && results[0]) {
+                  e.preventDefault()
+                  pick(results[0])
+                }
+              }}
+              aria-autocomplete="list"
+              aria-expanded={showList}
               placeholder="Enter delivery zip code"
               aria-label="Delivery ZIP or postal code"
               aria-invalid={!!message}
@@ -139,6 +179,34 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
             />
             {busy && (
               <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-theme-muted" />
+            )}
+
+            {showList && (
+              <ul
+                role="listbox"
+                className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-theme-border bg-theme-bg shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
+              >
+                {busy && results.length === 0 && (
+                  <li className="px-3 py-2.5 text-sm text-theme-muted">Searching…</li>
+                )}
+                {results.map((r) => (
+                  <li key={r.placeId} role="option" aria-selected={false}>
+                    <button
+                      type="button"
+                      onMouseDown={() => pick(r)}
+                      className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm transition-colors hover:bg-theme-subtle dark:hover:bg-white/10"
+                    >
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-theme-primary" />
+                      <span>
+                        <span className="font-semibold text-theme-dark dark:text-white">
+                          {r.formatted}
+                        </span>
+                        <span className="block text-[11px] text-theme-muted">{r.country}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
 

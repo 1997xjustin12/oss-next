@@ -57,19 +57,28 @@ function parseFeature(feature: unknown): GeoapifyResult {
   const nearestLocation = getNearestLocation(lat, lon)
   const postcode = String(p.postcode ?? '')
   const redirectParams = new URLSearchParams({ zipcode: postcode })
-  const formatted = String(`${p.city}, ${p.state_code} ${postcode}`)
-  const formatted2 = String(`${p.city}, ${p.state_code} ${postcode}, ${p.country}`)
+  // Built by joining the parts that exist rather than interpolating directly.
+  // Geoapify returns postcodes with no city — 30345 is one — and `${p.city}`
+  // renders those as the literal string "undefined". That is not just ugly on
+  // screen: selectResult writes `formatted` into zipcode_label, so
+  // "undefined, GA 30345" gets persisted and shown back on every later visit.
+  const city = String(p.city ?? '')
+  const stateCode = String(p.state_code ?? '')
+  const country = String(p.country ?? '')
+  const place = [city, stateCode].filter(Boolean).join(', ')
+  const formatted = [place, postcode].filter(Boolean).join(' ')
+  const formatted2 = [formatted, country].filter(Boolean).join(', ')
   if (nearestLocation) redirectParams.set('location', nearestLocation)
 
   return {
     placeId:         String(p.place_id     ?? ''),
     formatted,
     formatted2,
-    city:            String(p.city         ?? ''),
+    city,
     state:           String(p.state        ?? ''),
-    stateCode:       String(p.state_code   ?? ''),
+    stateCode,
     postcode,
-    country:         String(p.country      ?? ''),
+    country,
     countryCode:     String(p.country_code ?? ''),
     lat,
     lon,
