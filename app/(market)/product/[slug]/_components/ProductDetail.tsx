@@ -9,6 +9,7 @@ import { resolveContainerVariant } from "@/lib/containerVariant";
 import { ROUTES } from "@/config/routes";
 import type { ProductHit } from "@/types/product";
 import { ProductVariantShell } from "./ProductVariantShell";
+import { MobileTrustSection } from "./MobileTrustSection";
 import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { AccessoryDetail } from "./AccessoryDetail";
 import { BodyTabsSection } from "./BodyTabsSection";
@@ -182,6 +183,9 @@ export function ProductDetail({ product, relatedProducts }: Props) {
         onVariantChange={setActiveProduct}
         locationChange={locationChange}
       />
+
+      {/* Phones only — the desktop sidebar already carries this. */}
+      <MobileTrustSection />
 
       {/* BODY TABS */}
       <BodyTabsSection variant={containerVariant} />
