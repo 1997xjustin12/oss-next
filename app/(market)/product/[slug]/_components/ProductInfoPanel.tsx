@@ -132,7 +132,13 @@ function InfoHint({ text }: { text: string }) {
 
 function CartIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M4 4H5.62563C6.193 4 6.47669 4 6.70214 4.12433C6.79511 4.17561 6.87933 4.24136 6.95162 4.31912C7.12692 4.50769 7.19573 4.7829 7.33333 5.33333L7.51493 6.05972C7.616 6.46402 7.66654 6.66617 7.74455 6.83576C8.01534 7.42449 8.5546 7.84553 9.19144 7.96546C9.37488 8 9.58326 8 10 8"
         stroke="currentColor"
@@ -160,7 +166,13 @@ function CartIcon() {
 
 function QuoteIcon() {
   return (
-    <svg width="13" height="16" viewBox="0 0 13 16" fill="none" aria-hidden="true">
+    <svg
+      width="13"
+      height="16"
+      viewBox="0 0 13 16"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M1 4.6C1 3.33988 1 2.70982 1.24524 2.22852C1.46095 1.80516 1.80516 1.46095 2.22852 1.24524C2.70982 1 3.33988 1 4.6 1H7.9C9.16015 1 9.79015 1 10.2715 1.24524C10.6949 1.46095 11.0391 1.80516 11.2548 2.22852C11.5 2.70982 11.5 3.33988 11.5 4.6V14.5L6.25 11.5L1 14.5V4.6Z"
         stroke="currentColor"
@@ -174,7 +186,13 @@ function QuoteIcon() {
 
 function PhoneIcon() {
   return (
-    <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true">
+    <svg
+      width="12"
+      height="14"
+      viewBox="0 0 12 14"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M10.1336 9.44073L11.6542 11.5077C11.9487 11.908 11.863 12.4713 11.4626 12.7658C9.29838 14.358 6.29269 14.1165 4.41043 12.1991L4.3007 12.0874C2.88088 10.6411 1.67382 9.00034 0.715752 7.21436L0.641711 7.07634C-0.628409 4.70865 0.0357438 1.76733 2.20001 0.175136C2.60032 -0.119363 3.16358 -0.033586 3.45807 0.366725L4.97872 2.43373C5.30599 2.87859 5.21067 3.50454 4.7658 3.83182L3.32341 4.89295C3.05461 5.0907 2.94251 5.43826 3.04511 5.7558C3.63821 7.59142 4.81068 9.18515 6.38654 10.2978C6.65914 10.4903 7.02431 10.4867 7.29311 10.289L8.7355 9.22782C9.18037 8.90054 9.80632 8.99587 10.1336 9.44073Z"
         fill="currentColor"
@@ -474,13 +492,17 @@ function OptionBtn({
       )}
       {group === "size" && (
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[13px] font-bold leading-tight">{entry.label}</span>
+          <span className="text-[13px] font-bold leading-tight">
+            {entry.label}
+          </span>
           {/* Gold against the dark fill, so the figure carries on the selected
               key without a second UI colour; on the light keys it simply
               follows the label, where gold would not have the contrast. */}
           <span
             className={`whitespace-nowrap text-[13px] font-bold leading-tight ${
-              entry.active && entry.available ? "text-[#F2A93B]" : "text-[#6B6B6B] dark:text-gray-400"
+              entry.active && entry.available
+                ? "text-[#F2A93B]"
+                : "text-[#6B6B6B] dark:text-gray-400"
             }`}
           >
             {entry.price}
@@ -933,12 +955,17 @@ export function ProductInfoPanel({
     loading: deliveryLoading,
     error: deliveryError,
   } = useDeliveryRates({
-    slug: typeof activeProduct.handle === "string" ? activeProduct.handle : undefined,
+    slug:
+      typeof activeProduct.handle === "string"
+        ? activeProduct.handle
+        : undefined,
     zipcode,
     enabled: !isGenericDisplay,
   });
 
-  const deliveryOption = deliveryRates ? cheapestDeliveryOption(deliveryRates) : null;
+  const deliveryOption = deliveryRates
+    ? cheapestDeliveryOption(deliveryRates)
+    : null;
   const deliveryMiles = deliveryRates?.distance_miles ?? null;
 
   /**
@@ -962,6 +989,17 @@ export function ProductInfoPanel({
   const deliveryInSubtotal = selection.tab === "buy" ? deliveryTotal : 0;
 
   /**
+   * True while the subtotal is missing a delivery charge it is about to gain.
+   *
+   * Narrow on purpose. Rent and rent-to-own never add delivery to the figure,
+   * and with no ZIP there is nothing being calculated — in both cases the
+   * subtotal is already final and marking it pending would be a lie in the
+   * other direction.
+   */
+  const subtotalPending =
+    selection.tab === "buy" && !isGenericDisplay && !!zipcode && deliveryLoading;
+
+  /**
    * Order total: unit price × quantity, plus delivery where it applies.
    *
    * Rounded in whole cents rather than multiplied straight: 232.14 × 3 is
@@ -975,7 +1013,9 @@ export function ProductInfoPanel({
    */
   const subtotal = useMemo(() => {
     const total =
-      Math.round((activeProduct.sale_price * quantity + deliveryInSubtotal) * 100) / 100;
+      Math.round(
+        (activeProduct.sale_price * quantity + deliveryInSubtotal) * 100,
+      ) / 100;
     return `$${formatPrice(total)}`;
   }, [activeProduct.sale_price, quantity, deliveryInSubtotal]);
 
@@ -1056,7 +1096,9 @@ export function ProductInfoPanel({
       lines.push({
         label: "Distance",
         value: `${Math.round(deliveryMiles).toLocaleString()} mi${
-          deliveryRates?.depot.stores[0] ? ` from ${deliveryRates.depot.stores[0]}` : ""
+          deliveryRates?.depot.stores[0]
+            ? ` from ${deliveryRates.depot.stores[0]}`
+            : ""
         }`,
         muted: true,
       });
@@ -1163,11 +1205,21 @@ export function ProductInfoPanel({
       </p>
 
       <div className="flex items-center gap-2 mb-5 text-[20px]">
-        <span>{rating.toFixed(1)}</span>
-        <Stars count={Math.round(rating)} />
-        <a href="#reviews" className="underline">
-          {reviewCount > 0 && `(${reviewCount})`}
-        </a>
+        {rating === 0 && (
+          <>
+            <span>4.8</span>
+            <Stars count={Math.round(4.8)} />
+          </>
+        )}
+        {rating !== 0 && (
+          <>
+            <span>{rating.toFixed(1)}</span>
+            <Stars count={Math.round(rating)} />
+            <a href="#reviews" className="underline">
+              {reviewCount > 0 && `(${reviewCount})`}
+            </a>
+          </>
+        )}
       </div>
 
       <div className="flex flex-col">
@@ -1264,7 +1316,11 @@ export function ProductInfoPanel({
         {(["buy", "rent", "rto"] as PriceTab[]).map((key) => {
           const active = selection.tab === key;
           const label =
-            key === "buy" ? "Purchase" : key === "rent" ? "Rent" : "Rent-To-Own";
+            key === "buy"
+              ? "Purchase"
+              : key === "rent"
+                ? "Rent"
+                : "Rent-To-Own";
           const note =
             key === "buy"
               ? "Call For Best Pricing"
@@ -1297,7 +1353,9 @@ export function ProductInfoPanel({
                 </span>
                 <span
                   className={`mt-0.5 block text-[11px] leading-tight sm:text-[12px] ${
-                    active ? "text-white/85" : "text-[#8A8A8A] dark:text-gray-400"
+                    active
+                      ? "text-white/85"
+                      : "text-[#8A8A8A] dark:text-gray-400"
                   }`}
                 >
                   {note}
@@ -1308,7 +1366,7 @@ export function ProductInfoPanel({
         })}
       </div>
 
-      <div className="text-[#474747] text-[14px] font-bold mt-4 mb-2">
+      <div className="text-theme-primary md:text-[#474747] text-[14px] font-bold mt-4 mb-2">
         Select Container Specifications
       </div>
 
@@ -1488,7 +1546,6 @@ export function ProductInfoPanel({
             </span>
           </li>
         </ul>
-
       </div>
 
       {/* Ordering block.
@@ -1526,7 +1583,9 @@ export function ProductInfoPanel({
               </span>
               <button
                 type="button"
-                onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
+                onClick={() =>
+                  setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))
+                }
                 disabled={quantity >= MAX_QUANTITY}
                 aria-label="Increase quantity"
                 className="flex h-8 w-8 items-center justify-center text-lg leading-none text-[#0F3A5C] transition-colors hover:bg-[#E6EDF3] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
@@ -1537,7 +1596,9 @@ export function ProductInfoPanel({
           </div>
 
           <div className="text-right">
-            <div className="text-[12px] font-semibold text-white/75">Subtotal</div>
+            <div className="text-[12px] font-semibold text-white/75">
+              Subtotal
+            </div>
             <div className="text-[28px] font-bold leading-tight tabular-nums tracking-tight text-white">
               {subtotal}
               {priceDisplay.suffix && (
@@ -1546,6 +1607,19 @@ export function ProductInfoPanel({
                 </span>
               )}
             </div>
+            {/* The figure above is real but not yet final — delivery is still
+                being priced and will be added to it. Saying so beats letting a
+                total sit there looking settled and then jump by a few hundred
+                dollars, which is what it did while the delivery row directly
+                above already read "Calculating…". */}
+            {subtotalPending && (
+              <div
+                aria-live="polite"
+                className="text-[11px] font-medium text-white/70"
+              >
+                + delivery, still calculating
+              </div>
+            )}
           </div>
         </div>
         {/* Actions. One filled button carries the accent; the two supporting
