@@ -1183,28 +1183,27 @@ export function ProductInfoPanel({
     <div className="w-full">
       {/* Category label */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-[18px] font-bold uppercase text-theme-primary">
+        <span className="text-[13px] font-bold uppercase text-theme-primary sm:text-[18px]">
           {product?.loc_title}
         </span>
         <span className="flex-1 h-px bg-theme-primary-light" />
       </div>
 
-      <h1 className="text-[45px] leading-11.5 mb-2 font-anton line-clamp-4">
+      <h1 className="mb-2 font-anton text-[26px] leading-[30px] line-clamp-4 sm:text-[45px] sm:leading-11.5">
         {product.title}
       </h1>
 
-      <div className="flex flex-wrap gap-[15px]">
-        <div className="font-extrabold text-[22px]">{product?.size_title}</div>
-        <div className="text-[#A3A3A3] text-[14px] underline self-baseline-last">
-          Other size available
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className="text-[17px] font-extrabold sm:text-[22px]">
+            {product?.size_title}
+          </div>
+          <div className="text-[12px] text-[#A3A3A3] underline sm:text-[14px]">
+            Other size available
+          </div>
         </div>
-      </div>
 
-      <p className="text-[14px] text-[#A3A3A3] mb-3">
-        SKU: {product.variants?.[0]?.sku}
-      </p>
-
-      <div className="flex items-center gap-2 mb-5 text-[20px]">
+        <div className="flex items-center gap-1.5 text-[15px] sm:text-[20px]">
         {rating === 0 && (
           <>
             <span>4.8</span>
@@ -1220,19 +1219,24 @@ export function ProductInfoPanel({
             </a>
           </>
         )}
+        </div>
       </div>
+
+      <p className="mb-3 text-[12px] text-[#A3A3A3] sm:text-[14px]">
+        SKU: {product.variants?.[0]?.sku}
+      </p>
 
       <div className="flex flex-col">
         {/* Wraps rather than compressing. The ZIP field shares this row with
             the price, and on a phone the two together left it 199px wide —
             narrower than its own placeholder. Below sm it takes its own line
             instead. */}
-        <div className="flex flex-wrap gap-[20px]">
+        <div className="flex flex-wrap gap-x-4 gap-y-3 sm:gap-[20px]">
           {/* Price display — driven by activeProduct */}
           <div className="flex flex-col gap-0">
             <div className="uppercase text-[12px]">Price Starts At</div>
             <div className="flex items-baseline gap-2 flex-wrap">
-              <p className="text-[52px] font-anton  font-normal">
+              <p className="font-anton text-[38px] font-normal sm:text-[52px]">
                 {priceDisplay.price}
               </p>
               {priceDisplay.suffix && (
@@ -1244,7 +1248,12 @@ export function ProductInfoPanel({
           </div>
           {/* Delivery ZIP. Full width on its own line below sm, then shares
               the row with a floor wide enough to hold the field. */}
-          <div className="@container w-full min-w-0 sm:w-auto sm:flex-1 sm:basis-64">
+          {/* Shares the row with the price, as the design has it, but only
+              while it can hold its own field: below roughly 380px the two
+              together squeezed it to 142px — narrower than its placeholder —
+              so the min-width makes it wrap to its own line instead of
+              compressing. */}
+          <div className="@container min-w-[215px] flex-1 sm:w-auto sm:basis-64">
             <DeliveryZipCheck
               product={activeProduct}
               onZipChange={setPickedZip}

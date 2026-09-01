@@ -171,8 +171,11 @@ export function ProductVariantShell({
 
       {/* PRODUCT GRID */}
       <section className="px-4 sm:px-[5%] py-8 sm:py-10">
-        <div className="my-5">
-          <h1 className="text-[42px] font-bold leading-[42px]">
+        <div className="my-4 sm:my-5">
+          {/* 42px was unconditional, so on a phone this ran to seven lines and
+              pushed the gallery below the fold. Scaled for the viewport it
+              carries the same weight in two. */}
+          <h1 className="text-[22px] font-bold leading-[27px] sm:text-[42px] sm:leading-[42px]">
             {activeProduct?.seo?.focus_keyphrase && (
               <>
                 <span className="text-theme-primary">
