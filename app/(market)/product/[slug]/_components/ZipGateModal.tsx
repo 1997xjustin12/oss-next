@@ -27,8 +27,12 @@ import type { GeoapifyResult } from '@/hooks/useGeoapify'
 
 type Props = {
   open: boolean
-  /** Fires with the resolved postcode once the visitor supplies one. */
-  onResolved: (postcode: string) => void
+  /**
+   * Fires with the resolved postcode and the depot nearest it, so a caller
+   * on a listing with no depot of its own can move the visitor to a real
+   * one. The depot is null when nothing is close enough.
+   */
+  onResolved: (postcode: string, depot: string | null) => void
   /** Closed without answering — the X or Escape. */
   onDismiss: () => void
 }
@@ -107,7 +111,7 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
     // sitting greyed out with nothing said.
     if (!match) return
     selectResult(match)
-    onResolved(match.postcode)
+    onResolved(match.postcode, match.nearestLocation)
   }
 
   return createPortal(

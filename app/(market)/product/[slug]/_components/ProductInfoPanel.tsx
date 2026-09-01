@@ -611,7 +611,6 @@ export function ProductInfoPanel({
    * site never offers again on a later visit.
    */
   const [zipAsked, setZipAsked] = useState(false);
-  const zipGateOpen = storedZip.resolved && !zipcode && !zipAsked;
 
   const { isAuthenticated } = useAuth();
   /** Open only while a signed-out visitor is being asked for their details. */
@@ -1022,6 +1021,15 @@ export function ProductInfoPanel({
   // visible either way.
   const isGenericDisplay = isGenericDisplayHit(activeProduct);
   const inStock = isInStockHit(activeProduct);
+
+  /**
+   * A reference listing always asks, even from a visitor whose ZIP we
+   * already know: it has no depot of its own, so the page cannot price
+   * anything until that ZIP is turned into a real one. Everywhere else the
+   * prompt only appears when nothing has supplied a ZIP at all.
+   */
+  const zipGateOpen =
+    storedZip.resolved && !zipAsked && (!zipcode || isGenericDisplay);
 
   /**
    * Delivery quote for the current selection. Keyed on the active product's
@@ -1880,9 +1888,16 @@ export function ProductInfoPanel({
       {/* Sits with the other cart-blocking dialogs. */}
       <ZipGateModal
         open={zipGateOpen}
-        onResolved={(postcode) => {
+        onResolved={(postcode, depot) => {
           setPickedZip(postcode);
           setZipAsked(true);
+          // On a reference listing the ZIP alone changes nothing — the page
+          // still has no depot behind it. Handing the depot to the swap
+          // moves the visitor onto the real container stocked near them,
+          // which is the whole reason for asking here.
+          if (isGenericDisplay && depot && locationChange?.onChange) {
+            locationChange.onChange(depot);
+          }
         }}
         onDismiss={() => setZipAsked(true)}
       />
