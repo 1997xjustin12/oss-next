@@ -1664,13 +1664,13 @@ export function ProductInfoPanel({
       {/* Corner to corner on mobile, so the rounding is dropped too — a
           radius against the screen edge reads as a rendering fault rather
           than a card. */}
-      <div className="-mx-4 mt-4 bg-[#0F3A5C] px-4 py-4 text-white sm:mx-0 sm:rounded-lg">
+      <div className="-mx-4 mt-4 rounded-t-none rounded-b-[30px] bg-[#0F3A5C] px-5 py-4 text-white sm:mx-0">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <div className="text-[12px] font-semibold text-white/75">
+            <div className="text-[11px] font-semibold text-white/75">
               Quantity
             </div>
-            <div className="mt-1.5 inline-flex items-center overflow-hidden rounded-md bg-white">
+            <div className="mt-1.5 inline-flex items-center overflow-hidden rounded bg-white">
               {/* Real buttons, not divs: a div is unreachable by keyboard and
                   invisible to assistive tech, and these change what gets
                   ordered. */}
@@ -1683,13 +1683,13 @@ export function ProductInfoPanel({
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1}
                 aria-label="Decrease quantity"
-                className="flex h-8 w-8 items-center justify-center text-lg leading-none text-[#0F3A5C] transition-colors hover:bg-[#E6EDF3] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-6 w-6 items-center justify-center bg-[#E7EDF2] text-[13px] leading-none text-[#0F3A5C] transition-colors hover:bg-[#D5DFE8] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
               >
                 &minus;
               </button>
               <span
                 aria-live="polite"
-                className="w-9 border-x border-[#D6E0E8] py-1 text-center text-sm font-semibold tabular-nums text-[#0F3A5C]"
+                className="w-7 py-0.5 text-center text-[13px] font-semibold tabular-nums text-[#0F3A5C]"
               >
                 {quantity}
               </span>
@@ -1700,7 +1700,7 @@ export function ProductInfoPanel({
                 }
                 disabled={quantity >= MAX_QUANTITY}
                 aria-label="Increase quantity"
-                className="flex h-8 w-8 items-center justify-center text-lg leading-none text-[#0F3A5C] transition-colors hover:bg-[#E6EDF3] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-6 w-6 items-center justify-center bg-[#E7EDF2] text-[13px] leading-none text-[#0F3A5C] transition-colors hover:bg-[#D5DFE8] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
               >
                 +
               </button>
@@ -1753,7 +1753,7 @@ export function ProductInfoPanel({
             type="button"
             onClick={handleAddToCartClick}
             disabled={!isGenericDisplay && !inStock}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-theme-primary text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-theme-primary text-sm font-bold text-white sm:h-10 transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
           >
             <CartIcon />
             {isGenericDisplay
@@ -1768,11 +1768,11 @@ export function ProductInfoPanel({
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <button
               type="button"
-              className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="flex h-10 items-center justify-center gap-2 rounded-lg border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
             >
               <QuoteIcon />
               <span className="sm:hidden">Lock in your price &middot; Save Quote</span>
-              <span className="hidden sm:inline">Save quote</span>
+              <span className="hidden sm:inline">Save Quote</span>
             </button>
             {/* A link, not a button: this dials rather than acting on the page,
                 so it belongs in the browser's normal navigation affordances —
@@ -1781,7 +1781,7 @@ export function ProductInfoPanel({
             <Link
               href={CONTACT_TEL}
               aria-label={`Call ${CONTACT_NUMBER} for expert help`}
-              className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="flex h-10 items-center justify-center gap-2 rounded-lg border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
             >
               <PhoneIcon />
               Get expert help
