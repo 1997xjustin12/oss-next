@@ -477,12 +477,16 @@ function OptionBtn({
       // resting keys, so which one is chosen reads from across the page rather
       // than from a border colour. No lift on hover: these sit in tight rows of
       // three and four, and a translating neighbour makes the row feel loose.
-      className={`rounded-sm border px-2 py-1.5 transition-colors sm:px-3 sm:py-2.5 ${className} ${
+      className={`rounded border px-2 py-1.5 transition-colors sm:rounded-md sm:px-3.5 sm:py-2 ${className} ${
         !entry.available
           ? "cursor-not-allowed border-theme-border bg-theme-bg opacity-35"
           : entry.active
-            ? "border-theme-primary bg-theme-bg text-theme-primary sm:border-[#3B3B3B] sm:bg-[#3B3B3B] sm:text-white"
-            : "border-[#DEDEDE] bg-[#F5F5F5] text-[#3A3A3A] hover:bg-[#EBEBEB] dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
+            ? // Phone: outlined red. Desktop: a raised charcoal key — the
+              // gradient runs light to dark down the face and the inset
+              // highlight catches the top edge, which is what gives it the
+              // pressed-in look rather than a flat dark fill.
+              "border-theme-primary bg-theme-bg text-theme-primary sm:border-[#2B2B2B] sm:bg-linear-to-b sm:from-[#666666] sm:to-[#3A3A3A] sm:text-white sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]"
+            : "border-[#DEDEDE] bg-[#F5F5F5] text-[#3A3A3A] hover:bg-[#EBEBEB] sm:border-[#E4E4E4] sm:bg-linear-to-b sm:from-[#FDFDFD] sm:to-[#F1F1F1] sm:text-[#4A4A4A] sm:hover:from-[#F6F6F6] sm:hover:to-[#E9E9E9] dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
       }`}
     >
       {/* Stacked on a phone, where the options sit in a wrapping row and a
@@ -513,8 +517,8 @@ function OptionBtn({
           <span
             className={`whitespace-nowrap text-[10px] font-semibold leading-tight sm:text-[13px] sm:font-bold ${
               entry.active && entry.available
-                ? "text-theme-primary sm:text-[#F2A93B]"
-                : "text-[#6B6B6B] dark:text-gray-400"
+                ? "text-theme-primary sm:text-[#F5A623]"
+                : "text-[#7C7C7C] dark:text-gray-400"
             }`}
           >
             {entry.price}
