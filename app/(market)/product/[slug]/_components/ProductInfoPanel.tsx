@@ -183,6 +183,33 @@ function PhoneIcon() {
   );
 }
 
+/**
+ * The solid handset beside the "Found it Cheaper?" number.
+ *
+ * Filled with `currentColor` rather than the design's #279ED4 literal: it sits
+ * inside a link already set to that colour, so it follows if the link ever
+ * changes instead of drifting to a hardcoded blue. Decorative — the number it
+ * sits beside already says what the link does.
+ */
+function HandsetIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="18"
+      viewBox="0 0 16 18"
+      fill="none"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <path
+        d="M2.34873 0.755771L3.06468 0.206591C3.50289 -0.129547 4.13063 -0.0468012 4.46677 0.391411L6.7095 3.31518C7.04564 3.75339 6.96289 4.38113 6.52468 4.71727L4.4995 6.27071C4.16246 6.52925 4.02867 6.97445 4.16735 7.37595C4.96907 9.69696 6.50196 11.6953 8.53594 13.0711C8.88779 13.3091 9.35245 13.2953 9.68949 13.0367L11.7147 11.4833C12.1529 11.1471 12.7806 11.2299 13.1168 11.6681L15.3595 14.5919C15.6956 15.0301 15.6129 15.6578 15.1747 15.994L14.4587 16.5431C12.0895 18.3604 8.74461 18.1591 6.6105 16.0708L5.4955 14.9797C3.93782 13.4554 2.60469 11.7174 1.53612 9.81796L0.771221 8.45831C-0.692779 5.85594 -0.0204366 2.57309 2.34873 0.755771Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 /** Digits only — `tel:` should not carry the display formatting. */
 const CONTACT_TEL = `tel:${CONTACT_NUMBER.replace(/[^\d+]/g, "")}`;
 
@@ -428,35 +455,33 @@ function OptionBtn({
       type="button"
       disabled={!entry.available}
       onClick={entry.onSelect}
-      // Styling restored from the pre-Figma version: a red outline and tint for
-      // the selected option instead of the dark inset-shadow treatment. Kept
-      // deliberately, so the two branches differ only in look and not behaviour.
-      className={`text-left border-2 rounded-lg p-3 transition-all ${className} ${
+      // The selected option is a filled dark key and the rest are light
+      // resting keys, so which one is chosen reads from across the page rather
+      // than from a border colour. No lift on hover: these sit in tight rows of
+      // three and four, and a translating neighbour makes the row feel loose.
+      className={`rounded-sm border px-3 py-2.5 transition-colors ${className} ${
         !entry.available
-          ? "opacity-35 cursor-not-allowed border-theme-border bg-theme-bg"
+          ? "cursor-not-allowed border-theme-border bg-theme-bg opacity-35"
           : entry.active
-            ? "border-theme-primary bg-theme-primary-light"
-            : "border-theme-border bg-theme-bg hover:border-theme-primary hover:-translate-y-0.5"
+            ? "border-[#3B3B3B] bg-[#3B3B3B] text-white"
+            : "border-[#DEDEDE] bg-[#F5F5F5] text-[#3A3A3A] hover:bg-[#EBEBEB] dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
       }`}
     >
       {group !== "size" && (
-        <span
-          className={`block font-extrabold text-sm ${entry.active && entry.available ? "text-theme-primary" : "text-theme-dark"}`}
-        >
+        <span className="block text-center text-[13px] font-bold leading-tight">
           {entry.label}
         </span>
       )}
       {group === "size" && (
-        <div className="flex items-center justify-between gap-[20px]">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[13px] font-bold leading-tight">{entry.label}</span>
+          {/* Gold against the dark fill, so the figure carries on the selected
+              key without a second UI colour; on the light keys it simply
+              follows the label, where gold would not have the contrast. */}
           <span
-            className={`block font-extrabold text-sm ${entry.active && entry.available ? "text-theme-primary" : "text-theme-dark"}`}
-          >
-            {entry.label}
-          </span>
-          {/* The gold used on the dark button would be illegible on this light
-              tint, so the price simply follows the label's colour. */}
-          <span
-            className={`block font-extrabold text-sm whitespace-nowrap ${entry.active && entry.available ? "text-theme-primary" : "text-theme-dark"}`}
+            className={`whitespace-nowrap text-[13px] font-bold leading-tight ${
+              entry.active && entry.available ? "text-[#F2A93B]" : "text-[#6B6B6B] dark:text-gray-400"
+            }`}
           >
             {entry.price}
           </span>
@@ -1179,11 +1204,13 @@ export function ProductInfoPanel({
 
         <div className="flex gap-[5px]">
           <Link
-            className="text-[14px] text-[#279ED4] font-bold"
+            className="inline-flex items-center gap-1.5 text-[14px] text-[#279ED4] font-bold"
             prefetch={false}
-            href={`tel:${CONTACT_NUMBER}`}
+            href={CONTACT_TEL}
           >
-            Found it Cheaper? {CONTACT_NUMBER}
+            Found it Cheaper?
+            <HandsetIcon />
+            {CONTACT_NUMBER}
           </Link>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -1226,35 +1253,59 @@ export function ProductInfoPanel({
         </div>
       )} */}
 
-      {/* Price tabs */}
-      {/* Styling restored from the pre-Figma version: a bordered segmented
-          control rather than raised shadowed keys. The copy underneath each
-          label is the current one and is unchanged. */}
-      <div className="grid grid-cols-3 border border-theme-border rounded-t-md overflow-hidden mt-2">
-        {(["buy", "rent", "rto"] as PriceTab[]).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => handleSelect({ tab: key })}
-            className={`py-2.5 px-1 text-center border-r last:border-r-0 border-theme-border transition-colors
-              ${selection.tab === key ? "bg-theme-primary text-white" : "bg-theme-bg text-theme-muted hover:bg-theme-subtle"}`}
-          >
-            <span className="block font-bold text-sm">
-              {key === "buy"
-                ? "Purchase"
-                : key === "rent"
-                  ? "Rent"
-                  : "Rent-to-Own"}
-            </span>
-            <span className="block text-[10px] opacity-75 mt-0.5">
-              {key === "buy"
-                ? "Call For Best Pricing "
-                : key === "rent"
-                  ? "as low as $96 a month"
-                  : "as low as $61.36 a month"}
-            </span>
-          </button>
-        ))}
+      {/* Price tabs.
+          Three separated keys rather than one joined segmented control: the
+          selected one is a raised, filled button and the other two read as
+          resting alternatives, which is what makes the current choice obvious
+          at a glance rather than only by fill colour.
+          `pt-2.5` leaves room for the ribbon over Rent-To-Own, which sits
+          proud of its button. */}
+      <div className="grid grid-cols-3 gap-2 mt-2 pt-2.5">
+        {(["buy", "rent", "rto"] as PriceTab[]).map((key) => {
+          const active = selection.tab === key;
+          const label =
+            key === "buy" ? "Purchase" : key === "rent" ? "Rent" : "Rent-To-Own";
+          const note =
+            key === "buy"
+              ? "Call For Best Pricing"
+              : key === "rent"
+                ? "as low as $96 a month"
+                : "as low as $61.36 a month";
+
+          return (
+            <div key={key} className="relative">
+              {key === "rto" && (
+                <span className="pointer-events-none absolute -top-2.5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-xs bg-[#1F8A3B] px-2 py-[3px] text-[8px] font-bold uppercase leading-none tracking-[0.04em] text-white shadow-sm">
+                  No Credit Check Required
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={() => handleSelect({ tab: key })}
+                aria-pressed={active}
+                className={`w-full rounded-md px-2 py-2.5 text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 ${
+                  active
+                    ? // The inset white ring is the bevel highlight along the
+                      // top edge; the shadow lifts it off the two resting keys.
+                      "bg-linear-to-b from-[#D0293F] to-[#A50C22] text-white border border-[#8A0A1C] shadow-[0_2px_5px_rgba(0,0,0,0.28)] ring-1 ring-inset ring-white/20"
+                    : "bg-linear-to-b from-[#EFEFEF] to-[#DADADA] text-[#3A3A3A] border border-[#CBCBCB] shadow-[0_1px_2px_rgba(0,0,0,0.12)] hover:from-[#F6F6F6] hover:to-[#E3E3E3] dark:from-neutral-700 dark:to-neutral-800 dark:text-gray-100 dark:border-neutral-600"
+                }`}
+              >
+                <span className="block text-[15px] font-bold leading-tight sm:text-[17px]">
+                  {label}
+                </span>
+                <span
+                  className={`mt-0.5 block text-[11px] leading-tight sm:text-[12px] ${
+                    active ? "text-white/85" : "text-[#8A8A8A] dark:text-gray-400"
+                  }`}
+                >
+                  {note}
+                </span>
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       <div className="text-[#474747] text-[14px] font-bold mt-4 mb-2">
@@ -1264,13 +1315,13 @@ export function ProductInfoPanel({
       {/* Option groups — generated from productOptions */}
       {productOptions.map((group) => (
         <div key={group.id} className="mb-5">
-          <p className="text-[12px] font-bold tracking-wide mb-2 flex items-center gap-1">
+          <p className="mb-2 flex items-center gap-1 text-[13px] font-bold text-theme-dark">
             <span>
               {group.title}:{" "}
               {/* The option currently chosen in this group. Read off `active`
                   rather than tracked separately, so it can never disagree with
                   which button is highlighted. */}
-              <span className="font-normal text-theme-muted">
+              <span className="font-semibold text-theme-dark-2">
                 {group.options.find((o) => o.active)?.label ?? "—"}
               </span>
             </span>
@@ -1303,14 +1354,26 @@ export function ProductInfoPanel({
           values right, hairline rules, and tabular figures so digits line up
           down the column. That last part is legibility, not decoration: it lets
           someone compare a unit price to a total at a glance. */}
-      <div className="mt-6 overflow-hidden rounded-lg border border-theme-border bg-theme-bg">
-        <div className="border-b border-theme-border px-4 py-3">
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-muted">
-            Selected container
+      <div className="mt-6 border-t-2 border-theme-primary pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-[15px] font-bold text-theme-dark dark:text-white">
+            Selected Container Summary
           </h3>
+          {/* Stock state as a pill rather than a line of text: it is the one
+              thing here that changes what the buttons below can do, so it
+              should read at a glance instead of being scanned for. */}
+          <span
+            className={`shrink-0 rounded-sm px-2.5 py-1 text-[12px] font-semibold ${
+              inStock
+                ? "bg-[#E8F5EC] text-[#1F8A3B] dark:bg-[#123021] dark:text-[#4ADE80]"
+                : "bg-theme-subtle text-theme-muted"
+            }`}
+          >
+            {inStock ? "In stock" : "Out of stock"}
+          </span>
         </div>
 
-        <ul className="divide-y divide-theme-border/60 px-4 text-[13px] tabular-nums">
+        <ul className="mt-3 text-[14px] tabular-nums">
           {/* All three read activeProduct, not product: `product` is whatever
               the page loaded with, so the summary would keep describing that
               variant while the buttons above changed the selection. */}
@@ -1384,7 +1447,7 @@ export function ProductInfoPanel({
               // Includes a resolved route whose rate exceeds $1,000 — withheld
               // upstream in favour of a conversation, not an error.
               <Link
-                href={`tel:${CONTACT_TEL}`}
+                href={CONTACT_TEL}
                 className="text-right font-medium text-theme-primary hover:underline"
               >
                 Call for rate
@@ -1426,14 +1489,19 @@ export function ProductInfoPanel({
           </li>
         </ul>
 
-        {/* Total band. A quiet fill separates it from the spec rows above
-            without introducing another colour. */}
-        <div className="flex items-end justify-between gap-4 border-t border-theme-border bg-theme-subtle px-4 py-3">
+      </div>
+
+      {/* Ordering block.
+          Lifted onto a dark slab so everything that commits the visitor —
+          quantity, total, the three actions — reads as one panel, separate
+          from the specification rows above that only describe. */}
+      <div className="mt-4 rounded-lg bg-[#0F3A5C] px-4 py-4 text-white">
+        <div className="flex items-end justify-between gap-4">
           <div>
-            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-muted">
+            <div className="text-[12px] font-semibold text-white/75">
               Quantity
             </div>
-            <div className="mt-1.5 inline-flex items-center overflow-hidden rounded-md border border-theme-border bg-theme-bg">
+            <div className="mt-1.5 inline-flex items-center overflow-hidden rounded-md bg-white">
               {/* Real buttons, not divs: a div is unreachable by keyboard and
                   invisible to assistive tech, and these change what gets
                   ordered. */}
@@ -1446,13 +1514,13 @@ export function ProductInfoPanel({
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1}
                 aria-label="Decrease quantity"
-                className="flex h-8 w-8 items-center justify-center text-lg leading-none text-theme-muted transition-colors hover:bg-theme-subtle hover:text-theme-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-8 w-8 items-center justify-center text-lg leading-none text-[#0F3A5C] transition-colors hover:bg-[#E6EDF3] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
               >
                 &minus;
               </button>
               <span
                 aria-live="polite"
-                className="w-9 border-x border-theme-border py-1 text-center text-sm font-semibold tabular-nums text-theme-dark"
+                className="w-9 border-x border-[#D6E0E8] py-1 text-center text-sm font-semibold tabular-nums text-[#0F3A5C]"
               >
                 {quantity}
               </span>
@@ -1461,7 +1529,7 @@ export function ProductInfoPanel({
                 onClick={() => setQuantity((q) => Math.min(MAX_QUANTITY, q + 1))}
                 disabled={quantity >= MAX_QUANTITY}
                 aria-label="Increase quantity"
-                className="flex h-8 w-8 items-center justify-center text-lg leading-none text-theme-muted transition-colors hover:bg-theme-subtle hover:text-theme-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-8 w-8 items-center justify-center text-lg leading-none text-[#0F3A5C] transition-colors hover:bg-[#E6EDF3] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
               >
                 +
               </button>
@@ -1469,13 +1537,11 @@ export function ProductInfoPanel({
           </div>
 
           <div className="text-right">
-            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-muted">
-              Subtotal
-            </div>
-            <div className="text-[26px] font-bold leading-tight tabular-nums tracking-tight text-theme-dark">
+            <div className="text-[12px] font-semibold text-white/75">Subtotal</div>
+            <div className="text-[28px] font-bold leading-tight tabular-nums tracking-tight text-white">
               {subtotal}
               {priceDisplay.suffix && (
-                <span className="ml-0.5 text-sm font-semibold text-theme-muted">
+                <span className="ml-0.5 text-sm font-semibold text-white/70">
                   {priceDisplay.suffix}
                 </span>
               )}
@@ -1485,13 +1551,13 @@ export function ProductInfoPanel({
         {/* Actions. One filled button carries the accent; the two supporting
             actions are outlined, so the eye lands on the primary path without a
             second colour competing for attention. */}
-        <div className="flex flex-col gap-2.5 border-t border-theme-border px-4 py-4">
+        <div className="mt-4 flex flex-col gap-2.5">
           {/* A reference listing has no real depot behind it, so nothing can
               actually be added — the button opens the quote form instead. The
               note stays above it so the click lands somewhere the visitor was
               already told about, rather than feeling like a switch. */}
           {isGenericDisplay && (
-            <p className="rounded-md border border-theme-border bg-theme-subtle px-3 py-2.5 text-[13px] leading-relaxed text-theme-mid">
+            <p className="rounded-md bg-white/10 px-3 py-2.5 text-[13px] leading-relaxed text-white/85">
               This is a reference listing. Pricing and stock vary by depot — get
               a quote or call us for what&rsquo;s available near you.
             </p>
@@ -1516,7 +1582,7 @@ export function ProductInfoPanel({
           <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
-              className="flex h-10 items-center justify-center gap-2 rounded-md border border-theme-border bg-theme-bg text-[13px] font-semibold text-theme-dark transition-colors hover:border-theme-primary hover:text-theme-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary"
+              className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <QuoteIcon />
               Save quote
@@ -1528,15 +1594,15 @@ export function ProductInfoPanel({
             <Link
               href={CONTACT_TEL}
               aria-label={`Call ${CONTACT_NUMBER} for expert help`}
-              className="flex h-10 items-center justify-center gap-2 rounded-md border border-theme-border bg-theme-bg text-[13px] font-semibold text-theme-dark transition-colors hover:border-theme-primary hover:text-theme-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary"
+              className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <PhoneIcon />
               Get expert help
             </Link>
           </div>
 
-          <p className="text-center text-[11px] text-theme-muted">
-            Price held for 48 hours when you save this quote
+          <p className="text-center text-[11px] text-white/65">
+            Price locked for 48 hrs when you save this quote
           </p>
         </div>
       </div>
