@@ -477,38 +477,50 @@ function OptionBtn({
       // resting keys, so which one is chosen reads from across the page rather
       // than from a border colour. No lift on hover: these sit in tight rows of
       // three and four, and a translating neighbour makes the row feel loose.
-      className={`rounded-sm border px-3 py-2.5 transition-colors ${className} ${
+      className={`rounded-sm border px-2 py-1.5 transition-colors sm:px-3 sm:py-2.5 ${className} ${
         !entry.available
           ? "cursor-not-allowed border-theme-border bg-theme-bg opacity-35"
           : entry.active
-            ? "border-[#3B3B3B] bg-[#3B3B3B] text-white"
+            ? "border-theme-primary bg-theme-bg text-theme-primary sm:border-[#3B3B3B] sm:bg-[#3B3B3B] sm:text-white"
             : "border-[#DEDEDE] bg-[#F5F5F5] text-[#3A3A3A] hover:bg-[#EBEBEB] dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
       }`}
     >
-      {group !== "size" && (
-        <span className="block text-center text-[13px] font-bold leading-tight">
+      {/* Stacked on a phone, where the options sit in a wrapping row and a
+          side-by-side label and price would not fit; side by side from sm up,
+          which is how the desktop size row reads. */}
+      {/* Stacked everywhere on a phone, where the options sit in a wrapping
+          row. On desktop only the size row goes side by side: the grade row is
+          four across, and putting a note beside the label there squeezed
+          "Wind & Water Tight" onto three lines. */}
+      <div
+        className={`flex flex-col gap-0.5 ${
+          group === "size"
+            ? "sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+            : "sm:items-center"
+        }`}
+      >
+        <span
+          className={`text-[12px] font-bold leading-tight sm:text-[13px] ${
+            group === "size" ? "" : "sm:w-full sm:text-center"
+          }`}
+        >
           {entry.label}
         </span>
-      )}
-      {group === "size" && (
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[13px] font-bold leading-tight">
-            {entry.label}
-          </span>
-          {/* Gold against the dark fill, so the figure carries on the selected
-              key without a second UI colour; on the light keys it simply
-              follows the label, where gold would not have the contrast. */}
+        {/* Red on the outlined phone key and gold on the filled desktop one,
+            so the figure carries on whichever the selected button is; on the
+            light keys it stays grey, where neither would have contrast. */}
+        {entry.price && (
           <span
-            className={`whitespace-nowrap text-[13px] font-bold leading-tight ${
+            className={`whitespace-nowrap text-[10px] font-semibold leading-tight sm:text-[13px] sm:font-bold ${
               entry.active && entry.available
-                ? "text-[#F2A93B]"
+                ? "text-theme-primary sm:text-[#F2A93B]"
                 : "text-[#6B6B6B] dark:text-gray-400"
             }`}
           >
             {entry.price}
           </span>
-        </div>
-      )}
+        )}
+      </div>
     </button>
   );
 }
@@ -712,6 +724,65 @@ export function ProductInfoPanel({
     [candidates, selection.sizeIdx, selection.condIdx],
   );
 
+  /**
+   * What each condition and grade would cost, against the rest of the current
+   * selection.
+   *
+   * Same shape as `sizePrices`: hold the other axes still, find the cheapest
+   * variant that matches this option, and read its price. `undefined` when the
+   * depot stocks no such combination — the button is disabled in that case
+   * anyway, and inventing a figure for it would be worse than showing none.
+   */
+  const conditionPrices = useMemo(
+    () =>
+      conditions.map((_, i) => {
+        const matching = candidates.filter(
+          (p) => matchesSize(p, selection.sizeIdx) && matchesCondition(p, i),
+        );
+        if (matching.length === 0) return undefined;
+        return matching.reduce((cheapest, p) =>
+          p.sale_price < cheapest.sale_price ? p : cheapest,
+        ).sale_price;
+      }),
+    [candidates, selection.sizeIdx],
+  );
+
+  const gradePrices = useMemo(
+    () =>
+      grades.map((_, i) => {
+        const matching = candidates.filter(
+          (p) =>
+            matchesSize(p, selection.sizeIdx) &&
+            matchesCondition(p, selection.condIdx) &&
+            matchesGrade(p, i),
+        );
+        if (matching.length === 0) return undefined;
+        return matching.reduce((cheapest, p) =>
+          p.sale_price < cheapest.sale_price ? p : cheapest,
+        ).sale_price;
+      }),
+    [candidates, selection.sizeIdx, selection.condIdx],
+  );
+
+  /**
+   * That price expressed as its effect on the current one — "Add $200",
+   * "Save $100", "Included".
+   *
+   * A shopper comparing four grades wants to know what switching costs, not
+   * four absolute figures they have to subtract from each other.
+   */
+  const priceDelta = useCallback(
+    (price: number | undefined): string | undefined => {
+      if (price === undefined) return undefined;
+      const diff = Math.round(price - activeProduct.sale_price);
+      if (diff === 0) return "Included";
+      return diff > 0
+        ? `Add $${formatPrice(diff)}`
+        : `Save $${formatPrice(Math.abs(diff))}`;
+    },
+    [activeProduct.sale_price],
+  );
+
   const rentTermOptions = useMemo(
     () =>
       RENT_TERMS.map((term) => ({
@@ -827,6 +898,7 @@ export function ProductInfoPanel({
           key: c.name,
           label: c.name,
           sublabel: c.desc,
+          price: priceDelta(conditionPrices[i]),
           active: selection.condIdx === i,
           available: availableConditions[i],
           onSelect: () => handleSelect({ condIdx: i }),
@@ -842,6 +914,7 @@ export function ProductInfoPanel({
           key: g.name,
           label: g.name,
           sublabel: g.desc,
+          price: priceDelta(gradePrices[i]),
           active: selection.gradeIdx === i,
           available: availableGrades[i],
           onSelect: () => handleSelect({ gradeIdx: i }),
@@ -909,6 +982,9 @@ export function ProductInfoPanel({
     selection,
     availableSizes,
     sizePrices,
+    conditionPrices,
+    gradePrices,
+    priceDelta,
     availableConditions,
     availableGrades,
     rentTermOptions,
@@ -1172,10 +1248,12 @@ export function ProductInfoPanel({
 
   // ── render ──────────────────────────────────────────────────────────────────
 
+  // Phones wrap the options into as many rows as they need, beside a label
+  // column; from sm up they return to the fixed grid the desktop design uses.
   const layoutClass: Record<OptionsGroup["layout"], string> = {
-    "grid-4": "grid grid-cols-4 gap-2",
-    "grid-3": "grid grid-cols-3 gap-2",
-    "grid-2": "grid grid-cols-2 gap-2",
+    "grid-4": "flex flex-wrap gap-2 sm:grid sm:grid-cols-4",
+    "grid-3": "flex flex-wrap gap-2 sm:grid sm:grid-cols-3",
+    "grid-2": "flex flex-wrap gap-2 sm:grid sm:grid-cols-2",
     flex: "flex flex-wrap gap-2",
   };
 
@@ -1330,6 +1408,9 @@ export function ProductInfoPanel({
               : key === "rent"
                 ? "Rent"
                 : "Rent-To-Own";
+          // "Purchase" wraps in a third of a phone's width; the short form
+          // does not, and is what the mobile design uses.
+          const shortLabel = key === "buy" ? "Buy" : label;
           const note =
             key === "buy"
               ? "Call For Best Pricing"
@@ -1358,7 +1439,8 @@ export function ProductInfoPanel({
                 }`}
               >
                 <span className="block text-[15px] font-bold leading-tight sm:text-[17px]">
-                  {label}
+                  <span className="sm:hidden">{shortLabel}</span>
+                  <span className="hidden sm:inline">{label}</span>
                 </span>
                 <span
                   className={`mt-0.5 block text-[11px] leading-tight sm:text-[12px] ${
@@ -1382,19 +1464,28 @@ export function ProductInfoPanel({
       {/* Option groups — generated from productOptions */}
       {productOptions.map((group) => (
         <div key={group.id} className="mb-5">
-          <p className="mb-2 flex items-center gap-1 text-[13px] font-bold text-theme-dark">
+        {/* Label beside the options on a phone, above them from sm up. The
+            selected value is dropped on mobile — the highlighted button
+            already says it, and repeating it costs a line that the narrow
+            label column cannot spare. */}
+        <div className="flex items-start gap-3 sm:block">
+          <p className="w-[58px] shrink-0 pt-1.5 text-[12px] font-bold text-theme-dark sm:mb-2 sm:flex sm:w-auto sm:items-center sm:gap-1 sm:pt-0 sm:text-[13px]">
             <span>
               {group.title}:{" "}
               {/* The option currently chosen in this group. Read off `active`
                   rather than tracked separately, so it can never disagree with
                   which button is highlighted. */}
-              <span className="font-semibold text-theme-dark-2">
+              <span className="hidden font-semibold text-theme-dark-2 sm:inline">
                 {group.options.find((o) => o.active)?.label ?? "—"}
               </span>
             </span>
-            {group.info && <InfoHint text={group.info} />}
+            {group.info && (
+              <span className="hidden sm:inline">
+                <InfoHint text={group.info} />
+              </span>
+            )}
           </p>
-          <div className={layoutClass[group.layout]}>
+          <div className={`min-w-0 flex-1 ${layoutClass[group.layout]}`}>
             {group.options.map((entry) => (
               <OptionBtn
                 key={entry.key}
@@ -1404,6 +1495,7 @@ export function ProductInfoPanel({
               />
             ))}
           </div>
+        </div>
         </div>
       ))}
 
@@ -1669,13 +1761,14 @@ export function ProductInfoPanel({
                   : "Add to cart"}
           </button>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <button
               type="button"
               className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <QuoteIcon />
-              Save quote
+              <span className="sm:hidden">Lock in your price &middot; Save Quote</span>
+              <span className="hidden sm:inline">Save quote</span>
             </button>
             {/* A link, not a button: this dials rather than acting on the page,
                 so it belongs in the browser's normal navigation affordances —
