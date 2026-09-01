@@ -1671,26 +1671,22 @@ export function ProductInfoPanel({
             <div className="text-[11px] font-semibold text-white/75">
               Quantity
             </div>
-            <div className="mt-1.5 inline-flex items-center overflow-hidden rounded bg-white">
+            <div className="mt-1.5 inline-flex items-center gap-1 rounded-[10px] bg-[#2C5474] p-2">
               {/* Real buttons, not divs: a div is unreachable by keyboard and
                   invisible to assistive tech, and these change what gets
                   ordered. */}
-              {/* Real buttons, not divs: a div is unreachable by keyboard and
-                  invisible to assistive tech, and these change what gets
-                  ordered. Sized at 32px rather than the previous 18px so they
-                  are a usable target on a touchscreen. */}
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1}
                 aria-label="Decrease quantity"
-                className="flex h-6 w-6 items-center justify-center bg-[#E7EDF2] text-[13px] leading-none text-[#0F3A5C] transition-colors hover:bg-[#D5DFE8] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-7 w-9 items-center justify-center rounded-lg border border-white/25 bg-[#41678A] text-[15px] leading-none text-white transition-colors hover:bg-[#4E7A9F] focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 &minus;
               </button>
               <span
                 aria-live="polite"
-                className="w-7 py-0.5 text-center text-[13px] font-semibold tabular-nums text-[#0F3A5C]"
+                className="w-8 text-center text-[15px] font-medium tabular-nums text-white"
               >
                 {quantity}
               </span>
@@ -1701,7 +1697,7 @@ export function ProductInfoPanel({
                 }
                 disabled={quantity >= MAX_QUANTITY}
                 aria-label="Increase quantity"
-                className="flex h-6 w-6 items-center justify-center bg-[#E7EDF2] text-[13px] leading-none text-[#0F3A5C] transition-colors hover:bg-[#D5DFE8] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-primary disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-7 w-9 items-center justify-center rounded-lg border border-white/25 bg-[#41678A] text-[15px] leading-none text-white transition-colors hover:bg-[#4E7A9F] focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 +
               </button>
