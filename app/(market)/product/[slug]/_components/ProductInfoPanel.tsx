@@ -477,15 +477,16 @@ function OptionBtn({
       // resting keys, so which one is chosen reads from across the page rather
       // than from a border colour. No lift on hover: these sit in tight rows of
       // three and four, and a translating neighbour makes the row feel loose.
-      className={`rounded border px-2 py-1.5 transition-colors sm:rounded-md sm:px-3.5 sm:py-2 ${className} ${
+      className={`rounded border px-2 py-1.5 transition-colors sm:rounded-[5px] sm:px-3.5 sm:py-2 ${className} ${
         !entry.available
           ? "cursor-not-allowed border-theme-border bg-theme-bg opacity-35"
           : entry.active
-            ? // Phone: outlined red. Desktop: a raised charcoal key — the
-              // gradient runs light to dark down the face and the inset
-              // highlight catches the top edge, which is what gives it the
-              // pressed-in look rather than a flat dark fill.
-              "border-theme-primary bg-theme-bg text-theme-primary sm:border-[#2B2B2B] sm:bg-linear-to-b sm:from-[#666666] sm:to-[#3A3A3A] sm:text-white sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]"
+            ? // Phone: outlined red. Desktop: the Figma key — a flat #474747
+              // face whose bevel is six inset shadows, two lighting the side
+              // walls, one the top edge and one the bottom. The border goes
+              // transparent because the spec carries its own 1px ring in that
+              // stack; leaving one would double it.
+              "border-theme-primary bg-theme-bg text-theme-primary sm:border-transparent sm:bg-[#474747] sm:text-white sm:shadow-[0_0_0_1px_rgba(71,71,71,0.10),inset_-2px_0_0_0_rgba(255,255,255,0.20),inset_2px_0_0_0_rgba(255,255,255,0.20),inset_0_4px_0_-1px_rgba(255,255,255,0.20),inset_0_-2px_0_1px_rgba(0,0,0,0.20),inset_0_0_0_0.5px_rgba(0,0,0,0.15)]"
             : "border-[#DEDEDE] bg-[#F5F5F5] text-[#3A3A3A] hover:bg-[#EBEBEB] sm:border-[#E4E4E4] sm:bg-linear-to-b sm:from-[#FDFDFD] sm:to-[#F1F1F1] sm:text-[#4A4A4A] sm:hover:from-[#F6F6F6] sm:hover:to-[#E9E9E9] dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100"
       }`}
     >
