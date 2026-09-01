@@ -1753,7 +1753,7 @@ export function ProductInfoPanel({
             type="button"
             onClick={handleAddToCartClick}
             disabled={!isGenericDisplay && !inStock}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-theme-primary text-sm font-bold text-white sm:h-10 transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[#BD112A] text-sm font-bold text-white shadow-[inset_0_2px_2px_0_#BD112A,inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2px_0_rgba(255,255,255,0.50),0_4px_15px_0_rgba(0,0,0,0.15)] transition-colors hover:bg-[#A50F24] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F3A5C] disabled:cursor-not-allowed disabled:opacity-45 sm:h-10"
           >
             <CartIcon />
             {isGenericDisplay
@@ -1768,7 +1768,7 @@ export function ProductInfoPanel({
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <button
               type="button"
-              className="flex h-10 items-center justify-center gap-2 rounded-lg border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
+              className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-white bg-[#0F3A59] text-[13px] font-semibold text-white shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] transition-colors hover:bg-[#164A70] focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
             >
               <QuoteIcon />
               <span className="sm:hidden">Lock in your price &middot; Save Quote</span>
@@ -1781,7 +1781,7 @@ export function ProductInfoPanel({
             <Link
               href={CONTACT_TEL}
               aria-label={`Call ${CONTACT_NUMBER} for expert help`}
-              className="flex h-10 items-center justify-center gap-2 rounded-lg border border-white/45 text-[13px] font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
+              className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-white bg-[#0F3A59] text-[13px] font-semibold text-white shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] transition-colors hover:bg-[#164A70] focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
             >
               <PhoneIcon />
               Get expert help
