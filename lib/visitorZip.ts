@@ -24,6 +24,44 @@ export type VisitorZip = {
 export const EMPTY_VISITOR_ZIP: VisitorZip = { postcode: '', label: '', depot: '' }
 
 /**
+ * Forget where the visitor is, so the ZIP prompt asks again.
+ *
+ * Clears the three keys {@link readVisitorZip} reads, plus the gallery redirect
+ * built from them. Only ever touches this browser's own storage.
+ *
+ * Deliberately leaves `userZipCode`, which is the geolocation detector's cache.
+ * `ZipAutoDetect` skips itself whenever that key is set, so leaving it is what
+ * makes this reset hold: clear it too and, in any browser that has already
+ * granted location permission, the ZIP is silently re-detected within a second
+ * and the prompt never appears — which is exactly the thing this exists to
+ * avoid. Clearing it is still available via `clearDetectedLocation`.
+ */
+export function clearVisitorZip(): void {
+  try {
+    localStorage.removeItem('zipcode')
+    localStorage.removeItem('zipcode_label')
+    localStorage.removeItem('zipcode_depot')
+    localStorage.removeItem('gallery_redirect')
+  } catch {
+    // Storage unavailable — nothing was stored to begin with.
+  }
+}
+
+/**
+ * Also drop the geolocation cache.
+ *
+ * Separate because it re-arms the browser's location prompt on the next page
+ * load, which is rarely what you want mid-demo.
+ */
+export function clearDetectedLocation(): void {
+  try {
+    localStorage.removeItem('userZipCode')
+  } catch {
+    // Storage unavailable — nothing was stored to begin with.
+  }
+}
+
+/**
  * Read the visitor's ZIP. Browser-only — returns empties on the server.
  *
  * The URL wins over storage: a link carrying `?zipcode=` was built for a

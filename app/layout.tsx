@@ -7,7 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { LinkEnricher } from "@/components/layout/LinkEnricher";
 import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
-import { GuestCaptureReset } from "@/components/layout/GuestCaptureReset";
+import { DemoResets } from "@/components/layout/DemoResets";
 import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
 import { ROUTES } from "@/config/routes";
 import { SITE_URL } from "@/config/site";
@@ -74,9 +74,10 @@ export default function RootLayout({
           </CartProvider>
         </AuthProvider>
         <Suspense><LinkEnricher /></Suspense>
-        {/* Reads ?reset-guest=1 — needs the Suspense boundary that
-            useSearchParams requires, like its neighbours here. */}
-        <Suspense><GuestCaptureReset /></Suspense>
+        {/* Reads ?reset-guest=1 / ?reset-zip=1 / ?reset-all=1 — needs the
+            Suspense boundary that useSearchParams requires, like its
+            neighbours here. */}
+        <Suspense><DemoResets /></Suspense>
         <Suspense>
           <ZipAutoDetect excludePaths={[
             ROUTES.CHECKOUT,

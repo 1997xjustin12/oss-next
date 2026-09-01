@@ -1023,13 +1023,11 @@ export function ProductInfoPanel({
   const inStock = isInStockHit(activeProduct);
 
   /**
-   * A reference listing always asks, even from a visitor whose ZIP we
-   * already know: it has no depot of its own, so the page cannot price
-   * anything until that ZIP is turned into a real one. Everywhere else the
-   * prompt only appears when nothing has supplied a ZIP at all.
+   * Ask only when nothing has supplied a ZIP — no ?zipcode= in the URL and
+   * nothing in storage. A visitor who already told us where they are is not
+   * asked again, on any listing.
    */
-  const zipGateOpen =
-    storedZip.resolved && !zipAsked && (!zipcode || isGenericDisplay);
+  const zipGateOpen = storedZip.resolved && !zipcode && !zipAsked;
 
   /**
    * Delivery quote for the current selection. Keyed on the active product's
