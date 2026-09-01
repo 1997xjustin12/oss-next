@@ -1412,7 +1412,11 @@ export function ProductInfoPanel({
           values right, hairline rules, and tabular figures so digits line up
           down the column. That last part is legibility, not decoration: it lets
           someone compare a unit price to a total at a glance. */}
-      <div className="mt-6 border-t-2 border-theme-primary pt-3">
+      {/* Full-bleed on mobile: the negative margin cancels the section's own
+          `px-4` so the red rule and the slab below it run to both edges, while
+          the inner `px-4` keeps the text off them. Both revert at `sm`, the
+          same breakpoint where that section switches to a 5% gutter. */}
+      <div className="-mx-4 mt-6 border-t-2 border-theme-primary px-4 pt-3 sm:mx-0 sm:px-0">
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-[15px] font-bold text-theme-dark dark:text-white">
             Selected Container Summary
@@ -1552,7 +1556,10 @@ export function ProductInfoPanel({
           Lifted onto a dark slab so everything that commits the visitor —
           quantity, total, the three actions — reads as one panel, separate
           from the specification rows above that only describe. */}
-      <div className="mt-4 rounded-lg bg-[#0F3A5C] px-4 py-4 text-white">
+      {/* Corner to corner on mobile, so the rounding is dropped too — a
+          radius against the screen edge reads as a rendering fault rather
+          than a card. */}
+      <div className="-mx-4 mt-4 bg-[#0F3A5C] px-4 py-4 text-white sm:mx-0 sm:rounded-lg">
         <div className="flex items-end justify-between gap-4">
           <div>
             <div className="text-[12px] font-semibold text-white/75">
