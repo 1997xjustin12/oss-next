@@ -1693,7 +1693,7 @@ export function ProductInfoPanel({
       {/* Corner to corner on mobile, so the rounding is dropped too — a
           radius against the screen edge reads as a rendering fault rather
           than a card. */}
-      <div className="-mx-4 mt-4 rounded-t-none rounded-b-[30px] bg-[#0F3A5C] px-5 py-4 text-white sm:mx-0">
+      <div className="-mx-4 mt-4 rounded-t-none rounded-b-none md:rounded-b-[30px] bg-[#0F3A5C] px-5 py-4 text-white sm:mx-0">
         <div className="flex items-end justify-between gap-4">
           <div>
             <div className="text-[11px] font-semibold text-white/75">

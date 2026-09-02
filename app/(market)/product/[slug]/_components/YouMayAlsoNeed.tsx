@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BASE_URL } from "@/lib/helpers";
+import { CardCarousel } from "./CardCarousel";
 
 type Product = {
   image: string;
@@ -102,16 +103,11 @@ export function YouMayAlsoNeed({
   return (
     <div className="flex flex-col gap-[10px]">
       <h2 className="text-[24px] font-bold">{heading}</h2>
-      <div className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 -mx-5 px-5 pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none py-8 sm:py-10 w-full">
+      <CardCarousel label="Containers you may also need">
         {PRODUCTS.map((item, index) => (
-          <div
-            key={`product-card-${index}`}
-            className="w-[75%] shrink-0 snap-start sm:w-auto sm:shrink"
-          >
-            <Card item={item} />
-          </div>
+          <Card key={`product-card-${index}`} item={item} />
         ))}
-      </div>
+      </CardCarousel>
       <div className="mt-[30px] text-center">
         <Link
           prefetch={false}
