@@ -20,6 +20,7 @@ import { FaqAccordion } from "./FaqAccordion";
 // import { CustomerReviews } from './CustomerReviews'
 import { ReviewsCarousel } from "./ReviewsCarousel";
 import { YouMayAlsoNeed } from "./YouMayAlsoNeed";
+import { MobileSpecialistBanner } from "./MobileSpecialistBanner";
 import { QuoteForm } from "@/components/shared/QuoteForm";
 import { StatesSection } from "@/app/(market)/(home)/_components/StatesSection";
 import { CustomerReviewsSection } from "./CustomerReviewsSection";
@@ -328,6 +329,9 @@ export function ProductDetail({ product, relatedProducts }: Props) {
           </div>
         </section>
       )} */}
+
+      {/* Phones only — desktop keeps a call button in the sticky panel. */}
+      <MobileSpecialistBanner />
 
       {/* NOTE: this renders four hardcoded containers with placeholder prices
           and "#" CTA links — see the TODO in YouMayAlsoNeed.tsx. The section
