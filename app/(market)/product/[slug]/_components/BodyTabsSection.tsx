@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { ShieldCheck, Truck, Eye, RotateCcw } from 'lucide-react'
 import type { ContainerVariantKey } from '@/lib/containerVariant'
+import { resolveCombination } from '@/lib/containerOverview'
+import type { ProductHit } from '@/types/product'
 import { Overview20S } from './overview/Overview20S'
 import { Overview40S } from './overview/Overview40S'
 import { Overview40H } from './overview/Overview40H'
@@ -37,10 +39,19 @@ const bodyTabs = [
 
 type BodyTab = typeof bodyTabs[number]['id']
 
-type Props = { variant: ContainerVariantKey }
+type Props = {
+  variant: ContainerVariantKey
+  /**
+   * The container on screen. Its condition and grade choose which overview
+   * renders, so the copy follows the option pickers rather than describing
+   * whichever variant the page happened to load on.
+   */
+  product: ProductHit
+}
 
-export function BodyTabsSection({ variant }: Props) {
+export function BodyTabsSection({ variant, product }: Props) {
   const [bodyTab, setBodyTab] = useState<BodyTab>('overview')
+  const { condition, grade } = resolveCombination(product)
 
   return (
     <section className="px-4 sm:px-[5%] py-10 sm:py-16">
@@ -59,9 +70,9 @@ export function BodyTabsSection({ variant }: Props) {
       </div>
 
       {bodyTab === 'overview' && (
-        variant === '40S' ? <Overview40S /> :
-        variant === '40H' ? <Overview40H /> :
-        <Overview20S />
+        variant === '40S' ? <Overview40S condition={condition} grade={grade} /> :
+        variant === '40H' ? <Overview40H condition={condition} grade={grade} /> :
+        <Overview20S condition={condition} grade={grade} />
       )}
 
       {bodyTab === 'specs' && <Specifications variant={variant} />}

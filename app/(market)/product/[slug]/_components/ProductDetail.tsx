@@ -261,7 +261,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       <MobileTrustSection />
 
       {/* BODY TABS */}
-      <BodyTabsSection variant={containerVariant} />
+      <BodyTabsSection variant={containerVariant} product={activeProduct} />
 
       <section className="px-4 sm:px-[5%] py-10 sm:py-16">
         <div className="flex flex-col gap-[10px]">
@@ -368,18 +368,10 @@ export function ProductDetail({ product, relatedProducts }: Props) {
 
       {/* FAQ */}
       <section className="px-4 sm:px-[5%] py-10 sm:py-16">
-        <div className="flex items-baseline justify-between mb-6">
-          <h2 className="text-[32px] font-bold sm:text-3xl tracking-tight text-[#474747] uppercase">
+        <div className="flex items-baseline justify-center mb-6">
+          <h2 className="text-[16px] md:text-[32px] font-bold sm:text-3xl tracking-tight text-[#474747] uppercase">
             Frequently Asked Questions
           </h2>
-          <Link
-            href="/shipping-container-faqs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap"
-          >
-            View All FAQs →
-          </Link>
         </div>
         <FaqAccordion variant={containerVariant} />
       </section>
