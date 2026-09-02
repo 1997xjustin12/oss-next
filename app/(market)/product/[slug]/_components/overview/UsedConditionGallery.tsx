@@ -42,10 +42,7 @@ export function UsedConditionGallery() {
             <button
               type="button"
               onClick={() => setOpenIndex(index)}
-              // The label sits over the photograph, so the tile needs its own
-              // scrim — these are daylight shots and white text on the sky in
-              // the exterior view would be unreadable without one.
-              className="group relative block w-full overflow-hidden rounded aspect-square focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2"
+              className="group relative block aspect-square w-full overflow-hidden rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2"
             >
               <Image
                 src={view.src}
@@ -54,9 +51,15 @@ export function UsedConditionGallery() {
                 sizes="(max-width: 640px) 33vw, 16vw"
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <span className="absolute inset-0 bg-black/35 transition-colors group-hover:bg-black/20" />
-              <span className="absolute inset-0 flex items-center justify-center px-1 text-center text-[10px] font-bold uppercase leading-tight tracking-wide text-white sm:text-[11px]">
-                {view.label}
+              {/* The label carries its own ground rather than darkening the
+                  whole photograph. These images are the point — the rust and
+                  the patch repairs are what the buyer came to see — so a scrim
+                  over all six would dim the evidence to caption something the
+                  chip can hold on its own. */}
+              <span className="absolute inset-0 flex items-center justify-center p-1.5">
+                <span className="max-w-full truncate bg-white/95 px-2 py-1 text-[10px] font-bold uppercase leading-none tracking-wide text-[#1F1F1F] shadow-sm sm:text-[11px]">
+                  {view.label}
+                </span>
               </span>
             </button>
           </li>
