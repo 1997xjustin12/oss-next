@@ -22,7 +22,7 @@ import { Hero } from "./_components/Hero";
 import { HeroSkeleton } from "./_components/HeroSkeleton";
 import { RightContainer } from "./_components/RightContainer";
 import { OnsiteDifference } from "./_components/OnsiteDifference";
-import { TrustedBySection } from "./_components/TrustedBySection";
+import { TrustedBySection } from "@/components/shared/TrustedBySection";
 import { ReviewsSection } from "./_components/ReviewsSection";
 import { ReviewsSectionLive } from "./_components/ReviewsSectionLive";
 

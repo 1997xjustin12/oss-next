@@ -108,7 +108,7 @@ export function YouMayAlsoNeed({
           <Card key={`product-card-${index}`} item={item} />
         ))}
       </CardCarousel>
-      <div className="mt-[30px] text-center">
+      <div className="mt-[30px] text-center hidden md:block">
         <Link
           prefetch={false}
           href={`${BASE_URL}/sale-shipping-containers/?ptype=buy`}

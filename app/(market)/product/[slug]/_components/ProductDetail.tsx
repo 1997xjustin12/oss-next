@@ -14,6 +14,7 @@ import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { AccessoryDetail } from "./AccessoryDetail";
 import { BodyTabsSection } from "./BodyTabsSection";
 import { FaqAccordion } from "./FaqAccordion";
+import { TrustedBySection } from "@/components/shared/TrustedBySection";
 // WordPress-sourced reviews (previous PDP source) — kept in place, easy to
 // restore by swapping the import + JSX below, if ReviewsCarousel needs to be
 // rolled back before the OSS reviews table has enough approved data.
@@ -361,6 +362,9 @@ export function ProductDetail({ product, relatedProducts }: Props) {
           itself; if this heading should become editable, add its own key and
           pass it down from product/[slug]/page.tsx. */}
       <QuoteForm heading="Get a Free Quote on This Container" />
+
+      {/* Same logo marquee the homepage runs, one component shared by both. */}
+      <TrustedBySection />
 
       {/* FAQ */}
       <section className="px-4 sm:px-[5%] py-10 sm:py-16">
