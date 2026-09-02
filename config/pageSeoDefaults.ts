@@ -99,6 +99,21 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     },
   },
 
+  [ROUTES.SAVED_QUOTES]: {
+    title: 'Saved Quotes',
+    description:
+      "Quotes you've saved from container pages, with the price and delivery each had at the time.",
+    canonical: ROUTES.SAVED_QUOTES,
+    // Per-browser content with nothing to rank on, same as the wishlist.
+    robots: { index: false, follow: true },
+    openGraph: {
+      title: 'Saved Quotes',
+      description:
+        "Quotes you've saved from container pages, with the price and delivery each had at the time.",
+      images: [ACCOUNT_OG_IMAGE],
+    },
+  },
+
   [ROUTES.WISHLIST]: {
     title: 'My Wishlist',
     description:

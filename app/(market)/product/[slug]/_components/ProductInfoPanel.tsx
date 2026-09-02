@@ -28,6 +28,7 @@ import { CartLocationConflictModal } from "@/components/cart/CartLocationConflic
 import { GuestLeadModal } from "@/components/cart/GuestLeadModal";
 import type { QuoteLine } from "@/components/cart/GuestLeadModal";
 import { getGuestLead, setGuestLead } from "@/lib/guestCapture";
+import { saveQuote } from "@/lib/savedQuotes";
 import type { GuestLead } from "@/lib/guestCapture";
 import { Stars } from "@/components/product/Stars";
 import { DeliveryZipCheck } from "./DeliveryZipCheck";
@@ -615,6 +616,8 @@ export function ProductInfoPanel({
   const { isAuthenticated } = useAuth();
   /** Open only while a signed-out visitor is being asked for their details. */
   const [leadModalOpen, setLeadModalOpen] = useState(false);
+  /** Set once a quote has been filed this session, so the modal can say so. */
+  const [quoteSaved, setQuoteSaved] = useState(false);
 
   // When the shell swaps to a different product, reset both states
   useEffect(() => {
@@ -1207,11 +1210,30 @@ export function ProductInfoPanel({
   ]);
 
   /**
-   * Stores the details. The modal then slides to the quote itself — it does
-   * not add to the cart here, because the visitor has not asked to yet.
+   * Stores the details and files the quote.
+   *
+   * Both happen here rather than on the quote view, because this is the moment
+   * the visitor asked for one — and the figures saved are the ones they are
+   * about to be shown, not whatever the page has drifted to by the time they
+   * close it.
+   *
+   * Does not add to the cart: they have not asked to yet.
    */
   function handleLeadSubmit(lead: Omit<GuestLead, "capturedAt">) {
     setGuestLead(lead);
+
+    const stored = getGuestLead();
+    saveQuote({
+      productTitle: activeProduct.desc_title || activeProduct.title,
+      handle: String(activeProduct.handle ?? ""),
+      lines: quoteLines.map(({ label, value }) => ({ label, value })),
+      total: subtotal,
+      totalSuffix: priceDisplay.suffix || undefined,
+      // setGuestLead has just written it, so this reads back the stamped
+      // version rather than rebuilding the timestamp here.
+      lead: stored ?? { ...lead, capturedAt: new Date().toISOString() },
+    });
+    setQuoteSaved(true);
   }
 
   function addSelectedToCart() {
@@ -1771,6 +1793,7 @@ export function ProductInfoPanel({
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <button
               type="button"
+              onClick={() => setLeadModalOpen(true)}
               className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-white bg-[#0F3A59] text-[13px] font-semibold text-white shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] transition-colors hover:bg-[#164A70] focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
             >
               <QuoteIcon />
@@ -1913,7 +1936,11 @@ export function ProductInfoPanel({
           setLeadModalOpen(false);
           addSelectedToCart();
         }}
-        onDismiss={() => setLeadModalOpen(false)}
+        onDismiss={() => {
+          setLeadModalOpen(false);
+          setQuoteSaved(false);
+        }}
+        quoteSaved={quoteSaved}
         onAddressZipChange={setPickedZip}
       />
 

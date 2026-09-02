@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { MapPin, Phone, X } from 'lucide-react'
+import { Check, MapPin, Phone, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import Link from 'next/link'
 import { ROUTES } from '@/config/routes'
 import { CONTACT_NUMBER } from '@/lib/helpers'
+import { getGuestLead } from '@/lib/guestCapture'
 import type { GuestLead } from '@/lib/guestCapture'
 
 /**
@@ -72,6 +73,8 @@ type Props = {
    * would put an un-fulfillable line into the cart.
    */
   canAddToCart?: boolean
+  /** True once the caller has filed this quote, so the second view can say so. */
+  quoteSaved?: boolean
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -99,12 +102,23 @@ export function GuestLeadModal({
   onDismiss,
   onAddressZipChange,
   canAddToCart = true,
+  quoteSaved = false,
 }: Props) {
   const [step, setStep] = useState<Step>('details')
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
+  /**
+   * Seeded from the stored lead, so someone who has given their details once
+   * confirms them rather than typing them again — and can still edit any of
+   * them before submitting.
+   *
+   * Lazy initialisers rather than an effect: this only ever renders in the
+   * browser, behind the caller's `open` flag, so there is no server pass to
+   * mismatch against and no need to wait for one.
+   */
+  const stored = useState(() => getGuestLead())[0]
+  const [fullName, setFullName] = useState(stored?.fullName ?? '')
+  const [email, setEmail] = useState(stored?.email ?? '')
+  const [phone, setPhone] = useState(stored?.phone ?? '')
+  const [address, setAddress] = useState(stored?.address ?? '')
   const [error, setError] = useState<string | null>(null)
   const [addressOpen, setAddressOpen] = useState(false)
 
@@ -458,6 +472,19 @@ export function GuestLeadModal({
                   </span>
                 </div>
               </div>
+
+              {quoteSaved && (
+                <p className="mt-3 flex flex-wrap items-center gap-x-1.5 text-xs font-semibold text-theme-primary">
+                  <Check className="h-3.5 w-3.5" aria-hidden />
+                  Saved to your quotes.
+                  <Link
+                    href={ROUTES.SAVED_QUOTES}
+                    className="font-semibold underline underline-offset-2"
+                  >
+                    View saved quotes
+                  </Link>
+                </p>
+              )}
 
               <p className="mt-3 text-xs leading-relaxed text-theme-muted">
                 {canAddToCart

@@ -36,6 +36,7 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'cart', path: ROUTES.CART, label: 'Cart', group: 'Commerce', indexable: false },
   { id: 'checkout', path: ROUTES.CHECKOUT, label: 'Checkout', group: 'Commerce', indexable: false },
   { id: 'wishlist', path: ROUTES.WISHLIST, label: 'Wishlist', group: 'Commerce', indexable: false },
+  { id: 'saved-quotes', path: ROUTES.SAVED_QUOTES, label: 'Saved Quotes', group: 'Commerce', indexable: false },
 
   { id: 'account', path: ROUTES.ACCOUNT.ROOT, label: 'My Account', group: 'Account', indexable: false },
   { id: 'account-orders', path: ROUTES.ACCOUNT.ORDERS, label: 'Orders', group: 'Account', indexable: false },

@@ -15,6 +15,8 @@ export const ROUTES = {
   CART: '/cart',
   CHECKOUT: '/checkout',
   WISHLIST: '/wishlist',
+  /** Quotes this browser has saved from a product page. */
+  SAVED_QUOTES: '/saved-quotes',
   SITEMAP: '/sitemap.xml',
   ACCOUNT: {
     ROOT: '/my-account',
@@ -53,6 +55,7 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'cart',
   'checkout',
   'wishlist',
+  'saved-quotes',
   'my-account',
   'sale-shipping-containers',
   'agents',
