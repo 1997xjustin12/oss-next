@@ -1,6 +1,7 @@
 import { Shield, CheckCircle2, Lock, Layers } from 'lucide-react'
 import { OverviewBody, type OverviewCopy } from './OverviewBody'
 import { OverviewChecklist } from './OverviewChecklist'
+import { UsedConditionGallery } from './UsedConditionGallery'
 import { combinationKey } from '@/lib/containerOverview'
 import type { CombinationRegistry, OverviewProps } from './types'
 
@@ -69,6 +70,9 @@ function UsedWindandWaterTight() {
         your job site, business, or storage needs.
       </p>
       <OverviewChecklist items={USED_WWT_CHECKS} />
+      <h2 className="text-[12px] font-bold uppercase leading-[121%] tracking-[-0.22px] mt-5">SEE WHAT A USED CONTAINER ACTUALLY LOOKS LIKE</h2>
+      <p className="text-[12px] leading-[121%] tracking-[-0.22px]">Click images to see typical condition</p>
+      <UsedConditionGallery />
     </div>
   )
 }

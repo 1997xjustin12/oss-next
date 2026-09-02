@@ -19,7 +19,7 @@ export function OverviewChecklist({ items }: { items: string[] }) {
       {items.map((item) => (
         <li
           key={item}
-          className="flex break-inside-avoid items-start gap-2 py-1 text-sm sm:text-base text-theme-dark dark:text-gray-200"
+          className="flex break-inside-avoid items-start gap-2 py-1 text-[12px] text-theme-dark dark:text-gray-200"
         >
           <Check
             className="mt-0.5 h-4 w-4 shrink-0 text-[#22C55E]"
