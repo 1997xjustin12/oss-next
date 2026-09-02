@@ -1,5 +1,6 @@
 import { Shield, CheckCircle2, Lock, Layers } from 'lucide-react'
 import { OverviewBody, type OverviewCopy } from './OverviewBody'
+import { OverviewChecklist } from './OverviewChecklist'
 import { combinationKey } from '@/lib/containerOverview'
 import type { CombinationRegistry, OverviewProps } from './types'
 
@@ -43,8 +44,33 @@ function UsedASIS() {
   return <OverviewBody copy={DEFAULT_COPY} />
 }
 
+/**
+ * Ordered top to bottom down the left column, then the right — the two columns
+ * are CSS columns, so the array order is the reading order.
+ */
+const USED_WWT_CHECKS = [
+  "Wind & water tight",
+  "Original shipping markings",
+  "Solid wood flooring",
+  "Surface rust and dents may be present",
+  "Working cargo doors",
+  "Professionally inspected",
+]
+
 function UsedWindandWaterTight() {
-  return <OverviewBody copy={DEFAULT_COPY} />
+  return (
+    <div>
+      <h2 className="text-[18px] font-bold leading-[121%] tracking-[-0.36px] uppercase">
+        What is a used 20&apos; Wind and Water Tight Container?
+      </h2>
+      <p className="text-[14px] font-light leading-[121%] tracking-[-0.28px] mt-5">
+        A Wind &amp; Water Tight (WWT) container is used for storage and
+        shipping. It is structurally sound, weather resistant, and ready for
+        your job site, business, or storage needs.
+      </p>
+      <OverviewChecklist items={USED_WWT_CHECKS} />
+    </div>
+  )
 }
 
 function UsedCargoWorthy() {
