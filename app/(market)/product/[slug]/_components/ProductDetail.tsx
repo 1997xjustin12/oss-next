@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Package } from "lucide-react";
@@ -137,10 +137,15 @@ export function ProductDetail({ product, relatedProducts }: Props) {
         setBaseProduct(match);
         setActiveProduct(match);
 
-        // replaceState, not pushState: picking a ZIP is a selection, not a
-        // navigation, and a visitor who tries three ZIPs should still be one
-        // Back press from where they came in.
-        window.history.replaceState(null, "", ROUTES.PRODUCT(String(match.handle)));
+        // Replaces rather than pushes: picking a ZIP is a selection, not a
+        // step worth a Back press, and a visitor who tries three ZIPs should
+        // still be one press from where they came in. It carries the handle
+        // so the entry names the product it now points at.
+        window.history.replaceState(
+          { handle: String(match.handle) },
+          "",
+          ROUTES.PRODUCT(String(match.handle)),
+        );
       } catch {
         setLocationNotice(
           "Couldn't load containers for that location. Please try again, or call us.",
@@ -151,6 +156,73 @@ export function ProductDetail({ product, relatedProducts }: Props) {
     },
     [activeProduct],
   );
+
+  /**
+   * Variant selections are logged to browser history, so Back and Forward step
+   * through them.
+   *
+   * All three pieces live here rather than in the shell because the popstate
+   * handler has to turn a handle back into a product, and this is where the
+   * pool of them is. Native history rather than `router.push`: that re-runs the
+   * server component for a change already resolved on the client, so the swap
+   * stops being instant.
+   *
+   * The URL carries the variant in its path — `/product/<handle>` — rather than
+   * a query parameter, because each variant is a real product with its own page.
+   */
+
+  /** Seeds the entry the page loaded on, so Back from the next one has a handle. */
+  useEffect(() => {
+    const handle = String(activeProduct.handle ?? "");
+    if (handle) window.history.replaceState({ handle }, "", window.location.href);
+    // Mount only — later entries are pushed by the effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const handle = String(activeProduct.handle ?? "");
+    if (!handle) return;
+
+    // Already the entry we are standing on. Covers both a repeat click on the
+    // selected option and a change that came from popstate — the browser set
+    // that state before telling us, so pushing here would bury the entry the
+    // visitor just navigated back to.
+    const current = (window.history.state as { handle?: string } | null)?.handle;
+    if (current === handle) return;
+
+    window.history.pushState({ handle }, "", ROUTES.PRODUCT(handle));
+  }, [activeProduct]);
+
+  useEffect(() => {
+    function onPopState(event: PopStateEvent) {
+      const fromState = (event.state as { handle?: string } | null)?.handle;
+      // Falls back to the path for entries pushed before this state shape
+      // existed, or by anything else that rewrote the URL.
+      const fromPath = window.location.pathname
+        .split("/product/")[1]
+        ?.replace(/\/$/, "");
+      const handle = fromState ?? fromPath;
+      if (!handle) return;
+
+      const match = [baseProduct, product, ...pool].find(
+        (p) => String(p.handle) === handle,
+      );
+
+      if (match) {
+        setActiveProduct(match);
+        return;
+      }
+
+      // The depot changed since that entry was pushed, so the product is no
+      // longer in this pool and cannot be restored on the client. The URL has
+      // already moved, so reloading renders what it now points at — better than
+      // leaving the address bar describing a product that is not on screen.
+      window.location.reload();
+    }
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [pool, baseProduct, product]);
 
   const locationChange: LocationChangeStrategy = {
     mode: "swap",
@@ -177,7 +249,6 @@ export function ProductDetail({ product, relatedProducts }: Props) {
     <div className="bg-theme-bg text-theme-dark">
       {/* Breadcrumb + product grid */}
       <ProductVariantShell
-        product={baseProduct}
         relatedProducts={pool}
         activeProduct={activeProduct}
         onVariantChange={setActiveProduct}

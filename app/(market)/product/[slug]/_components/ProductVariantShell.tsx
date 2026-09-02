@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import {
@@ -96,7 +95,6 @@ function deriveQuickSpecs(product: ProductHit) {
 }
 
 type Props = {
-  product: ProductHit;
   relatedProducts: ProductHit[];
   activeProduct: ProductHit;
   onVariantChange: (product: ProductHit) => void;
@@ -105,36 +103,11 @@ type Props = {
 };
 
 export function ProductVariantShell({
-  product,
   relatedProducts,
   activeProduct,
   onVariantChange,
   locationChange,
 }: Props) {
-  /**
-   * Keep the URL pointing at whichever variant is on screen, without
-   * navigating — so the address bar, a copied link and a reload all agree with
-   * what the shopper is actually looking at.
-   *
-   * `replaceState`, not `pushState`. This was `pushState`, which gave every
-   * option toggle its own history entry while nothing listened for `popstate`
-   * to put the state back: pressing Back returned the URL to the previous
-   * variant but left the current one rendered, so the address bar said 40ft
-   * while the page showed 20ft. Adding a `popstate` handler would fix the
-   * desync, but it would also mean four size clicks cost four Back presses to
-   * leave the page.
-   *
-   * Replacing instead treats a variant the way the depot picker already treats
-   * a location — a selection within one page rather than a journey between
-   * pages — so Back returns to wherever the shopper came in from, which is
-   * what they meant by it.
-   */
-  useEffect(() => {
-    if (activeProduct === product) return;
-    if (!activeProduct.handle) return;
-    window.history.replaceState(null, "", ROUTES.PRODUCT(activeProduct.handle));
-  }, [activeProduct, product]);
-
   const crumb = getListingCrumb(activeProduct);
 
   // Keyed off the active product, so the size-specific slot follows the size
