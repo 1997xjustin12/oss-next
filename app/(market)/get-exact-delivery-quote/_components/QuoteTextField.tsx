@@ -30,7 +30,14 @@ export function QuoteTextField({
   defaultValue,
 }: Props) {
   return (
-    <div className="relative">
+    // `self-start` stops this stretching when it is a grid cell.
+    //
+    // The label is positioned `inset-y-0` against this wrapper, so the wrapper
+    // has to be the input's height and nothing more. A stretched grid row — the
+    // Full Name cell growing to match the taller Phone cell beside it, which
+    // carries a note under its input — made the wrapper 70px against a 48px
+    // input, and the label centred itself 11px too low.
+    <div className="relative self-start">
       <input
         id={id}
         name={name}
