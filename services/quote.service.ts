@@ -50,10 +50,16 @@ export type QuoteRequest = {
   agentName?: string
 }
 
+/**
+ * How a request reached us. Set by the server, never by the payload — an agent
+ * that could name its own source could claim to be the web form.
+ */
+export type QuoteRequestSource = 'agent_api' | 'delivery_quote_form'
+
 export type StoredQuoteRequest = QuoteRequest & {
   id: string
   receivedAt: string
-  source: 'agent_api'
+  source: QuoteRequestSource
   /** Never shown to the submitter; for rate-limit forensics only. */
   clientId?: string
 }
@@ -77,12 +83,13 @@ export async function deliverQuoteRequest(
   request: QuoteRequest,
   clientId: string | undefined,
   now: Date = new Date(),
+  source: QuoteRequestSource = 'agent_api',
 ): Promise<StoredQuoteRequest> {
   const stored: StoredQuoteRequest = {
     ...request,
     id: `q_${now.getTime().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
     receivedAt: now.toISOString(),
-    source: 'agent_api',
+    source,
     ...(clientId ? { clientId } : {}),
   }
 

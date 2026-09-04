@@ -16,9 +16,18 @@ type Props = {
   bare?: boolean
   /** Panel width — defaults to a compact dialog; widen for richer content. */
   maxWidth?: string
+  /**
+   * Let content escape the panel's bounds.
+   *
+   * The panel clips by default so its children cannot spill past the rounded
+   * corners. That is wrong for a dialog containing an autocomplete: the
+   * suggestion list is positioned against its input and gets sliced off at the
+   * panel edge, leaving a picker whose options cannot be read or clicked.
+   */
+  allowOverflow?: boolean
 }
 
-export function Modal({ open, onClose, title, children, footer, bare = false, maxWidth = 'max-w-md' }: Props) {
+export function Modal({ open, onClose, title, children, footer, bare = false, maxWidth = 'max-w-md', allowOverflow = false }: Props) {
   useEffect(() => {
     if (!open) return
     function onKey(e: KeyboardEvent) {
@@ -45,7 +54,7 @@ export function Modal({ open, onClose, title, children, footer, bare = false, ma
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative w-full ${maxWidth} rounded-xl border border-theme-border bg-theme-bg dark:bg-neutral-900 dark:border-neutral-800 shadow-2xl overflow-hidden`}
+        className={`relative w-full ${maxWidth} rounded-xl border border-theme-border bg-theme-bg dark:bg-neutral-900 dark:border-neutral-800 shadow-2xl ${allowOverflow ? 'overflow-visible' : 'overflow-hidden'}`}
       >
         {/* `bare` means the caller lays out its own header, so the title
             survives only as the dialog's accessible name above — drawing

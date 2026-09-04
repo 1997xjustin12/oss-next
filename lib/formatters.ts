@@ -42,7 +42,7 @@ export function formatPrice(value: number | string | null | undefined): string {
  * separators and symbols are stripped before parsing rather than being allowed
  * to turn the value into NaN.
  */
-function toNumber(value: number | string | null | undefined): number | null {
+export function toNumber(value: number | string | null | undefined): number | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
   if (typeof value !== 'string') return null
 

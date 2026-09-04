@@ -31,7 +31,6 @@ export const PDP_RESOURCE_FILES: readonly string[] = [
   'used_40h_wwt.webp',
   'used_40s_asis.pdf',
   'used_40s_asis.webp',
-  'used_40s_cw (1).webp',
   'used_40s_cw.pdf',
   'used_40s_cw.webp',
   'used_40s_iicl.pdf',

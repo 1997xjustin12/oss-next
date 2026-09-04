@@ -41,6 +41,8 @@ import { formatPrice } from "@/lib/formatters";
 import { useDeliveryRates } from "@/hooks/useDeliveryRates";
 import { useStoredZip } from "@/hooks/useStoredZip";
 import { cheapestDeliveryOption } from "@/lib/delivery";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/config/routes";
 
 // ─── option layer types ───────────────────────────────────────────────────────
 
@@ -614,6 +616,7 @@ export function ProductInfoPanel({
   const [zipAsked, setZipAsked] = useState(false);
 
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
   /** Open only while a signed-out visitor is being asked for their details. */
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   /** Set once a quote has been filed this session, so the modal can say so. */
@@ -1109,30 +1112,50 @@ export function ProductInfoPanel({
     return `$${formatPrice(total)}`;
   }, [activeProduct.sale_price, quantity, deliveryInSubtotal]);
 
+  /** Everything the quote flow needs to describe what this visitor is looking at. */
+  function quoteHref() {
+    return ROUTES.DELIVERY_QUOTE_FOR({
+      handle: typeof activeProduct.handle === "string" ? activeProduct.handle : undefined,
+      zip: zipcode || undefined,
+      qty: quantity,
+    });
+  }
+
   /**
    * The visible Add to cart action.
    *
-   * A signed-out visitor who has not given us their details is asked for them
-   * first; everyone else goes straight into the cart. The check is deliberately
-   * one-shot — once a lead is stored, or the person is signed in, this never
-   * interrupts again. Asking on every add is how a useful prompt becomes the
-   * reason someone leaves.
+   * No longer a lead gate. Asking a guest for their details before they can put
+   * a container in the basket costs more sales than the details are worth — the
+   * cart itself will ask, at the point where the answer is genuinely needed.
+   * Details are now collected where someone is already asking for something in
+   * return: Save Quote, and the quote flow behind it.
    */
   function handleAddToCartClick() {
-    // A reference listing cannot reach the cart at all — it has no depot, no
-    // SKU and a placeholder location — so the quote is the only outcome
-    // available, and it is offered to signed-in visitors too. Checked before
-    // the stored-lead shortcut, or a returning guest would click into nothing.
+    // A reference listing cannot reach the cart at all — no depot, no SKU, a
+    // placeholder location — so the only honest outcome is a quote. It goes to
+    // the quote flow rather than the modal, since the modal is now reached
+    // exclusively from Save Quote.
     if (isGenericDisplay) {
-      setLeadModalOpen(true);
-      return;
-    }
-
-    if (!isAuthenticated && !getGuestLead()) {
-      setLeadModalOpen(true);
+      router.push(quoteHref());
       return;
     }
     addSelectedToCart();
+  }
+
+  /**
+   * Save Quote, which is now the only way into the lead modal.
+   *
+   * A guest we have never met goes to the full quote page instead: it is a
+   * server-rendered form with room to ask properly, and the modal's job is to
+   * confirm details we already hold, not to collect them from scratch. Someone
+   * who has been through either route once gets the modal from then on.
+   */
+  function handleSaveQuoteClick() {
+    if (!isAuthenticated && !getGuestLead()) {
+      router.push(quoteHref());
+      return;
+    }
+    setLeadModalOpen(true);
   }
 
   /**
@@ -1793,7 +1816,7 @@ export function ProductInfoPanel({
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             <button
               type="button"
-              onClick={() => setLeadModalOpen(true)}
+              onClick={handleSaveQuoteClick}
               className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-white bg-[#0F3A59] text-[13px] font-semibold text-white shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] transition-colors hover:bg-[#164A70] focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
             >
               <QuoteIcon />

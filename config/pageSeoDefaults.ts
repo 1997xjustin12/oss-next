@@ -114,6 +114,34 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     },
   },
 
+  [ROUTES.DELIVERY_QUOTE]: {
+    title: 'Get Your Exact Delivery Quote | On Site Storage Solutions',
+    description:
+      'Tell us where your container is going and how to reach you, and we will come back with the exact delivery price for your address — usually within 15 minutes during business hours.',
+    canonical: ROUTES.DELIVERY_QUOTE,
+    openGraph: {
+      title: 'Get Your Exact Delivery Quote',
+      description:
+        'Delivery is priced per address. Send us your details and we will quote yours exactly.',
+      images: [ACCOUNT_OG_IMAGE],
+    },
+  },
+
+  [ROUTES.DELIVERY_QUOTE_REVIEW]: {
+    title: 'Your Delivery Quote | On Site Storage Solutions',
+    description:
+      'The quote your details bought, with the container, delivery estimate and what happens next.',
+    canonical: ROUTES.DELIVERY_QUOTE_REVIEW,
+    // The far side of a form submission: personalised, reached by redirect, and
+    // nothing to rank on.
+    robots: { index: false, follow: true },
+    openGraph: {
+      title: 'Your Delivery Quote',
+      description: 'The quote your details bought.',
+      images: [ACCOUNT_OG_IMAGE],
+    },
+  },
+
   [ROUTES.WISHLIST]: {
     title: 'My Wishlist',
     description:

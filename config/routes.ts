@@ -17,6 +17,29 @@ export const ROUTES = {
   WISHLIST: '/wishlist',
   /** Quotes this browser has saved from a product page. */
   SAVED_QUOTES: '/saved-quotes',
+  /**
+   * The delivery-quote flow. Step 3 captures contact details, step 4 shows the
+   * quote those details bought. Steps 1 and 2 are the product page and its ZIP
+   * field — real pages, just not ones this flow owns.
+   */
+  DELIVERY_QUOTE: '/get-exact-delivery-quote',
+  DELIVERY_QUOTE_REVIEW: '/get-exact-delivery-quote/review',
+  /**
+   * The quote flow, carrying what the product page already knows.
+   *
+   * Built here rather than at the call site because the page reads these
+   * parameters server-side, and a typo in one is invisible: the page still
+   * renders, just describing a container nobody chose. Empty values are dropped
+   * rather than sent as blanks.
+   */
+  DELIVERY_QUOTE_FOR: (params: { handle?: string; zip?: string; qty?: number }) => {
+    const query = new URLSearchParams()
+    if (params.handle) query.set('handle', params.handle)
+    if (params.zip) query.set('zip', params.zip)
+    if (params.qty && params.qty > 1) query.set('qty', String(params.qty))
+    const search = query.toString()
+    return search ? `/get-exact-delivery-quote?${search}` : '/get-exact-delivery-quote'
+  },
   SITEMAP: '/sitemap.xml',
   ACCOUNT: {
     ROOT: '/my-account',
@@ -56,6 +79,7 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'checkout',
   'wishlist',
   'saved-quotes',
+  'get-exact-delivery-quote',
   'my-account',
   'sale-shipping-containers',
   'agents',
