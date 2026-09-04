@@ -1,11 +1,11 @@
 import type { ProductHit } from '@/types/product'
 import { getCustomFieldValue } from '@/lib/pricing'
 
-// The three physical container variants this catalog carries — [Size][Height]:
-// 20S = 20' Standard, 40S = 40' Standard, 40H = 40' High Cube.
-// Shared across every component whose content depends on which one is active
-// (quick specs, PDP tabs, FAQ) so they all agree on the same classification.
-export type ContainerVariantKey = '20S' | '40S' | '40H'
+// Defined in containerSpecTerms alongside its label/slug/abbr. Imported for
+// use below and re-exported so the many components that reach for it through
+// this file keep working.
+import type { ContainerVariantKey } from './containerSpecTerms'
+export type { ContainerVariantKey }
 
 export function resolveContainerVariant(product: ProductHit): ContainerVariantKey {
   const height = getCustomFieldValue(product, 'height').toLowerCase()

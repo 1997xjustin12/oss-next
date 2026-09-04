@@ -57,7 +57,7 @@ export function UsedConditionGallery() {
                   over all six would dim the evidence to caption something the
                   chip can hold on its own. */}
               <span className="absolute inset-0 flex items-center justify-center p-1.5">
-                <span className="max-w-full truncate bg-white/95 px-2 py-1 text-[10px] font-bold uppercase leading-none tracking-wide text-[#1F1F1F] shadow-sm sm:text-[11px]">
+                <span className="max-w-full truncate bg-white/95 px-2 py-1 text-[12px] font-bold uppercase leading-none tracking-wide text-[#1F1F1F] shadow-sm sm:text-[11px]">
                   {view.label}
                 </span>
               </span>

@@ -929,25 +929,25 @@ export function ProductInfoPanel({
       });
 
       // groups.push({
-      groups.push({
-        id: "selection_type",
-        title: "Selection Type",
-        layout: "grid-3",
-        info: "How your container is picked at the depot — you get the next available unit matching the specification you chose above.",
-        // Display only. Every container we sell is First Off the Stack, so this
-        // states the fulfilment method rather than offering a choice: always
-        // shown as selected, never disabled, and clicking it does nothing.
-        // It is deliberately outside the size/condition/grade cascade — nothing
-        // here narrows which variant is chosen.
-        options: selectionTypes.map((t) => ({
-          key: t.key,
-          label: t.name,
-          sublabel: t.desc,
-          active: true,
-          available: true,
-          onSelect: () => {},
-        })),
-      });
+      // groups.push({
+      //   id: "selection_type",
+      //   title: "Selection Type",
+      //   layout: "grid-3",
+      //   info: "How your container is picked at the depot — you get the next available unit matching the specification you chose above.",
+      //   // Display only. Every container we sell is First Off the Stack, so this
+      //   // states the fulfilment method rather than offering a choice: always
+      //   // shown as selected, never disabled, and clicking it does nothing.
+      //   // It is deliberately outside the size/condition/grade cascade — nothing
+      //   // here narrows which variant is chosen.
+      //   options: selectionTypes.map((t) => ({
+      //     key: t.key,
+      //     label: t.name,
+      //     sublabel: t.desc,
+      //     active: true,
+      //     available: true,
+      //     onSelect: () => {},
+      //   })),
+      // });
     }
 
     if (selection.tab === "rent") {

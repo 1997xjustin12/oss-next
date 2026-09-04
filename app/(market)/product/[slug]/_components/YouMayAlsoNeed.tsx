@@ -102,7 +102,7 @@ export function YouMayAlsoNeed({
 }) {
   return (
     <div className="flex flex-col gap-[10px]">
-      <h2 className="text-[24px] font-bold">{heading}</h2>
+      <h2 className="text-[16px] md:text-[24px] font-bold">{heading}</h2>
       <CardCarousel label="Containers you may also need">
         {PRODUCTS.map((item, index) => (
           <Card key={`product-card-${index}`} item={item} />

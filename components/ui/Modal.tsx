@@ -47,7 +47,11 @@ export function Modal({ open, onClose, title, children, footer, bare = false, ma
         aria-label={title}
         className={`relative w-full ${maxWidth} rounded-xl border border-theme-border bg-theme-bg dark:bg-neutral-900 dark:border-neutral-800 shadow-2xl overflow-hidden`}
       >
-        {title && (
+        {/* `bare` means the caller lays out its own header, so the title
+            survives only as the dialog's accessible name above — drawing
+            the bar here too would stack a second heading and a second
+            close button over content that already has both. */}
+        {title && !bare && (
           <div className="flex items-center justify-between gap-4 px-5 sm:px-6 pt-5 sm:pt-6">
             <h2 className="text-lg font-extrabold tracking-tight text-theme-dark dark:text-white">
               {title}

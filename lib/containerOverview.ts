@@ -1,4 +1,6 @@
 import { getCustomFieldValue } from '@/lib/pricing'
+import type { ContainerCondition, ContainerGrade } from './containerSpecTerms'
+import { CONTAINER_CONDITIONS, CONTAINER_GRADES } from './containerSpecTerms'
 import type { ProductHit } from '@/types/product'
 
 /**
@@ -16,16 +18,29 @@ import type { ProductHit } from '@/types/product'
  * buttons highlight another.
  */
 
-export const CONTAINER_CONDITIONS = ['Used', 'New'] as const
-export const CONTAINER_GRADES = [
-  'AS IS',
-  'Wind and Water Tight',
-  'Cargo Worthy',
-  'IICL',
-] as const
-
-export type ContainerCondition = (typeof CONTAINER_CONDITIONS)[number]
-export type ContainerGrade = (typeof CONTAINER_GRADES)[number]
+// The vocabulary itself lives in containerSpecTerms — a module with no imports,
+// so build scripts can read the same slugs the app does. Re-exported here
+// because every existing call site reaches for it through this file.
+export {
+  CONTAINER_CONDITIONS,
+  CONTAINER_GRADES,
+  CONTAINER_VARIANTS,
+  CONDITION_TERMS,
+  GRADE_TERMS,
+  SIZE_TERMS,
+  OFFERED_PAIRS,
+  conditionSlug,
+  gradeSlug,
+  gradeAbbr,
+  sizeSlug,
+  specFileStem,
+} from './containerSpecTerms'
+export type {
+  SpecTerm,
+  ContainerCondition,
+  ContainerGrade,
+  ContainerVariantKey,
+} from './containerSpecTerms'
 
 /** e.g. `Used|Cargo Worthy`. The key each overview registry is indexed by. */
 export type CombinationKey = `${ContainerCondition}|${ContainerGrade}`

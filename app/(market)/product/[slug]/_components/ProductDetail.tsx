@@ -22,6 +22,7 @@ import { TrustedBySection } from "@/components/shared/TrustedBySection";
 import { ReviewsCarousel } from "./ReviewsCarousel";
 import { YouMayAlsoNeed } from "./YouMayAlsoNeed";
 import { MobileSpecialistBanner } from "./MobileSpecialistBanner";
+import { ContainerResources } from "./ContainerResources";
 import { QuoteForm } from "@/components/shared/QuoteForm";
 import { StatesSection } from "@/app/(market)/(home)/_components/StatesSection";
 import { CustomerReviewsSection } from "./CustomerReviewsSection";
@@ -248,7 +249,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
     .slice(0, 4);
 
   return (
-    <div className="bg-theme-bg text-theme-dark">
+    <div className="bg-theme-bg text-theme-dark flex flex-col gap-[20px]">
       {/* Breadcrumb + product grid */}
       <ProductVariantShell
         relatedProducts={pool}
@@ -263,9 +264,9 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       {/* BODY TABS */}
       <BodyTabsSection variant={containerVariant} product={activeProduct} />
 
-      <section className="px-4 sm:px-[5%] py-10 sm:py-16">
+      <section className="px-4 sm:px-[5%]">
         <div className="flex flex-col gap-[10px]">
-          <h2 className="text-[24px] font-bold">Ideal for:</h2>
+          <h2 className="text-[16px] md:text-[24px] font-bold">Ideal for:</h2>
           <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[10px]">
             {IDEAL_FOR.map((item) => (
               <li
@@ -293,44 +294,9 @@ export function ProductDetail({ product, relatedProducts }: Props) {
         </div>
       </section>
 
-      {/* RELATED PRODUCTS */}
-      {/* {relatedToShow.length > 0 && (
-        <section className="px-4 sm:px-[5%] py-10 sm:py-16">
-          <div className="flex items-baseline justify-between mb-6">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">You May Also Need</h2>
-            <Link href={ROUTES.PLP} className="text-xs sm:text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors whitespace-nowrap">
-              View All Containers →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {relatedToShow.map((p) => (
-              <Link
-                key={p.objectID}
-                href={ROUTES.PRODUCT(p.handle)}
-                className="rounded-lg border border-theme-border bg-theme-bg overflow-hidden hover:border-theme-primary hover:-translate-y-1 hover:shadow-lg transition-all"
-              >
-                <div className="relative h-32 bg-theme-subtle">
-                  {p.images?.[0]?.src ? (
-                    <Image src={p.images[0].src} alt={p.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, 25vw" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-10 h-10 text-theme-muted" strokeWidth={1.5} />
-                    </div>
-                  )}
-                </div>
-                <div className="p-3.5">
-                  <h4 className="font-extrabold text-sm mb-2 line-clamp-2 leading-snug">{p.title}</h4>
-                  <div className="flex items-center justify-between pt-2.5 border-t border-theme-border">
-                    <span className="font-extrabold text-base">{fmt(p.sale_price)}</span>
-                    <span className="bg-theme-dark text-white text-xs font-bold px-3 py-1.5 rounded">View</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )} */}
 
+      <ContainerResources product={activeProduct} />
+      
       {/* Phones only — desktop keeps a call button in the sticky panel. */}
       <MobileSpecialistBanner />
 
@@ -339,7 +305,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
           directly above it lists the *real* related products for this depot,
           under the same "You May Also Need" title. Give this one its own
           heading, or wire it to relatedProducts, before it ships. */}
-      <section className="px-4 sm:px-[5%] py-10 sm:py-16">
+      <section className="px-4 sm:px-[5%]">
         <YouMayAlsoNeed />
       </section>
 
@@ -367,9 +333,9 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       <TrustedBySection />
 
       {/* FAQ */}
-      <section className="px-4 sm:px-[5%] py-10 sm:py-16">
-        <div className="flex items-baseline justify-center mb-6">
-          <h2 className="text-[16px] md:text-[32px] font-bold sm:text-3xl tracking-tight text-[#474747] uppercase">
+      <section className="px-4 sm:px-[5%]">
+        <div className="flex items-baseline mb-6">
+          <h2 className="text-[16px] md:text-[24px] font-bold tracking-tight">
             Frequently Asked Questions
           </h2>
         </div>

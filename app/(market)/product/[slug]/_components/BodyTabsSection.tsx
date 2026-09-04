@@ -54,7 +54,7 @@ export function BodyTabsSection({ variant, product }: Props) {
   const { condition, grade } = resolveCombination(product)
 
   return (
-    <section className="px-4 sm:px-[5%] py-10 sm:py-16">
+    <section className="px-4 sm:px-[5%]">
       <div className="flex gap-1 overflow-x-auto border-b-2 border-theme-border mb-8 -mx-1 px-1 scrollbar-none">
         {bodyTabs.map((t, index) => (
           <button

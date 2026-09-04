@@ -1,0 +1,41 @@
+// GENERATED FILE — do not edit by hand.
+// Run `npm run resources:manifest` (or any `npm run dev`/`build`) to refresh.
+// Source: public/resources/pdp/
+
+/** Every file present under `public/resources/pdp/`, as bare filenames. */
+export const PDP_RESOURCE_FILES: readonly string[] = [
+  '20s_dimension.pdf',
+  '40h_dimension.pdf',
+  '40s_dimension.pdf',
+  'new_20s_iicl.pdf',
+  'new_20s_iicl.webp',
+  'new_40h_iicl.pdf',
+  'new_40h_iicl.webp',
+  'new_40s_iicl.pdf',
+  'new_40s_iicl.webp',
+  'used_20s_asis.pdf',
+  'used_20s_asis.webp',
+  'used_20s_cw.pdf',
+  'used_20s_cw.webp',
+  'used_20s_iicl.pdf',
+  'used_20s_iicl.webp',
+  'used_20s_wwt.pdf',
+  'used_20s_wwt.webp',
+  'used_40h_asis.pdf',
+  'used_40h_asis.webp',
+  'used_40h_cw.pdf',
+  'used_40h_cw.webp',
+  'used_40h_iicl.pdf',
+  'used_40h_iicl.webp',
+  'used_40h_wwt.pdf',
+  'used_40h_wwt.webp',
+  'used_40s_asis.pdf',
+  'used_40s_asis.webp',
+  'used_40s_cw (1).webp',
+  'used_40s_cw.pdf',
+  'used_40s_cw.webp',
+  'used_40s_iicl.pdf',
+  'used_40s_iicl.webp',
+  'used_40s_wwt.pdf',
+  'used_40s_wwt.webp',
+]

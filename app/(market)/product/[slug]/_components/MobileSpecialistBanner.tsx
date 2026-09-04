@@ -32,13 +32,6 @@ export function MobileSpecialistBanner() {
         Talk to a container specialist. We&rsquo;re here to help.
       </p>
 
-      {/* A hairline between the pitch and the action, so the button reads as
-          the answer to the question above rather than part of the sentence. */}
-      <div
-        aria-hidden
-        className="mx-auto mt-5 h-px w-56 max-w-full border-t border-dashed border-white/25"
-      />
-
       <Link
         href={CONTACT_TEL}
         className="mt-4 inline-flex items-center justify-center rounded-[4px] bg-[#BD112A] px-6 py-3 text-[19px] font-bold text-white transition-colors hover:bg-[#A50F24] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#123A5E]"

@@ -1,8 +1,38 @@
 import type { ProductHit } from '@/types/product'
 import { type ContainerVariantKey, resolveContainerVariant } from '@/lib/containerVariant'
+import { BASE_URL } from '../helpers';
 
 export type SpecItem = { label: string; value: string }
 export type FaqItem  = { question: string; answer: string }
+
+/**
+ * What kind of thing a resource link leads to.
+ *
+ * Drives both the icon and how the link opens, so a visitor can tell a
+ * document from a page before clicking rather than after. Add a member here
+ * when a new kind appears — a video, a spreadsheet — rather than special-casing
+ * it at the call site.
+ */
+export type ContainerResourceType = 'page' | 'pdf' | 'img'
+
+/**
+ * A document or page offered alongside a container size.
+ *
+ * Files live under `public/resources/pdp/`, so their url is a site-absolute
+ * path. Next serves a PDF with `Content-Type: application/pdf`, which is what
+ * lets the browser render one in its own viewer rather than save it — the link
+ * deliberately carries no `download` attribute for that reason.
+ *
+ * An `img` opens in a lightbox on the page instead of a new tab: these are
+ * infographics meant to be read beside the product, and sending someone to a
+ * bare image URL loses that context and the way back.
+ */
+export type ContainerResource = {
+  label: string
+  url: string
+  /** Defaults to `page`. */
+  type?: ContainerResourceType
+}
 
 export type PdpShippingContainerEntry = {
   quickSpecs: { cuFt: string; sqFt: string; lbsTare: string }
@@ -83,18 +113,29 @@ export const PDP_SHIPPING_CONTAINERS: Record<ContainerVariantKey, PdpShippingCon
       { label: 'Space', value: 'Occupies space of a large single parking spot' },
     ],
     faq: faq20S,
+    // TODO: placeholder links. Replace the URLs before launch — every one of
+    // these currently points at a page that does not exist.
   },
   '40S': {
     quickSpecs: { cuFt: '2,390', sqFt: '306', lbsTare: '8,000–8,400' },
     specs: build40FtSpecs('8 ft 6 in', '7 ft 10 in'),
     faq: faq40S,
+    // TODO: placeholder links. Replace the URLs before launch — every one of
+    // these currently points at a page that does not exist.
   },
   '40H': {
     quickSpecs: { cuFt: '2,700', sqFt: '306', lbsTare: '8,000–8,400' },
     specs: build40FtSpecs('9 ft 6 in', '8 ft 10 in'),
     faq: faq40H,
+    // TODO: placeholder links. Replace the URLs before launch — every one of
+    // these currently points at a page that does not exist.
   },
 }
+
+/** The resources offered for whichever size is on screen. */
+// Resources are no longer listed per size: they are derived from the active
+// product's size, condition and grade against the files actually present under
+// public/resources/pdp/. See `getContainerResources` in ./pdpResources.
 
 export function getQuickSpecs(product: ProductHit) {
   return PDP_SHIPPING_CONTAINERS[resolveContainerVariant(product)].quickSpecs

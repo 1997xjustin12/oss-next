@@ -319,6 +319,12 @@ async function logAgent(request: NextRequest, status: number): Promise<void> {
 // Broadened from just '/' so the maintenance wall can gate every route. Excludes
 // Next internals and common static assets, so CSS/JS/images/favicon still load
 // on the maintenance page itself and aren't needlessly walled.
+//
+// Every static extension served from public/ has to be listed here. Anything
+// missing is treated as a page path, and since it is not a native route and
+// the backend has never heard of it, the proxy 404s it — which is exactly what
+// happened to the resource PDFs, and to /llms.txt before them. Add the
+// extension when a new kind of asset lands in public/.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|pdf)$).*)'],
 }

@@ -221,7 +221,7 @@ export function CustomerReviewsSection({ heading = 'Customer Reviews:' }: { head
   return (
     <section id="reviews" className="px-4 py-10 sm:px-[5%] sm:py-16">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-xl font-bold text-theme-dark sm:text-2xl dark:text-white">
+        <h2 className="text-[16px] md:text-[24px] font-bold text-theme-dark sm:text-2xl dark:text-white">
           {heading}
         </h2>
         <GoogleReviewsBadge linkCount />
