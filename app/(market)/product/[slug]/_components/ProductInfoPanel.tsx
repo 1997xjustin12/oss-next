@@ -614,6 +614,15 @@ export function ProductInfoPanel({
    * site never offers again on a later visit.
    */
   const [zipAsked, setZipAsked] = useState(false);
+  /**
+   * The ZIP prompt opened on purpose rather than on arrival.
+   *
+   * Separate from `zipAsked`, which only records that the automatic prompt has
+   * had its turn. Someone who dismissed it on arrival and later presses Add to
+   * cart on a reference listing still needs to be asked — that press is the
+   * request.
+   */
+  const [zipGateRequested, setZipGateRequested] = useState(false);
 
   const { isAuthenticated } = useAuth();
   const router = useRouter();
@@ -1033,7 +1042,8 @@ export function ProductInfoPanel({
    * nothing in storage. A visitor who already told us where they are is not
    * asked again, on any listing.
    */
-  const zipGateOpen = storedZip.resolved && !zipcode && !zipAsked;
+  const zipGateOpen =
+    zipGateRequested || (storedZip.resolved && !zipcode && !zipAsked);
 
   /**
    * Delivery quote for the current selection. Keyed on the active product's
@@ -1135,6 +1145,18 @@ export function ProductInfoPanel({
    * genuinely needed before an order can be progressed.
    */
   function handleAddToCartClick() {
+    // A reference listing has no depot behind it, so `addSelectedToCart` bails
+    // and the press does nothing at all — a dead button on the one control the
+    // page is built around.
+    //
+    // What is actually missing is where the visitor is: with a ZIP the gate
+    // resolves the nearest depot and swaps the page onto the real container
+    // stocked there, which can then go in the cart. So the press asks for the
+    // ZIP rather than failing silently.
+    if (isGenericDisplay) {
+      setZipGateRequested(true);
+      return;
+    }
     addSelectedToCart();
   }
 
@@ -1929,6 +1951,7 @@ export function ProductInfoPanel({
         onResolved={(postcode, depot) => {
           setPickedZip(postcode);
           setZipAsked(true);
+          setZipGateRequested(false);
           // On a reference listing the ZIP alone changes nothing — the page
           // still has no depot behind it. Handing the depot to the swap
           // moves the visitor onto the real container stocked near them,
@@ -1937,7 +1960,10 @@ export function ProductInfoPanel({
             locationChange.onChange(depot);
           }
         }}
-        onDismiss={() => setZipAsked(true)}
+        onDismiss={() => {
+          setZipAsked(true);
+          setZipGateRequested(false);
+        }}
       />
 
       <GuestLeadModal
