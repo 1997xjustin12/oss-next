@@ -11,7 +11,8 @@
     "resources:manifest": "node scripts/generate-pdp-resources.mjs",
     "resources:check": "node --experimental-strip-types scripts/check-pdp-resources.mjs",
     "predev": "node scripts/generate-pdp-resources.mjs",
-    "prebuild": "node scripts/generate-pdp-resources.mjs"
+    "prebuild": "node scripts/generate-pdp-resources.mjs",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^8.19.1",

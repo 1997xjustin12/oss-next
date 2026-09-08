@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# Blocks credentials before they reach a remote.
+#
+# This is the only point in the lifecycle where deleting a secret still helps.
+# Once it is pushed, removal stops it being *found* again but does not revoke
+# it — anyone who cloned, forked or cached the repo still has it, and the only
+# real fix is rotating at the provider. That is why this runs here and not in CI.
+#
+# Wired up by the `prepare` script in package.json (core.hooksPath), so a fresh
+# `npm install` is enough — nothing to remember and no dependency to add.
+#
+# To get past a false positive:  ALLOW_SECRET=1 git commit ...
+# Prefer fixing the line. The bypass exists because a blocked commit with no way
+# through is a hook people delete.
+
+[ -n "$ALLOW_SECRET" ] && exit 0
+
+exec node "$(dirname "$0")/scan-staged.mjs"

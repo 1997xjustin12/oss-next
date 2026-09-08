@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 onsite_headless_prototype
+# Raw scanner output. secsuite-run-40.pdf carries the leaked Braintree and
+# Elasticsearch keys in its text, so committing it would copy the leak into this
+# repository history too. Keep scans local; the remediation report is committed.
+docs/security_audit/secsuite-run-*.pdf
