@@ -1124,21 +1124,17 @@ export function ProductInfoPanel({
   /**
    * The visible Add to cart action.
    *
-   * No longer a lead gate. Asking a guest for their details before they can put
-   * a container in the basket costs more sales than the details are worth — the
-   * cart itself will ask, at the point where the answer is genuinely needed.
-   * Details are now collected where someone is already asking for something in
-   * return: Save Quote, and the quote flow behind it.
+   * No longer a lead gate, and no longer a detour. Asking a guest for their
+   * details before they can put a container in the basket costs more sales than
+   * the details are worth, and so does answering "add this to my cart" with a
+   * form. Every listing now adds directly, reference listings included — the
+   * note above the button already says pricing and stock vary by depot, which is
+   * the honest caveat, and sales confirm the depot when they price delivery.
+   *
+   * The quote flow is entered from checkout instead, where a guest's details are
+   * genuinely needed before an order can be progressed.
    */
   function handleAddToCartClick() {
-    // A reference listing cannot reach the cart at all — no depot, no SKU, a
-    // placeholder location — so the only honest outcome is a quote. It goes to
-    // the quote flow rather than the modal, since the modal is now reached
-    // exclusively from Save Quote.
-    if (isGenericDisplay) {
-      router.push(quoteHref());
-      return;
-    }
     addSelectedToCart();
   }
 
@@ -1260,8 +1256,6 @@ export function ProductInfoPanel({
   }
 
   function addSelectedToCart() {
-    if (isGenericDisplay) return; // belt-and-suspenders — the button is hidden for these
-
     const orderType =
       selection.tab === "rent"
         ? `Rental · ${selection.rentTerm} Months`
@@ -1953,7 +1947,7 @@ export function ProductInfoPanel({
         quoteLines={quoteLines}
         quoteTotal={subtotal}
         quoteTotalSuffix={priceDisplay.suffix}
-        canAddToCart={!isGenericDisplay}
+        canAddToCart
         onSubmit={handleLeadSubmit}
         onAddToCart={() => {
           setLeadModalOpen(false);
