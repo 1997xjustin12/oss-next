@@ -47,6 +47,7 @@ const ERRORS: Record<string, string> = {
   email: 'That email address does not look right — check it and try again.',
   'email-mismatch': 'The two email addresses do not match.',
   phone: 'Please add a phone number we can reach you on.',
+  zip: 'Please set the delivery ZIP code — we cannot quote delivery without it.',
 }
 
 const OPTION_CHIP =

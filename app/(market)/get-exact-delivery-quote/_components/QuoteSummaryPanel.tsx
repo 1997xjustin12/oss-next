@@ -125,12 +125,25 @@ export function QuoteSummaryPanel({ quote }: { quote: DeliveryQuoteContext }) {
 
           <div className="mt-2 flex items-start justify-between gap-4 text-sm">
             <span className="shrink-0 font-semibold text-theme-mid dark:text-neutral-300">
-              Delivery to
+              Delivery to{' '}
+              <span className="text-theme-primary" aria-hidden>
+                *
+              </span>
+              <span className="sr-only">(required)</span>
             </span>
             <span className="text-right font-semibold text-[#0F6FBF] dark:text-sky-400">
               {quote.deliveryLabel ?? 'Not set yet'}
             </span>
           </div>
+
+          {/* Shown while the destination is unset, not only after a rejected
+              submit: the ZIP is set in the dialog above rather than in the form,
+              so nothing else tells the visitor why they cannot continue. */}
+          {!quote.zip && (
+            <p className="mt-1.5 text-right text-xs font-medium text-theme-primary dark:text-red-300">
+              Required before you can continue to the next step.
+            </p>
+          )}
 
           <div className="mt-4 flex items-start justify-between gap-4 border-t border-theme-border pt-4 text-sm dark:border-neutral-800">
             <span className="shrink-0 font-semibold text-theme-mid dark:text-neutral-300">

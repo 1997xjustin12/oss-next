@@ -48,6 +48,7 @@ export async function submitDeliveryQuote(formData: FormData) {
     details: String(formData.get('details') ?? '').trim(),
   }
   const confirmEmail = String(formData.get('confirmEmail') ?? '').trim()
+  const zip = String(formData.get('zip') ?? '').trim()
   const query = contextQuery(formData)
 
   const store = await cookies()
@@ -69,13 +70,18 @@ export async function submitDeliveryQuote(formData: FormData) {
   if (!EMAIL_PATTERN.test(draft.email)) fail('email')
   if (draft.email.toLowerCase() !== confirmEmail.toLowerCase()) fail('email-mismatch')
   if (!draft.phone) fail('phone')
+  // The destination is not a field in this form — it is chosen in the summary
+  // panel's ZIP editor — so no browser validation covers it. Without it there is
+  // no delivery charge to show, which is the one thing the review page exists to
+  // show, so the submission is refused rather than quoting nothing.
+  if (!zip) fail('zip')
 
   await deliverQuoteRequest(
     {
       ...(String(formData.get('handle') ?? '').trim()
         ? { handle: String(formData.get('handle')).trim() }
         : {}),
-      zip: String(formData.get('zip') ?? '').trim(),
+      zip,
       name: draft.fullName,
       email: draft.email,
       phone: draft.phone,
