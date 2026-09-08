@@ -1,7 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { readVisitorZip, EMPTY_VISITOR_ZIP, type VisitorZip } from '@/lib/visitorZip'
+import {
+  readVisitorZip,
+  EMPTY_VISITOR_ZIP,
+  VISITOR_ZIP_EVENT,
+  type VisitorZip,
+} from '@/lib/visitorZip'
 
 /**
  * The visitor's ZIP, for components.
@@ -38,8 +43,21 @@ export function useStoredZip(): StoredZip {
 
   useEffect(() => {
     // Set even when nothing was found, so `resolved` flips either way.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setStored({ ...readVisitorZip(), resolved: true })
+    function sync() {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStored({ ...readVisitorZip(), resolved: true })
+    }
+    sync()
+
+    // Re-read on a change in this tab, and on `storage` for the other ones.
+    // Without the first, a component that mounted before the visitor gave a ZIP
+    // keeps showing nothing for the rest of the session.
+    window.addEventListener(VISITOR_ZIP_EVENT, sync)
+    window.addEventListener('storage', sync)
+    return () => {
+      window.removeEventListener(VISITOR_ZIP_EVENT, sync)
+      window.removeEventListener('storage', sync)
+    }
   }, [])
 
   return stored

@@ -24,6 +24,23 @@ export type VisitorZip = {
 export const EMPTY_VISITOR_ZIP: VisitorZip = { postcode: '', label: '', depot: '' }
 
 /**
+ * Broadcast when this browser's ZIP changes.
+ *
+ * The native `storage` event only fires in *other* tabs, so a component in the
+ * same document never hears a write made beside it. Everything that reads the
+ * visitor's ZIP through a hook was therefore stuck with whatever was there when
+ * it mounted — the ZIP prompt could resolve a new location and the delivery
+ * field two hundred pixels away would go on showing the old one.
+ */
+export const VISITOR_ZIP_EVENT = 'oss:visitor-zip-change'
+
+/** Call after writing any of the ZIP keys, so readers in this tab re-read. */
+export function notifyVisitorZipChange(): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new Event(VISITOR_ZIP_EVENT))
+}
+
+/**
  * Forget where the visitor is, so the ZIP prompt asks again.
  *
  * Clears the three keys {@link readVisitorZip} reads, plus the gallery redirect

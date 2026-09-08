@@ -7,6 +7,7 @@ import { Package } from "lucide-react";
 import { findEquivalentContainer, isContainerHit } from "@/lib/pricing";
 import { resolveContainerVariant } from "@/lib/containerVariant";
 import { ROUTES } from "@/config/routes";
+import { notifyVisitorZipChange } from "@/lib/visitorZip";
 import type { ProductHit } from "@/types/product";
 import { ProductVariantShell } from "./ProductVariantShell";
 import { MobileTrustSection } from "./MobileTrustSection";
@@ -144,11 +145,15 @@ export function ProductDetail({ product, relatedProducts }: Props) {
         // step worth a Back press, and a visitor who tries three ZIPs should
         // still be one press from where they came in. It carries the handle
         // so the entry names the product it now points at.
-        window.history.replaceState(
-          { handle: String(match.handle) },
-          "",
-          ROUTES.PRODUCT(String(match.handle)),
-        );
+        // The query string is carried over, not dropped. `readVisitorZip`
+        // resolves `?zipcode=` ahead of storage, so rewriting the URL without
+        // it silently changes what every reader on the page resolves to — the
+        // delivery field would fall back to whatever was stored before, right
+        // after the visitor told us somewhere new.
+        const swapped = new URL(window.location.href);
+        swapped.pathname = ROUTES.PRODUCT(String(match.handle));
+        window.history.replaceState({ handle: String(match.handle) }, "", swapped);
+        notifyVisitorZipChange();
       } catch {
         setLocationNotice(
           "Couldn't load containers for that location. Please try again, or call us.",
@@ -193,7 +198,13 @@ export function ProductDetail({ product, relatedProducts }: Props) {
     const current = (window.history.state as { handle?: string } | null)?.handle;
     if (current === handle) return;
 
-    window.history.pushState({ handle }, "", ROUTES.PRODUCT(handle));
+    // Query carried over for the same reason the ZIP swap carries it: the
+    // visitor's location is orthogonal to which variant they are looking at,
+    // and dropping it here means a link copied after switching size arrives
+    // somewhere with no location at all.
+    const next = new URL(window.location.href);
+    next.pathname = ROUTES.PRODUCT(handle);
+    window.history.pushState({ handle }, "", next);
   }, [activeProduct]);
 
   useEffect(() => {

@@ -40,6 +40,7 @@ import Link from "next/link";
 import { formatPrice } from "@/lib/formatters";
 import { useDeliveryRates } from "@/hooks/useDeliveryRates";
 import { useStoredZip } from "@/hooks/useStoredZip";
+import { notifyVisitorZipChange } from "@/lib/visitorZip";
 import { cheapestDeliveryOption } from "@/lib/delivery";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/config/routes";
@@ -1144,6 +1145,36 @@ export function ProductInfoPanel({
    * The quote flow is entered from checkout instead, where a guest's details are
    * genuinely needed before an order can be progressed.
    */
+  /**
+   * Put the resolved ZIP in the URL.
+   *
+   * `readVisitorZip` gives `?zipcode=` precedence over storage, deliberately —
+   * a link someone was sent should win over wherever that browser happens to
+   * think it is. But it means a stale parameter shadows a ZIP the visitor has
+   * just given us: arrive on `?zipcode=92590`, answer the prompt with 90210,
+   * and every reader still resolves 92590. Worse, the label degrades to the
+   * bare digits, because the stored label no longer contains the URL's code.
+   *
+   * This used to be handled by redirecting to the new URL. The flow swaps
+   * content in place now, so the address bar is corrected without a navigation.
+   * `replaceState` rather than `pushState`: correcting a parameter is not a
+   * place in the history someone should have to press Back through. The
+   * existing state object is carried over so ProductDetail's own handle-based
+   * history entries survive.
+   */
+  function syncZipToUrl(postcode: string) {
+    if (typeof window === "undefined" || !postcode) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("zipcode") === postcode) return;
+    url.searchParams.set("zipcode", postcode);
+    window.history.replaceState(window.history.state, "", url);
+    // Announce again. `selectResult` already fired one when it wrote storage,
+    // but that was before this line — and since `readVisitorZip` prefers the
+    // URL, every reader resolved the *old* parameter and cached it. The signal
+    // has to follow the last thing that changes the answer, not the first.
+    notifyVisitorZipChange();
+  }
+
   function handleAddToCartClick() {
     // A reference listing has no depot behind it, so `addSelectedToCart` bails
     // and the press does nothing at all — a dead button on the one control the
@@ -1952,6 +1983,7 @@ export function ProductInfoPanel({
           setPickedZip(postcode);
           setZipAsked(true);
           setZipGateRequested(false);
+          syncZipToUrl(postcode);
           // On a reference listing the ZIP alone changes nothing — the page
           // still has no depot behind it. Handing the depot to the swap
           // moves the visitor onto the real container stocked near them,

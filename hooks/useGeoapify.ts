@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { notifyVisitorZipChange } from '@/lib/visitorZip'
 import { getNearestLocation } from '@/lib/locations'
 import { BASE_URL } from '@/lib/helpers'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
@@ -199,6 +200,8 @@ export function useGeoapify(
     localStorage.setItem('zipcode_label',    result.formatted)
     localStorage.setItem('zipcode_depot',    result.nearestLocation ?? '')
     localStorage.setItem('gallery_redirect', result.galleryRedirect)
+    // Tell readers in this tab, which no storage event reaches.
+    notifyVisitorZipChange()
     enrichSaleLinks()
     clear()
 
