@@ -6,21 +6,21 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
 endobj
 3 0 obj
-<< /Length 5317 >>
+<< /Length 5330 >>
 stream
 BT /F2 21 Tf 0.1 0.1 0.1 rg 1 0 0 1 54 709 Tm (Security remediation report) Tj ET
 BT /F1 11 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 687.1800000000001 Tm (oss_pages storefront) Tj ET
 0.85 0.85 0.85 RG 0.6 w 54 674.56 m 558 674.56 l S
 BT /F1 9.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 657.06 Tm (Generated) Tj ET
-BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 455.01410999999996 657.06 Tm (2026-09-08 06:59 UTC) Tj ET
+BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 455.01410999999996 657.06 Tm (2026-09-08 08:10 UTC) Tj ET
 BT /F1 9.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 642.81 Tm (Batches in this report) Tj ET
-BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 546.80216 642.81 Tm (#1) Tj ET
-BT /F1 9.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 628.56 Tm (Findings covered) Tj ET
+BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 530.0054 642.81 Tm (#1, #2) Tj ET
+BT /F1 9.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 628.56 Tm (Distinct findings) Tj ET
 BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 552.40108 628.56 Tm (9) Tj ET
 BT /F1 9.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 614.31 Tm (Fixed) Tj ET
-BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 552.40108 614.31 Tm (6) Tj ET
-BT /F1 9.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 600.06 Tm (Deferred) Tj ET
-BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 552.40108 600.06 Tm (3) Tj ET
+BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 552.40108 614.31 Tm (9) Tj ET
+BT /F1 9.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 600.06 Tm (Still outstanding) Tj ET
+BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 552.40108 600.06 Tm (0) Tj ET
 0.85 0.85 0.85 RG 0.6 w 54 587.31 m 558 587.31 l S
 BT /F2 13 Tf 0.1 0.1 0.1 rg 1 0 0 1 54 566.31 Tm (Provenance) Tj ET
 BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 548.35 Tm (This report does not follow docs/security_audit/secsuite-run-40.pdf. That scan was run against a different codebase:) Tj ET
@@ -57,11 +57,11 @@ BT /F2 8 Tf 1 1 1 rg 1 0 0 1 60 120.97000000000003 Tm (HIGH) Tj ET
 BT /F2 10.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 96.2 119.97000000000003 Tm (browserslist   <=4.28.6) Tj ET
 BT /F1 8.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 99.47000000000003 Tm (Transitive dependency - installed: 4.28.2) Tj ET
 BT /F2 9 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 82.89999999999998 Tm (Reported) Tj ET
-BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 1 of 4) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 1 of 6) Tj ET
 endstream
 endobj
 4 0 obj
-<< /Type /Page /Parent 11 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 3 0 R >>
+<< /Type /Page /Parent 15 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 3 0 R >>
 endobj
 5 0 obj
 << /Length 5088 >>
@@ -116,11 +116,11 @@ BT /F2 8 Tf 1 1 1 rg 1 0 0 1 60 120.95000000000027 Tm (HIGH) Tj ET
 BT /F2 10.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 96.2 119.95000000000027 Tm (undici   <=6.27.0 || 7.0.0 - 7.28.0) Tj ET
 BT /F1 8.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 99.45000000000027 Tm (Transitive dependency - installed: 6.27.0, 7.28.0) Tj ET
 BT /F2 9 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 82.88000000000022 Tm (Reported) Tj ET
-BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 2 of 4) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 2 of 6) Tj ET
 endstream
 endobj
 6 0 obj
-<< /Type /Page /Parent 11 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 5 0 R >>
+<< /Type /Page /Parent 15 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 5 0 R >>
 endobj
 7 0 obj
 << /Length 6245 >>
@@ -175,14 +175,14 @@ BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 121.37000000000023 Tm (- PostCSS has XSS v
 BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 109.59000000000026 Tm (CWE-79 - https://github.com/advisories/GHSA-qx2v-qp2m-jg93) Tj ET
 BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 95.23000000000025 Tm (- PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments) Tj ET
 BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 83.45000000000027 Tm (CWE-22, CWE-200 - https://github.com/advisories/GHSA-6g55-p6wh-862q) Tj ET
-BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 3 of 4) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 3 of 6) Tj ET
 endstream
 endobj
 8 0 obj
-<< /Type /Page /Parent 11 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 7 0 R >>
+<< /Type /Page /Parent 15 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 7 0 R >>
 endobj
 9 0 obj
-<< /Length 3602 >>
+<< /Length 5538 >>
 stream
 BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 721 Tm (- PostCSS: incomplete fix of GHSA-6g55-p6wh-862q -- attacker-controlled sourceMappingURL reads arbitrary .map files) Tj ET
 BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 708.22 Tm (when `from` is unset) Tj ET
@@ -205,43 +205,140 @@ BT /F2 9 Tf 0.7 0.44 0.05 rg 1 0 0 1 54 497.83000000000004 Tm (Deferred) Tj ET
 BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 483.05000000000007 Tm (Deferred to batch 2. npm reports the only fix as next@16.3.4, which is outside the stated dependency range in package.json) Tj ET
 BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 470.2700000000001 Tm (-- a framework upgrade is a decision, not a quick fix.) Tj ET
 0.85 0.85 0.85 RG 0.6 w 54 452.4900000000001 m 558 452.4900000000001 l S
-BT /F2 13 Tf 0.1 0.1 0.1 rg 1 0 0 1 54 425.4900000000001 Tm (Carried over from secsuite-run-40.pdf) Tj ET
-BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 406.53000000000014 Tm (Two findings in that report are credentials committed to source. The files are not in this repository, but a leaked key is) Tj ET
-BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 393.04000000000013 Tm (leaked wherever it was committed, and deleting the line does not help because it remains in git history. Both need) Tj ET
-BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 379.5500000000001 Tm (rotating at the provider, and this repository depends on braintree \(^3.38.0\), so if that gateway is shared the exposure) Tj ET
-BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 366.0600000000001 Tm (reaches this app too.) Tj ET
-BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 347.0700000000001 Tm (- Braintree private key -- src/app/lib/braintree.js:7) Tj ET
-BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 334.29000000000013 Tm (- Elasticsearch API key -- src/pages/api/es/searchkit.js:8 and :43) Tj ET
-BT /F1 9 Tf 0.52 0.52 0.52 rg 1 0 0 1 62 315.51000000000016 Tm (Reported fix, verbatim: "Rotate the credential, remove it from source, and load from a secret manager.") Tj ET
-BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 4 of 4) Tj ET
+BT /F2 15 Tf 0.1 0.1 0.1 rg 1 0 0 1 54 423.4900000000001 Tm (Batch 2 -- Next.js upgrade -- the deferred decision) Tj ET
+BT /F1 9 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 404.1900000000001 Tm (Source: npm audit) Tj ET
+BT /F2 9.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 54 384.91000000000014 Tm (Before: 3 vulnerabilities \(0 critical, 3 high, 0 moderate, 0 low\). After: 0 \(0 critical, 0 high, 0 moderate, 0 low\).) Tj ET
+BT /F2 10 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 362.92000000000013 Tm (Verification) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 346.72000000000014 Tm (- tsc --noEmit: clean.) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 332.94000000000017 Tm (- eslint: 10 errors before the upgrade, 10 after - all pre-existing, none introduced.) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 319.1600000000002 Tm (- next build: compiles.) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 305.3800000000002 Tm (- Production server \(npm start\), 13 routes: home, PLP, PDP, cart, both quote steps, saved-quotes, llms.txt, robots.txt,) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 292.60000000000025 Tm (sitemap.xml and a public PDF all 200.) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 278.8200000000003 Tm (- Proxy still gates correctly: /admin 404s even with a forged isLoggedIn cookie, and an unknown path 404s. This mattered) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 266.0400000000003 Tm (because one advisory fixed here is a middleware/proxy bypass under Turbopack, and this app relies on proxy.ts.) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 252.26000000000033 Tm (- PDP configurator prices and adds to cart. The quote Server Action submits, the httpOnly draft cookie survives the redirect,) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 239.48000000000036 Tm (the review page greets by name and the guest lead persists. No page errors.) Tj ET
+0.85 0.85 0.85 RG 0.6 w 54 223.7000000000004 m 558 223.7000000000004 l S
+0.74 0.07 0.16 rg 54 201.7000000000004 33.2 14 re f
+BT /F2 8 Tf 1 1 1 rg 1 0 0 1 60 205.7000000000004 Tm (HIGH) Tj ET
+BT /F2 10.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 96.2 204.7000000000004 Tm (next   9.3.4-canary.0 - 16.3.0-preview.10) Tj ET
+BT /F1 8.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 184.2000000000004 Tm (Direct dependency - installed: 16.2.7) Tj ET
+BT /F2 9 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 167.63000000000034 Tm (Reported) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 152.85000000000036 Tm (- Next.js: Middleware / Proxy bypass in App Router applications using Turbopack and single locale) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 141.0700000000004 Tm (CWE-285 - https://github.com/advisories/GHSA-6gpp-xcg3-4w24) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 126.71000000000038 Tm (- Next.js: Denial of Service in App Router using Server Actions) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 114.9300000000004 Tm (CWE-834 - https://github.com/advisories/GHSA-m99w-x7hq-7vfj) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 100.57000000000039 Tm (- Next.js: Server-Side Request Forgery in Server Actions on custom servers) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 88.79000000000042 Tm (CWE-918 - https://github.com/advisories/GHSA-89xv-2m56-2m9x) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 4 of 6) Tj ET
 endstream
 endobj
 10 0 obj
-<< /Type /Page /Parent 11 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 9 0 R >>
+<< /Type /Page /Parent 15 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 9 0 R >>
 endobj
 11 0 obj
-<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R 10 0 R] /Count 4 >>
+<< /Length 6003 >>
+stream
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 721 Tm (- Next.js: Cache confusion of response bodies for requests with bodies) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 709.22 Tm (CWE-524 - https://github.com/advisories/GHSA-68g3-v927-f742) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 694.86 Tm (- Next.js: Cache confusion of response bodies for requests with bodies containing invalid UTF-8 byte sequences) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 683.08 Tm (CWE-116 - https://github.com/advisories/GHSA-4633-3j49-mh5q) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 668.72 Tm (- Next.js: Unbounded Server Action payload in Edge runtime) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 656.94 Tm (CWE-770 - https://github.com/advisories/GHSA-4c39-4ccg-62r3) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 642.5799999999999 Tm (- Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 630.8 Tm (CWE-918 - https://github.com/advisories/GHSA-p9j2-gv94-2wf4) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 616.44 Tm (- Next.js: Denial of Service in the Image Optimization API using SVGs) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 604.66 Tm (CWE-407 - https://github.com/advisories/GHSA-q8wf-6r8g-63ch) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 590.3 Tm (- Next.js: Unauthenticated disclosure of internal Server Function endpoints) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 578.52 Tm (CWE-201 - https://github.com/advisories/GHSA-955p-x3mx-jcvp) Tj ET
+BT /F2 9 Tf 0.12 0.54 0.23 rg 1 0 0 1 54 561.1600000000001 Tm (Fixed) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 546.38 Tm (Upgraded next 16.2.7 -> 16.3.4 \(npm install next@16.3.4 --save-exact, keeping this project's exact-pin convention\). This) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 533.6 Tm (was the decision batch 1 deferred: npm reported the fix as outside the stated range because package.json pinned 16.2.7) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 520.82 Tm (exactly. 16.3.4 is a minor within Next 16, not a major.) Tj ET
+BT /F1 8.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 62 506.5400000000001 Tm (Now installed: 16.3.4) Tj ET
+0.85 0.85 0.85 RG 0.6 w 54 491.9700000000001 m 558 491.9700000000001 l S
+0.74 0.07 0.16 rg 54 469.9700000000001 33.2 14 re f
+BT /F2 8 Tf 1 1 1 rg 1 0 0 1 60 473.9700000000001 Tm (HIGH) Tj ET
+BT /F2 10.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 96.2 472.9700000000001 Tm (postcss   <=8.5.22) Tj ET
+BT /F1 8.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 452.4700000000001 Tm (Transitive dependency - installed: 8.4.31, 8.5.20) Tj ET
+BT /F2 9 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 435.9000000000001 Tm (Reported) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 421.1200000000001 Tm (- PostCSS has XSS via Unescaped </style> in its CSS Stringify Output) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 409.34000000000015 Tm (CWE-79 - https://github.com/advisories/GHSA-qx2v-qp2m-jg93) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 394.98000000000013 Tm (- PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 383.20000000000016 Tm (CWE-22, CWE-200 - https://github.com/advisories/GHSA-6g55-p6wh-862q) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 368.84000000000015 Tm (- PostCSS: incomplete fix of GHSA-6g55-p6wh-862q -- attacker-controlled sourceMappingURL reads arbitrary .map files) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 356.0600000000002 Tm (when `from` is unset) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 344.2800000000002 Tm (CWE-22, CWE-200 - https://github.com/advisories/GHSA-fxqj-rqcc-2cmp) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 329.9200000000002 Tm (- PostCSS: Path Traversal in Previous Source Map Auto-Loading \(sourceMappingURL\) leads to Arbitrary .map File) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 317.1400000000002 Tm (Disclosure) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 305.36000000000024 Tm (CWE-22 - https://github.com/advisories/GHSA-r28c-9q8g-f849) Tj ET
+BT /F2 9 Tf 0.12 0.54 0.23 rg 1 0 0 1 54 288.0000000000002 Tm (Fixed) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 273.22000000000025 Tm (Resolved by the next 16.2.7 -> 16.3.4 upgrade. postcss is pinned by Next's own dependency tree, so it could not move) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 260.4400000000003 Tm (independently -- which is why it was deferred with next rather than fixed in batch 1. 8.4.31, 8.5.20 -> 8.5.23, 8.5.28) Tj ET
+BT /F1 8.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 62 246.1600000000003 Tm (Now installed: 8.5.23, 8.5.28) Tj ET
+0.85 0.85 0.85 RG 0.6 w 54 231.59000000000026 m 558 231.59000000000026 l S
+0.74 0.07 0.16 rg 54 209.59000000000026 33.2 14 re f
+BT /F2 8 Tf 1 1 1 rg 1 0 0 1 60 213.59000000000026 Tm (HIGH) Tj ET
+BT /F2 10.5 Tf 0.1 0.1 0.1 rg 1 0 0 1 96.2 212.59000000000026 Tm (sharp   <0.35.0) Tj ET
+BT /F1 8.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 192.09000000000026 Tm (Transitive dependency - installed: 0.34.5) Tj ET
+BT /F2 9 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 175.5200000000002 Tm (Reported) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 160.74000000000024 Tm (- sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 72 148.96000000000026 Tm (CWE-1395 - https://github.com/advisories/GHSA-f88m-g3jw-g9cj) Tj ET
+BT /F2 9 Tf 0.12 0.54 0.23 rg 1 0 0 1 54 131.60000000000025 Tm (Fixed) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 116.82000000000028 Tm (Resolved by the next 16.2.7 -> 16.3.4 upgrade. sharp is pinned by Next's own dependency tree, so it could not move) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 104.0400000000003 Tm (independently -- which is why it was deferred with next rather than fixed in batch 1. 0.34.5 -> 0.35.4) Tj ET
+BT /F1 8.5 Tf 0.52 0.52 0.52 rg 1 0 0 1 62 89.76000000000033 Tm (Now installed: 0.35.4) Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 5 of 6) Tj ET
+endstream
 endobj
 12 0 obj
-<< /Type /Catalog /Pages 11 0 R >>
+<< /Type /Page /Parent 15 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 11 0 R >>
+endobj
+13 0 obj
+<< /Length 1281 >>
+stream
+0.85 0.85 0.85 RG 0.6 w 54 730 m 558 730 l S
+BT /F2 13 Tf 0.1 0.1 0.1 rg 1 0 0 1 54 703 Tm (Carried over from secsuite-run-40.pdf) Tj ET
+BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 684.04 Tm (Two findings in that report are credentials committed to source. The files are not in this repository, but a leaked key is) Tj ET
+BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 670.55 Tm (leaked wherever it was committed, and deleting the line does not help because it remains in git history. Both need) Tj ET
+BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 657.06 Tm (rotating at the provider, and this repository depends on braintree \(^3.38.0\), so if that gateway is shared the exposure) Tj ET
+BT /F1 9.5 Tf 0.35 0.35 0.35 rg 1 0 0 1 54 643.5699999999999 Tm (reaches this app too.) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 624.5799999999999 Tm (- Braintree private key -- src/app/lib/braintree.js:7) Tj ET
+BT /F1 9 Tf 0.1 0.1 0.1 rg 1 0 0 1 62 611.8 Tm (- Elasticsearch API key -- src/pages/api/es/searchkit.js:8 and :43) Tj ET
+BT /F1 9 Tf 0.52 0.52 0.52 rg 1 0 0 1 62 593.02 Tm (Reported fix, verbatim: "Rotate the credential, remove it from source, and load from a secret manager.") Tj ET
+BT /F1 8 Tf 0.52 0.52 0.52 rg 1 0 0 1 54 38 Tm (oss_pages security remediation  -  page 6 of 6) Tj ET
+endstream
+endobj
+14 0 obj
+<< /Type /Page /Parent 15 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 13 0 R >>
+endobj
+15 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R 10 0 R 12 0 R 14 0 R] /Count 6 >>
+endobj
+16 0 obj
+<< /Type /Catalog /Pages 15 0 R >>
 endobj
 xref
-0 13
+0 17
 0000000000 65535 f 
 0000000009 00000 n 
 0000000106 00000 n 
 0000000208 00000 n 
-0000005577 00000 n 
-0000005714 00000 n 
-0000010854 00000 n 
-0000010991 00000 n 
-0000017288 00000 n 
-0000017425 00000 n 
-0000021079 00000 n 
-0000021217 00000 n 
-0000021294 00000 n 
+0000005590 00000 n 
+0000005727 00000 n 
+0000010867 00000 n 
+0000011004 00000 n 
+0000017301 00000 n 
+0000017438 00000 n 
+0000023028 00000 n 
+0000023166 00000 n 
+0000029222 00000 n 
+0000029361 00000 n 
+0000030695 00000 n 
+0000030834 00000 n 
+0000030925 00000 n 
 trailer
-<< /Size 13 /Root 12 0 R >>
+<< /Size 17 /Root 16 0 R >>
 startxref
-21345
+30976
 %%EOF

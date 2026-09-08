@@ -1,0 +1,142 @@
+{
+  "batch": 2,
+  "title": "Next.js upgrade — the deferred decision",
+  "generated": "2026-09-08T08:10:21.136Z",
+  "source": {
+    "tool": "npm audit"
+  },
+  "totals": {
+    "before": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 3,
+      "critical": 0,
+      "total": 3
+    },
+    "after": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    }
+  },
+  "verification": [
+    "tsc --noEmit: clean.",
+    "eslint: 10 errors before the upgrade, 10 after - all pre-existing, none introduced.",
+    "next build: compiles.",
+    "Production server (npm start), 13 routes: home, PLP, PDP, cart, both quote steps, saved-quotes, llms.txt, robots.txt, sitemap.xml and a public PDF all 200.",
+    "Proxy still gates correctly: /admin 404s even with a forged isLoggedIn cookie, and an unknown path 404s. This mattered because one advisory fixed here is a middleware/proxy bypass under Turbopack, and this app relies on proxy.ts.",
+    "PDP configurator prices and adds to cart. The quote Server Action submits, the httpOnly draft cookie survives the redirect, the review page greets by name and the guest lead persists. No page errors."
+  ],
+  "findings": [
+    {
+      "package": "next",
+      "severity": "high",
+      "range": "9.3.4-canary.0 - 16.3.0-preview.10",
+      "direct": true,
+      "advisories": [
+        {
+          "title": "Next.js: Middleware / Proxy bypass in App Router applications using Turbopack and single locale",
+          "cwe": "CWE-285",
+          "url": "https://github.com/advisories/GHSA-6gpp-xcg3-4w24"
+        },
+        {
+          "title": "Next.js: Denial of Service in App Router using Server Actions",
+          "cwe": "CWE-834",
+          "url": "https://github.com/advisories/GHSA-m99w-x7hq-7vfj"
+        },
+        {
+          "title": "Next.js: Server-Side Request Forgery in Server Actions on custom servers",
+          "cwe": "CWE-918",
+          "url": "https://github.com/advisories/GHSA-89xv-2m56-2m9x"
+        },
+        {
+          "title": "Next.js: Cache confusion of response bodies for requests with bodies",
+          "cwe": "CWE-524",
+          "url": "https://github.com/advisories/GHSA-68g3-v927-f742"
+        },
+        {
+          "title": "Next.js: Cache confusion of response bodies for requests with bodies containing invalid UTF-8 byte sequences",
+          "cwe": "CWE-116",
+          "url": "https://github.com/advisories/GHSA-4633-3j49-mh5q"
+        },
+        {
+          "title": "Next.js: Unbounded Server Action payload in Edge runtime",
+          "cwe": "CWE-770",
+          "url": "https://github.com/advisories/GHSA-4c39-4ccg-62r3"
+        },
+        {
+          "title": "Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname",
+          "cwe": "CWE-918",
+          "url": "https://github.com/advisories/GHSA-p9j2-gv94-2wf4"
+        },
+        {
+          "title": "Next.js: Denial of Service in the Image Optimization API using SVGs",
+          "cwe": "CWE-407",
+          "url": "https://github.com/advisories/GHSA-q8wf-6r8g-63ch"
+        },
+        {
+          "title": "Next.js: Unauthenticated disclosure of internal Server Function endpoints",
+          "cwe": "CWE-201",
+          "url": "https://github.com/advisories/GHSA-955p-x3mx-jcvp"
+        }
+      ],
+      "versionBefore": "16.2.7",
+      "versionAfter": "16.3.4",
+      "status": "FIXED",
+      "fix": "Upgraded next 16.2.7 -> 16.3.4 (npm install next@16.3.4 --save-exact, keeping this project's exact-pin convention). This was the decision batch 1 deferred: npm reported the fix as outside the stated range because package.json pinned 16.2.7 exactly. 16.3.4 is a minor within Next 16, not a major."
+    },
+    {
+      "package": "postcss",
+      "severity": "high",
+      "range": "<=8.5.22",
+      "direct": false,
+      "advisories": [
+        {
+          "title": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+          "cwe": "CWE-79",
+          "url": "https://github.com/advisories/GHSA-qx2v-qp2m-jg93"
+        },
+        {
+          "title": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+          "cwe": "CWE-22, CWE-200",
+          "url": "https://github.com/advisories/GHSA-6g55-p6wh-862q"
+        },
+        {
+          "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+          "cwe": "CWE-22, CWE-200",
+          "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp"
+        },
+        {
+          "title": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+          "cwe": "CWE-22",
+          "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849"
+        }
+      ],
+      "versionBefore": "8.4.31, 8.5.20",
+      "versionAfter": "8.5.23, 8.5.28",
+      "status": "FIXED",
+      "fix": "Resolved by the next 16.2.7 -> 16.3.4 upgrade. postcss is pinned by Next's own dependency tree, so it could not move independently — which is why it was deferred with next rather than fixed in batch 1. 8.4.31, 8.5.20 -> 8.5.23, 8.5.28"
+    },
+    {
+      "package": "sharp",
+      "severity": "high",
+      "range": "<0.35.0",
+      "direct": false,
+      "advisories": [
+        {
+          "title": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
+          "cwe": "CWE-1395",
+          "url": "https://github.com/advisories/GHSA-f88m-g3jw-g9cj"
+        }
+      ],
+      "versionBefore": "0.34.5",
+      "versionAfter": "0.35.4",
+      "status": "FIXED",
+      "fix": "Resolved by the next 16.2.7 -> 16.3.4 upgrade. sharp is pinned by Next's own dependency tree, so it could not move independently — which is why it was deferred with next rather than fixed in batch 1. 0.34.5 -> 0.35.4"
+    }
+  ]
+}

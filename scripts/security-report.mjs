@@ -171,10 +171,22 @@ d.rule()
 
 const latest = batches[batches.length - 1]
 d.pair('Generated', new Date(latest.generated).toISOString().replace('T', ' ').slice(0, 16) + ' UTC')
+/**
+ * Rolled up by package, latest batch wins.
+ *
+ * Summing the batches would double-count anything deferred in one and fixed in
+ * a later one — next, postcss and sharp appear in both — and would report three
+ * findings still outstanding when none are. The per-batch sections below still
+ * show each batch's own before/after, which is where the history lives.
+ */
+const current = new Map()
+for (const b of batches) for (const f of b.findings) current.set(f.package, f.status)
+const outstanding = [...current.values()].filter((s) => s !== 'FIXED').length
+
 d.pair('Batches in this report', batches.map((b) => `#${b.batch}`).join(', '))
-d.pair('Findings covered', String(batches.reduce((n, b) => n + b.findings.length, 0)))
-d.pair('Fixed', String(batches.reduce((n, b) => n + b.findings.filter((f) => f.status === 'FIXED').length, 0)))
-d.pair('Deferred', String(batches.reduce((n, b) => n + b.findings.filter((f) => f.status !== 'FIXED').length, 0)))
+d.pair('Distinct findings', String(current.size))
+d.pair('Fixed', String(current.size - outstanding))
+d.pair('Still outstanding', String(outstanding))
 
 d.rule()
 d.text('Provenance', { size: 13, bold: true })
@@ -212,6 +224,20 @@ for (const batch of batches) {
     `${t.after.moderate} moderate, ${t.after.low} low).`,
     { bold: true },
   )
+
+  // A dependency bump that nobody checked is a claim, not a fix. Where a batch
+  // records how it was verified, the report carries it — that is the part a
+  // reader needs in six months when something breaks and they are working out
+  // whether this was to blame.
+  if (batch.verification?.length) {
+    d.space(8)
+    d.text('Verification', { size: 10, bold: true, colour: RGB.mid })
+    d.space(3)
+    for (const v of batch.verification) {
+      d.text(`•  ${v}`, { size: 9, colour: RGB.ink, indent: 8 })
+      d.space(1)
+    }
+  }
 
   for (const f of batch.findings) {
     d.rule({ gap: 11 })

@@ -21,7 +21,7 @@
     "braintree-web-drop-in": "^1.47.0",
     "cheerio": "^1.2.0",
     "lucide-react": "^1.20.0",
-    "next": "16.2.7",
+    "next": "16.3.4",
     "postcss": "^8.5.20",
     "postcss-safe-parser": "^7.0.1",
     "react": "19.2.4",
