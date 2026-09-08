@@ -12,7 +12,7 @@
     "resources:check": "node --experimental-strip-types scripts/check-pdp-resources.mjs",
     "predev": "node scripts/generate-pdp-resources.mjs",
     "prebuild": "node scripts/generate-pdp-resources.mjs",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "node -e \"try{require('child_process').execSync('git config core.hooksPath .githooks',{stdio:'ignore'})}catch{}\""
   },
   "dependencies": {
     "@elastic/elasticsearch": "^8.19.1",
