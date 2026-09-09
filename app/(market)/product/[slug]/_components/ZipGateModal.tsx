@@ -25,6 +25,19 @@ import type { GeoapifyResult } from '@/hooks/useGeoapify'
  * location.
  */
 
+/**
+ * Whether the field holds a postcode someone has finished typing.
+ *
+ * Five digits for the US, the six-character form for Canada. This is the guard
+ * on resolving automatically: a partial entry can match exactly one place too,
+ * and acting on it would move the visitor somewhere they were still midway
+ * through typing.
+ */
+function isCompletePostcode(value: string): boolean {
+  const v = value.trim()
+  return /^\d{5}$/.test(v) || /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(v)
+}
+
 type Props = {
   open: boolean
   /**
@@ -51,6 +64,8 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
   const [chosen, setChosen] = useState<GeoapifyResult | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
+  /** Stops the auto-resolve firing twice for one opening of the dialog. */
+  const autoResolved = useRef(false)
 
   const { results, loading, selectResult } = useGeoapify(zip, {
     type: 'postcode',
@@ -76,6 +91,32 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
       document.body.style.overflow = previousOverflow
     }
   }, [open, onDismiss])
+
+  /**
+   * Resolve on its own when the search settles on one place.
+   *
+   * With a single result there is nothing to choose between, so asking someone
+   * to click the row and then the button is two presses to confirm a decision
+   * already made for them.
+   *
+   * The completeness gate is the part that matters — see `isCompletePostcode`.
+   * The latch resets when the dialog closes, so opening it again can resolve
+   * again.
+   */
+  useEffect(() => {
+    if (!open) {
+      autoResolved.current = false
+      return
+    }
+    if (autoResolved.current || chosen || loading) return
+    if (results.length !== 1 || !isCompletePostcode(zip)) return
+
+    autoResolved.current = true
+    const only = results[0]
+    selectResult(only)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    onResolved(only.postcode, only.nearestLocation)
+  }, [open, chosen, loading, results, zip, selectResult, onResolved])
 
   if (!open) return null
 

@@ -21,6 +21,15 @@ const KEY = 'oss-saved-quotes'
  */
 const MAX_QUOTES = 50
 
+/**
+ * How long a saved quote stands.
+ *
+ * The panel promises "price locked for 48 hrs when you save this quote", so
+ * that promise is what decides whether saving the same thing again is a new
+ * quote or the one already held.
+ */
+export const QUOTE_VALID_MS = 48 * 60 * 60 * 1000
+
 /** One row of a saved quote — mirrors what the modal showed at the time. */
 export type SavedQuoteLine = {
   label: string
@@ -34,6 +43,15 @@ export type SavedQuote = {
   productTitle: string
   /** Product handle, so the entry can link back to the page it came from. */
   handle: string
+  /**
+   * Delivery destination, bare postcode.
+   *
+   * Stored rather than left inside `lines` because the same container quoted to
+   * two addresses is two different quotes, and a formatted line is no basis for
+   * deciding that. Optional: entries written before this field existed load
+   * without one and simply never match a deduplication check.
+   */
+  zip?: string
   lines: SavedQuoteLine[]
   total: string
   /** e.g. `/mo` — kept separate so the figure and its unit stay distinguishable. */
@@ -86,7 +104,23 @@ export function getSavedQuotes(): SavedQuote[] {
  * week apart are two different prices, and collapsing them would throw away
  * the older one — which is the one worth comparing against.
  */
+/**
+ * Save a quote, unless the same one is already held and still valid.
+ *
+ * Same container, same destination, inside the 48-hour window is not a second
+ * quote — it is the one already saved, and stacking copies of it turns the list
+ * into a log of how many times someone pressed the button.
+ *
+ * The existing entry is returned untouched rather than refreshed. Its price is
+ * locked from when it was saved, so moving `savedAt` forward would quietly
+ * extend a promise that has already started running down. Once the window has
+ * passed, saving again is a genuinely new quote and the old one stays as
+ * history.
+ */
 export function saveQuote(quote: NewSavedQuote): SavedQuote {
+  const existing = findLiveQuote(quote.handle, quote.zip)
+  if (existing) return existing
+
   const entry: SavedQuote = {
     ...quote,
     id:
@@ -97,6 +131,23 @@ export function saveQuote(quote: NewSavedQuote): SavedQuote {
   }
   write([entry, ...read()])
   return entry
+}
+
+/**
+ * A still-valid saved quote for this container and destination, if there is one.
+ *
+ * Both keys must be present to match. A quote saved before `zip` existed, or one
+ * saved with no destination, deduplicates against nothing — better a duplicate
+ * than silently returning a quote priced to somewhere else.
+ */
+export function findLiveQuote(handle: string, zip: string | undefined): SavedQuote | null {
+  if (!handle || !zip) return null
+  const cutoff = Date.now() - QUOTE_VALID_MS
+  return (
+    read().find(
+      (q) => q.handle === handle && q.zip === zip && Date.parse(q.savedAt) > cutoff,
+    ) ?? null
+  )
 }
 
 export function removeSavedQuote(id: string): void {
