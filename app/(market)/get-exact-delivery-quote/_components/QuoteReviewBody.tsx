@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { ArrowLeft, Check, Clock, Phone } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Clock } from 'lucide-react'
 
-import { CONTACT_NUMBER } from '@/lib/helpers'
+import { ROUTES } from '@/config/routes'
 import { resolveDeliveryQuote } from '@/lib/deliveryQuote'
 import { readQuoteDraft } from '@/lib/quoteDraft'
 import { PersistGuestLead } from './PersistGuestLead'
@@ -24,8 +24,6 @@ import { one, type SearchParams } from './searchParams'
  * refresh an hour later once the draft cookie has expired, and the page is
  * still coherent — just without a name on it.
  */
-
-const CONTACT_TEL = `tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`
 
 export async function QuoteReviewBody({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
@@ -111,12 +109,18 @@ export async function QuoteReviewBody({ searchParams }: { searchParams: SearchPa
       </p>
 
       <div className="mt-6 flex flex-col gap-2.5 sm:flex-row-reverse">
+        {/* Forward, not sideways. A guest reaches this page by being detoured
+            here on the way to checkout, so the primary action is resuming that
+            journey — a phone number is a way to ask a question, not a way to
+            finish. Safe even with an empty basket: checkout renders its own
+            empty-cart view, so someone who arrived from a product page's Save
+            Quote lands somewhere that explains itself rather than a dead end. */}
         <Link
-          href={CONTACT_TEL}
+          href={ROUTES.CHECKOUT}
           className="flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-theme-primary px-5 text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2"
         >
-          <Phone className="h-4 w-4" aria-hidden />
-          Call {CONTACT_NUMBER}
+          Continue to checkout
+          <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
 
         <Link
