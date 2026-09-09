@@ -16,7 +16,6 @@ import {
 import type { ProductHit } from "@/types/product";
 import { useAddContainerToCart } from "@/hooks/useAddContainerToCart";
 import { useWishlist } from "@/hooks/useWishlist";
-import { useAuth } from "@/hooks/useAuth";
 import {
   getCustomFieldValue,
   isGenericDisplayHit,
@@ -42,8 +41,6 @@ import { useDeliveryRates } from "@/hooks/useDeliveryRates";
 import { useStoredZip } from "@/hooks/useStoredZip";
 import { notifyVisitorZipChange } from "@/lib/visitorZip";
 import { cheapestDeliveryOption } from "@/lib/delivery";
-import { useRouter } from "next/navigation";
-import { ROUTES } from "@/config/routes";
 
 // ─── option layer types ───────────────────────────────────────────────────────
 
@@ -625,8 +622,6 @@ export function ProductInfoPanel({
    */
   const [zipGateRequested, setZipGateRequested] = useState(false);
 
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
   /** Open only while a signed-out visitor is being asked for their details. */
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   /** Set once a quote has been filed this session, so the modal can say so. */
@@ -1123,15 +1118,6 @@ export function ProductInfoPanel({
     return `$${formatPrice(total)}`;
   }, [activeProduct.sale_price, quantity, deliveryInSubtotal]);
 
-  /** Everything the quote flow needs to describe what this visitor is looking at. */
-  function quoteHref() {
-    return ROUTES.DELIVERY_QUOTE_FOR({
-      handle: typeof activeProduct.handle === "string" ? activeProduct.handle : undefined,
-      zip: zipcode || undefined,
-      qty: quantity,
-    });
-  }
-
   /**
    * The visible Add to cart action.
    *
@@ -1192,18 +1178,20 @@ export function ProductInfoPanel({
   }
 
   /**
-   * Save Quote, which is now the only way into the lead modal.
+   * Save Quote — always the modal, for everyone.
    *
-   * A guest we have never met goes to the full quote page instead: it is a
-   * server-rendered form with room to ask properly, and the modal's job is to
-   * confirm details we already hold, not to collect them from scratch. Someone
-   * who has been through either route once gets the modal from then on.
+   * It used to send a visitor we had never met to /get-exact-delivery-quote on
+   * the reasoning that a full page has more room to ask properly. In practice
+   * that made one button do two different things depending on invisible state:
+   * the same click opened a dialog for someone who had been here before and
+   * navigated away from the product for someone who had not. Pressing "save"
+   * and losing the page you were saving is the wrong answer either way.
+   *
+   * The modal already handles both cases — step 1 collects details when we have
+   * none and pre-fills them when we do, and step 2 is the quote. Nothing is lost
+   * by never leaving.
    */
   function handleSaveQuoteClick() {
-    if (!isAuthenticated && !getGuestLead()) {
-      router.push(quoteHref());
-      return;
-    }
     setLeadModalOpen(true);
   }
 
