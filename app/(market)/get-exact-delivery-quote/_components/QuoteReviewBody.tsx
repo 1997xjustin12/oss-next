@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Clock } from 'lucide-react'
 import { ROUTES } from '@/config/routes'
 import { resolveDeliveryQuote } from '@/lib/deliveryQuote'
 import { readQuoteDraft } from '@/lib/quoteDraft'
-import { PersistGuestLead } from './PersistGuestLead'
+import { PersistGuestLead } from '@/components/shared/PersistGuestLead'
 import { QuoteReviewLines } from './QuoteReviewLines'
 import { one, type SearchParams } from './searchParams'
 

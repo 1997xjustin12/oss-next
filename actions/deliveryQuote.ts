@@ -110,5 +110,12 @@ Cart subtotal: ${String(formData.get('cartTotal')).trim()}`
     'delivery_quote_form',
   )
 
-  redirect(`${ROUTES.DELIVERY_QUOTE_REVIEW}${query ? `?${query}` : ''}`)
+  // Was: redirect(`${ROUTES.DELIVERY_QUOTE_REVIEW}${query ? `?${query}` : ''}`)
+  //
+  // The submit button now reads "Continue to checkout", so this has to land
+  // there. A button that names one destination and delivers another is worse
+  // than either choice made cleanly. The review page keeps its own URL and its
+  // own metadata, so nothing is orphaned — it is simply no longer forced
+  // between giving details and paying.
+  redirect(ROUTES.CHECKOUT)
 }

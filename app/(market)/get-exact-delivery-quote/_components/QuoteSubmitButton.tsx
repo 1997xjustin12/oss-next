@@ -29,7 +29,8 @@ export function QuoteSubmitButton() {
         </>
       ) : (
         <>
-          Next: review quote
+          {/* Was: Next: review quote */}
+          Continue to checkout
           <ArrowRight className="h-4 w-4" aria-hidden />
         </>
       )}

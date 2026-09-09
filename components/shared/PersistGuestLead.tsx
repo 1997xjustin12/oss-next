@@ -11,9 +11,10 @@ import { setGuestLead } from '@/lib/guestCapture'
  * product page, sent back here to type the same four fields again.
  *
  * It has to happen in the browser — the form is a Server Action and the store
- * is `localStorage`, so the server cannot write it. This is the first moment
- * after submission when client code runs, which is why it lives on the review
- * page rather than beside the form.
+ * is `localStorage`, so the server cannot write it. It therefore belongs on
+ * whichever page the visitor lands on after submitting, which is why it is
+ * rendered from two of them: the quote review page, and checkout. Both read the
+ * same httpOnly draft cookie on the server and hand the values down.
  *
  * Renders nothing. `setGuestLead` also stamps the email into the key the
  * exit-intent prompt reads, so finishing this form stops that prompt asking the
