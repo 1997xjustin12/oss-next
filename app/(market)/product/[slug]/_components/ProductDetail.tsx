@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Package } from "lucide-react";
-import { findEquivalentContainer, isContainerHit } from "@/lib/pricing";
+import { findEquivalentContainer, isContainerHit, isGenericDisplayHit } from "@/lib/pricing";
 import { resolveContainerVariant } from "@/lib/containerVariant";
 import { ROUTES } from "@/config/routes";
-import { notifyVisitorZipChange } from "@/lib/visitorZip";
+import { notifyVisitorZipChange, readVisitorZip } from "@/lib/visitorZip";
+import { getNearestLocation } from "@/lib/locations";
 import type { ProductHit } from "@/types/product";
 import { ProductVariantShell } from "./ProductVariantShell";
 import { MobileTrustSection } from "./MobileTrustSection";
@@ -82,6 +83,29 @@ const IDEAL_FOR: IdealForItem[] = [
 ];
 
 type Props = { product: ProductHit; relatedProducts: ProductHit[] };
+
+/**
+ * The yard nearest a postcode, or null.
+ *
+ * Never throws: this runs on page load to improve what the visitor sees, so a
+ * geocoding hiccup should leave them on the listing they asked for rather than
+ * breaking the page.
+ */
+async function depotForPostcode(postcode: string): Promise<string | null> {
+  try {
+    const params = new URLSearchParams({ text: postcode, type: "postcode", limit: "1" });
+    const res = await fetch(`/api/geoapify?${params}`);
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      features?: { properties?: { lat?: number; lon?: number } }[];
+    };
+    const props = json.features?.[0]?.properties;
+    if (typeof props?.lat !== "number" || typeof props?.lon !== "number") return null;
+    return getNearestLocation(props.lat, props.lon);
+  } catch {
+    return null;
+  }
+}
 
 export function ProductDetail({ product, relatedProducts }: Props) {
   // Shared across ProductVariantShell, BodyTabsSection, and FaqAccordion so
@@ -237,6 +261,52 @@ export function ProductDetail({ product, relatedProducts }: Props) {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, [pool, baseProduct, product]);
+
+  /**
+   * On arrival, move a reference listing to the visitor's own depot.
+   *
+   * A "Generic Product Page" describes a container without saying where it
+   * comes from, so its price, stock and delivery are all placeholders. When we
+   * already know where the visitor is — a `?zipcode=` on the link, or a ZIP
+   * they gave us on an earlier page — there is no reason to show them the
+   * placeholder and wait for them to ask. Clicking a generic listing from the
+   * PLP should land on the real container stocked near them.
+   *
+   * `readVisitorZip` is the same reader the rest of the site uses, so the URL
+   * parameter wins over storage and the depot is only returned when it belongs
+   * to the ZIP actually in play — a depot left over from a previous ZIP would
+   * relocate the visitor somewhere they never asked about.
+   *
+   * Runs once. `swapToLocation` replaces `activeProduct`, which re-runs this
+   * effect, and without the latch the second pass would swap the swapped
+   * product again.
+   *
+   * Only reference listings. A visitor who clicked a specific container at a
+   * named depot chose that depot; silently moving them to another because of a
+   * ZIP in storage would take away a choice they had already made.
+   */
+  const autoSwapped = useRef(false);
+  useEffect(() => {
+    if (autoSwapped.current) return;
+    if (!isGenericDisplayHit(activeProduct)) return;
+
+    const { postcode, depot } = readVisitorZip();
+    if (!postcode) return;
+
+    autoSwapped.current = true;
+    void (async () => {
+      // A stored depot is the common case and costs nothing: the visitor picked
+      // a ZIP earlier and `selectResult` recorded which yard serves it.
+      //
+      // A ZIP that arrived only in the URL has no depot beside it — a shared
+      // link, or a fresh browser — so it is geocoded once and matched to the
+      // nearest yard, the same two steps `useGeoapify` takes when someone picks
+      // a suggestion. Without this, a link with ?zipcode= on it would land on
+      // the placeholder listing, which is half the point of the parameter.
+      const nearest = depot || (await depotForPostcode(postcode));
+      if (nearest) await swapToLocation(nearest);
+    })();
+  }, [activeProduct, swapToLocation]);
 
   const locationChange: LocationChangeStrategy = {
     mode: "swap",
