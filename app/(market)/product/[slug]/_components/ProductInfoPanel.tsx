@@ -1992,6 +1992,7 @@ export function ProductInfoPanel({
       <GuestLeadModal
         open={leadModalOpen}
         productTitle={activeProduct.desc_title || activeProduct.title}
+        productImage={activeProduct.images?.[0]?.src ?? null}
         priceLabel={`${priceDisplay.price}${priceDisplay.suffix ?? ""}`}
         quoteLines={quoteLines}
         quoteTotal={subtotal}

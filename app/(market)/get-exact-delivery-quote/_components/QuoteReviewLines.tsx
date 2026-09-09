@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+import { Container } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { formatPrice } from '@/lib/formatters'
 import type { QuoteLine } from '@/types/deliveryQuote'
@@ -30,7 +32,8 @@ export function QuoteReviewLines({
   const rows: QuoteLine[] = fromCart
     ? cart.items.map((item) => ({
         label: item.quantity > 1 ? `${item.name} x ${item.quantity}` : item.name,
-        value: `$${formatPrice(item.price * item.quantity)}`,
+        value: `${formatPrice(item.price * item.quantity)}`,
+        image: item.image ?? null,
       }))
     : lines
 
@@ -51,8 +54,24 @@ export function QuoteReviewLines({
       ) : (
         <ul className="divide-y divide-theme-border px-4 text-sm dark:divide-neutral-800">
           {rows.map((line) => (
-            <li key={line.label} className="flex items-baseline justify-between gap-6 py-2.5">
-              <span className="min-w-0 text-theme-muted">{line.label}</span>
+            <li key={line.label} className="flex items-center justify-between gap-4 py-2.5">
+              {/* A thumbnail only where there is a product to show. Delivery and
+                  tax rows carry no image, and an empty frame beside them would
+                  read as a picture that failed to load rather than a row that
+                  never had one. */}
+              {line.image !== undefined && (
+                <span className="relative h-11 w-14 shrink-0 overflow-hidden rounded bg-theme-subtle dark:bg-neutral-800">
+                  {line.image ? (
+                    <Image src={line.image} alt="" fill sizes="56px" className="object-cover" />
+                  ) : (
+                    <Container
+                      className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-theme-muted"
+                      aria-hidden
+                    />
+                  )}
+                </span>
+              )}
+              <span className="min-w-0 flex-1 text-theme-muted">{line.label}</span>
               <span
                 className={
                   line.muted

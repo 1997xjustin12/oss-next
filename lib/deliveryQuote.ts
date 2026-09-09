@@ -123,6 +123,7 @@ export async function resolveDeliveryQuote(params: {
     lines.push({
       label: quantity > 1 ? `${base} x ${quantity}` : base,
       value: money(unitPrice * quantity),
+      image: product?.thumbnail_url ?? null,
     })
   }
 

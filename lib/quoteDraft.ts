@@ -23,6 +23,8 @@ export type QuoteDraft = {
   fullName: string
   phone: string
   email: string
+  /** Where the container is going. Free text — see the form field. */
+  address: string
   contactMethod: string
   interests: string[]
   timeline: string
@@ -41,6 +43,7 @@ export async function readQuoteDraft(): Promise<QuoteDraft | null> {
       fullName: String(draft.fullName ?? ''),
       phone: String(draft.phone ?? ''),
       email: String(draft.email ?? ''),
+      address: String(draft.address ?? ''),
       contactMethod: String(draft.contactMethod ?? 'phone'),
       interests: Array.isArray(draft.interests) ? draft.interests.map(String) : [],
       timeline: String(draft.timeline ?? ''),

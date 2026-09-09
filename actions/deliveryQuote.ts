@@ -42,12 +42,12 @@ export async function submitDeliveryQuote(formData: FormData) {
     fullName: String(formData.get('fullName') ?? '').trim(),
     phone: String(formData.get('phone') ?? '').trim(),
     email: String(formData.get('email') ?? '').trim(),
+    address: String(formData.get('address') ?? '').trim(),
     contactMethod: String(formData.get('contactMethod') ?? 'phone'),
     interests: formData.getAll('interests').map(String),
     timeline: String(formData.get('timeline') ?? ''),
     details: String(formData.get('details') ?? '').trim(),
   }
-  const confirmEmail = String(formData.get('confirmEmail') ?? '').trim()
   const zip = String(formData.get('zip') ?? '').trim()
   const query = contextQuery(formData)
 
@@ -68,7 +68,7 @@ export async function submitDeliveryQuote(formData: FormData) {
 
   if (!draft.fullName) fail('name')
   if (!EMAIL_PATTERN.test(draft.email)) fail('email')
-  if (draft.email.toLowerCase() !== confirmEmail.toLowerCase()) fail('email-mismatch')
+  if (!draft.address) fail('address')
   if (!draft.phone) fail('phone')
   // The destination is not a field in this form — it is chosen in the summary
   // panel's ZIP editor — so no browser validation covers it. Without it there is
@@ -86,6 +86,7 @@ export async function submitDeliveryQuote(formData: FormData) {
       email: draft.email,
       phone: draft.phone,
       notes: [
+        draft.address ? `Delivery address: ${draft.address}` : '',
         draft.details,
         // The cart is the order being asked about; without it the record names
         // only whatever single container the URL carried.

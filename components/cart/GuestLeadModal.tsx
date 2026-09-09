@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, MapPin, Phone, X } from 'lucide-react'
+import Image from 'next/image'
+import { Check, Container, MapPin, Phone, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import Link from 'next/link'
@@ -42,6 +43,8 @@ type Props = {
   open: boolean
   /** What is being quoted, so the modal never reads as a random interruption. */
   productTitle: string
+  /** Thumbnail of the container being quoted, shown on the second step. */
+  productImage?: string | null
   priceLabel: string
   /** Rows of the quote view, already formatted. */
   quoteLines: QuoteLine[]
@@ -93,6 +96,7 @@ type Step = 'details' | 'quote'
 export function GuestLeadModal({
   open,
   productTitle,
+  productImage,
   priceLabel,
   quoteLines,
   quoteTotal,
@@ -436,8 +440,23 @@ export function GuestLeadModal({
               </p>
 
               <div className="mt-5 overflow-hidden rounded-md border border-theme-border dark:border-neutral-800">
-                <div className="border-b border-theme-border bg-theme-subtle px-4 py-3 text-sm font-bold text-theme-dark dark:border-neutral-800 dark:bg-neutral-800/60 dark:text-white">
-                  {productTitle}
+                {/* The picture belongs on the header rather than the price rows:
+                    there is one container here, and repeating its thumbnail
+                    beside every line would say it three times. */}
+                <div className="flex items-center gap-3 border-b border-theme-border bg-theme-subtle px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800/60">
+                  <span className="relative h-12 w-16 shrink-0 overflow-hidden rounded bg-theme-bg dark:bg-neutral-900">
+                    {productImage ? (
+                      <Image src={productImage} alt="" fill sizes="64px" className="object-cover" />
+                    ) : (
+                      <Container
+                        className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-theme-muted"
+                        aria-hidden
+                      />
+                    )}
+                  </span>
+                  <span className="min-w-0 text-sm font-bold text-theme-dark dark:text-white">
+                    {productTitle}
+                  </span>
                 </div>
                 <ul className="divide-y divide-theme-border px-4 text-sm dark:divide-neutral-800">
                   {quoteLines.map((line) => (

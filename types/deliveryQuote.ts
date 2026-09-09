@@ -12,6 +12,14 @@
 export type QuoteLine = {
   label: string
   value: string
+  /**
+   * Thumbnail for the container this line names.
+   *
+   * Only the product line carries one — a delivery charge or a tax note has
+   * nothing to show, and a placeholder box beside them would read as a picture
+   * that failed to load.
+   */
+  image?: string | null
   /** Rendered quieter — an estimate or a note rather than a figure. */
   muted?: boolean
 }

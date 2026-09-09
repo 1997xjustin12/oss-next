@@ -42,14 +42,15 @@ export async function QuoteReviewBody({ searchParams }: { searchParams: SearchPa
     <section className="rounded-lg border border-theme-border bg-theme-bg p-5 shadow-sm sm:p-8 dark:border-neutral-800 dark:bg-neutral-900">
       {/* Hands the details to the same store the product page's quote modal
           reads, so the next visit recognises this person instead of sending
-          them back through this form. The ZIP stands in for the address: it is
-          the only part of a delivery destination this flow asks for. */}
+          them back through this form. The form now asks for a real delivery
+          address, so that is what gets stored; the ZIP is only the fallback for
+          a draft written before that field existed. */}
       {draft && (
         <PersistGuestLead
           fullName={draft.fullName}
           email={draft.email}
           phone={draft.phone}
-          address={quote.zip ?? ''}
+          address={draft.address || quote.zip || ''}
         />
       )}
 

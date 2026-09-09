@@ -45,7 +45,7 @@ const CONTACT_METHODS = [
 const ERRORS: Record<string, string> = {
   name: 'Please tell us your name so we know who we are quoting.',
   email: 'That email address does not look right — check it and try again.',
-  'email-mismatch': 'The two email addresses do not match.',
+  address: 'Please give the full delivery address — street, city and state.',
   phone: 'Please add a phone number we can reach you on.',
   zip: 'Please set the delivery ZIP code — we cannot quote delivery without it.',
 }
@@ -146,12 +146,18 @@ export async function QuoteForm({
           defaultValue={draft?.email}
           required
         />
+        {/* Was "Confirm Email Address". Retyping an address proves nothing —
+            the overwhelming way people fill a confirmation field is to paste
+            what they just typed, so it catches almost no typos while costing
+            every visitor a field. This asks for something we do not already
+            have and genuinely need: delivery is priced per address, and a ZIP
+            alone cannot say whether a truck can reach the site. */}
         <QuoteTextField
-          id="confirmEmail"
-          name="confirmEmail"
-          type="email"
-          label="Confirm Email Address"
-          autoComplete="email"
+          id="address"
+          name="address"
+          label="Complete Delivery Address"
+          autoComplete="street-address"
+          defaultValue={draft?.address}
           required
         />
       </div>
