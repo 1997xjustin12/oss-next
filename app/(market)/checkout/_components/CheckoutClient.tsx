@@ -20,6 +20,8 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { cartItemsToLineItems } from '@/lib/cart';
 import { lookupZip } from '@/lib/zippopotam';
+import { getGuestLead } from '@/lib/guestCapture';
+import { readVisitorZip } from '@/lib/visitorZip';
 import { ROUTES } from '@/config/routes';
 import { BraintreeDropIn } from './BraintreeDropIn';
 import { Recaptcha } from '@/components/ui/Recaptcha';
@@ -379,6 +381,58 @@ export function CheckoutClient() {
     detail?: string;
   } | null>(null);
   const [liveTotal, setLiveTotal] = useState<OrderTotal | null>(null);
+
+  /**
+   * Start the shipping form from what the guest has already told us.
+   *
+   * A guest reaching checkout has usually given their name, email and phone to
+   * the quote flow and a ZIP to the delivery check. Asking for all of it again
+   * on the longest form on the site is the kind of friction that loses an order
+   * that was otherwise finished.
+   *
+   * Blanks only. `prev.x || …` never overwrites something typed — the effect can
+   * re-run, and a prefill that clobbers a correction is worse than no prefill.
+   *
+   * Nothing is written for a signed-in shopper, and nothing happens at all when
+   * there is no stored guest lead, which is the same condition by another name.
+   *
+   * The address line is deliberately left empty. What we hold is a delivery ZIP
+   * or a "City, ST 00000" label, not a street — dropping either into address1
+   * would look filled while being wrong, and the visitor would have to clear it
+   * before typing.
+   */
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || authToken) return;
+    const lead = getGuestLead();
+    const { postcode } = readVisitorZip();
+    if (!lead && !postcode) return;
+    prefilled.current = true;
+
+    const [first = '', ...rest] = (lead?.fullName ?? '').trim().split(/\s+/);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShipping((prev) => ({
+      ...prev,
+      firstName: prev.firstName || first,
+      lastName: prev.lastName || rest.join(' '),
+      email: prev.email || lead?.email || '',
+      phone: prev.phone || lead?.phone || '',
+      zip: prev.zip || postcode,
+    }));
+
+    // City and state come from the ZIP through the same lookup the field's own
+    // blur handler uses. Filling the ZIP programmatically never fires a blur, so
+    // without this the two fields below it would sit empty next to a filled one.
+    if (!postcode) return;
+    void lookupZip(postcode, emptyAddress.country).then((result) => {
+      if (!result) return;
+      setShipping((prev) => ({
+        ...prev,
+        city: prev.city || result.city || '',
+        state: prev.state || result.state || '',
+      }));
+    });
+  }, [authToken]);
 
   const updateShipping = (field: keyof AddressForm, value: string) =>
     setShipping((p) => ({ ...p, [field]: value }));
