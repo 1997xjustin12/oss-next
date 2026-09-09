@@ -109,6 +109,13 @@ export function dismissGuestCapture(): void {
 export function isGuestCaptureSuppressed(): boolean {
   if (typeof window === 'undefined') return true
   if (getGuestEmail()) return true
+  // Checked as well as the email, not instead of it. `setGuestLead` mirrors the
+  // address into `EMAIL_KEY`, so the two normally travel together and this line
+  // changes nothing — but that made the rule "we already have their details"
+  // depend on a side-effect of one writer rather than on the details actually
+  // being there. A lead written without the mirror got prompted for an email we
+  // already held.
+  if (getGuestLead()) return true
 
   const dismissedAt = localStorage.getItem(DISMISSED_AT_KEY)
   if (!dismissedAt) return false
