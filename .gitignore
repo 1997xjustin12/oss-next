@@ -41,7 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 onsite_headless_prototype
-# Raw scanner output. secsuite-run-40.pdf carries the leaked Braintree and
-# Elasticsearch keys in its text, so committing it would copy the leak into this
-# repository history too. Keep scans local; the remediation report is committed.
-docs/security_audit/secsuite-run-*.pdf
+# Project documentation is kept local, not published to the remote. It holds raw
+# scanner output (secsuite-run-40.pdf carries the leaked Braintree and
+# Elasticsearch keys in its text), dated internal reports, and build references
+# copied from the legacy app — none of which a checkout needs in order to build.
+# Code-level conventions that DO need to travel live in AGENTS.md at the root.
+/docs/
