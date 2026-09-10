@@ -7,7 +7,6 @@ import {
   isContainerHit,
   isInStockHit,
 } from "@/lib/pricing";
-import { getQuickSpecs } from "@/lib/data/pdpShippingContainers";
 import type { ProductHit } from "@/types/product";
 import { ProductImageGallery } from "@/components/product/ProductImageGallery";
 import { ProductInfoPanel } from "./ProductInfoPanel";
@@ -77,23 +76,6 @@ function getListingCrumb(product: ProductHit) {
   };
 }
 
-function deriveQuickSpecs(product: ProductHit) {
-  const sizeNum =
-    getCustomFieldValue(product, "length_width").match(/\d+/)?.[0] ?? "—";
-  const specs = getQuickSpecs(product);
-  return [
-    { label: "Length", value: sizeNum !== "—" ? `${sizeNum} ft` : "—" },
-    { label: "Width", value: "8 ft" },
-    {
-      label: "Height",
-      value: getCustomFieldValue(product, "height") || "8'6\"",
-    },
-    { label: "Cu Ft", value: specs.cuFt, accent: true },
-    { label: "Sq Ft", value: specs.sqFt, accent: true },
-    { label: "Lbs Tare", value: specs.lbsTare, accent: true },
-  ];
-}
-
 type Props = {
   relatedProducts: ProductHit[];
   activeProduct: ProductHit;
@@ -116,7 +98,6 @@ export function ProductVariantShell({
   const allImages = (activeProduct.images ?? [])
     .map((img) => img.src)
     .filter(Boolean);
-  const quickSpecs = deriveQuickSpecs(activeProduct);
   const promoTag = activeProduct.tags?.find((t) => !/stock/i.test(t));
 
   return (

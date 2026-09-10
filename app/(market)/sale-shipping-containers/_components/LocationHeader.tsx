@@ -13,7 +13,7 @@ type Props = {
   ptype?: string;
 };
 
-export function LocationHeader({ location, zipcode, ptype = 'buy' }: Props) {
+export function LocationHeader({ location, ptype = 'buy' }: Props) {
   const heading = PTYPE_HEADINGS[ptype] ?? PTYPE_HEADINGS.buy
   return (
     <div className="px-[5%] py-4">

@@ -9,13 +9,8 @@ import { resolveAgentSummary, resolvePageMetadata } from "@/lib/seo";
 import { getHomeHeadings } from "@/lib/content";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
-import { HeroSection } from "./_components/HeroSection";
-import { TrustStrip } from "./_components/TrustStrip";
-import { ContainerTypes } from "./_components/ContainerTypes";
 import { HowItWorks } from "./_components/HowItWorks";
-import { WhyUs } from "./_components/WhyUs";
 import { QuoteForm } from "@/components/shared/QuoteForm";
-import { Reviews } from "./_components/Reviews";
 import { StatesSection } from "./_components/StatesSection";
 
 import { Hero } from "./_components/Hero";

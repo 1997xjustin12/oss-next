@@ -32,7 +32,8 @@ const CACHE_SECONDS = 3600
  *
  * The data function keeps its hourly `'use cache'`, so the 40s is paid at most
  * once an hour at runtime instead of once per build. Deploy platforms need a
- * function timeout above that for the first cold request — see xml.md.
+ * function timeout above that for the first cold request — see
+ * docs/reference/XML_ENDPOINTS.md.
  *
  * `connection()` rather than `export const dynamic` — the latter is rejected
  * outright under `cacheComponents`. Awaiting it is the supported way to say

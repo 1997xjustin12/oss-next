@@ -114,7 +114,6 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
     autoResolved.current = true
     const only = results[0]
     selectResult(only)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     onResolved(only.postcode, only.nearestLocation)
   }, [open, chosen, loading, results, zip, selectResult, onResolved])
 

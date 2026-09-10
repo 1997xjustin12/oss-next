@@ -44,7 +44,6 @@ export function useStoredZip(): StoredZip {
   useEffect(() => {
     // Set even when nothing was found, so `resolved` flips either way.
     function sync() {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStored({ ...readVisitorZip(), resolved: true })
     }
     sync()

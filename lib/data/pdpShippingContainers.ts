@@ -1,6 +1,5 @@
 import type { ProductHit } from '@/types/product'
 import { type ContainerVariantKey, resolveContainerVariant } from '@/lib/containerVariant'
-import { BASE_URL } from '../helpers';
 
 export type SpecItem = { label: string; value: string }
 export type FaqItem  = { question: string; answer: string }

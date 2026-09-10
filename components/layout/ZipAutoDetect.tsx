@@ -33,7 +33,6 @@ export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: 
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         try {
-          // eslint-disable-next-line no-console
           if (process.env.NODE_ENV === 'development') console.log('[ZipAutoDetect] coords', coords)
           const { latitude, longitude } = coords
           const params = new URLSearchParams({

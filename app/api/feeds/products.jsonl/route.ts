@@ -73,7 +73,8 @@ export async function GET(request: Request) {
     note: 'One product per line after this header. Prices are objects: read price.description, never price.amount alone — rental and rent-to-own products are priced PER MONTH.',
     // Pagination reduces the bytes you transfer, not the time we take: the
     // upstream scan reads the whole catalog either way (see the caching note in
-    // xml.md). Fetch once and page through your own copy rather than polling.
+    // docs/reference/XML_ENDPOINTS.md). Fetch once and page through your own
+    // copy rather than polling.
     paginationNote:
       '?offset= and ?limit= slice the catalog. Every request costs the same upstream work, so prefer one full pull over many small ones.',
     docs: `${SITE.url}/openapi.json`,

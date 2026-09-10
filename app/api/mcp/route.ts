@@ -26,7 +26,7 @@ import { MCP_TOOLS, MCP_TOOLS_BY_NAME } from '@/services/mcpTools.service'
  *   DELETE           405 — there are no sessions to terminate
  *
  * Connect from Claude or ChatGPT by adding this URL as a custom connector; see
- * xml.md for the instructions we publish.
+ * docs/reference/XML_ENDPOINTS.md for the instructions we publish.
  *
  * ## Auth posture (T5.3)
  *
