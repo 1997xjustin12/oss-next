@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { Package } from "lucide-react";
 import { findEquivalentContainer, isContainerHit, isGenericDisplayHit } from "@/lib/pricing";
 import { resolveContainerVariant } from "@/lib/containerVariant";
 import { ROUTES } from "@/config/routes";
@@ -21,21 +19,13 @@ import { TrustedBySection } from "@/components/shared/TrustedBySection";
 // restore by swapping the import + JSX below, if ReviewsCarousel needs to be
 // rolled back before the OSS reviews table has enough approved data.
 // import { CustomerReviews } from './CustomerReviews'
-import { ReviewsCarousel } from "./ReviewsCarousel";
+// import { ReviewsCarousel } from "./ReviewsCarousel"
 import { YouMayAlsoNeed } from "./YouMayAlsoNeed";
 import { MobileSpecialistBanner } from "./MobileSpecialistBanner";
 import { ContainerResources } from "./ContainerResources";
 import { QuoteForm } from "@/components/shared/QuoteForm";
 import { StatesSection } from "@/app/(market)/(home)/_components/StatesSection";
 import { CustomerReviewsSection } from "./CustomerReviewsSection";
-
-const fmt = (n: number) =>
-  n.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
-
 type IdealForItem = {
   id: string;
   image: string;
@@ -107,6 +97,72 @@ async function depotForPostcode(postcode: string): Promise<string | null> {
   }
 }
 
+/**
+ * Is a product page still the thing on screen?
+ *
+ * Every history write below is a *correction* to a product URL — it renames the
+ * entry the visitor is already standing on. None of them is a navigation, so
+ * none of them is correct once the visitor has left.
+ */
+function onProductPage(): boolean {
+  return window.location.pathname.startsWith("/product/");
+}
+
+/**
+ * Has the visitor asked to go somewhere else?
+ *
+ * The depot swap runs two network round-trips before it rewrites the URL, and
+ * nothing used to cancel it when the visitor left mid-flight. Clicking a nav
+ * link during that window started the navigation and then let the resolving
+ * swap `replaceState` a product URL over it — and because Next patches
+ * `replaceState` to re-sync the router, that write did not merely change the
+ * address bar, it *cancelled the navigation*: the visitor clicked Buy and
+ * stayed on a product page. Reproducible here in roughly one attempt in five
+ * inside a ~200 ms window, and far wider on real latency, where those two
+ * fetches take seconds rather than the milliseconds they take against a local
+ * backend.
+ *
+ * A committed-URL check cannot catch it. The router changes the URL only once
+ * the payload for the new page arrives, so at the moment the swap resolves the
+ * pathname is still this product's — the guard passes and the damage is done.
+ * What is needed is the visitor's *intent*, which is observable a beat earlier:
+ * the click itself. Capture phase, so it is recorded before any handler can
+ * stop propagation.
+ *
+ * Compared by pathname so that in-page anchors and a repeat click on the
+ * current product — neither of which goes anywhere — do not disarm the swap.
+ */
+function useLeavingRef() {
+  const leaving = useRef(false);
+
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      const anchor = (event.target as HTMLElement | null)?.closest?.("a[href]");
+      const href = anchor?.getAttribute("href");
+      if (!href) return;
+      try {
+        if (new URL(href, window.location.href).pathname !== window.location.pathname) {
+          leaving.current = true;
+        }
+      } catch {
+        // Not a URL we can resolve — leave the swap armed.
+      }
+    };
+    const onPopState = () => {
+      leaving.current = true;
+    };
+
+    document.addEventListener("click", onClick, true);
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, []);
+
+  return leaving;
+}
+
 export function ProductDetail({ product, relatedProducts }: Props) {
   // Shared across ProductVariantShell, BodyTabsSection, and FaqAccordion so
   // they all react to whichever variant the shopper currently has selected.
@@ -124,6 +180,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
   const [pool, setPool] = useState(relatedProducts);
   const [baseProduct, setBaseProduct] = useState(product);
   const [swapping, setSwapping] = useState(false);
+  const leaving = useLeavingRef();
   const [locationNotice, setLocationNotice] = useState<string | null>(null);
 
   /**
@@ -161,6 +218,12 @@ export function ProductDetail({ product, relatedProducts }: Props) {
           return;
         }
 
+        // Nothing below is right for a visitor who left while those two
+        // fetches were in flight — see useLeavingRef. Checked before the state
+        // writes as well as the history write, so a departed visitor doesn't
+        // pay for a re-render of a tree that is on its way out either.
+        if (leaving.current || !onProductPage()) return;
+
         setPool(nextPool);
         setBaseProduct(match);
         setActiveProduct(match);
@@ -186,7 +249,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
         setSwapping(false);
       }
     },
-    [activeProduct],
+    [activeProduct, leaving],
   );
 
   /**
@@ -206,7 +269,8 @@ export function ProductDetail({ product, relatedProducts }: Props) {
   /** Seeds the entry the page loaded on, so Back from the next one has a handle. */
   useEffect(() => {
     const handle = String(activeProduct.handle ?? "");
-    if (handle) window.history.replaceState({ handle }, "", window.location.href);
+    if (handle && onProductPage())
+      window.history.replaceState({ handle }, "", window.location.href);
     // Mount only — later entries are pushed by the effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -214,6 +278,10 @@ export function ProductDetail({ product, relatedProducts }: Props) {
   useEffect(() => {
     const handle = String(activeProduct.handle ?? "");
     if (!handle) return;
+
+    // A variant settling after the visitor has navigated away must not push a
+    // product entry onto the page they moved to — see useLeavingRef.
+    if (leaving.current || !onProductPage()) return;
 
     // Already the entry we are standing on. Covers both a repeat click on the
     // selected option and a change that came from popstate — the browser set
@@ -229,7 +297,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
     const next = new URL(window.location.href);
     next.pathname = ROUTES.PRODUCT(handle);
     window.history.pushState({ handle }, "", next);
-  }, [activeProduct]);
+  }, [activeProduct, leaving]);
 
   useEffect(() => {
     function onPopState(event: PopStateEvent) {
@@ -320,14 +388,6 @@ export function ProductDetail({ product, relatedProducts }: Props) {
   }
 
   const containerVariant = resolveContainerVariant(activeProduct);
-
-  // Real ES-backed containers from the same location, excluding whichever
-  // variant is currently on screen — was previously a hardcoded array with
-  // fabricated prices and dead CTA buttons; this section is hidden entirely
-  // rather than shown empty/fake when there's nothing real to display.
-  const relatedToShow = pool
-    .filter((p) => p.objectID !== activeProduct.objectID)
-    .slice(0, 4);
 
   return (
     <div className="bg-theme-bg text-theme-dark flex flex-col gap-[20px]">

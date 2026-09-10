@@ -6,6 +6,7 @@ import { findDepotByPath, toLocalBusinessInput } from '@/lib/locations'
 import { breadcrumbFromPath, graph, localBusinessNode, siteNodes, webPageNode } from '@/lib/schema'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { isNativePath } from '@/config/routes'
+import { EXTERNAL_HTML_ATTR } from '@/lib/linkEnrich'
 
 /**
  * Catch-all for converted WordPress pages.
@@ -123,7 +124,11 @@ async function WpContent({ params }: Props) {
 
       {/* Carries the original WP body classes, which scopeCss() rewrote
           `body.foo` selectors to depend on. */}
-      <div className={page.wrapperClass} dangerouslySetInnerHTML={{ __html: page.content }} />
+      <div
+        {...{ [EXTERNAL_HTML_ATTR]: '' }}
+        className={page.wrapperClass}
+        dangerouslySetInnerHTML={{ __html: page.content }}
+      />
     </>
   )
 }

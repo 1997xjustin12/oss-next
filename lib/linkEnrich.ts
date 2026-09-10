@@ -41,9 +41,38 @@ export function applyEnrichParams(href: string, zipcode: string, location: strin
   return `${path}?${params}`
 }
 
-// DOM mutation version — used for non-React HTML (WP proxy pages, static content)
+/**
+ * Marks a container whose HTML came from outside React — the converted
+ * WordPress pages and blog article bodies, both injected with
+ * `dangerouslySetInnerHTML`. Those anchors are plain `<a>` elements that React
+ * does not manage, and they are the only ones this sweep may touch.
+ */
+export const EXTERNAL_HTML_ATTR = 'data-external-html'
+
+/**
+ * DOM mutation version — for non-React HTML only (WP proxy pages, article
+ * bodies). React-rendered links enrich themselves during render instead; see
+ * `applyEnrichParams`'s callers.
+ *
+ * Scoped rather than document-wide, which is how it started. Sweeping every
+ * anchor rewrote the `href` of React-owned `<Link>`s too, and doing that before
+ * hydration finished made the DOM disagree with the server HTML React was
+ * hydrating against — "some attributes of the server rendered HTML didn't match
+ * the client properties. This won't be patched up." Reproducible: with a ZIP in
+ * storage the mismatch fired on every product-page load, and with no ZIP (this
+ * function returns early) it never fired once.
+ *
+ * Nothing was gained for the cost, either. `next/link` navigates to its own
+ * `href` prop and ignores the DOM attribute, so rewriting a `<Link>`'s anchor
+ * never changed where it went — it only corrupted hydration. The nav bar is
+ * unaffected because it enriches its hrefs in render, which is the fix the
+ * footer's links want too if they should carry the ZIP (they currently do not).
+ */
 export function enrichSaleLinks() {
   if (typeof window === 'undefined') return
+
+  const containers = document.querySelectorAll<HTMLElement>(`[${EXTERNAL_HTML_ATTR}]`)
+  if (containers.length === 0) return
 
   // Same resolution as everything else, so a page reached with ?zipcode= has
   // its links enriched with that ZIP rather than the one this browser happens
@@ -51,10 +80,12 @@ export function enrichSaleLinks() {
   const { postcode: zipcode, depot: location } = readVisitorZip()
   if (!zipcode && !location) return
 
-  document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((a) => {
-    const href = a.getAttribute('href') ?? ''
-    if (!href) return
-    const enriched = applyEnrichParams(href, zipcode, location)
-    if (enriched !== href) a.setAttribute('href', enriched)
+  containers.forEach((container) => {
+    container.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((a) => {
+      const href = a.getAttribute('href') ?? ''
+      if (!href) return
+      const enriched = applyEnrichParams(href, zipcode, location)
+      if (enriched !== href) a.setAttribute('href', enriched)
+    })
   })
 }

@@ -1,3 +1,4 @@
+import { EXTERNAL_HTML_ATTR } from '@/lib/linkEnrich'
 // Renders the post's raw WordPress HTML. The content is first-party (our own
 // blog), so it's injected directly, inside a scoped `.blog-content` wrapper that
 // supplies typographic defaults — the WP install ships no typography plugin here
@@ -37,7 +38,11 @@ export function ArticleBody({ html }: { html: string }) {
           .blog-content pre { background: #1f2937; }
         }
       `}</style>
-      <div className="blog-content" dangerouslySetInnerHTML={{ __html: html }} />
+      <div
+        {...{ [EXTERNAL_HTML_ATTR]: '' }}
+        className="blog-content"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
     </>
   )
 }

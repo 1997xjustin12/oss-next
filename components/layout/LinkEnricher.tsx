@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import { enrichSaleLinks } from '@/lib/linkEnrich'
+import { enrichSaleLinks, EXTERNAL_HTML_ATTR } from '@/lib/linkEnrich'
 import { ADMIN_PATHS } from '@/lib/admin'
 
 // Storefront link rewriting has no business running over the admin UI.
@@ -24,15 +24,26 @@ export function LinkEnricher() {
 
     enrichSaleLinks()
 
-    // Re-run when dropdown children or other conditional links enter the DOM
+    // Re-run when more of an injected page streams in.
     const debouncedEnrich = () => {
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = setTimeout(enrichSaleLinks, 50)
     }
 
     observerRef.current?.disconnect()
-    observerRef.current = new MutationObserver(debouncedEnrich)
-    observerRef.current.observe(document.body, { childList: true, subtree: true })
+
+    // Watch only the injected-HTML containers, not the whole body. Observing
+    // `document.body` with `subtree: true` meant every React render anywhere on
+    // the page scheduled another full sweep — on a route with no injected HTML
+    // at all, which is most of them, all of that work found nothing to do.
+    const containers = document.querySelectorAll<HTMLElement>(`[${EXTERNAL_HTML_ATTR}]`)
+    if (containers.length === 0) return
+
+    const observer = new MutationObserver(debouncedEnrich)
+    containers.forEach((container) =>
+      observer.observe(container, { childList: true, subtree: true }),
+    )
+    observerRef.current = observer
 
     return () => {
       observerRef.current?.disconnect()
