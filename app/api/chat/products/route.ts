@@ -2,6 +2,7 @@ import { connection } from 'next/server'
 import { MAX_HANDLE_CHARS, MAX_PRODUCT_HANDLES } from '@/config/chat'
 import { ROUTES } from '@/config/routes'
 import { withRateLimit } from '@/lib/agentApi'
+import { formatMoney } from '@/lib/formatters'
 import {
   getCustomFieldValue,
   getPriceBasis,
@@ -94,7 +95,7 @@ async function toCard(handle: string): Promise<ChatProductCard | null> {
       title: product.title,
       url: ROUTES.PRODUCT(handle),
       image: product.images?.[0]?.src,
-      priceLabel: price === null ? 'Call for pricing' : `$${price.toLocaleString('en-US')}${basis.suffix}`,
+      priceLabel: price === null ? 'Call for pricing' : `${formatMoney(price)}${basis.suffix}`,
       priceBasis: basis.termMonths ? `${basis.label} · ${basis.termMonths}-month term` : basis.label,
       inStock: isInStockHit(product),
       addable: !isGenericDisplayHit(product) && price !== null,

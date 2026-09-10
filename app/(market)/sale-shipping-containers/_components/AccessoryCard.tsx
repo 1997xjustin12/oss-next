@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Phone, Star } from 'lucide-react'
+import { formatMoney } from '@/lib/formatters'
 import type { Accessory } from '@/types/product'
 
 type Props = { product: Accessory }
@@ -77,7 +78,7 @@ export function AccessoryCard({ product }: Props) {
 
         <div className="mt-auto pt-2.5 flex items-center justify-between border-t border-theme-border dark:border-neutral-800">
           <div className="text-lg font-black leading-none text-theme-dark dark:text-gray-100">
-            ${product.price.toLocaleString()}
+            {formatMoney(product.price)}
           </div>
           <button className="text-xs font-extrabold bg-theme-primary text-white px-3 py-1.5 rounded-md hover:bg-theme-primary-dark transition-colors">
             View

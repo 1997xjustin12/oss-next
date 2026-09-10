@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useCart } from '@/hooks/useCart'
 import { ROUTES } from '@/config/routes'
+import { formatMoney } from '@/lib/formatters'
 
 function CartIcon({ className }: { className?: string }) {
   return (
@@ -18,7 +19,7 @@ export function CartButton() {
 
   const label = cart.totalItems === 0
     ? 'Cart is empty'
-    : `${cart.totalItems} item${cart.totalItems !== 1 ? 's' : ''} — $${cart.totalPrice.toFixed(2)}`
+    : `${cart.totalItems} item${cart.totalItems !== 1 ? 's' : ''} — ${formatMoney(cart.totalPrice)}`
 
   return (
     <Link
@@ -35,7 +36,7 @@ export function CartButton() {
         )}
       </span>
       <span className="text-[10px] font-semibold tabular-nums leading-none mt-1">
-        ${cart.totalPrice.toFixed(2)}
+        {formatMoney(cart.totalPrice)}
       </span>
     </Link>
   )

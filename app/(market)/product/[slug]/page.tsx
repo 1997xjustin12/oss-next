@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getProductByHandle } from '@/services/search.service'
 import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
+import { formatMoney } from '@/lib/formatters'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { resolveContainerVariant } from '@/lib/containerVariant'
 import { PDP_SHIPPING_CONTAINERS } from '@/lib/data/pdpShippingContainers'
@@ -25,7 +26,7 @@ function buildProductDescription(product: ProductHit, location: string): string 
   // price of a 40ft container. getPriceBasis() is the single place that knows
   // which it is — see lib/pricing.ts.
   const basis = getPriceBasis(product)
-  const price = `$${product.sale_price}${basis.suffix}`
+  const price = `${formatMoney(product.sale_price)}${basis.suffix}`
   const qualified =
     basis.period === 'monthly'
       ? `${price} (${basis.label.toLowerCase()}${basis.termMonths ? `, ${basis.termMonths}-month term` : ''})`

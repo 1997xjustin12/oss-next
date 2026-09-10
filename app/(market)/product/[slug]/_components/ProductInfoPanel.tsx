@@ -2,26 +2,14 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  Shield,
-  CheckCircle2,
-  Truck,
-  Headphones,
-  Heart,
-  Printer,
-  ShoppingCart,
-  ClipboardList,
-  Phone,
-  Info,
 } from "lucide-react";
 import type { ProductHit } from "@/types/product";
 import { useAddContainerToCart } from "@/hooks/useAddContainerToCart";
-import { useWishlist } from "@/hooks/useWishlist";
 import {
   getCustomFieldValue,
   isGenericDisplayHit,
   isInStockHit,
 } from "@/lib/pricing";
-import { DEFAULT_LOCATION } from "@/lib/constants";
 import { normaliseRating } from "@/lib/ratings";
 import { CartLocationConflictModal } from "@/components/cart/CartLocationConflictModal";
 import { GuestLeadModal } from "@/components/cart/GuestLeadModal";
@@ -33,10 +21,9 @@ import { Stars } from "@/components/product/Stars";
 import { DeliveryZipCheck } from "./DeliveryZipCheck";
 import { ZipGateModal } from "./ZipGateModal";
 import type { LocationChangeStrategy } from "./DeliveryZipCheck";
-import { ShareButton } from "@/components/product/ShareButton";
 import { CONTACT_NUMBER } from "@/lib/helpers";
 import Link from "next/link";
-import { formatPrice } from "@/lib/formatters";
+import { formatMoney } from "@/lib/formatters";
 import { useDeliveryRates } from "@/hooks/useDeliveryRates";
 import { useStoredZip } from "@/hooks/useStoredZip";
 import { notifyVisitorZipChange } from "@/lib/visitorZip";
@@ -300,14 +287,6 @@ const grades = [
  * spelled both "First off the Stack" and "First of the Stack", so match on the
  * bracketed code rather than the name.
  */
-const selectionTypes = [
-  {
-    name: "First Off the Stack",
-    key: "FO",
-    desc: "Whichever unit is on top · Fastest",
-  },
-];
-
 const RENT_TERMS = [
   { value: "12", label: "12 Months" },
   { value: "6", label: "6 Months" },
@@ -319,13 +298,6 @@ const RTO_TERMS = [
   { value: "36", label: "36 Months" },
   { value: "24", label: "24 Months" },
   { value: "12", label: "12 Months" },
-];
-
-const trustBadges = [
-  { Icon: Shield, label: "Satisfaction Guaranteed" },
-  { Icon: CheckCircle2, label: "No Hidden Fees" },
-  { Icon: Truck, label: "Fast Nationwide Delivery" },
-  { Icon: Headphones, label: "Expert Phone Support" },
 ];
 
 // ─── index helpers ────────────────────────────────────────────────────────────
@@ -544,7 +516,6 @@ type Props = {
 
 export function ProductInfoPanel({
   product,
-  categoryLabel,
   relatedProducts,
   onVariantChange,
   locationChange,
@@ -555,7 +526,6 @@ export function ProductInfoPanel({
     addContainerToCart,
     clearCart,
   } = useAddContainerToCart();
-  const { isWishlisted, toggleWishlist } = useWishlist();
 
   // The currently matched product — starts as the page product, updates on every option change
   const [activeProduct, setActiveProduct] = useState<ProductHit>(product);
@@ -707,11 +677,11 @@ export function ProductInfoPanel({
             p.sale_price < cheapest.sale_price ? p : cheapest,
           );
 
-        const amount = formatPrice(chosen.sale_price);
+        const amount = formatMoney(chosen.sale_price);
         if (!amount) return undefined;
 
         const monthly = selection.tab === "rent" || selection.tab === "rto";
-        return `$${amount}${monthly ? "/mo" : ""}`;
+        return `${amount}${monthly ? "/mo" : ""}`;
       }),
     [candidates, selection.condIdx, selection.gradeIdx, selection.tab],
   );
@@ -792,8 +762,8 @@ export function ProductInfoPanel({
       const diff = Math.round(price - activeProduct.sale_price);
       if (diff === 0) return "Included";
       return diff > 0
-        ? `Add $${formatPrice(diff)}`
-        : `Save $${formatPrice(Math.abs(diff))}`;
+        ? `Add ${formatMoney(diff)}`
+        : `Save ${formatMoney(Math.abs(diff))}`;
     },
     [activeProduct.sale_price],
   );
@@ -967,7 +937,7 @@ export function ProductInfoPanel({
         options: rentTermOptions.map((term) => ({
           key: term.value,
           label: term.label,
-          sublabel: term.variant ? `$${term.variant.sale_price}/mo` : undefined,
+          sublabel: term.variant ? `${formatMoney(term.variant.sale_price)}/mo` : undefined,
           active: selection.rentTerm === term.value,
           available: term.available,
           onSelect: () => handleSelect({ rentTerm: term.value }),
@@ -984,7 +954,7 @@ export function ProductInfoPanel({
         options: rtoTermOptions.map((term) => ({
           key: term.value,
           label: term.label,
-          sublabel: term.variant ? `$${term.variant.sale_price}/mo` : undefined,
+          sublabel: term.variant ? `${formatMoney(term.variant.sale_price)}/mo` : undefined,
           active: selection.rtoTerm === term.value,
           available: term.available,
           onSelect: () => handleSelect({ rtoTerm: term.value }),
@@ -1011,7 +981,7 @@ export function ProductInfoPanel({
 
   const priceDisplay = useMemo(
     () => ({
-      price: `$${formatPrice(activeProduct.sale_price)}`,
+      price: formatMoney(activeProduct.sale_price),
       suffix: selection.tab === "buy" ? "" : "/mo",
       note: {
         buy: "Additional delivery fee based on your location - Sales tax may apply",
@@ -1102,7 +1072,7 @@ export function ProductInfoPanel({
    * Order total: unit price × quantity, plus delivery where it applies.
    *
    * Rounded in whole cents rather than multiplied straight: 232.14 × 3 is
-   * 696.4200000000001 in binary floating point, and formatPrice would round it
+   * 696.4200000000001 in binary floating point, and formatMoney would round it
    * to two decimals anyway — doing it here keeps the number that reaches the
    * cart and the number on screen identical.
    *
@@ -1115,7 +1085,7 @@ export function ProductInfoPanel({
       Math.round(
         (activeProduct.sale_price * quantity + deliveryInSubtotal) * 100,
       ) / 100;
-    return `$${formatPrice(total)}`;
+    return formatMoney(total);
   }, [activeProduct.sale_price, quantity, deliveryInSubtotal]);
 
   /**
@@ -1235,7 +1205,7 @@ export function ProductInfoPanel({
             // often wrong, thing to tell someone.
             "Calculating…"
           : deliveryOption
-            ? `$${formatPrice(deliveryTotal)}${selection.tab === "buy" ? "" : " (one-time)"}`
+            ? `${formatMoney(deliveryTotal)}${selection.tab === "buy" ? "" : " (one-time)"}`
             : zipcode
               ? "Call for rate"
               : "Enter a ZIP code for a rate",
@@ -1327,17 +1297,6 @@ export function ProductInfoPanel({
 
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
-  }
-
-  function handleToggleWishlist() {
-    toggleWishlist({
-      id: activeProduct.objectID,
-      handle: activeProduct.handle,
-      name: activeProduct.title,
-      price: activeProduct.sale_price,
-      image: activeProduct.images?.[0]?.src,
-      addedAt: new Date().toISOString(),
-    });
   }
 
   // ── render ──────────────────────────────────────────────────────────────────
@@ -1509,7 +1468,7 @@ export function ProductInfoPanel({
             key === "buy"
               ? "Call For Best Pricing"
               : key === "rent"
-                ? "as low as $96 a month"
+                ? "as low as $96.00 a month"
                 : "as low as $61.36 a month";
 
           return (
@@ -1689,7 +1648,7 @@ export function ProductInfoPanel({
               </span>
             ) : deliveryOption ? (
               <span className="text-right font-medium tabular-nums text-theme-dark">
-                ${formatPrice(deliveryTotal)}
+                {formatMoney(deliveryTotal)}
                 {/* On rent and rent-to-own the figure above is monthly and this
                     one is not, so the two cannot simply be added. Saying so is
                     what keeps the subtotal from looking like an arithmetic

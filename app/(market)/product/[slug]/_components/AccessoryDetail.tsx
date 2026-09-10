@@ -6,6 +6,7 @@ import { ShoppingCart, Phone, MapPin, Tag, CheckCircle2, XCircle, Star, ChevronR
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { useCart } from '@/hooks/useCart'
 import { getCustomFieldValue, isInStockHit } from '@/lib/pricing'
+import { formatMoney } from '@/lib/formatters'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { normaliseRating } from '@/lib/ratings'
@@ -13,11 +14,6 @@ import { ROUTES } from '@/config/routes'
 import type { ProductHit } from '@/types/product'
 
 type Props = { product: ProductHit }
-
-function formatPrice(price: number): string {
-  if (!price || price <= 0) return 'Call for Price'
-  return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
-}
 
 const CONTAINER_CATEGORY_NAMES = ['Shipping Containers', 'Generic Product Page']
 
@@ -138,7 +134,7 @@ export function AccessoryDetail({ product }: Props) {
             {/* Price */}
             <div className="py-5 border-t border-b border-theme-border">
               <p className="text-4xl sm:text-5xl font-extrabold tracking-tight dark:text-white">
-                {formatPrice(product.sale_price)}
+                {product.sale_price > 0 ? formatMoney(product.sale_price) : 'Call for Price'}
               </p>
               {product.sale_price > 0 && (
                 <p className="text-sm text-theme-muted mt-1.5">

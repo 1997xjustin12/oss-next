@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { Container } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
-import { formatPrice } from '@/lib/formatters'
+import { formatMoney } from '@/lib/formatters'
 import type { QuoteLine } from '@/types/deliveryQuote'
 
 /**
@@ -32,7 +32,7 @@ export function QuoteReviewLines({
   const rows: QuoteLine[] = fromCart
     ? cart.items.map((item) => ({
         label: item.quantity > 1 ? `${item.name} x ${item.quantity}` : item.name,
-        value: `${formatPrice(item.price * item.quantity)}`,
+        value: formatMoney(item.price * item.quantity),
         image: item.image ?? null,
       }))
     : lines
@@ -90,7 +90,7 @@ export function QuoteReviewLines({
         <div className="flex items-baseline justify-between gap-6 border-t border-theme-border px-4 py-2.5 text-sm dark:border-neutral-800">
           <span className="font-semibold text-theme-mid dark:text-neutral-300">Subtotal</span>
           <span className="font-semibold tabular-nums text-theme-dark dark:text-white">
-            ${formatPrice(cart.totalPrice)}
+            {formatMoney(cart.totalPrice)}
           </span>
         </div>
       )}

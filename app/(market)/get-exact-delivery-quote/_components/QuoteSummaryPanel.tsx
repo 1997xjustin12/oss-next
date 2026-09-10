@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { Clock, Container, Info, Lock } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
-import { formatPrice } from '@/lib/formatters'
+import { formatMoney } from '@/lib/formatters'
 import type { DeliveryQuoteContext } from '@/types/deliveryQuote'
 import { DeliveryZipEditor } from './DeliveryZipEditor'
 
@@ -29,8 +29,6 @@ import { DeliveryZipEditor } from './DeliveryZipEditor'
  * number beside it, and scrolling it away removes the reason.
  */
 
-const money = (n: number) => '$' + formatPrice(n)
-
 export function QuoteSummaryPanel({ quote }: { quote: DeliveryQuoteContext }) {
   const { cart } = useCart()
   const fromCart = cart.items.length > 0
@@ -41,7 +39,7 @@ export function QuoteSummaryPanel({ quote }: { quote: DeliveryQuoteContext }) {
         title: item.name,
         image: item.image ?? null,
         quantity: item.quantity,
-        value: money(item.price * item.quantity),
+        value: formatMoney(item.price * item.quantity),
       }))
     : [
         {
@@ -53,7 +51,7 @@ export function QuoteSummaryPanel({ quote }: { quote: DeliveryQuoteContext }) {
         },
       ]
 
-  const subtotal = fromCart ? money(cart.totalPrice) : quote.subtotal
+  const subtotal = fromCart ? formatMoney(cart.totalPrice) : quote.subtotal
 
   return (
     <aside className="lg:sticky lg:top-6 lg:self-start">

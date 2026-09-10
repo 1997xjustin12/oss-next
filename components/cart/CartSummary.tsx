@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { getGuestLead } from '@/lib/guestCapture'
 import { readVisitorZip } from '@/lib/visitorZip'
 import { ROUTES } from '@/config/routes'
+import { formatMoney } from '@/lib/formatters'
 
 type Props = {
   /** Real total_shipping from /api/orders/get-total — undefined/0 until checkout knows a ZIP. */
@@ -18,7 +19,6 @@ type Props = {
   loading?: boolean
 }
 
-const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
 export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
   const { cart, clearCart } = useCart()
@@ -83,14 +83,14 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
           <span className="text-theme-muted">
             Subtotal ({cart.totalItems} item{cart.totalItems !== 1 ? 's' : ''})
           </span>
-          <span className="font-semibold">{fmt(cart.totalPrice)}</span>
+          <span className="font-semibold">{formatMoney(cart.totalPrice)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-theme-muted">Delivery fee</span>
           {loading ? (
             <span className="font-semibold text-theme-muted italic">Calculating…</span>
           ) : shipping > 0 ? (
-            <span className="font-semibold">{fmt(shipping)}</span>
+            <span className="font-semibold">{formatMoney(shipping)}</span>
           ) : (
             <span className="font-semibold text-theme-muted italic">Calculated at checkout</span>
           )}
@@ -101,7 +101,7 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
           {loading ? (
             <span className="font-semibold text-theme-muted italic">Calculating…</span>
           ) : tax > 0 ? (
-            <span className="font-semibold">{fmt(tax)}</span>
+            <span className="font-semibold">{formatMoney(tax)}</span>
           ) : (
             <span className="font-semibold text-theme-muted italic">At checkout</span>
           )}
@@ -110,7 +110,7 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
 
       <div className="flex justify-between items-baseline pt-3.5 border-t-2 border-theme-dark mb-1">
         <span className="text-lg font-extrabold">Total</span>
-        <span className="text-3xl font-extrabold text-theme-primary">{fmt(total)}</span>
+        <span className="text-3xl font-extrabold text-theme-primary">{formatMoney(total)}</span>
       </div>
       <p className="text-[11px] text-theme-muted mb-5">
         *Tax calculated at checkout. No sales tax on most container orders.

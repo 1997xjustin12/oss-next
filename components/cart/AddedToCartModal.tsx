@@ -10,13 +10,13 @@ import { DEFAULT_LOCATION } from '@/lib/constants'
 import { ROUTES } from '@/config/routes'
 import type { CartItem } from '@/types/cart'
 import type { ProductHit } from '@/types/product'
+import { formatMoney } from '@/lib/formatters'
 
 type Props = {
   item:    CartItem | null
   onClose: () => void
 }
 
-const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
 // Chip row for container specs (size, grade, condition, location) — same
 // custom_fields keys QuickViewModal.tsx reads, just condensed into pills
@@ -122,7 +122,7 @@ function FrequentlyBought({ onNavigate }: { onNavigate: () => void }) {
                 <p className="mt-2 text-xs font-semibold text-theme-dark dark:text-white line-clamp-2 group-hover:text-theme-primary transition-colors">
                   {p.title}
                 </p>
-                <p className="text-xs text-theme-muted">{fmt(p.sale_price)}</p>
+                <p className="text-xs text-theme-muted">{formatMoney(p.sale_price)}</p>
               </Link>
             ))}
       </div>
@@ -171,7 +171,7 @@ export function AddedToCartModal({ item, onClose }: Props) {
             )}
             <div className="min-w-0">
               <p className="font-bold text-theme-dark dark:text-white truncate">{item.name}</p>
-              <p className="text-xs text-theme-muted">Qty {item.quantity} · {fmt(item.price)}</p>
+              <p className="text-xs text-theme-muted">Qty {item.quantity} · {formatMoney(item.price)}</p>
             </div>
           </div>
 

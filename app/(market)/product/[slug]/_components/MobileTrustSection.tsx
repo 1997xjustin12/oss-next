@@ -21,7 +21,7 @@ const CONTACT_TEL = `tel:${CONTACT_NUMBER.replace(/[^\d+]/g, "")}`;
 
 /** Matches the payment keys on the panel above, so the two never disagree. */
 const BUDGET_OPTIONS = [
-  { label: "Rent", note: "as low as $96 a month", ptype: "rental" },
+  { label: "Rent", note: "as low as $96.00 a month", ptype: "rental" },
   { label: "Rent-To-Own", note: "as low as $61.36 a month", ptype: "rto" },
 ] as const;
 

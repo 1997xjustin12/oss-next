@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { formatMoney } from '@/lib/formatters'
 import Image from 'next/image'
 import Link from 'next/link'
 import { PackageSearch, Package, RotateCcw, Star } from 'lucide-react'
@@ -37,9 +38,9 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   )
 }
 
-function fmtMoney(n: string | number): string {
-  const num = typeof n === 'string' ? parseFloat(n) : n
-  return Number.isFinite(num) ? num.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '—'
+/** Order totals arrive as strings; an unparseable one shows an em dash, not `$NaN`. */
+function formatOrderMoney(n: string | number): string {
+  return formatMoney(n) || '—'
 }
 
 function OrdersSkeleton() {
@@ -191,7 +192,7 @@ export function OrdersList() {
                       <p className="text-sm font-semibold truncate dark:text-white">Item #{item.product_id}</p>
                     )}
                     <p className="text-xs text-theme-muted dark:text-gray-400">
-                      Qty {item.quantity} · {fmtMoney(item.price)} each
+                      Qty {item.quantity} · {formatOrderMoney(item.price)} each
                     </p>
                   </div>
                 </div>
@@ -201,7 +202,7 @@ export function OrdersList() {
 
           <div className="flex items-center justify-between pt-3 border-t border-theme-border dark:border-gray-700">
             <span className="text-sm font-semibold text-theme-muted dark:text-gray-400">Total</span>
-            <span className="text-lg font-extrabold dark:text-white">{fmtMoney(order.total_price)}</span>
+            <span className="text-lg font-extrabold dark:text-white">{formatOrderMoney(order.total_price)}</span>
           </div>
 
           {(REORDERABLE.includes(order.status) || REVIEWABLE.includes(order.status)) && (

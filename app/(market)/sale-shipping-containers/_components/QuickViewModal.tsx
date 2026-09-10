@@ -11,6 +11,7 @@ import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { normaliseRating } from '@/lib/ratings'
+import { formatMoney } from '@/lib/formatters'
 import { ROUTES } from '@/config/routes'
 import type { HitData } from './InstantSearchSection'
 
@@ -104,7 +105,7 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
 
             <p className="text-3xl font-extrabold tracking-tight text-theme-dark dark:text-white">
               {isGenericLocation && <span className="text-lg font-bold text-theme-muted mr-1.5">Starts at</span>}
-              ${price.toLocaleString('en-US')}{priceSuffix}
+              {formatMoney(price)}{priceSuffix}
             </p>
 
             <p className="flex items-center gap-1.5 text-sm font-semibold text-theme-accent">

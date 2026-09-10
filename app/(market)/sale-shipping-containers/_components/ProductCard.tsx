@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Phone, Star } from "lucide-react";
+import { formatMoney } from '@/lib/formatters'
 import type { Product } from "@/types/product";
 
 type Props = { product: Product };
@@ -105,14 +106,14 @@ export function ProductCard({ product }: Props) {
             <span className="font-bold text-theme-dark">
               Budget-Friendly Option:{" "}
             </span>
-            Don&rsquo;t want to pay ${product.price.toLocaleString()} upfront?
+            Don&rsquo;t want to pay {formatMoney(product.price)} upfront?
             Select our{" "}
             <Link
               href={product?.rtoOffer?.url || "#"}
               onClick={(e) => e.stopPropagation()}
               className="font-bold text-theme-accent underline underline-offset-2 hover:text-theme-primary"
             >
-              Rent-To-Own option at ${product.rtoOffer.price}/mo
+              Rent-To-Own option at {formatMoney(product.rtoOffer.price)}/mo
             </Link>
             . No credit check required!
           </div>
@@ -168,7 +169,7 @@ export function ProductCard({ product }: Props) {
       <div className="sm:col-span-3 flex flex-row sm:flex-col items-center sm:items-end justify-between gap-3">
         <div className="text-left sm:text-right">
           <div className="text-3xl font-black leading-none text-theme-dark">
-            ${product.price.toLocaleString()}
+            {formatMoney(product.price)}
           </div>
           <div className="text-[11px] text-theme-muted">+ delivery, no tax</div>
         </div>

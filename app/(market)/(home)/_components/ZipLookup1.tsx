@@ -8,6 +8,7 @@ import { useGeoapify } from "@/hooks/useGeoapify";
 import type { GeoapifyResult } from "@/hooks/useGeoapify";
 import type { FormattedContainerHit } from "@/types/product";
 import { getCustomFieldValue } from "@/lib/pricing";
+import { formatMoney } from "@/lib/formatters";
 import { BASE_URL } from "@/lib/helpers";
 
 type Props = {
@@ -107,12 +108,7 @@ function getLowestPrice(
 
 function formatPrice(price: number, ptype: string): string {
   const suffix = ptype === "rental" || ptype === "rto" ? "/mo" : "";
-  const hasCents = price % 1 !== 0;
-  const amount = price.toLocaleString("en-US", {
-    minimumFractionDigits: hasCents ? 2 : 0,
-    maximumFractionDigits: hasCents ? 2 : 0,
-  });
-  return `$${amount}${suffix}`;
+  return `${formatMoney(price)}${suffix}`;
 }
 
 function buildBannerUrl(item: BannerListItem, zipcode: string, location: string): string {

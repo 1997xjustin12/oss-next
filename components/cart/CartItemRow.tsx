@@ -4,10 +4,10 @@ import Image from 'next/image'
 import { Minus, Plus, Trash2, Package, Lock } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import type { CartItem } from '@/types/cart'
+import { formatMoney } from '@/lib/formatters'
 
 type Props = { item: CartItem }
 
-const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
 export function CartItemRow({ item }: Props) {
   const { removeItem, updateQty } = useCart()
@@ -98,15 +98,15 @@ export function CartItemRow({ item }: Props) {
         {/* Price column */}
         <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-1 pl-20 sm:pl-0 shrink-0">
           <div className="text-2xl font-extrabold leading-none">
-            {fmt(item.price * item.quantity)}
+            {formatMoney(item.price * item.quantity)}
           </div>
           <div className="flex sm:flex-col items-center sm:items-end gap-1.5 sm:gap-1">
             {item.originalPrice && (
               <span className="text-xs text-theme-muted line-through">
-                {fmt(item.originalPrice * item.quantity)}
+                {formatMoney(item.originalPrice * item.quantity)}
               </span>
             )}
-            <span className="text-xs text-theme-muted">{fmt(item.price)} / unit</span>
+            <span className="text-xs text-theme-muted">{formatMoney(item.price)} / unit</span>
             {item.orderType && (
               <span
                 className={`text-[10px] font-bold px-1.5 py-0.5 rounded text-white ${

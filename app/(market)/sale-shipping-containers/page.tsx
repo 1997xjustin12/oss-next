@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { cachedEsSearch, DEFAULT_LOCATION } from '@/services/search.service'
 import { getPriceBasis } from '@/lib/pricing'
+import { formatMoney } from '@/lib/formatters'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ROUTES } from '@/config/routes'
@@ -177,7 +178,7 @@ async function SaleContainersContent({ searchParams }: Props) {
                 return (
                   <li key={hit.handle} className="mb-2">
                     <Link href={ROUTES.PRODUCT(hit.handle)}>{hit.title}</Link>
-                    {hit.sale_price ? ` — $${hit.sale_price}${basis.suffix}` : ''}
+                    {hit.sale_price ? ` — ${formatMoney(hit.sale_price)}${basis.suffix}` : ''}
                     {basis.period === 'monthly' ? ` (${basis.label.toLowerCase()})` : ''}
                   </li>
                 )

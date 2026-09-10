@@ -3,7 +3,7 @@ import { fetchProduct } from '@/services/product.service'
 import { cachedGeoapifyAutocomplete } from '@/services/geoapify.service'
 import { getDeliveryRates } from '@/services/delivery.service'
 import { cheapestDeliveryOption, hasQuotedDelivery } from '@/lib/delivery'
-import { formatPrice, toNumber } from '@/lib/formatters'
+import { formatMoney, toNumber } from '@/lib/formatters'
 // Shapes live in types/ so the client-side summary panel can import them
 // without pulling in this module's `'use cache'` directive.
 import type { DeliveryQuoteContext, QuoteLine } from '@/types/deliveryQuote'
@@ -26,14 +26,6 @@ export type { DeliveryQuoteContext, QuoteLine } from '@/types/deliveryQuote'
  */
 
 const FALLBACK_TITLE = 'Your shipping container'
-
-/**
- * `formatPrice` deliberately returns a bare figure — see its own doc comment —
- * so the symbol belongs here, the same way the product panel adds it.
- */
-function money(amount: number): string {
-  return '$' + formatPrice(amount)
-}
 
 /**
  * A postcode as a place: "New York, NY 10001".
@@ -122,7 +114,7 @@ export async function resolveDeliveryQuote(params: {
       : 'Container'
     lines.push({
       label: quantity > 1 ? `${base} x ${quantity}` : base,
-      value: money(unitPrice * quantity),
+      value: formatMoney(unitPrice * quantity),
       image: product?.thumbnail_url ?? null,
     })
   }
@@ -156,7 +148,7 @@ export async function resolveDeliveryQuote(params: {
       // route, or a price over the ceiling upstream will not publish. Prefer
       // upstream's own formatting so this page and the PDP read the same.
       if (cheapest?.rate != null) {
-        deliveryCharge = cheapest.rate_formatted || money(cheapest.rate)
+        deliveryCharge = cheapest.rate_formatted || formatMoney(cheapest.rate)
         deliveryPending = false
         lines.push({ label: 'Estimated delivery', value: deliveryCharge })
         runningTotal += cheapest.rate
@@ -171,15 +163,15 @@ export async function resolveDeliveryQuote(params: {
     handle,
     productTitle: product?.container_title ?? FALLBACK_TITLE,
     productImage: product?.thumbnail_url ?? null,
-    priceLabel: hasPrice ? money(unitPrice) : null,
+    priceLabel: hasPrice ? formatMoney(unitPrice) : null,
     zip,
     quantity,
-    subtotal: hasPrice ? money(unitPrice * quantity) : null,
+    subtotal: hasPrice ? formatMoney(unitPrice * quantity) : null,
     deliveryLabel,
     deliveryCharge,
     deliveryPending,
     lines,
-    total: runningTotal > 0 ? money(runningTotal) : null,
+    total: runningTotal > 0 ? formatMoney(runningTotal) : null,
     backHref: handle ? `/product/${handle}` : '/sale-shipping-containers',
     resolved: product !== null,
   }

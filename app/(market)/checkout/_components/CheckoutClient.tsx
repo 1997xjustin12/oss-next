@@ -22,7 +22,8 @@ import { cartItemsToLineItems } from '@/lib/cart';
 import { lookupZip } from '@/lib/zippopotam';
 import { getGuestLead } from '@/lib/guestCapture';
 import { readVisitorZip } from '@/lib/visitorZip';
-import { ROUTES } from '@/config/routes';
+import { ROUTES } from '@/config/routes'
+import { formatMoney } from '@/lib/formatters';
 import { BraintreeDropIn } from './BraintreeDropIn';
 import { Recaptcha } from '@/components/ui/Recaptcha';
 import type { BraintreeDropInHandle } from './BraintreeDropIn';
@@ -815,7 +816,7 @@ export function CheckoutClient() {
 
                 {/* Line total */}
                 <p className="pt-1 text-right text-sm font-bold text-theme-dark dark:text-neutral-100">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  {formatMoney(item.price * item.quantity)}
                 </p>
               </div>
             ))}
@@ -824,7 +825,7 @@ export function CheckoutClient() {
             <div className="mt-4 space-y-2 border-t border-theme-border pt-4 text-sm dark:border-neutral-700">
               <div className="flex justify-between">
                 <span className="font-semibold text-theme-mid dark:text-neutral-400">Subtotal</span>
-                <span className="font-bold text-theme-dark dark:text-neutral-100">${subtotal.toFixed(2)}</span>
+                <span className="font-bold text-theme-dark dark:text-neutral-100">{formatMoney(subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold text-theme-mid dark:text-neutral-400">Ship To</span>
@@ -836,18 +837,18 @@ export function CheckoutClient() {
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold text-theme-mid dark:text-neutral-400">Sales Tax</span>
-                <span className="font-bold text-theme-dark dark:text-neutral-100">${tax.toFixed(2)}</span>
+                <span className="font-bold text-theme-dark dark:text-neutral-100">{formatMoney(tax)}</span>
               </div>
               {shippingCost > 0 && (
                 <div className="flex justify-between">
                   <span className="font-semibold text-theme-mid dark:text-neutral-400">Shipping</span>
-                  <span className="font-bold text-theme-dark dark:text-neutral-100">${shippingCost.toFixed(2)}</span>
+                  <span className="font-bold text-theme-dark dark:text-neutral-100">{formatMoney(shippingCost)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-theme-border pt-3 dark:border-neutral-700">
                 <span className="text-base font-extrabold text-theme-dark dark:text-neutral-100">Total</span>
                 <span className="text-lg font-extrabold text-theme-dark dark:text-neutral-100">
-                  ${total.toFixed(2)}
+                  {formatMoney(total)}
                 </span>
               </div>
             </div>

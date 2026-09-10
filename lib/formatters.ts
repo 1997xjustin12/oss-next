@@ -4,34 +4,48 @@
  */
 
 /**
- * A price with thousands separators and cents only when there are cents.
+ * A price with thousands separators and always two decimal places.
  *
- *   1000     -> '1,000'
- *   2323.00  -> '2,323'
+ *   1000     -> '1,000.00'
+ *   2323     -> '2,323.00'
  *   1020.30  -> '1,020.30'
  *   232.14   -> '232.14'
  *
- * No currency symbol: callers add `$` where they need it, so this stays usable
- * for a bare figure in a spec table or a label that already says "USD".
+ * No currency symbol — {@link formatMoney} adds that, and is what display code
+ * should reach for. This stays bare for the cases that genuinely want a figure
+ * on its own: a spec table, a hidden form value, a label that already says USD.
  *
- * The all-or-nothing decimal rule is the point. `maximumFractionDigits: 2` with
- * `minimumFractionDigits: 0` — the obvious spelling, and what two call sites in
- * this repo currently do — renders 1020.30 as `1,020.3`, which reads as a
- * truncated number rather than a price.
+ * Cents are no longer conditional. They used to be dropped on a whole amount
+ * (`1,000`) and kept otherwise (`1,020.30`), which meant a single price column
+ * could mix the two and read as though the round numbers had been rounded.
+ * Prices are money and money has cents.
  */
 export function formatPrice(value: number | string | null | undefined): string {
   const amount = toNumber(value)
   if (amount === null) return ''
 
-  // Compared in whole cents rather than with `% 1`, because binary floats make
-  // the remainder of a value like 1020.30 a long approximation rather than a
-  // clean 0.3, and a value like 1000.0000001 would otherwise grow decimals.
-  const hasCents = Math.round(amount * 100) % 100 !== 0
-
   return amount.toLocaleString('en-US', {
-    minimumFractionDigits: hasCents ? 2 : 0,
-    maximumFractionDigits: hasCents ? 2 : 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   })
+}
+
+/**
+ * A price ready to show to someone: `$1,300.00`.
+ *
+ * The one formatter display code should use. Before this existed the repo had
+ * six different spellings of "show a price" — bare `toLocaleString()`,
+ * `toFixed(2)`, three separate local `fmt` helpers using `style: 'currency'`,
+ * and raw interpolation of whatever the catalogue sent — so the same container
+ * could appear as `$1,300`, `$1,300.00` and `$1300` on three different screens.
+ *
+ * Unparseable input returns an empty string rather than `$NaN`, matching
+ * {@link formatPrice}. Callers that need to say something in that case (`Call
+ * for pricing`) should test the value, not the formatted output.
+ */
+export function formatMoney(value: number | string | null | undefined): string {
+  const formatted = formatPrice(value)
+  return formatted ? `$${formatted}` : ''
 }
 
 /**

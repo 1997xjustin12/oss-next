@@ -1,7 +1,7 @@
 'use client'
 
 import { useCart } from '@/hooks/useCart'
-import { formatPrice } from '@/lib/formatters'
+import { formatMoney } from '@/lib/formatters'
 
 /**
  * Puts the cart into the submission.
@@ -22,13 +22,13 @@ export function CartLeadFields() {
   if (cart.items.length === 0) return null
 
   const summary = cart.items
-    .map((item) => `${item.quantity} x ${item.name} — $${formatPrice(item.price * item.quantity)}`)
+    .map((item) => `${item.quantity} x ${item.name} — ${formatMoney(item.price * item.quantity)}`)
     .join('\n')
 
   return (
     <>
       <input type="hidden" name="cartSummary" value={summary} />
-      <input type="hidden" name="cartTotal" value={`$${formatPrice(cart.totalPrice)}`} />
+      <input type="hidden" name="cartTotal" value={formatMoney(cart.totalPrice)} />
     </>
   )
 }

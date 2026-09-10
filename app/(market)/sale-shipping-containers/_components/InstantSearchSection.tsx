@@ -17,14 +17,11 @@ import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
 import { QuickViewModal } from './QuickViewModal'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { formatMoney } from '@/lib/formatters'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { normaliseRating } from '@/lib/ratings'
 import type { RawRatings } from '@/lib/ratings'
 import type { Accessory, BadgeTone } from '@/types/product'
-
-function cn(...classes: (string | false | null | undefined)[]) {
-  return classes.filter(Boolean).join(' ')
-}
 
 const INDEX         = process.env.NEXT_PUBLIC_SEARCH_INDEX ?? 'onsite_products_index'
 const SPECIALS_HREF = '/on-site-specials'
@@ -549,7 +546,7 @@ function ProductHit({ hit }: { hit: HitData }) {
       <div className="sm:col-span-3 flex flex-row sm:flex-col items-center sm:items-end justify-between gap-3">
         <div className="text-left sm:text-right">
           <div className="text-3xl font-black leading-none text-theme-dark">
-            {price > 0 ? `$${price.toLocaleString()}` : 'Call for Price'}
+            {price > 0 ? formatMoney(price) : 'Call for Price'}
           </div>
           {price > 0 && <div className="text-[11px] text-theme-muted">+ delivery, no tax</div>}
         </div>
