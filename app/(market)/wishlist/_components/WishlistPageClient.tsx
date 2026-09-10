@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { PlpLink } from '@/components/shared/PlpLink'
 import { Heart } from 'lucide-react'
 import { useWishlist } from '@/hooks/useWishlist'
 import { ROUTES } from '@/config/routes'
@@ -57,12 +58,12 @@ function EmptyWishlist() {
       <p className="text-sm text-theme-muted mb-6 max-w-xs mx-auto">
         Save containers you&apos;re considering — tap the heart on any product page.
       </p>
-      <Link
+      <PlpLink
         href={ROUTES.PLP}
         className="rounded-md bg-theme-primary hover:bg-theme-primary-dark text-white font-semibold px-6 py-3 text-sm transition-colors inline-block"
       >
         Browse Containers
-      </Link>
+      </PlpLink>
     </div>
   )
 }

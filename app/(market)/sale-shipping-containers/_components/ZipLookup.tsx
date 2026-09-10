@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { notifyVisitorZipChange } from '@/lib/visitorZip'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Navigation, Loader2, MapPin } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
@@ -99,6 +100,12 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
       localStorage.setItem('zipcode_label',    formatted)
       localStorage.setItem('zipcode_depot',    nearestLocation ?? '')
       localStorage.setItem('gallery_redirect', galleryRedirect)
+
+      // Same broadcast `useGeoapify.selectResult` makes. Without it this wrote
+      // the visitor's location and nothing on the page noticed: every link kept
+      // the previous ZIP, because `useStoredZip` has no way to see a write made
+      // beside it (the native `storage` event only fires in *other* tabs).
+      notifyVisitorZipChange()
 
       setZip(formatted)
       navigate(postcode, nearestLocation ?? formatted)

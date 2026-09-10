@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PlpLink } from "@/components/shared/PlpLink";
 import { Phone, ShieldCheck, Trophy, Truck } from "lucide-react";
 import { Stars } from "@/components/product/Stars";
 import { ROUTES } from "@/config/routes";
@@ -103,7 +104,7 @@ export function MobileTrustSection() {
 
         <div className="mt-3 grid grid-cols-2 gap-3">
           {BUDGET_OPTIONS.map((option) => (
-            <Link
+            <PlpLink
               key={option.ptype}
               href={`${ROUTES.PLP}?ptype=${option.ptype}`}
               className="rounded-md bg-theme-primary px-2 py-2.5 text-center text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2"
@@ -114,7 +115,7 @@ export function MobileTrustSection() {
               <span className="mt-0.5 block text-[11px] leading-tight text-white/85">
                 {option.note}
               </span>
-            </Link>
+            </PlpLink>
           ))}
         </div>
 

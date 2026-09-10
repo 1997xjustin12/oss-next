@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PlpLink } from "@/components/shared/PlpLink";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { BASE_URL } from "@/lib/helpers";
@@ -235,14 +236,14 @@ export function Hero({
 
             <div className="flex flex-col sm:flex-row justify-evenly gap-3 sm:gap-2">
               {PAY_OPTIONS.map((item) => (
-                <Link
+                <PlpLink
                   key={item.label}
                   prefetch={false}
                   href={item.href}
                   className="shadow-lg text-lg sm:text-[22px] lg:text-[24px] bg-[#F2B824] border-[2px] border-white font-extrabold px-5 py-2 text-center"
                 >
                   {item.label}
-                </Link>
+                </PlpLink>
               ))}
             </div>
 

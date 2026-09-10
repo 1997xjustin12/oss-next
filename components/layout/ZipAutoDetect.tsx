@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { notifyVisitorZipChange } from '@/lib/visitorZip'
 import { usePathname } from 'next/navigation'
 import { getNearestLocation } from '@/lib/locations'
 import { ROUTES } from '@/config/routes'
@@ -67,6 +68,11 @@ export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: 
           localStorage.setItem('zipcode',       postcode)
           localStorage.setItem('zipcode_label', label)
           localStorage.setItem('zipcode_depot', depot)
+
+          // This resolves asynchronously after mount, so without the broadcast
+          // every link on the page kept whatever location it rendered with —
+          // for the rest of that page's life.
+          notifyVisitorZipChange()
         } catch {
           // silently fail — geolocation is best-effort
         }

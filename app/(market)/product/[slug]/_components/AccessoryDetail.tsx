@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { PlpLink } from '@/components/shared/PlpLink'
 import { ShoppingCart, Phone, MapPin, Tag, CheckCircle2, XCircle, Star, ChevronRight } from 'lucide-react'
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { useCart } from '@/hooks/useCart'
@@ -54,7 +55,7 @@ export function AccessoryDetail({ product }: Props) {
       <div className="flex items-center gap-1.5 flex-wrap px-4 sm:px-[5%] py-3 text-xs sm:text-sm text-theme-muted bg-theme-subtle border-b border-theme-border">
         <Link href={ROUTES.HOME} className="hover:text-theme-primary transition-colors">Home</Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-        <Link href={ROUTES.PLP_ACCESSORIES} className="hover:text-theme-primary transition-colors">Container Accessories</Link>
+        <PlpLink href={ROUTES.PLP_ACCESSORIES} className="hover:text-theme-primary transition-colors">Container Accessories</PlpLink>
         <ChevronRight className="w-3.5 h-3.5 opacity-40" />
         <span className="text-theme-dark font-semibold">{product.title}</span>
       </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { PlpLink } from '@/components/shared/PlpLink'
 import { FileText, Trash2 } from 'lucide-react'
 import { ROUTES } from '@/config/routes'
 import { getSavedQuotes, removeSavedQuote, clearSavedQuotes } from '@/lib/savedQuotes'
@@ -71,12 +72,12 @@ export function SavedQuotesList() {
           Save a quote from any container page and it will be kept here, with the
           price and delivery it had at the time.
         </p>
-        <Link
+        <PlpLink
           href={ROUTES.PLP}
           className="mt-6 inline-flex h-11 items-center justify-center rounded-md bg-theme-primary px-6 text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark"
         >
           Browse containers
-        </Link>
+        </PlpLink>
       </div>
     )
   }

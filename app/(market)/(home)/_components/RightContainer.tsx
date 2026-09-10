@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PlpLink } from "@/components/shared/PlpLink";
 import { BASE_URL } from "@/lib/helpers";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 
@@ -110,13 +111,13 @@ export function RightContainer({
           ))}
         </div>
         <div className="mt-[30px]">
-          <Link
+          <PlpLink
             prefetch={false}
             href={`${BASE_URL}/sale-shipping-containers/?ptype=buy`}
             className="font-semibold text-lg sm:text-[20px] py-2 px-8 border transition-colors bg-theme-primary text-white border-theme-primary hover:bg-[#a00f24] sm:bg-transparent sm:text-inherit sm:border-stone-700 sm:hover:bg-stone-100 sm:dark:border-gray-400 sm:dark:text-white sm:dark:hover:bg-gray-800"
           >
             View All Containers &amp; Pricing
-          </Link>
+          </PlpLink>
         </div>
       </div>
     </section>

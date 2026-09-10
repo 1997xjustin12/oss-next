@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { PlpLink } from '@/components/shared/PlpLink';
 import Image from 'next/image';
 import {
   Info,
@@ -259,12 +260,12 @@ function EmptyCart() {
       <p className="mt-2 max-w-sm text-sm text-theme-muted dark:text-neutral-400">
         You haven&apos;t added any containers or accessories yet. Browse our inventory to get started.
       </p>
-      <Link
+      <PlpLink
         href={ROUTES.PLP}
         className="mt-8 inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark"
       >
         Browse Containers
-      </Link>
+      </PlpLink>
       <a
         href="tel:8889779085"
         className="mt-3 text-sm font-semibold text-theme-primary hover:underline dark:text-red-400"

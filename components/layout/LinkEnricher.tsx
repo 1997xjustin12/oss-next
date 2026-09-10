@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { enrichSaleLinks, EXTERNAL_HTML_ATTR } from '@/lib/linkEnrich'
 import { ADMIN_PATHS } from '@/lib/admin'
+import { VISITOR_ZIP_EVENT } from '@/lib/visitorZip'
 
 // Storefront link rewriting has no business running over the admin UI.
 const EXCLUDED_PATHS: string[] = [...ADMIN_PATHS]
@@ -45,9 +46,20 @@ export function LinkEnricher() {
     )
     observerRef.current = observer
 
+    // Re-sweep when the visitor's location changes, not only when more content
+    // arrives. `useGeoapify` calls `enrichSaleLinks()` by hand after a
+    // selection, which works but means every future ZIP input has to remember
+    // to do the same. Listening here makes one broadcast enough:
+    // `notifyVisitorZipChange()` already updates React-rendered links through
+    // `useStoredZip`, and now updates the injected HTML too.
+    window.addEventListener(VISITOR_ZIP_EVENT, enrichSaleLinks)
+    window.addEventListener('storage', enrichSaleLinks)
+
     return () => {
       observerRef.current?.disconnect()
       if (timerRef.current) clearTimeout(timerRef.current)
+      window.removeEventListener(VISITOR_ZIP_EVENT, enrichSaleLinks)
+      window.removeEventListener('storage', enrichSaleLinks)
     }
   }, [pathname])
 

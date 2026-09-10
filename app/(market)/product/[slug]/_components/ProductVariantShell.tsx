@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PlpLink } from "@/components/shared/PlpLink";
 import { ChevronRight } from "lucide-react";
 import {
   getCustomFieldValue,
@@ -111,12 +112,12 @@ export function ProductVariantShell({
           Home
         </Link>
         <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-        <Link
+        <PlpLink
           href={crumb.href}
           className="hover:text-theme-primary transition-colors"
         >
           {crumb.label}
-        </Link>
+        </PlpLink>
         <ChevronRight className="w-3.5 h-3.5 opacity-40" />
         <span className="text-theme-dark font-semibold">
           {activeProduct.title}

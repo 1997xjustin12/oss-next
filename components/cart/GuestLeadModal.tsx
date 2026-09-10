@@ -7,6 +7,7 @@ import { Check, Container, MapPin, Phone, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import Link from 'next/link'
+import { PlpLink } from '@/components/shared/PlpLink'
 import { ROUTES } from '@/config/routes'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { getGuestLead } from '@/lib/guestCapture'
@@ -517,17 +518,17 @@ export function GuestLeadModal({
                     <button type="button" onClick={addToCart} className={PRIMARY_BUTTON}>
                       Add to cart
                     </button>
-                    <Link href={ROUTES.PLP} className={SECONDARY_BUTTON}>
+                    <PlpLink href={ROUTES.PLP} className={SECONDARY_BUTTON}>
                       Continue shopping
-                    </Link>
+                    </PlpLink>
                   </>
                 ) : (
                   // Nothing to add, so the only action is to keep looking —
                   // shown as the primary, since a lone outlined button reads
                   // like the real one is missing.
-                  <Link href={ROUTES.PLP} className={PRIMARY_BUTTON}>
+                  <PlpLink href={ROUTES.PLP} className={PRIMARY_BUTTON}>
                     Continue shopping
-                  </Link>
+                  </PlpLink>
                 )}
               </div>
 

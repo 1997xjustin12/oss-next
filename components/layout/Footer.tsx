@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PlpLink } from "@/components/shared/PlpLink";
 import Image from "next/image";
 import { cacheLife } from "next/cache";
 import { BASE_URL } from "@/lib/helpers";
@@ -169,13 +170,13 @@ export async function Footer() {
           </h2>
           {CONTAINER_LINKS.map(({ href, label }, index) => {
             return (
-              <Link
+              <PlpLink
                 key={`container-link-${index}-${href}`}
                 href={href}
                 className="block text-[13px] text-[#666] mb-2 transition-colors hover:text-white"
               >
                 {label}
-              </Link>
+              </PlpLink>
             );
           })}
         </div>

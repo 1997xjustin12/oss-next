@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PlpLink } from "@/components/shared/PlpLink";
 import { Loader2, MapPin } from "lucide-react";
 import { useGeoapify } from "@/hooks/useGeoapify";
 import type { GeoapifyResult } from "@/hooks/useGeoapify";
@@ -349,13 +350,13 @@ export function ZipLookup1({
             ))}
           </div>
           <div className="flex justify-center">
-            <Link
+            <PlpLink
               prefetch={false}
               href={`${BASE_URL}/sale-shipping-containers?ptype=buy`}
               className="text-white bg-theme-primary text-center py-2 px-5"
             >
               View All Containers & Pricing
-            </Link>
+            </PlpLink>
           </div>
         </>
       )}
