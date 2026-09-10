@@ -1,5 +1,5 @@
 import { connection } from 'next/server'
-import { BACKEND_TIMEOUT_MS, MAX_MESSAGE_CHARS, REGION_MESSAGE } from '@/config/chat'
+import { BACKEND_TIMEOUT_MS, MAX_MESSAGE_CHARS, regionMessage } from '@/config/chat'
 import { allowedCountries, chatRegion } from '@/lib/chatRegion'
 import { clientIp } from '@/lib/clientIp'
 import { userTokenFrom } from '@/lib/chatAuth'
@@ -39,9 +39,14 @@ export async function POST(request: Request): Promise<Response> {
   // ── 1. Region, before anything else ───────────────────────────────────────
   // Each message costs the backend a model call, so a request we are going to
   // refuse should cost as close to nothing as possible — refuse before reading
-  // the body, before touching Redis, before any of it.
-  const region = chatRegion(request)
-  if (!region.allowed) return fail(REGION_MESSAGE, 403)
+  // the body, before the rate-limit round trip, before any of it.
+  //
+  // This does consult the country switch, which is a Redis read, but a cached
+  // one: at most a single read per instance per 20s, shared by every request.
+  // The message is worded from the same list the verdict used, so a refusal can
+  // never name a different set of countries than the one that refused it.
+  const region = await chatRegion(request)
+  if (!region.allowed) return fail(regionMessage(region.countries ?? []), 403)
 
   const limit = await checkRateLimit(request, 'chat')
   const headers = rateLimitHeaders(limit)
@@ -181,7 +186,7 @@ export async function POST(request: Request): Promise<Response> {
  */
 export async function GET(request: Request): Promise<Response> {
   await connection()
-  const region = chatRegion(request)
+  const region = await chatRegion(request)
 
   return Response.json(
     {
@@ -193,7 +198,7 @@ export async function GET(request: Request): Promise<Response> {
       },
       response: { reply: 'string', session_id: 'string', took_ms: 'number' },
       availability: '/api/chat/availability',
-      regions: allowedCountries(),
+      regions: await allowedCountries(),
       available: region.allowed,
     },
     { headers: { 'Cache-Control': 'private, no-store' } },

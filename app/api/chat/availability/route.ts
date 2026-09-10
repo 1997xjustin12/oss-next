@@ -21,7 +21,7 @@ export async function GET(request: Request): Promise<Response> {
   return withRateLimit(
     request,
     async (headers) => {
-      const { allowed, country } = chatRegion(request)
+      const { allowed, country } = await chatRegion(request)
 
       return Response.json(
         { available: allowed, country },

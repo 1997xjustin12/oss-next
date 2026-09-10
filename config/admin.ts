@@ -18,12 +18,13 @@ export const ADMIN_ROUTES = {
   AGENT_TRAFFIC: '/admin/agent-traffic',
   QUOTE_REQUESTS: '/admin/quote-requests',
   CACHE: '/admin/cache',
+  CHAT: '/admin/chat',
 } as const;
 
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -61,6 +62,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'Cache',
     icon: 'DatabaseZap',
     hint: 'Purge cached pages',
+  },
+  {
+    href: ADMIN_ROUTES.CHAT,
+    label: 'AI Assistant',
+    icon: 'MessagesSquare',
+    hint: 'Where the chat is offered',
   },
 ];
 

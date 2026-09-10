@@ -28,11 +28,50 @@ export const MAX_HANDLE_CHARS = 200
  */
 export const BACKEND_TIMEOUT_MS = 45_000
 
-/** Countries the assistant is offered in when nothing is configured. */
-export const DEFAULT_ALLOWED_COUNTRIES = ['US', 'CA'] as const
+/**
+ * The two country sets the admin switch chooses between.
+ *
+ * `STRICT` is the sales markets — the catalogue only ships to the US and
+ * Canada, and every message costs a backend model call, so this is what points
+ * that spend at the customers we can actually serve.
+ *
+ * `RELAXED` adds the Philippines, where the team works. It exists so the
+ * assistant can be exercised against production without a VPN. It is a wider
+ * spend, not a wider market: nothing about the catalogue changes.
+ *
+ * Deliberately two fixed sets rather than a free-text country list. A text
+ * field invites `US,CANADA` or `us, ca ,` and fails in ways nobody notices
+ * until the assistant is off for a whole country.
+ */
+export const CHAT_COUNTRIES_STRICT = ['US', 'CA'] as const
+export const CHAT_COUNTRIES_RELAXED = ['US', 'CA', 'PH'] as const
 
-/** One wording, used by the API and the widget alike. */
-export const REGION_MESSAGE = 'The AI assistant is only available in the US and Canada.'
+/** Countries the assistant is offered in when the switch cannot be read. */
+export const DEFAULT_ALLOWED_COUNTRIES = CHAT_COUNTRIES_STRICT
+
+/** For prose: `['US','CA']` -> `the US and Canada`. */
+const COUNTRY_NAMES: Record<string, string> = {
+  US: 'the US',
+  CA: 'Canada',
+  PH: 'the Philippines',
+}
+
+/**
+ * The refusal wording, built from whichever set is live.
+ *
+ * Derived rather than a constant because the set is now a runtime switch: a
+ * fixed "US and Canada" string would start lying to refused visitors the moment
+ * someone turned the Philippines on.
+ */
+export function regionMessage(countries: readonly string[]): string {
+  const names = countries.map((code) => COUNTRY_NAMES[code] ?? code)
+  const list =
+    names.length <= 1
+      ? (names[0] ?? 'selected regions')
+      : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+
+  return `The AI assistant is only available in ${list}.`
+}
 
 export const GREETING =
   "Hi! Ask me anything about the containers here — what fits your space, what's in your budget, or how two models compare."

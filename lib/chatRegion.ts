@@ -1,4 +1,4 @@
-import { DEFAULT_ALLOWED_COUNTRIES } from '@/config/chat'
+import { chatAllowedCountries } from '@/lib/chatCountries'
 
 /**
  * Who may use the AI assistant.
@@ -22,18 +22,18 @@ const DEBUG_HEADER = 'x-debug-country'
 /**
  * The countries the assistant is offered in.
  *
- * An empty or malformed `CHAT_ALLOWED_COUNTRIES` means *not configured* and
- * falls back to the default — locking every visitor out is not a sane reading
- * of a typo. `XX` is rejected because that is what the platform sends when it
- * cannot place an address: a non-answer, not a country.
+ * Now an admin switch rather than `CHAT_ALLOWED_COUNTRIES` — see
+ * `lib/chatCountries.ts`. Async because it reads that flag; the callers are
+ * all route handlers, so there is nothing to block that was not already
+ * awaiting a request.
+ *
+ * The old env var accepted free text and had to defend against `XX` (what the
+ * platform sends when it cannot place an address) and against a typo locking
+ * every visitor out. The switch chooses between two fixed, valid sets, so
+ * neither failure is reachable any more.
  */
-export function allowedCountries(): string[] {
-  const parsed = (process.env.CHAT_ALLOWED_COUNTRIES ?? '')
-    .split(',')
-    .map((code) => code.trim().toUpperCase())
-    .filter((code) => /^[A-Z]{2}$/.test(code) && code !== 'XX')
-
-  return parsed.length ? parsed : [...DEFAULT_ALLOWED_COUNTRIES]
+export async function allowedCountries(): Promise<string[]> {
+  return chatAllowedCountries()
 }
 
 /**
@@ -80,6 +80,13 @@ export type ChatRegion = {
   /** Returned so a refusal can be explained rather than guessed at. */
   country: string | null
   locked: boolean
+  /**
+   * The set that was applied, or null when the lock is off and none was
+   * consulted. Handed back so a caller can word its refusal from the same list
+   * the decision used, instead of reading the switch a second time and risking
+   * a message that disagrees with the verdict.
+   */
+  countries: string[] | null
 }
 
 /**
@@ -91,15 +98,18 @@ export type ChatRegion = {
  * sending the header the assistant would be off for everyone — the kind of
  * failure you hear about immediately, rather than quietly open to the world.
  */
-export function chatRegion(request: Request): ChatRegion {
+export async function chatRegion(request: Request): Promise<ChatRegion> {
   const locked = isRegionLocked()
   const country = countryOf(request)
 
-  if (!locked) return { allowed: true, country, locked }
+  if (!locked) return { allowed: true, country, locked, countries: null }
+
+  const countries = await allowedCountries()
 
   return {
-    allowed: country !== null && allowedCountries().includes(country),
+    allowed: country !== null && countries.includes(country),
     country,
     locked,
+    countries,
   }
 }
