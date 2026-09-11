@@ -22,7 +22,13 @@ export function applyEnrichParams(href: string, zipcode: string, location: strin
   const parsed = getPathAndParams(href)
   if (!parsed) return href
 
-  const { path, params, isAbsolute } = parsed
+  const { params, isAbsolute } = parsed
+  // Collapsed before matching, and the collapsed form is what gets returned.
+  // A doubled slash — `${origin}/` joined onto a path that starts with `/` —
+  // made `//sale-shipping-containers/` fail the prefix test, so the link was
+  // silently left without the ZIP. Returning the clean path also saves the
+  // redirect Next would otherwise answer a doubled slash with.
+  const path = parsed.path.replace(/\/{2,}/g, '/')
 
   const matches = ENRICHED_PREFIXES.some(
     (prefix) => path === prefix || path.startsWith(prefix + '/'),
@@ -35,6 +41,7 @@ export function applyEnrichParams(href: string, zipcode: string, location: strin
 
   if (isAbsolute) {
     const url = new URL(href)
+    url.pathname = path
     url.search = params.toString()
     return url.toString()
   }
@@ -82,10 +89,18 @@ export function enrichSaleLinks() {
 
   containers.forEach((container) => {
     container.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((a) => {
-      const href = a.getAttribute('href') ?? ''
-      if (!href) return
-      const enriched = applyEnrichParams(href, zipcode, location)
-      if (enriched !== href) a.setAttribute('href', enriched)
+      // Always enrich from the href the page was authored with, never from the
+      // one a previous sweep wrote. `applyEnrichParams` leaves a link that
+      // already names a `location` alone — right for a link written to point at
+      // one depot, but after our own first pass *every* link names one, so a
+      // second ZIP change updated none of them. Remembering the original keeps
+      // both: authored locations are still respected, our own are replaced.
+      const original = a.dataset.enrichOriginal ?? a.getAttribute('href') ?? ''
+      if (!original) return
+      a.dataset.enrichOriginal = original
+
+      const enriched = applyEnrichParams(original, zipcode, location)
+      if (enriched !== a.getAttribute('href')) a.setAttribute('href', enriched)
     })
   })
 }

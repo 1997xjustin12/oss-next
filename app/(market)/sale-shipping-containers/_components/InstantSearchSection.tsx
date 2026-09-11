@@ -8,6 +8,7 @@ import {
   Configure,
   Pagination,
   useInstantSearch,
+  useInstantSearchContext,
   useSearchBox,
 } from 'react-instantsearch'
 import Image from 'next/image'
@@ -170,9 +171,31 @@ function AccessoryCategoryFilter({ selected, onSelect }: { selected: string | nu
 
 // ─── SearchRefresher ──────────────────────────────────────────────────────────
 
+/**
+ * Hands the parent a way to re-run the search — one that is safe to call.
+ *
+ * The parent keeps the function in a ref and calls it when a URL filter
+ * changes. But Next.js keeps a visited listing alive while it is hidden, and
+ * instantsearch.js disposes its instance a tick after the subtree hides
+ * (`setTimeout(cleanup)` in useInstantSearchApi). Come back to the listing with
+ * *different* filters and the parent's filter effect fires against the ref it
+ * still holds — the refresh of that disposed instance — which throws "The
+ * `start` method needs to be called before `refresh`" straight into the error
+ * boundary. Reproduced every time: open the listing, open a product, set a
+ * ZIP there, click back into the listing through any link that now carries it.
+ *
+ * Skipping the call is not just safe but correct. A reconnect remounts a fresh
+ * <InstantSearch> (see `instanceKey` below), and its first search reads the
+ * filters the parent has already written to `filtersRef` — so the new location
+ * is searched either way, by the instance that is actually alive.
+ */
 function SearchRefresher({ onReady }: { onReady: (fn: () => void) => void }) {
-  const { refresh } = useInstantSearch()
-  useEffect(() => { onReady(refresh) }, [onReady, refresh])
+  const search = useInstantSearchContext()
+  useEffect(() => {
+    onReady(() => {
+      if (search.started) search.refresh()
+    })
+  }, [onReady, search])
   return null
 }
 
