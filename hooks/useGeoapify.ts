@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { notifyVisitorZipChange } from '@/lib/visitorZip'
+import { saveVisitorZip } from '@/lib/visitorZip'
 import { getNearestLocation } from '@/lib/locations'
 import { BASE_URL } from '@/lib/helpers'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
@@ -46,6 +46,16 @@ interface UseGeoapifyReturn {
   error: string | null
   clear: () => void
   selectResult: (result: GeoapifyResult) => void
+  /**
+   * The place a typed ZIP refers to, for "typed it and pressed the button".
+   *
+   * Someone who types five digits and clicks straight away beats the debounce,
+   * so the suggestion list is usually still empty at that moment. This checks
+   * the list first and asks the lookup directly if it has not arrived. Null
+   * when the text does not name one place. Pass the result to your own select
+   * handler, so it goes through `selectResult` like a picked suggestion.
+   */
+  resolveTyped: (text: string) => Promise<GeoapifyResult | null>
   depotContainers: FormattedContainerHit[]
   depotContainersLoading: boolean
   depotContainersError: string | null
@@ -195,13 +205,58 @@ export function useGeoapify(
     void fetchDepotContainers(storedDepot || DEFAULT_LOCATION, 'init')
   }, [])
 
+  /** Exact postcode match, else the only result, else nothing. */
+  function pickTyped(candidates: GeoapifyResult[], text: string): GeoapifyResult | null {
+    const norm = (value: string) => value.toUpperCase().replace(/s+/g, '')
+    const wanted = norm(text)
+    if (!wanted) return null
+    return (
+      candidates.find((r) => norm(r.postcode) === wanted) ??
+      (candidates.length === 1 ? candidates[0] : null)
+    )
+  }
+
+  async function resolveTyped(text: string): Promise<GeoapifyResult | null> {
+    const trimmed = text.trim()
+    if (trimmed.length < minLength) return null
+
+    // The current list only answers for the text it was fetched for. It holds
+    // suggestions for whatever the input shows *now*, which need not be this —
+    // "Use my current location" resolves the detected ZIP while the box still
+    // shows the typed one, and its lone suggestion used to win the "only
+    // result" fallback and resolve to the wrong city. An exact postcode match is
+    // safe from any list; the single-result fallback is not.
+    const norm = (value: string) => value.toUpperCase().replace(/s+/g, '')
+    const exact = results.find((r) => norm(r.postcode) === norm(trimmed))
+    if (exact) return exact
+    if (query.trim() === trimmed && results.length === 1) return results[0]
+
+    try {
+      const params = new URLSearchParams({
+        text: trimmed,
+        limit: String(limit),
+        type,
+        filter: `countrycode:${countries}`,
+      })
+      const res = await fetch(`${GEOAPIFY_PROXY}?${params}`)
+      if (!res.ok) return null
+      const json = (await res.json()) as { features?: unknown[] }
+      return pickTyped((json.features ?? []).map(parseFeature), trimmed)
+    } catch {
+      return null
+    }
+  }
+
   function selectResult(result: GeoapifyResult) {
-    localStorage.setItem('zipcode',          result.postcode)
-    localStorage.setItem('zipcode_label',    result.formatted)
-    localStorage.setItem('zipcode_depot',    result.nearestLocation ?? '')
     localStorage.setItem('gallery_redirect', result.galleryRedirect)
-    // Tell readers in this tab, which no storage event reaches.
-    notifyVisitorZipChange()
+    // Storage, the address bar and the broadcast every link listens for, in
+    // one call — see saveVisitorZip. Every component built on this hook gets
+    // all of it by calling selectResult; none has to know the pieces exist.
+    saveVisitorZip({
+      postcode: result.postcode,
+      label: result.formatted,
+      depot: result.nearestLocation ?? '',
+    })
     enrichSaleLinks()
     clear()
 
@@ -216,6 +271,7 @@ export function useGeoapify(
     error,
     clear,
     selectResult,
+    resolveTyped,
     depotContainers,
     depotContainersLoading,
     depotContainersError,

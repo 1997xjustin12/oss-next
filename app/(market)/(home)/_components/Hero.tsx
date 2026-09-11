@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PlpLink } from "@/components/shared/PlpLink";
 import Image from "next/image";
 import type { ReactNode } from "react";

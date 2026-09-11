@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { notifyVisitorZipChange } from '@/lib/visitorZip'
+import { saveVisitorZip } from '@/lib/visitorZip'
 import { usePathname } from 'next/navigation'
 import { getNearestLocation } from '@/lib/locations'
 import { ROUTES } from '@/config/routes'
@@ -64,15 +64,12 @@ export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: 
           const label = [city, state, postcode].filter(Boolean).join(', ')
           const depot = getNearestLocation(latitude, longitude) ?? ''
 
-          localStorage.setItem('userZipCode',   postcode)
-          localStorage.setItem('zipcode',       postcode)
-          localStorage.setItem('zipcode_label', label)
-          localStorage.setItem('zipcode_depot', depot)
-
-          // This resolves asynchronously after mount, so without the broadcast
-          // every link on the page kept whatever location it rendered with —
-          // for the rest of that page's life.
-          notifyVisitorZipChange()
+          localStorage.setItem('userZipCode', postcode)
+          // Through the single write so links update the moment this resolves —
+          // it lands asynchronously after mount, and used to update nothing.
+          // Not `explicit`: nobody chose this, so it must not overwrite a
+          // `?zipcode=` on a link someone deliberately sent.
+          saveVisitorZip({ postcode, label, depot }, { explicit: false })
         } catch {
           // silently fail — geolocation is best-effort
         }

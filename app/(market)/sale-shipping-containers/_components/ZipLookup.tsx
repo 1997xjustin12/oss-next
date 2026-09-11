@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { notifyVisitorZipChange } from '@/lib/visitorZip'
+import { saveVisitorZip } from '@/lib/visitorZip'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Navigation, Loader2, MapPin } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
@@ -20,7 +20,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   const [open, setOpen] = useState(false)
   const [locating, setLocating] = useState(false)
 
-  const { results, loading, error, clear, selectResult } = useGeoapify(zip, {
+  const { results, loading, error, clear, selectResult, resolveTyped } = useGeoapify(zip, {
     type: 'postcode',
     countries: 'us,ca',
     debounceMs: 300,
@@ -58,10 +58,17 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     navigate(result.postcode || zip, result.nearestLocation ?? result.formatted)
   }
 
-  function handleSeePrices() {
+  async function handleSeePrices() {
     const trimmed = zip.trim()
     if (!trimmed) return
     setOpen(false)
+
+    // Typed and submitted without picking a suggestion. This used to save
+    // nothing and navigate with `location` — the depot of the page they were
+    // already on — beside a ZIP that may belong to a different one. Resolved
+    // and saved like a picked suggestion instead; handleSelect navigates.
+    const match = await resolveTyped(trimmed)
+    if (match) return handleSelect(match)
     navigate(trimmed, location ?? trimmed)
   }
 
@@ -96,16 +103,9 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
       if (nearestLocation) redirectParams.set('location', nearestLocation)
       const galleryRedirect = `/sale-shipping-containers?${redirectParams}`
 
-      localStorage.setItem('zipcode',          postcode)
-      localStorage.setItem('zipcode_label',    formatted)
-      localStorage.setItem('zipcode_depot',    nearestLocation ?? '')
       localStorage.setItem('gallery_redirect', galleryRedirect)
-
-      // Same broadcast `useGeoapify.selectResult` makes. Without it this wrote
-      // the visitor's location and nothing on the page noticed: every link kept
-      // the previous ZIP, because `useStoredZip` has no way to see a write made
-      // beside it (the native `storage` event only fires in *other* tabs).
-      notifyVisitorZipChange()
+      // The same single write every ZIP input uses — see saveVisitorZip.
+      saveVisitorZip({ postcode, label: formatted, depot: nearestLocation ?? '' })
 
       setZip(formatted)
       navigate(postcode, nearestLocation ?? formatted)

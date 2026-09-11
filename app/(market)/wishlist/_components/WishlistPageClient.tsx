@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { PlpLink } from '@/components/shared/PlpLink'
 import { Heart } from 'lucide-react'
 import { useWishlist } from '@/hooks/useWishlist'

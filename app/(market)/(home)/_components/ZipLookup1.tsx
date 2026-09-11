@@ -156,7 +156,7 @@ export function ZipLookup1({
   const [selectedZipcode, setSelectedZipcode] = useState(initialZip);
   const [selectedLocation, setSelectedLocation] = useState(location);
 
-  const { results, loading, error, clear, selectResult, depotContainers } = useGeoapify(zip, {
+  const { results, loading, error, clear, selectResult, resolveTyped, depotContainers } = useGeoapify(zip, {
     type: "postcode",
     countries: "us,ca",
     debounceMs: 300,
@@ -217,10 +217,23 @@ export function ZipLookup1({
     }
   }
 
-  function handleSeePrices() {
+  async function handleSeePrices() {
     const trimmed = zip.trim();
     if (!trimmed) return;
     setOpen(false);
+
+    // Typed and submitted without picking a suggestion. This used to navigate
+    // and save nothing, so the ZIP they had just given us steered one page
+    // load and was then forgotten — every link afterwards still carried the
+    // old one. Resolved and saved like a picked suggestion instead. Navigates
+    // here rather than through handleSelect because version 3 of the homepage
+    // deliberately does not navigate on select, and this button always should.
+    const match = await resolveTyped(trimmed);
+    if (match) {
+      selectResult(match);
+      navigate(match.postcode || trimmed, match.nearestLocation ?? match.formatted);
+      return;
+    }
     navigate(trimmed, location ?? trimmed);
   }
 

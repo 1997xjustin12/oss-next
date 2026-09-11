@@ -11,6 +11,27 @@ const eslintConfig = defineConfig([
     files: ["**/*.cjs"],
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },
+  // The visitor's ZIP has exactly one write path: saveVisitorZip() in
+  // lib/visitorZip.ts, or useGeoapify's selectResult, which calls it. Writing
+  // the keys directly skips the address-bar fix and the broadcast every
+  // listing link listens for — which is how two writers used to save a
+  // location that updated no link at all. This makes the mistake a lint error
+  // for a component that has not been written yet.
+  {
+    files: ["**/*.{ts,tsx}"],
+    ignores: ["lib/visitorZip.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.property.name='setItem'][arguments.0.value=/^zipcode(_label|_depot)?$/]",
+          message:
+            "Save the visitor's ZIP with saveVisitorZip() from @/lib/visitorZip (or useGeoapify's selectResult), so the URL, storage and every listing link update together.",
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

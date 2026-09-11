@@ -81,7 +81,7 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
   // caller loading the new depot's containers for a swap.
   const busy = matching || locationChange?.loading === true
 
-  const { results, loading, error, clear, selectResult } = useGeoapify(zip, {
+  const { results, loading, error, clear, selectResult, resolveTyped } = useGeoapify(zip, {
     type: 'postcode',
     countries: 'us,ca',
     debounceMs: 300,
@@ -172,6 +172,27 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
     }
 
     setLocateError(null)
+
+    // The label and depot in storage belong to whatever ZIP is *current*,
+    // which is the detected one only until the visitor types another. After
+    // that, reusing them paired the detected ZIP with the typed ZIP's city and
+    // depot — and saved nothing, so the links kept the typed one. Resolve the
+    // detected ZIP the same way a typed one is, through handleSelect.
+    let current = ''
+    try {
+      current = localStorage.getItem('zipcode') ?? ''
+    } catch {
+      // Unreadable storage — resolving afresh below is the safe path anyway.
+    }
+    if (detected !== current) {
+      setOpen(false)
+      void resolveTyped(detected).then((match) => {
+        if (match) handleSelect(match)
+        else setLocateError("We couldn't place your location — enter your ZIP code instead.")
+      })
+      return
+    }
+
     setZip(label || detected)
     setOpen(false)
     onZipChange?.(detected)
@@ -186,8 +207,17 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
     }
   }
 
-  function handleCheck() {
-    if (results.length === 1) handleSelect(results[0])
+  // Enter without picking. Used to act only when the list had already
+  // narrowed to one, so pressing Enter straight after typing — before the
+  // debounce — did nothing at all.
+  async function handleCheck() {
+    const match = await resolveTyped(zip)
+    // Shares the auto-select latch: the suggestion list can land while this
+    // is still resolving, and both would otherwise select the same place —
+    // two depot lookups and two product swaps for one Enter.
+    if (!match || autoSelectedRef.current === match.placeId) return
+    autoSelectedRef.current = match.placeId
+    handleSelect(match)
   }
 
   const showDropdown = open && (results.length > 0 || loading || !!error)

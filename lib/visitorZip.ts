@@ -34,6 +34,92 @@ export const EMPTY_VISITOR_ZIP: VisitorZip = { postcode: '', label: '', depot: '
  */
 export const VISITOR_ZIP_EVENT = 'oss:visitor-zip-change'
 
+/**
+ * Make the address bar agree with a location the visitor has just chosen.
+ *
+ * {@link readVisitorZip} lets `?zipcode=` beat storage, on purpose: a link
+ * someone was sent should win over what this browser remembers. The cost is
+ * that a stale parameter also beats a ZIP the visitor has *just typed*. Arrive
+ * on `?zipcode=30303`, pick 90001, and storage says 90001 while every reader
+ * still resolves 30303 — and drops the depot, because it belongs to a ZIP that
+ * no longer matches. Measured: all ten listing links on a product page went to
+ * `zipcode=30303` with no `location` at all, straight after choosing 90001.
+ *
+ * An explicit choice is newer information than the link that brought them, so
+ * the parameter is corrected in place. `replaceState`, carrying the existing
+ * state object: this is a correction, not a step anyone should press Back
+ * through, and the history entries the product page keeps must survive it.
+ *
+ * Only parameters **already present** are touched. A page that never had
+ * `?zipcode=` does not need one to be correct — storage answers there — and
+ * growing query strings on the cart or checkout would be a surprise.
+ *
+ * Call before {@link notifyVisitorZipChange}: readers re-resolve on the
+ * signal, so it has to follow the last thing that changes their answer.
+ */
+export function adoptVisitorZipInUrl(postcode: string, depot: string): void {
+  if (typeof window === 'undefined' || !postcode) return
+
+  const url = new URL(window.location.href)
+  const params = url.searchParams
+  let changed = false
+
+  if (params.has('zipcode') && params.get('zipcode') !== postcode) {
+    params.set('zipcode', postcode)
+    changed = true
+  }
+  // The listing carries the depot as `location`. Left stale beside a corrected
+  // ZIP it would describe a different yard from the one now in storage.
+  if (depot && params.has('location') && params.get('location') !== depot) {
+    params.set('location', depot)
+    changed = true
+  }
+
+  if (changed) window.history.replaceState(window.history.state, '', url)
+}
+
+/**
+ * Record where the visitor is. **The only place the ZIP keys are written.**
+ *
+ * Every consequence of a location change hangs off this one call: storage,
+ * the address bar, every `PlpLink` and the navbar through `useStoredZip`, and
+ * the injected-HTML links through `LinkEnricher` — all of which listen for the
+ * broadcast at the end. A component that saves a ZIP any other way skips some
+ * of that, which is not hypothetical: two writers here used to set the keys by
+ * hand and notify nobody, so a detected location updated no link for the rest
+ * of the page's life. An ESLint rule now rejects a direct write to these keys
+ * anywhere but this file, so a new ZIP input cannot repeat it by accident.
+ *
+ * `explicit` separates a choice from a guess. A ZIP the visitor typed or picked
+ * is newer information than the link that brought them here, so it corrects a
+ * stale `?zipcode=` in the address bar. Geolocation is not a choice — it runs
+ * unprompted on page load — and must not overwrite a `?zipcode=` that someone
+ * deliberately sent: that is exactly the case `readVisitorZip` lets the URL
+ * win for.
+ */
+export function saveVisitorZip(
+  zip: { postcode: string; label: string; depot: string },
+  { explicit = true }: { explicit?: boolean } = {},
+): void {
+  if (typeof window === 'undefined' || !zip.postcode) return
+
+  try {
+    localStorage.setItem('zipcode', zip.postcode)
+    // Falls back to the postcode rather than storing an empty label, which
+    // every reader would otherwise render as a blank location.
+    localStorage.setItem('zipcode_label', zip.label || zip.postcode)
+    localStorage.setItem('zipcode_depot', zip.depot)
+  } catch {
+    // Storage unavailable (Safari private mode). The URL fix and the broadcast
+    // below still help this page, so carry on rather than returning.
+  }
+
+  if (explicit) adoptVisitorZipInUrl(zip.postcode, zip.depot)
+
+  // Last, so every reader re-resolves against the final storage *and* URL.
+  notifyVisitorZipChange()
+}
+
 /** Call after writing any of the ZIP keys, so readers in this tab re-read. */
 export function notifyVisitorZipChange(): void {
   if (typeof window === 'undefined') return
