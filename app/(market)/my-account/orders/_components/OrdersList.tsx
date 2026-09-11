@@ -78,7 +78,7 @@ function EmptyOrders() {
 
 export function OrdersList() {
   const { token, user } = useAuth()
-  const { addItem } = useCart()
+  const { addItem } = useCart()
 
   const { addContainerToCart } = useAddContainerToCart()
   const [orders, setOrders] = useState<Order[] | null>(null)
