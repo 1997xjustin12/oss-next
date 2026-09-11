@@ -1,6 +1,8 @@
 import { cartItemsToLineItems, userProfileToCart } from '@/lib/cart'
 import { getGuestEmail } from '@/lib/guestCapture'
+import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import type { Cart, CartItem } from '@/types/cart'
+import type { ProductHit } from '@/types/product'
 import type { User } from '@/types/user'
 import type { Action } from './CartContext'
 
@@ -73,6 +75,89 @@ export function parseServerCart(data: unknown): ParsedServerCart | null {
     updatedAt: typeof d.updated_at === 'string' ? d.updated_at : undefined,
     isAbandoned: typeof d.is_abandoned === 'string' ? d.is_abandoned : null,
   }
+}
+
+// ── Rebuilding restored lines from the catalogue ─────────────────────────────
+//
+// parseServerCart can only give a restored line its SKU, so it stands the SKU
+// in for the id — and every later save sent that SKU as `product_id`. The
+// backend refused the whole request ("A valid integer is required"), so a
+// signed-in customer whose cart had ever been restored could no longer save
+// it, and their order total failed at checkout. Restored lines also lost
+// `isContainer` and `location`, which let a restored container slip past the
+// one-depot-per-order rule.
+//
+// Found by the e2e journeys (tests/e2e/registered.spec.ts), on the test
+// account's own saved cart.
+
+/** Does this line already carry a real catalogue product? */
+function hasRealProduct(item: CartItem): boolean {
+  const id = Number(item.rawHit?.product_id)
+  return Number.isInteger(id) && id > 0
+}
+
+/**
+ * Swap each restored line for the real catalogue product, found by SKU — built
+ * exactly as a fresh add-to-cart builds it, so the line saves, totals and obeys
+ * the location rule like any other. Quantity is kept from the saved cart.
+ *
+ * A line whose product is no longer in the catalogue is dropped: it cannot be
+ * ordered, and one unresolvable line would make the backend refuse the rest.
+ * If the lookup itself fails, the lines are returned untouched — no worse than
+ * before, and the next restore tries again.
+ */
+export async function rebuildRestoredItems(items: CartItem[]): Promise<CartItem[]> {
+  const pending = items.filter((item) => !hasRealProduct(item) && item.sku)
+  if (pending.length === 0) return items
+
+  let products: ProductHit[]
+  try {
+    const skus = pending.map((item) => item.sku!).join(',')
+    const res = await fetch(`/api/products/by-skus?skus=${encodeURIComponent(skus)}`)
+    if (!res.ok) return items
+    products = ((await res.json()) as { products?: ProductHit[] }).products ?? []
+  } catch {
+    return items
+  }
+
+  const bySku = new Map<string, ProductHit>()
+  for (const product of products) {
+    for (const variant of product.variants ?? []) {
+      if (variant?.sku) bySku.set(String(variant.sku).toLowerCase(), product)
+    }
+  }
+
+  const rebuilt: CartItem[] = []
+  for (const item of items) {
+    if (hasRealProduct(item)) {
+      rebuilt.push(item)
+      continue
+    }
+    const product = item.sku ? bySku.get(item.sku.toLowerCase()) : undefined
+    if (!product) {
+      console.warn('[cart] dropped a restored line no longer in the catalogue:', item.sku)
+      continue
+    }
+    const isContainer = isContainerHit(product)
+    rebuilt.push({
+      id: product.objectID,
+      name: product.title,
+      price: product.sale_price,
+      quantity: item.quantity,
+      sku: item.sku,
+      image: product.images?.[0]?.src ?? item.image,
+      rawHit: product,
+      ...(isContainer
+        ? {
+            isContainer: true,
+            location: getCustomFieldValue(product, 'location'),
+            size: getCustomFieldValue(product, 'length_width'),
+            condition: getCustomFieldValue(product, 'condition'),
+          }
+        : {}),
+    })
+  }
+  return rebuilt
 }
 
 // ── Core create/update/close sync ────────────────────────────────────────────

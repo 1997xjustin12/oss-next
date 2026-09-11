@@ -258,6 +258,51 @@ export async function getProductsByIds(productIds: (string | number)[]): Promise
   }
 }
 
+/**
+ * Products by variant SKU — for rebuilding a signed-in customer's saved cart.
+ *
+ * The backend's saved cart echoes back each line's `product_sku` and nothing
+ * that identifies the product otherwise: no `product_id`, no handle. A line
+ * restored without the real product carried its SKU where the numeric id
+ * belongs, and the backend then refused every save and every order total for
+ * the whole cart. Looking the SKU up here recovers the real product.
+ *
+ * Matches on the keyword sub-field when the index has one and on the phrase
+ * otherwise, so an exact SKU like `PADR1212.754P` is found either way without
+ * matching its neighbours. Returns only hits whose SKU really is one asked for.
+ */
+export async function getProductsBySkus(skus: string[]): Promise<ProductHit[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  const wanted = [...new Set(skus.map((sku) => sku.trim()).filter(Boolean))]
+  if (wanted.length === 0) return []
+
+  try {
+    const esResponse = await client.search({
+      index: INDEX,
+      size: wanted.length * 3,
+      query: {
+        bool: {
+          should: [
+            { terms: { 'variants.sku.keyword': wanted } },
+            ...wanted.map((sku) => ({ match_phrase: { 'variants.sku': sku } })),
+          ],
+          minimum_should_match: 1,
+        },
+      },
+    })
+
+    const exact = new Set(wanted.map((sku) => sku.toLowerCase()))
+    return esResponse.hits.hits
+      .map((hit) => formatProduct({ objectID: hit._id ?? '', ...(hit._source as Record<string, unknown>) }) as unknown as ProductHit)
+      .filter((product) => (product.variants ?? []).some((variant) => exact.has(String(variant?.sku ?? '').toLowerCase())))
+  } catch {
+    return []
+  }
+}
+
 export type ProductHandleEntry = { handle: string; updatedAt?: string }
 
 // Every published product's handle + updated_at, for app/sitemap.ts. Uses

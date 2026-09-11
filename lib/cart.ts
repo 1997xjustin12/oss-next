@@ -45,6 +45,19 @@ export function requestCartLocationConflict(request: CartLocationConflictRequest
   window.dispatchEvent(new CustomEvent(CART_LOCATION_CONFLICT_EVENT, { detail: request }))
 }
 
+// The product's real numeric id. This used to send `objectID`, which is only
+// the same number by coincidence — for a line rebuilt from the saved cart it
+// was the SKU, and the backend refused the entire request over it ("A valid
+// integer is required"). `objectID` stays as the fallback for the lines that
+// have no `product_id` field, and only when it is a whole number.
+function lineProductId(rawHit: NonNullable<CartItem['rawHit']>): number | string {
+  const productId = Number(rawHit.product_id)
+  if (Number.isInteger(productId) && productId > 0) return productId
+  const objectId = Number(rawHit.objectID)
+  if (Number.isInteger(objectId) && objectId > 0) return objectId
+  return rawHit.objectID
+}
+
 // Backend create/update expect the full raw hit + quantity per item
 // (CartLineItem), not the simplified shape CartContext keeps for display.
 // Items missing rawHit (legacy localStorage carts saved before that field
@@ -56,7 +69,7 @@ export function requestCartLocationConflict(request: CartLocationConflictRequest
 export function cartItemsToLineItems(items: CartItem[]): CartLineItem[] {
   return items
     .filter((item): item is CartItem & { rawHit: NonNullable<CartItem['rawHit']> } => !!item.rawHit)
-    .map((item) => ({ ...item.rawHit, product_id: item.rawHit.objectID, quantity: item.quantity }))
+    .map((item) => ({ ...item.rawHit, product_id: lineProductId(item.rawHit), quantity: item.quantity }))
 }
 
 // Maps a normalized User (with its nested profile) onto /api/cart/create's

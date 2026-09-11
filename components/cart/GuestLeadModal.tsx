@@ -152,6 +152,18 @@ export function GuestLeadModal({
     onAddressZipChange?.(result.postcode)
   }
 
+  // The latest onDismiss, read by the open/close effect below — and kept OUT of
+  // that effect's dependencies on purpose. ProductInfoPanel passes a new
+  // function on every render, and each new one re-ran the effect, which
+  // re-focused the Name field. So whenever the product page re-rendered behind
+  // the open modal (delivery rates arriving, the depot swap settling), the
+  // cursor was pulled out of whatever the visitor was typing in, and the rest
+  // of their email went into the Name field. Found by the e2e journeys.
+  const onDismissRef = useRef(onDismiss)
+  useEffect(() => {
+    onDismissRef.current = onDismiss
+  }, [onDismiss])
+
   useEffect(() => {
     if (!open) return
 
@@ -162,7 +174,7 @@ export function GuestLeadModal({
       // behind and the next visitor to open the modal lands on a stale quote
       // instead of the form.
       setStep('details')
-      onDismiss()
+      onDismissRef.current()
     }
     window.addEventListener('keydown', onKey)
 
@@ -175,7 +187,7 @@ export function GuestLeadModal({
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = previousOverflow
     }
-  }, [open, onDismiss])
+  }, [open])
 
   if (!open) return null
 

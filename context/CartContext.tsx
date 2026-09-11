@@ -5,7 +5,7 @@ import { AddedToCartModal } from '@/components/cart/AddedToCartModal'
 import { CartLocationConflictHost } from '@/components/cart/CartLocationConflictHost'
 import { useAuth } from '@/hooks/useAuth'
 import { isCartTimedOut } from '@/lib/cartAbandonment'
-import { notifyAbandonedCart, parseServerCart, sendAbandonedCartBeacon, syncCartToBackend } from './cartSync'
+import { notifyAbandonedCart, parseServerCart, rebuildRestoredItems, sendAbandonedCartBeacon, syncCartToBackend } from './cartSync'
 import type { Cart, CartItem } from '@/types/cart'
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -153,13 +153,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     fetch('/api/cart/active', { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: unknown) => {
+      .then(async (data: unknown) => {
         if (cancelled || !data) return
         const server = parseServerCart(data)
         if (!server) return
 
-        if (server.items.length > 0) {
-          dispatch({ type: 'RESTORE_CART', payload: { ...server, ...totals(server.items) } })
+        // The saved cart only records each line's SKU; rebuild the lines as
+        // real catalogue products before they become the cart — see
+        // rebuildRestoredItems for what breaking this cost.
+        const items = server.items.length > 0 ? await rebuildRestoredItems(server.items) : []
+        if (cancelled) return
+
+        if (items.length > 0) {
+          dispatch({ type: 'RESTORE_CART', payload: { ...server, items, ...totals(items) } })
         } else {
           dispatch({ type: 'SET_SERVER_META', payload: { cartId: server.cartId, referenceNumber: server.referenceNumber } })
           dispatch({ type: 'SET_ABANDONED', payload: server.isAbandoned ?? null })

@@ -1,4 +1,5 @@
 import type { CheckoutPayload, GetOrderTotalPayload, Order, OrderTotal } from '@/types/order'
+import { logBackendRejection } from '@/lib/backendError'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
 const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
@@ -44,6 +45,7 @@ export async function getOrderTotal(payload: GetOrderTotalPayload): Promise<Orde
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    logBackendRejection('order.service get-total', res.status, data)
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not calculate order total.')
   }
 

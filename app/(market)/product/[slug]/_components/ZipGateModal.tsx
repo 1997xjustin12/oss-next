@@ -74,11 +74,19 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
     limit: 5,
   })
 
+  // Latest onDismiss, kept out of the effect's dependencies: the parent passes a
+  // new function every render, and re-running the effect re-focused the input
+  // on every re-render behind the gate. Same fix as GuestLeadModal.
+  const onDismissRef = useRef(onDismiss)
+  useEffect(() => {
+    onDismissRef.current = onDismiss
+  }, [onDismiss])
+
   useEffect(() => {
     if (!open) return
 
     function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') onDismiss()
+      if (event.key === 'Escape') onDismissRef.current()
     }
     window.addEventListener('keydown', onKey)
 
@@ -90,7 +98,7 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = previousOverflow
     }
-  }, [open, onDismiss])
+  }, [open])
 
   /**
    * Save the place and close the gate — unless the cart holds a container from
