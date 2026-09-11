@@ -12,7 +12,8 @@
     "resources:check": "node --experimental-strip-types scripts/check-pdp-resources.mjs",
     "predev": "node scripts/generate-pdp-resources.mjs",
     "prebuild": "node scripts/generate-pdp-resources.mjs",
-    "prepare": "node -e \"try{require('child_process').execSync('git config core.hooksPath .githooks',{stdio:'ignore'})}catch{}\""
+    "prepare": "node -e \"try{require('child_process').execSync('git config core.hooksPath .githooks',{stdio:'ignore'})}catch{}\"",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^8.19.1",
@@ -29,6 +30,7 @@
     "react-instantsearch": "^7.37.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/braintree": "^3.4.4",
     "@types/braintree-web-drop-in": "^1.39.4",

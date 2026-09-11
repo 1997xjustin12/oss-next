@@ -47,3 +47,9 @@ onsite_headless_prototype
 # copied from the legacy app — none of which a checkout needs in order to build.
 # Code-level conventions that DO need to travel live in AGENTS.md at the root.
 /docs/
+
+# Playwright end-to-end runs
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
