@@ -11,7 +11,6 @@ import {
   isInStockHit,
 } from "@/lib/pricing";
 import { normaliseRating } from "@/lib/ratings";
-import { CartLocationConflictModal } from "@/components/cart/CartLocationConflictModal";
 import { GuestLeadModal } from "@/components/cart/GuestLeadModal";
 import type { QuoteLine } from "@/components/cart/GuestLeadModal";
 import { getGuestLead, setGuestLead } from "@/lib/guestCapture";
@@ -520,12 +519,8 @@ export function ProductInfoPanel({
   onVariantChange,
   locationChange,
 }: Props) {
-  const {
-    conflict: locationConflict,
-    clearConflict: clearLocationConflict,
-    addContainerToCart,
-    clearCart,
-  } = useAddContainerToCart();
+  // A location conflict is shown by the global prompt — see CartLocationConflictHost.
+  const { addContainerToCart } = useAddContainerToCart();
 
   // The currently matched product — starts as the page product, updates on every option change
   const [activeProduct, setActiveProduct] = useState<ProductHit>(product);
@@ -1970,15 +1965,6 @@ export function ProductInfoPanel({
         onAddressZipChange={setPickedZip}
       />
 
-      {locationConflict && (
-        <CartLocationConflictModal
-          open={true}
-          onClose={clearLocationConflict}
-          currentLocation={locationConflict.currentLocation}
-          newLocation={locationConflict.newLocation}
-          onClearCart={clearCart}
-        />
-      )}
     </div>
   );
 }

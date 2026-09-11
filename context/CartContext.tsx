@@ -2,6 +2,7 @@
 
 import { createContext, useEffect, useReducer, useRef, useState } from 'react'
 import { AddedToCartModal } from '@/components/cart/AddedToCartModal'
+import { CartLocationConflictHost } from '@/components/cart/CartLocationConflictHost'
 import { useAuth } from '@/hooks/useAuth'
 import { isCartTimedOut } from '@/lib/cartAbandonment'
 import { notifyAbandonedCart, parseServerCart, sendAbandonedCartBeacon, syncCartToBackend } from './cartSync'
@@ -258,6 +259,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     <CartContext value={value}>
       {children}
       <AddedToCartModal item={addedItem} onClose={() => setAddedItem(null)} />
+      {/* The location-conflict prompt for every page — see CartLocationConflictHost. */}
+      <CartLocationConflictHost />
     </CartContext>
   )
 }

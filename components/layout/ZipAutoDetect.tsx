@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { saveVisitorZip } from '@/lib/visitorZip'
+import { useCart } from '@/hooks/useCart'
+import { findLocationConflict } from '@/lib/cart'
 import { usePathname } from 'next/navigation'
 import { getNearestLocation } from '@/lib/locations'
 import { ROUTES } from '@/config/routes'
@@ -21,6 +23,14 @@ type Props = {
 
 export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: Props) {
   const pathname = usePathname()
+
+  // Through a ref: the lookup below resolves seconds after mount, and the cart
+  // only hydrates from storage in an effect — a closure would see it empty.
+  const { cart } = useCart()
+  const cartRef = useRef(cart)
+  useEffect(() => {
+    cartRef.current = cart
+  }, [cart])
 
   useEffect(() => {
     // Skip on excluded pages
@@ -65,6 +75,12 @@ export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: 
           const depot = getNearestLocation(latitude, longitude) ?? ''
 
           localStorage.setItem('userZipCode', postcode)
+
+          // A container from another depot is already in the cart: keep the
+          // location that cart was built for. No prompt — nobody asked for this
+          // location, so refusing it quietly is the only honest outcome. The
+          // detected ZIP is still remembered above for "use my location".
+          if (findLocationConflict(cartRef.current, { isContainer: true, location: depot })) return
           // Through the single write so links update the moment this resolves —
           // it lands asynchronously after mount, and used to update nothing.
           // Not `explicit`: nobody chose this, so it must not overwrite a

@@ -6,6 +6,8 @@ import { getNearestLocation } from '@/lib/locations'
 import { BASE_URL } from '@/lib/helpers'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { useCart } from '@/hooks/useCart'
+import { findLocationConflict, requestCartLocationConflict } from '@/lib/cart'
 import type { FormattedContainerHit } from '@/types/product'
 export type { ShippingContainerHit, FormattedContainerHit } from '@/types/product'
 
@@ -45,7 +47,24 @@ interface UseGeoapifyReturn {
   loading: boolean
   error: string | null
   clear: () => void
-  selectResult: (result: GeoapifyResult) => void
+  /**
+   * Save a picked place as the visitor's location. Returns **false** when it
+   * was refused — the cart holds a container from another depot — in which
+   * case the conflict prompt is already showing and the caller must stop:
+   * whatever it was about to do next (swap the product, navigate to the
+   * listing) belongs to a location change that did not happen.
+   *
+   * `retry` is what to run if the visitor clears their cart to switch. Pass
+   * the handler that called this, so the whole action completes — not just the
+   * save. Without it, clearing the cart saves the location and stops there.
+   */
+  selectResult: (result: GeoapifyResult, retry?: () => void) => boolean
+  /**
+   * The same guard, for a location that did not come from a picked
+   * suggestion — "use my current location", say. True when the change may go
+   * ahead; false when it was refused and the prompt is showing.
+   */
+  confirmLocationChange: (depot: string, retry?: () => void) => boolean
   /**
    * The place a typed ZIP refers to, for "typed it and pressed the button".
    *
@@ -109,6 +128,15 @@ export function useGeoapify(
   }: UseGeoapifyOptions = {},
 ): UseGeoapifyReturn {
   const [results, setResults] = useState<GeoapifyResult[]>([])
+
+  // Read through a ref so a retry run after the cart is cleared sees the
+  // cleared cart. A closure would hold the cart from the render that blocked
+  // it, and refuse again.
+  const { cart } = useCart()
+  const cartRef = useRef(cart)
+  useEffect(() => {
+    cartRef.current = cart
+  }, [cart])
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -247,7 +275,34 @@ export function useGeoapify(
     }
   }
 
-  function selectResult(result: GeoapifyResult) {
+  /**
+   * One depot per order: a location change that would leave the cart holding a
+   * container from somewhere else is refused, and the global prompt explains.
+   * Same rule add-to-cart enforces (`findLocationConflict`), applied from the
+   * other direction. Lives here so every ZIP input built on this hook is
+   * covered without doing anything.
+   *
+   * A place with no depot passes: there is nothing to compare, and refusing
+   * would leave the visitor unable to enter a ZIP at all.
+   */
+  function confirmLocationChange(depot: string, retry?: () => void): boolean {
+    if (!depot) return true
+    const clash = findLocationConflict(cartRef.current, { isContainer: true, location: depot })
+    if (!clash?.location) return true
+
+    requestCartLocationConflict({
+      currentLocation: clash.location,
+      newLocation: depot,
+      reason: 'zip',
+      retry,
+    })
+    return false
+  }
+
+  function selectResult(result: GeoapifyResult, retry?: () => void): boolean {
+    const depot = result.nearestLocation ?? ''
+    if (!confirmLocationChange(depot, retry ?? (() => selectResult(result)))) return false
+
     localStorage.setItem('gallery_redirect', result.galleryRedirect)
     // Storage, the address bar and the broadcast every link listens for, in
     // one call — see saveVisitorZip. Every component built on this hook gets
@@ -263,6 +318,7 @@ export function useGeoapify(
     if (result.nearestLocation) {
       void fetchDepotContainers(result.nearestLocation, 'select')
     }
+    return true
   }
 
   return {
@@ -271,6 +327,7 @@ export function useGeoapify(
     error,
     clear,
     selectResult,
+    confirmLocationChange,
     resolveTyped,
     depotContainers,
     depotContainersLoading,

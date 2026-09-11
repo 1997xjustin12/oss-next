@@ -14,6 +14,37 @@ export function findLocationConflict(
   )
 }
 
+// ── Location conflict prompt ─────────────────────────────────────────────────
+//
+// One modal, mounted once inside CartProvider, answers every attempt to break
+// the rule above — adding a container from another depot, or moving the
+// visitor's ZIP to another depot while the cart holds one. Triggered by event
+// rather than rendered per page, so nothing that can cause a conflict has to
+// know how to show one: the ZIP inputs never did, and two add-to-cart surfaces
+// each carried their own copy of the modal.
+
+export const CART_LOCATION_CONFLICT_EVENT = 'oss:cart-location-conflict'
+
+export type CartLocationConflictRequest = {
+  /** The depot the cart's containers ship from. */
+  currentLocation: string
+  /** The depot the blocked action would have moved to. */
+  newLocation: string
+  /** What was blocked — the modal words itself, and offers actions, to fit. */
+  reason: 'add' | 'zip'
+  /**
+   * Finish the blocked action once the cart has been cleared. The prompt runs
+   * it only after the cleared cart has actually rendered, so a guard that reads
+   * the cart sees it empty rather than the stale copy that blocked it.
+   */
+  retry?: () => void
+}
+
+export function requestCartLocationConflict(request: CartLocationConflictRequest): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(CART_LOCATION_CONFLICT_EVENT, { detail: request }))
+}
+
 // Backend create/update expect the full raw hit + quantity per item
 // (CartLineItem), not the simplified shape CartContext keeps for display.
 // Items missing rawHit (legacy localStorage carts saved before that field

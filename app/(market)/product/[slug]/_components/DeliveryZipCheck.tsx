@@ -100,6 +100,13 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
   // Auto-select once the suggestions narrow to exactly one match — same
   // convenience ZipLookup1 offers on the homepage.
   useEffect(() => {
+    // Only for something the visitor typed. The box starts out holding the
+    // stored location's label, and that label's lookup narrows to one result —
+    // so merely focusing the field used to re-select the current location. That
+    // was a silent no-op until selecting could be refused: with a cart from
+    // another depot it now raised the conflict prompt for a location nobody
+    // tried to change.
+    if (typedZip === null) return
     if (!open || results.length !== 1) return
     if (autoSelectedRef.current === results[0].placeId) return
 
@@ -128,8 +135,11 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
   }
 
   function handleSelect(result: GeoapifyResult) {
+    // Refused when the cart holds a container from another depot. Stop here:
+    // swapping the page onto the new depot's container would show a location
+    // the prompt has just said cannot be used.
+    if (!selectResult(result, () => handleSelect(result))) return
     setZip(result.formatted)
-    selectResult(result) // persists zipcode/zipcode_label/zipcode_depot for the rest of the site
     onZipChange?.(result.postcode)
     setOpen(false)
     if (!result.nearestLocation) return

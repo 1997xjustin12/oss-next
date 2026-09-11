@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, MapPin, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
@@ -93,6 +93,23 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
   }, [open, onDismiss])
 
   /**
+   * Save the place and close the gate — unless the cart holds a container from
+   * another depot. Then the conflict prompt opens over this dialog and the gate
+   * stays put, so the visitor can pick somewhere else; clearing the cart from
+   * the prompt runs this again and finishes the job.
+   */
+  const apply = useCallback(
+    (result: GeoapifyResult) => {
+      const finish = () => onResolved(result.postcode, result.nearestLocation)
+      // The retry saves again and finishes — it runs after the cart is cleared,
+      // so the second selectResult is allowed.
+      if (!selectResult(result, () => selectResult(result) && finish())) return
+      finish()
+    },
+    [selectResult, onResolved],
+  )
+
+  /**
    * Resolve on its own when the search settles on one place.
    *
    * With a single result there is nothing to choose between, so asking someone
@@ -113,9 +130,8 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
 
     autoResolved.current = true
     const only = results[0]
-    selectResult(only)
-    onResolved(only.postcode, only.nearestLocation)
-  }, [open, chosen, loading, results, zip, selectResult, onResolved])
+    apply(only)
+  }, [open, chosen, loading, results, zip, apply])
 
   if (!open) return null
 
@@ -150,8 +166,7 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
     // No match yet: `message` above explains why, rather than the button
     // sitting greyed out with nothing said.
     if (!match) return
-    selectResult(match)
-    onResolved(match.postcode, match.nearestLocation)
+    apply(match)
   }
 
   return createPortal(

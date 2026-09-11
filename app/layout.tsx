@@ -70,6 +70,19 @@ export default function RootLayout({
             <WishlistProvider>
               {children}
               <Suspense><GuestCartCapture /></Suspense>
+              {/* Inside CartProvider: it will not move a visitor off the depot
+                  their cart was built for, so it has to be able to read the
+                  cart. Rendered outside it, useCart() throws and takes down
+                  every page. */}
+              <Suspense>
+                <ZipAutoDetect excludePaths={[
+                  ROUTES.CHECKOUT,
+                  ROUTES.CART,
+                  ROUTES.ACCOUNT.ROOT,
+                  ROUTES.WISHLIST,
+                  ...ADMIN_PATHS,
+                ]} />
+              </Suspense>
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>
@@ -78,15 +91,6 @@ export default function RootLayout({
             Suspense boundary that useSearchParams requires, like its
             neighbours here. */}
         <Suspense><DemoResets /></Suspense>
-        <Suspense>
-          <ZipAutoDetect excludePaths={[
-            ROUTES.CHECKOUT,
-            ROUTES.CART,
-            ROUTES.ACCOUNT.ROOT,
-            ROUTES.WISHLIST,
-            ...ADMIN_PATHS,
-          ]} />
-        </Suspense>
       </body>
     </html>
   );

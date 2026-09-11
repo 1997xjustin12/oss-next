@@ -84,14 +84,22 @@ export function DeliveryZipEditor({ handle, zip, quantity }: Props) {
     setPending(true)
     setListOpen(false)
 
+    let allowed = true
     try {
       // The hook's own recorder, rather than writing the keys here: it sets
       // four of them plus the enriched sale links, and a partial copy would
       // leave the site half-moved to the new location.
-      selectResult(result)
+      allowed = selectResult(result, () => pick(result))
     } catch {
       // Private mode throws on localStorage. The navigation below still carries
       // the ZIP, so the quote is still right — only "remember it" is lost.
+    }
+    // Refused: the cart holds a container from another depot and the prompt is
+    // showing. Quoting delivery to a location they cannot order for would
+    // contradict it, so the page stays where it is.
+    if (!allowed) {
+      setPending(false)
+      return
     }
 
     router.push(

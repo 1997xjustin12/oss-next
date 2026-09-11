@@ -20,7 +20,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   const [open, setOpen] = useState(false)
   const [locating, setLocating] = useState(false)
 
-  const { results, loading, error, clear, selectResult, resolveTyped } = useGeoapify(zip, {
+  const { results, loading, error, clear, selectResult, confirmLocationChange, resolveTyped } = useGeoapify(zip, {
     type: 'postcode',
     countries: 'us,ca',
     debounceMs: 300,
@@ -52,8 +52,10 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   }
 
   function handleSelect(result: GeoapifyResult) {
+    // Refused when the cart holds a container from another depot; the prompt
+    // is showing, so stay on this listing rather than navigate to the new one.
+    if (!selectResult(result, () => handleSelect(result))) return
     setZip(result.formatted)
-    selectResult(result)
     setOpen(false)
     navigate(result.postcode || zip, result.nearestLocation ?? result.formatted)
   }
@@ -104,6 +106,8 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
       const galleryRedirect = `/sale-shipping-containers?${redirectParams}`
 
       localStorage.setItem('gallery_redirect', galleryRedirect)
+      // Same one-depot-per-order guard as a picked suggestion.
+      if (!confirmLocationChange(nearestLocation ?? '', () => void handleUseLocation())) return
       // The same single write every ZIP input uses — see saveVisitorZip.
       saveVisitorZip({ postcode, label: formatted, depot: nearestLocation ?? '' })
 

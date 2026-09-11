@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Phone, ShoppingCart, MapPin } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
-import { CartLocationConflictModal } from '@/components/cart/CartLocationConflictModal'
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'
 import { Stars } from '@/components/product/Stars'
 import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
@@ -30,7 +29,8 @@ function getCF(hit: HitData, name: string): string {
 
 export function QuickViewModal({ open, onClose, hit }: Props) {
   const [added, setAdded] = useState(false)
-  const { conflict, clearConflict, addContainerToCart, clearCart } = useAddContainerToCart()
+  // A location conflict is shown by the global prompt — see CartLocationConflictHost.
+  const { addContainerToCart } = useAddContainerToCart()
 
   const images     = hit.images?.length ? hit.images.map((img) => img.src) : []
   const sku        = hit.variants?.[0]?.sku ?? ''
@@ -163,15 +163,6 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
         </div>
       </Modal>
 
-      {conflict && (
-        <CartLocationConflictModal
-          open={true}
-          onClose={clearConflict}
-          currentLocation={conflict.currentLocation}
-          newLocation={conflict.newLocation}
-          onClearCart={clearCart}
-        />
-      )}
     </>
   )
 }

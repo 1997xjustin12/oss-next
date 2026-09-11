@@ -203,8 +203,10 @@ export function ZipLookup1({
   // below driven by sale_price, so selecting a suggestion there only narrows
   // depotContainers to that location instead of navigating away.
   function handleSelect(result: GeoapifyResult) {
+    // Refused when the cart holds a container from another depot — the prompt
+    // is already up, and navigating to the new location would contradict it.
+    if (!selectResult(result, () => handleSelect(result))) return;
     setZip(result.formatted);
-    selectResult(result);
     setOpen(false);
     setSelectedZipcode(result.postcode || zip);
     setSelectedLocation(result.nearestLocation ?? location);
@@ -230,7 +232,7 @@ export function ZipLookup1({
     // deliberately does not navigate on select, and this button always should.
     const match = await resolveTyped(trimmed);
     if (match) {
-      selectResult(match);
+      if (!selectResult(match, () => void handleSeePrices())) return;
       navigate(match.postcode || trimmed, match.nearestLocation ?? match.formatted);
       return;
     }
