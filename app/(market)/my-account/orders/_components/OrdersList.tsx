@@ -8,6 +8,8 @@ import { PlpLink } from '@/components/shared/PlpLink'
 import { PackageSearch, Package, RotateCcw, Star } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
+import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
+import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import { ROUTES } from '@/config/routes'
 import { ReviewFormModal } from './ReviewFormModal'
 import type { Order, OrderStatus } from '@/types/order'
@@ -76,7 +78,9 @@ function EmptyOrders() {
 
 export function OrdersList() {
   const { token, user } = useAuth()
-  const { addItem } = useCart()
+  const { addItem } = useCart()
+
+  const { addContainerToCart } = useAddContainerToCart()
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [products, setProducts] = useState<Record<string, ProductHit>>({})
   const [error, setError] = useState<string | null>(null)
@@ -116,7 +120,8 @@ export function OrdersList() {
   function handleBuyAgain(productId: string | number, quantity: number) {
     const product = products[String(productId)]
     if (!product) return
-    addItem({
+
+    const base = {
       id: product.objectID,
       name: product.title,
       price: product.sale_price,
@@ -124,7 +129,25 @@ export function OrdersList() {
       sku: product.variants?.[0]?.sku,
       image: product.images?.[0]?.src,
       rawHit: product,
-    })
+    }
+
+    // A shipping container goes through the same path as the product page, so
+    // the one-depot-per-order rule applies. Re-adding one with plain addItem
+    // left it unmarked — neither `isContainer` nor `location` — so the cart
+    // treated it like an accessory: it was never blocked against the cart's
+    // depot, and once in the cart it could not block a ZIP change either.
+    // Accessories have no location constraint and keep the plain add.
+    if (isContainerHit(product)) {
+      addContainerToCart({
+        ...base,
+        size: getCustomFieldValue(product, 'length_width'),
+        condition: getCustomFieldValue(product, 'condition'),
+        isContainer: true,
+        location: getCustomFieldValue(product, 'location'),
+      })
+      return
+    }
+    addItem(base)
   }
 
   // Checks for an existing review by this user on this product first (per
