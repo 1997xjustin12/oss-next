@@ -1,9 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { BASE_URL } from "@/lib/helpers";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
-import { FEATURED_CONTAINERS, type FeaturedContainer } from "@/config/featuredContainers";
+import { FEATURED_CONTAINERS, featuredListingHref, type FeaturedContainer } from "@/config/featuredContainers";
 import { StartingPriceLabel } from "./StartingPriceLabel";
 
 function Card({ item }: { item: FeaturedContainer }) {
@@ -34,13 +33,13 @@ function Card({ item }: { item: FeaturedContainer }) {
             Buy &middot; Rent &middot; Rent-To-Own
           </div>
         </div>
-        <Link
+        <PlpLink
           prefetch={false}
-          href={item.cta.url}
+          href={featuredListingHref(item.spec)}
           className="shrink-0 bg-theme-primary text-center text-white py-2 px-4 text-xs sm:text-sm font-semibold whitespace-nowrap hover:bg-[#a00f24] transition-colors"
         >
-          {item.cta.label}
-        </Link>
+          {item.ctaLabel}
+        </PlpLink>
       </div>
     </div>
   );

@@ -3,10 +3,11 @@ import type { GuestLead } from '@/lib/guestCapture'
 /**
  * Quotes the visitor has saved, newest first.
  *
- * Kept in this browser only. There is no server-side store for these yet —
- * `deliverQuoteRequest()` is still a stub — so a saved quote survives a reload
- * and nothing more. Clearing site data loses them, and they do not follow the
- * visitor to another device.
+ * Kept in this browser only. The quote request behind each one is filed
+ * separately (`deliverQuoteRequest()` stores it where the admin can read it);
+ * this list is the visitor's own copy, so it survives a reload and nothing
+ * more. Clearing site data loses it, and it does not follow the visitor to
+ * another device.
  *
  * Each entry is a snapshot, not a live reference: the price, delivery and
  * distance are copied at the moment of saving. That is the point of saving one

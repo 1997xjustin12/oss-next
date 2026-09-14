@@ -1,15 +1,14 @@
 import Image from "next/image";
-import Link from "next/link";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { BASE_URL } from "@/lib/helpers";
 import { formatMoney } from "@/lib/formatters";
 import { lowestPrice } from "@/lib/pricing";
-import { FEATURED_CONTAINERS, type FeaturedContainer } from "@/config/featuredContainers";
+import { FEATURED_CONTAINERS, featuredListingHref, type FeaturedContainer } from "@/config/featuredContainers";
 import type { ProductHit } from "@/types/product";
 import { CardCarousel } from "./CardCarousel";
 
-// The four featured containers, priced from this page's depot. The "#" CTA
-// links are still placeholders — see the note in ProductDetail.tsx.
+// The four featured containers, priced from this page's depot; each button
+// opens the listing filtered to that container.
 
 function Card({ item, price }: { item: FeaturedContainer; price: number | null }) {
   return (
@@ -40,13 +39,13 @@ function Card({ item, price }: { item: FeaturedContainer; price: number | null }
             Buy &middot; Rent &middot; Rent-To-Own
           </div>
         </div>
-        <Link
+        <PlpLink
           prefetch={false}
-          href={item.cta.url}
+          href={featuredListingHref(item.spec)}
           className="shrink-0 bg-theme-primary text-center text-white py-2 px-4 text-xs sm:text-sm font-semibold whitespace-nowrap hover:bg-[#a00f24] transition-colors"
         >
-          {item.cta.label}
-        </Link>
+          {item.ctaLabel}
+        </PlpLink>
       </div>
     </div>
   );

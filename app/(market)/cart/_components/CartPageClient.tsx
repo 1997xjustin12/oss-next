@@ -36,7 +36,11 @@ export function CartPageClient() {
   // they're actually free.
   async function fetchTotals(items: CartItem[]) {
     const lineItems = cartItemsToLineItems(items)
-    if (lineItems.length === 0) {
+    // A cart holding a container can't be totalled without a delivery address:
+    // the backend refuses it outright ("no_address"), and the cart page has no
+    // address to send. Skipping the request avoids one that always fails —
+    // CartSummary shows the delivery estimate, or "Calculated at checkout".
+    if (lineItems.length === 0 || items.some((item) => item.isContainer)) {
       setLiveTotal(null)
       return
     }

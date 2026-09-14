@@ -444,11 +444,8 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       {/* Phones only — desktop keeps a call button in the sticky panel. */}
       <MobileSpecialistBanner />
 
-      {/* NOTE: four featured containers, priced from this depot's listings,
-          whose CTA links are still "#" placeholders. The section directly above
-          it lists the *real* related products for this depot, under the same
-          "You May Also Need" title — give this one its own heading, and real
-          links, before it ships. */}
+      {/* Four featured containers, priced from this depot's listings; each
+          button opens the listing filtered to that container. */}
       <section className="px-4 sm:px-[5%]">
         <YouMayAlsoNeed relatedProducts={pool} />
       </section>

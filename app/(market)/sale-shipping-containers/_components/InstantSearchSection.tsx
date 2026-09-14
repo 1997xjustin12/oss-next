@@ -25,7 +25,10 @@ import type { RawRatings } from '@/lib/ratings'
 import type { Accessory, BadgeTone } from '@/types/product'
 
 const INDEX         = process.env.NEXT_PUBLIC_SEARCH_INDEX ?? 'onsite_products_index'
-const SPECIALS_HREF = '/on-site-specials'
+// The WordPress promotions page, as the header and footer link it. The old
+// '/on-site-specials' is a dead URL here (404) and redirects to the homepage on
+// onsitestorage.com.
+const SPECIALS_HREF = '/special-promotions'
 
 // ─── Filter options ───────────────────────────────────────────────────────────
 
