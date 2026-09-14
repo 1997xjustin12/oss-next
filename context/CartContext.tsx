@@ -3,17 +3,19 @@
 import { createContext, useEffect, useReducer, useRef, useState } from 'react'
 import { AddedToCartModal } from '@/components/cart/AddedToCartModal'
 import { CartLocationConflictHost } from '@/components/cart/CartLocationConflictHost'
+import { CartMergeNoticeHost } from '@/components/cart/CartMergeNoticeHost'
 import { useAuth } from '@/hooks/useAuth'
 import { isCartTimedOut } from '@/lib/cartAbandonment'
 import { notifyAbandonedCart, parseServerCart, rebuildRestoredItems, sendAbandonedCartBeacon, syncCartToBackend } from './cartSync'
+import { announceCartMergeRemovals, mergeGuestCartIntoSaved } from '@/lib/cart'
 import type { Cart, CartItem } from '@/types/cart'
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 export type Action =
-  | { type: 'ADD_ITEM';     payload: CartItem }
+  | { type: 'ADD_ITEM';     payload: CartItem; guest?: boolean }
   | { type: 'REMOVE_ITEM';  id: string }
-  | { type: 'UPDATE_QTY';   id: string; qty: number }
+  | { type: 'UPDATE_QTY';   id: string; qty: number; guest?: boolean }
   | { type: 'CLEAR_CART' }
   | { type: 'RESTORE_CART'; payload: Cart }
   | { type: 'SET_SERVER_META'; payload: { cartId?: string; referenceNumber?: string } }
@@ -72,13 +74,22 @@ function reducer(state: Cart, action: Action): Cart {
       const exists = state.items.find(i =>
         i.id === action.payload.id || (!!i.sku && !!action.payload.sku && i.sku === action.payload.sku),
       )
+      // `guestQuantity` records how much was added while signed out, so the
+      // login merge adds exactly that on top of the saved cart — see
+      // mergeGuestCartIntoSaved. Additions made while signed in are not
+      // counted: those already sync to the saved cart.
+      const added = action.guest ? action.payload.quantity : 0
       const items = exists
         ? state.items.map(i =>
             i === exists
-              ? { ...i, quantity: i.quantity + action.payload.quantity }
+              ? {
+                  ...i,
+                  quantity: i.quantity + action.payload.quantity,
+                  guestQuantity: added ? (i.guestQuantity ?? 0) + added : i.guestQuantity,
+                }
               : i,
           )
-        : [...state.items, action.payload]
+        : [...state.items, { ...action.payload, guestQuantity: added || undefined }]
       return { ...state, items, ...totals(items), updatedAt: new Date().toISOString() }
     }
     case 'REMOVE_ITEM': {
@@ -88,7 +99,19 @@ function reducer(state: Cart, action: Action): Cart {
     case 'UPDATE_QTY': {
       const items = action.qty <= 0
         ? state.items.filter(i => i.id !== action.id)
-        : state.items.map(i => i.id === action.id ? { ...i, quantity: action.qty } : i)
+        : state.items.map(i => {
+            if (i.id !== action.id) return i
+            const delta = action.qty - i.quantity
+            // Raised while signed out: the extra counts as a guest addition.
+            // Lowered: the guest portion can never exceed what is left.
+            const guestQuantity =
+              delta > 0 && action.guest
+                ? (i.guestQuantity ?? 0) + delta
+                : i.guestQuantity !== undefined
+                  ? Math.min(i.guestQuantity, action.qty)
+                  : undefined
+            return { ...i, quantity: action.qty, guestQuantity }
+          })
       return { ...state, items, ...totals(items), updatedAt: new Date().toISOString() }
     }
     case 'CLEAR_CART':
@@ -143,10 +166,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart])
 
   // ── load the server's active cart once the user is authenticated ──
-  // Server cart wins when it has items (matches the reference app: Django is
-  // the source of truth for a logged-in user's cart). If the server cart is
-  // empty but the guest had local items, there's nothing to merge from the
-  // server — the sync effect below creates one from what's already local.
+  // The saved cart and what was added while signed out are merged — see
+  // mergeGuestCartIntoSaved. This used to be "server cart wins" (carried over
+  // from the reference app), which discarded a container chosen as a guest the
+  // moment they signed in to buy it. Runs on every signed-in page load too;
+  // with nothing added while signed out the merge is just the saved cart. If
+  // the saved cart is empty the local cart is kept, and the sync effect below
+  // creates the saved cart from it.
   useEffect(() => {
     if (!isAuthenticated || !token) return
     let cancelled = false
@@ -161,8 +187,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         // The saved cart only records each line's SKU; rebuild the lines as
         // real catalogue products before they become the cart — see
         // rebuildRestoredItems for what breaking this cost.
-        const items = server.items.length > 0 ? await rebuildRestoredItems(server.items) : []
+        const saved = server.items.length > 0 ? await rebuildRestoredItems(server.items) : []
         if (cancelled) return
+
+        const { items, removed, keptLocation } = mergeGuestCartIntoSaved(saved, cartRef.current.items)
 
         if (items.length > 0) {
           dispatch({ type: 'RESTORE_CART', payload: { ...server, items, ...totals(items) } })
@@ -170,6 +198,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: 'SET_SERVER_META', payload: { cartId: server.cartId, referenceNumber: server.referenceNumber } })
           dispatch({ type: 'SET_ABANDONED', payload: server.isAbandoned ?? null })
         }
+        if (removed.length > 0 && keptLocation) announceCartMergeRemovals({ removed, keptLocation })
       })
       .catch(() => {
         // Best-effort — the local cart still works even if this fails.
@@ -253,11 +282,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const value: CartContextValue = {
     cart,
     addItem: (item, showModal = true) => {
-      dispatch({ type: 'ADD_ITEM', payload: item })
+      dispatch({ type: 'ADD_ITEM', payload: item, guest: !isAuthenticated })
       if (showModal) setAddedItem(item)
     },
     removeItem: (id)   => dispatch({ type: 'REMOVE_ITEM', id }),
-    updateQty:  (id, qty) => dispatch({ type: 'UPDATE_QTY', id, qty }),
+    updateQty:  (id, qty) => dispatch({ type: 'UPDATE_QTY', id, qty, guest: !isAuthenticated }),
     clearCart:  ()     => dispatch({ type: 'CLEAR_CART' }),
   }
 
@@ -267,6 +296,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       <AddedToCartModal item={addedItem} onClose={() => setAddedItem(null)} />
       {/* The location-conflict prompt for every page — see CartLocationConflictHost. */}
       <CartLocationConflictHost />
+      {/* Explains saved containers removed by the login merge. */}
+      <CartMergeNoticeHost />
     </CartContext>
   )
 }

@@ -136,14 +136,8 @@ test.describe('registered customer', () => {
   })
 
   test('a cart built as a guest survives logging in', async ({ page }) => {
-    // Expected to fail, deliberately. At login the account's saved cart
-    // REPLACES whatever the visitor added as a guest ("Server cart wins" in
-    // CartContext, carried over from the reference app), so the container they
-    // just chose disappears the moment they sign in to check out. That is a
-    // product decision, not a defect this suite should hide or quietly paper
-    // over. Once guest lines are merged at login this starts passing, the
-    // runner reports an unexpected pass, and this line should be deleted.
-    test.fail(true, 'Saved server cart replaces the guest cart at login — awaiting a product decision')
+    // Guest lines are merged into the saved cart at login (decision 2026-09-14),
+    // so the container chosen as a guest must still be there after signing in.
     await autoDismissSaveCart(page)
     let guestLine: CartLine | undefined
 

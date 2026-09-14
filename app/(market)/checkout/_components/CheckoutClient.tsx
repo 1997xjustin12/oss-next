@@ -59,6 +59,22 @@ interface AddressForm {
   email: string;
 }
 
+/**
+ * A profile's country as one of the checkout select's options, or undefined.
+ *
+ * The select offers exactly "United States (US)" and "Canada (CA)", while the
+ * account profile stores whatever was typed — "US", "United States", "CA". A
+ * value that matches neither is left alone rather than guessed at.
+ */
+function toCountryOption(value: string | undefined): string | undefined {
+  const v = (value ?? '').trim().toLowerCase();
+  if (['us', 'usa', 'united states', 'united states (us)', 'united states of america'].includes(v)) {
+    return 'United States (US)';
+  }
+  if (['ca', 'can', 'canada', 'canada (ca)'].includes(v)) return 'Canada (CA)';
+  return undefined;
+}
+
 const emptyAddress: AddressForm = {
   firstName: '',
   lastName: '',
@@ -359,7 +375,7 @@ function PaymentTakenNoOrder({ transactionId, detail }: { transactionId?: string
 /* ── Main Client Component ── */
 export function CheckoutClient() {
   const { cart, removeItem, updateQty, clearCart } = useCart();
-  const { token: authToken } = useAuth();
+  const { token: authToken, user: authUser } = useAuth();
   const dropinRef = useRef<BraintreeDropInHandle>(null);
 
   const [shipping, setShipping] = useState<AddressForm>(emptyAddress);
@@ -395,8 +411,9 @@ export function CheckoutClient() {
    * Blanks only. `prev.x || …` never overwrites something typed — the effect can
    * re-run, and a prefill that clobbers a correction is worse than no prefill.
    *
-   * Nothing is written for a signed-in shopper, and nothing happens at all when
-   * there is no stored guest lead, which is the same condition by another name.
+   * Nothing is written for a signed-in shopper — their account profile is used
+   * instead, by the effect below — and nothing happens at all when there is no
+   * stored guest lead.
    *
    * The address line is deliberately left empty. What we hold is a delivery ZIP
    * or a "City, ST 00000" label, not a street — dropping either into address1
@@ -435,6 +452,71 @@ export function CheckoutClient() {
       }));
     });
   }, [authToken]);
+
+  /**
+   * Start the form from a signed-in customer's account profile.
+   *
+   * Signed-in customers used to reach checkout with every field empty, despite
+   * the account holding their name, email, phone and addresses (decision
+   * 2026-09-14). Same rule as the guest prefill above: blanks only, so it never
+   * overwrites anything typed, and everything stays editable.
+   *
+   * Unlike the guest prefill this does fill the street line: the profile holds
+   * a real street address, not just a ZIP or a city label.
+   *
+   * Country is filled only while the select still shows its default, since a
+   * select is never blank.
+   */
+  const accountPrefilled = useRef(false);
+  useEffect(() => {
+    if (accountPrefilled.current || !authToken || !authUser) return;
+    accountPrefilled.current = true;
+
+    const profile = authUser.profile ?? {};
+    const shippingZip = profile.shippingZip || readVisitorZip().postcode;
+    const fromAccount = (prev: AddressForm) => ({
+      firstName: prev.firstName || authUser.firstName || '',
+      lastName: prev.lastName || authUser.lastName || '',
+      email: prev.email || authUser.email || '',
+      phone: prev.phone || profile.phone || '',
+    });
+
+    setShipping((prev) => ({
+      ...prev,
+      ...fromAccount(prev),
+      address1: prev.address1 || profile.shippingAddress || '',
+      city: prev.city || profile.shippingCity || '',
+      state: prev.state || profile.shippingState || '',
+      zip: prev.zip || shippingZip || '',
+      country:
+        prev.country === emptyAddress.country
+          ? (toCountryOption(profile.shippingCountry) ?? prev.country)
+          : prev.country,
+    }));
+    setBilling((prev) => ({
+      ...prev,
+      ...fromAccount(prev),
+      address1: prev.address1 || profile.billingAddress || '',
+      city: prev.city || profile.billingCity || '',
+      state: prev.state || profile.billingState || '',
+      zip: prev.zip || profile.billingZip || '',
+      country:
+        prev.country === emptyAddress.country
+          ? (toCountryOption(profile.billingCountry) ?? prev.country)
+          : prev.country,
+    }));
+
+    // City and state from the ZIP when the profile has a ZIP but not those.
+    if (!shippingZip || (profile.shippingCity && profile.shippingState)) return;
+    void lookupZip(shippingZip, emptyAddress.country).then((result) => {
+      if (!result) return;
+      setShipping((prev) => ({
+        ...prev,
+        city: prev.city || result.city || '',
+        state: prev.state || result.state || '',
+      }));
+    });
+  }, [authToken, authUser]);
 
   const updateShipping = (field: keyof AddressForm, value: string) =>
     setShipping((p) => ({ ...p, [field]: value }));

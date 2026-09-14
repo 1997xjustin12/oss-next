@@ -58,6 +58,70 @@ function lineProductId(rawHit: NonNullable<CartItem['rawHit']>): number | string
   return rawHit.objectID
 }
 
+// ── Guest cart merge at login ────────────────────────────────────────────────
+
+export const CART_MERGE_NOTICE_EVENT = 'oss:cart-merge-notice'
+
+export type CartMergeNotice = {
+  /** Saved containers taken out because they ship from another depot. */
+  removed: CartItem[]
+  /** The depot of the containers the visitor added while signed out. */
+  keptLocation: string
+}
+
+/** Tell the visitor which saved lines the login merge removed — see CartMergeNoticeHost. */
+export function announceCartMergeRemovals(notice: CartMergeNotice): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(CART_MERGE_NOTICE_EVENT, { detail: notice }))
+}
+
+const isSameProduct = (a: CartItem, b: CartItem) =>
+  a.id === b.id || (!!a.sku && !!b.sku && a.sku.toLowerCase() === b.sku.toLowerCase())
+
+/**
+ * Combine the account's saved cart with what the visitor added while signed out.
+ *
+ * Replaces "the saved cart wins", which silently threw away a container chosen
+ * as a guest at exactly the moment they signed in to buy it (decision
+ * 2026-09-14):
+ *
+ * - Nothing added while signed out (every reload of a signed-in page): the saved
+ *   cart, unchanged — the local cart already mirrors it.
+ * - Saved cart empty: the local cart, as it is.
+ * - Otherwise: every saved line, plus each line's `guestQuantity` on top of it
+ *   (same product: quantities add), plus any guest line the saved cart lacks.
+ * - One depot per order: the guest's containers are the current intent, so
+ *   saved containers from another depot are removed and returned in `removed`
+ *   so the visitor can be told. Accessories are never removed.
+ *
+ * Always returns lines with `guestQuantity` cleared, so the merge happens once.
+ */
+export function mergeGuestCartIntoSaved(
+  saved: CartItem[],
+  local: CartItem[],
+): { items: CartItem[]; removed: CartItem[]; keptLocation: string | null } {
+  const strip = (items: CartItem[]) => items.map((item) => ({ ...item, guestQuantity: undefined }))
+  const guest = local.filter((item) => (item.guestQuantity ?? 0) > 0)
+
+  if (guest.length === 0) return { items: saved, removed: [], keptLocation: null }
+  if (saved.length === 0) return { items: strip(local), removed: [], keptLocation: null }
+
+  const merged: CartItem[] = saved.map((line) => {
+    const match = guest.find((g) => isSameProduct(g, line))
+    return match ? { ...line, quantity: line.quantity + (match.guestQuantity ?? 0) } : line
+  })
+  for (const g of guest) {
+    if (!saved.some((line) => isSameProduct(g, line))) merged.push(g)
+  }
+
+  const keptLocation = guest.find((g) => g.isContainer && g.location)?.location ?? null
+  const removed = keptLocation
+    ? merged.filter((line) => line.isContainer && !!line.location && line.location !== keptLocation)
+    : []
+
+  return { items: strip(merged.filter((line) => !removed.includes(line))), removed, keptLocation }
+}
+
 // Backend create/update expect the full raw hit + quantity per item
 // (CartLineItem), not the simplified shape CartContext keeps for display.
 // Items missing rawHit (legacy localStorage carts saved before that field

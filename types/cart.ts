@@ -16,6 +16,16 @@ export interface CartItem {
   // order — set on container line items so the cart can detect the conflict.
   isContainer?: boolean
   location?: string
+  /**
+   * How much of `quantity` was added while signed out.
+   *
+   * When a guest logs in, their cart is merged into the account's saved cart
+   * rather than replaced by it, and this is the amount added on top. It has to
+   * be tracked per line: for a signed-in customer every page load restores the
+   * saved cart while the local cart already mirrors it, so adding whole local
+   * quantities would double the cart on each reload. Cleared by the merge.
+   */
+  guestQuantity?: number
   // The raw ES hit this item was added from — needed to build the backend's
   // CartLineItem shape (full hit + quantity) when syncing to /api/cart/*.
   // Optional because carts saved to localStorage before this field existed
