@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { GOOGLE_REVIEW_STATS } from '@/config/reviews'
 
 /**
@@ -24,8 +23,6 @@ type Props = {
   tone?: 'onDark' | 'onLight'
   /** Show the numeric rating beside the stars. The banner does; the PDP does not. */
   showRating?: boolean
-  /** Link the review count. Off on the banner, where it is a plain statement. */
-  linkCount?: boolean
   size?: 'sm' | 'md'
   className?: string
 }
@@ -71,11 +68,10 @@ function RatingStars({ rating, px }: { rating: number; px: number }) {
 export function GoogleReviewsBadge({
   tone = 'onLight',
   showRating = false,
-  linkCount = false,
   size = 'md',
   className = '',
 }: Props) {
-  const { rating, count, url } = GOOGLE_REVIEW_STATS
+  const { rating, count } = GOOGLE_REVIEW_STATS
   const onDark = tone === 'onDark'
   const starPx = size === 'sm' ? 14 : 18
 
@@ -105,16 +101,7 @@ export function GoogleReviewsBadge({
           <RatingStars rating={rating} px={starPx} />
         </div>
 
-        {linkCount ? (
-          <Link
-            href={url}
-            className={`${countClasses} underline underline-offset-2 transition-opacity hover:opacity-80`}
-          >
-            {countLabel}
-          </Link>
-        ) : (
-          <div className={countClasses}>{countLabel}</div>
-        )}
+        <div className={countClasses}>{countLabel}</div>
       </div>
     </div>
   )

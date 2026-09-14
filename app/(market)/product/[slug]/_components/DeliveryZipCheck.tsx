@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, MapPin, Pencil } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
@@ -230,6 +230,7 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
     handleSelect(match)
   }
 
+  const listboxId = useId()
   const showDropdown = open && (results.length > 0 || loading || !!error)
 
   return (
@@ -273,8 +274,10 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
               }}
               placeholder="Enter Zip to see your price"
               aria-label="Delivery ZIP or postal code"
+              role="combobox"
               aria-autocomplete="list"
               aria-expanded={showDropdown}
+              aria-controls={listboxId}
               className="w-full rounded border border-transparent bg-theme-bg px-3 py-2.5 text-sm text-theme-dark outline-none transition-colors placeholder:text-[13px] placeholder:text-theme-muted focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/10 dark:bg-neutral-900 dark:text-white"
             />
             {(loading || busy) && (
@@ -283,6 +286,7 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
 
             {showDropdown && (
               <ul
+                id={listboxId}
                 role="listbox"
                 className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-theme-border bg-white shadow-lg dark:bg-neutral-900 dark:border-neutral-700"
               >

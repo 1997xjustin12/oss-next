@@ -171,7 +171,10 @@ test.describe('registered customer', () => {
     await expectNoErrorScreen(page)
 
     const buyAgain = page.getByRole('button', { name: /Buy Again/ }).first()
-    const hasOrders = await buyAgain.isVisible({ timeout: 20_000 }).catch(() => false)
+    // waitFor, not isVisible: isVisible answers immediately and ignores its
+    // timeout, so it checked before the order list had loaded and skipped a test
+    // the account can run (it has a delivered order).
+    const hasOrders = await buyAgain.waitFor({ state: 'visible', timeout: 20_000 }).then(() => true, () => false)
     test.skip(!hasOrders, 'The test account has no past orders with a Buy Again button.')
 
     await test.step('Buy Again', async () => {

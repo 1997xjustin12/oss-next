@@ -401,6 +401,10 @@ export async function cachedEsSearch(input: SearchInput) {
 
   if (productType === 'buy' || productType === 'rental' || productType === 'rto') {
     filters.push(cfFilter('payment_type', [productType]))
+    // Containers only. Accessories carry payment_type and location custom fields
+    // too, so without this a depot listing was mostly ramps and shelving: Buy at
+    // Atlanta returned 241 results, 225 of them accessories (2026-09-14).
+    filters.push({ terms: { 'product_category.category_name.keyword': SHIPPING_CONTAINER_CATEGORIES } })
   } else if (productType === 'accessories') {
     if (accessoryCategory) {
       filters.push({ term: { 'product_category.category_name.keyword': accessoryCategory } })

@@ -285,12 +285,12 @@ function emptyResults(requests: ISearchRequest[]) {
 type SearchClientProp = React.ComponentProps<typeof InstantSearch>['searchClient']
 
 function makeSearchClient(
-  filtersRef: React.MutableRefObject<AllFilters>,
+  getFilters: () => AllFilters,
   onSearchError: (failed: boolean) => void,
 ): SearchClientProp {
   const client = {
     search(requests: unknown[]) {
-      const f = filtersRef.current
+      const f = getFilters()
       const enriched = (requests as Array<{ indexName: string; params?: Record<string, unknown> }>)
         .map((r) => ({
           ...r,
@@ -780,7 +780,10 @@ export function InstantSearchSection() {
   // below is still built exactly once.
   const [searchFailed, setSearchFailed] = useState(false)
 
-  const searchClient = useMemo(() => makeSearchClient(filtersRef, setSearchFailed), [])
+  // The getter reads the ref when InstantSearch sends a request, never while
+  // rendering; the rule cannot see through the closure.
+  // eslint-disable-next-line react-hooks/refs
+  const searchClient = useMemo(() => makeSearchClient(() => filtersRef.current, setSearchFailed), [])
 
   // instantsearch.js disposes its search instance shortly after this
   // subtree is hidden (a debounced cleanup meant for fast unmount/remount

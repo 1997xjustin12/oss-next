@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Phone } from "lucide-react";
 import { CartButton } from "@/components/layout/CartButton";
 import { WishlistButton } from "@/components/layout/WishlistButton";
+import { SavedQuotesButton } from "@/components/layout/SavedQuotesButton";
 import { BASE_URL } from "@/lib/helpers";
 import { applyEnrichParams } from "@/lib/linkEnrich";
 import { useStoredZip } from "@/hooks/useStoredZip";
@@ -185,6 +186,7 @@ export function Navbar() {
             Get Free Quote
           </Link>
           <WishlistButton />
+          <SavedQuotesButton />
           <CartButton />
         </div>
 

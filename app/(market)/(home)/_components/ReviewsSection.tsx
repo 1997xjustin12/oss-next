@@ -75,13 +75,16 @@ export function ReviewsSection({
 }: {
   heading?: string;
 }) {
-  const [current, setCurrent] = useState(0);
+  const [requested, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [visibleCount, setVisibleCount] = useState(3);
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
   const maxIndex = REVIEWS.length - visibleCount;
+  // Clamped while rendering, so a wider viewport (fewer positions) never leaves
+  // the carousel past its last one — without a second render to correct it.
+  const current = Math.min(requested, maxIndex);
 
   // Update visibleCount on breakpoint change
   useEffect(() => {
@@ -93,11 +96,6 @@ export function ReviewsSection({
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
-
-  // Clamp current when maxIndex shrinks (e.g. expanding viewport)
-  useEffect(() => {
-    setCurrent((c) => Math.min(c, maxIndex));
-  }, [maxIndex]);
 
   // Sync scroll position whenever current changes
   useEffect(() => {

@@ -21,7 +21,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { cartItemsToLineItems } from '@/lib/cart';
 import { lookupZip } from '@/lib/zippopotam';
-import { getGuestLead } from '@/lib/guestCapture';
+import { getGuestLead, streetLineFromAddress } from '@/lib/guestCapture';
 import { readVisitorZip } from '@/lib/visitorZip';
 import { ROUTES } from '@/config/routes'
 import { formatMoney } from '@/lib/formatters';
@@ -415,10 +415,11 @@ export function CheckoutClient() {
    * instead, by the effect below — and nothing happens at all when there is no
    * stored guest lead.
    *
-   * The address line is deliberately left empty. What we hold is a delivery ZIP
-   * or a "City, ST 00000" label, not a street — dropping either into address1
-   * would look filled while being wrong, and the visitor would have to clear it
-   * before typing.
+   * The street line is filled only when the stored address is a real street,
+   * as the quote form's "Complete Delivery Address" usually is. Often what we
+   * hold is a delivery ZIP or a "City, ST 00000" label instead — dropping that
+   * into address1 would look filled while being wrong, and the visitor would
+   * have to clear it before typing. See streetLineFromAddress.
    */
   const prefilled = useRef(false);
   useEffect(() => {
@@ -436,6 +437,7 @@ export function CheckoutClient() {
       lastName: prev.lastName || rest.join(' '),
       email: prev.email || lead?.email || '',
       phone: prev.phone || lead?.phone || '',
+      address1: prev.address1 || streetLineFromAddress(lead?.address ?? ''),
       zip: prev.zip || postcode,
     }));
 

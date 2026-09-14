@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Runs only on the client after hydration — avoids SSR/client mismatch
     const stored = loadSession()
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the session is in localStorage
     if (stored) setSession(stored)
     if (!stored) return
 

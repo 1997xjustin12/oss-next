@@ -180,7 +180,7 @@ test.describe('guest', () => {
     })
 
     await test.step('refused: the prompt explains, nothing moves', async () => {
-      await expect(page.getByRole('dialog', { name: 'Your Cart Is From Another Location' })).toBeVisible()
+      await expect(page.getByRole('dialog', { name: 'Whoops! There seems to be a problem.' })).toBeVisible()
       expect(await page.evaluate(() => localStorage.getItem('zipcode'))).toBe(ZIP)
     })
 

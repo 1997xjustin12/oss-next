@@ -5,7 +5,7 @@ import type { HeadingLevel } from '@/types/content';
 // One source of truth: the components render from these defaults, and the admin
 // Content Editor shows them as the placeholder behind each field.
 //
-// Deliberately excludes headings inside HeroSection, TrustStrip, ContainerTypes,
+// Deliberately excludes headings inside TrustStrip, ContainerTypes,
 // WhyUs and Reviews — those components are commented out in (home)/page.tsx, so
 // listing their 8 headings would make the editor claim control over copy that
 // never reaches a visitor. Uncomment a section, add its headings here.

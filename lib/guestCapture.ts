@@ -45,6 +45,21 @@ export function getGuestLead(): GuestLead | null {
 }
 
 /**
+ * The street line of a stored guest address, or '' when it has none.
+ *
+ * `GuestLead.address` has writers with different shapes. The quote form's
+ * "Complete Delivery Address" is usually a real street ("123 Main St, Atlanta,
+ * GA 30303"); the product page's address picker stores a place label ("Atlanta,
+ * GA 30303"), and the quote review page can fall back to a bare ZIP. Only the
+ * first belongs in a street field, so this takes the part before the first
+ * comma and keeps it only when it is a house number followed by a street name.
+ */
+export function streetLineFromAddress(address: string): string {
+  const first = address.split(',')[0]?.trim() ?? ''
+  return /^\d+[A-Za-z]?(-\d+)?\s+\S*[A-Za-z]/.test(first) ? first : ''
+}
+
+/**
  * Store the lead, and write the email into the key the exit-intent prompt
  * reads.
  *

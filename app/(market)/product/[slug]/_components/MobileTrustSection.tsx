@@ -5,6 +5,7 @@ import { Stars } from "@/components/product/Stars";
 import { ROUTES } from "@/config/routes";
 import { GOOGLE_REVIEW_STATS } from "@/config/reviews";
 import { CONTACT_NUMBER } from "@/lib/helpers";
+import { formatMoney } from "@/lib/formatters";
 
 /**
  * The reassurance block under the product, on phones.
@@ -22,9 +23,16 @@ const CONTACT_TEL = `tel:${CONTACT_NUMBER.replace(/[^\d+]/g, "")}`;
 
 /** Matches the payment keys on the panel above, so the two never disagree. */
 const BUDGET_OPTIONS = [
-  { label: "Rent", note: "as low as $96.00 a month", ptype: "rental" },
-  { label: "Rent-To-Own", note: "as low as $61.36 a month", ptype: "rto" },
+  { label: "Rent", ptype: "rental" },
+  { label: "Rent-To-Own", ptype: "rto" },
 ] as const;
+
+type Props = {
+  /** Lowest monthly rental at this depot, or null when it has none. */
+  rentFrom: number | null;
+  /** Lowest monthly rent-to-own payment at this depot, or null when it has none. */
+  rtoFrom: number | null;
+};
 
 const ASSURANCES = [
   {
@@ -73,7 +81,7 @@ function GoogleMark() {
   );
 }
 
-export function MobileTrustSection() {
+export function MobileTrustSection({ rentFrom, rtoFrom }: Props) {
   const { rating, count } = GOOGLE_REVIEW_STATS;
 
   return (
@@ -103,20 +111,25 @@ export function MobileTrustSection() {
         </h2>
 
         <div className="mt-3 grid grid-cols-2 gap-3">
-          {BUDGET_OPTIONS.map((option) => (
-            <PlpLink
-              key={option.ptype}
-              href={`${ROUTES.PLP}?ptype=${option.ptype}`}
-              className="rounded-md bg-theme-primary px-2 py-2.5 text-center text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2"
-            >
-              <span className="block text-[15px] font-bold leading-tight">
-                {option.label}
-              </span>
-              <span className="mt-0.5 block text-[11px] leading-tight text-white/85">
-                {option.note}
-              </span>
-            </PlpLink>
-          ))}
+          {BUDGET_OPTIONS.map((option) => {
+            const from = option.ptype === "rental" ? rentFrom : rtoFrom;
+            return (
+              <PlpLink
+                key={option.ptype}
+                href={`${ROUTES.PLP}?ptype=${option.ptype}`}
+                className="rounded-md bg-theme-primary px-2 py-2.5 text-center text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2"
+              >
+                <span className="block text-[15px] font-bold leading-tight">
+                  {option.label}
+                </span>
+                {from !== null && (
+                  <span className="mt-0.5 block text-[11px] leading-tight text-white/85">
+                    as low as {formatMoney(from)} a month
+                  </span>
+                )}
+              </PlpLink>
+            );
+          })}
         </div>
 
         {/* Two columns of reassurance. The rating leads because it is the only

@@ -219,12 +219,15 @@ export function CustomerReviewsSection({ heading = 'Customer Reviews:' }: { head
   }
 
   return (
-    <section id="reviews" className="px-4 py-10 sm:px-[5%] sm:py-16">
+    // scroll-mt: the review-count links above jump here, and the sticky header
+    // would otherwise cover the heading they jump to.
+    <section id="reviews" className="scroll-mt-24 px-4 py-10 sm:px-[5%] sm:py-16">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-[16px] md:text-[24px] font-bold text-theme-dark sm:text-2xl dark:text-white">
           {heading}
         </h2>
-        <GoogleReviewsBadge linkCount />
+        {/* Not a link: it sits inside the section its count would point to. */}
+        <GoogleReviewsBadge />
       </div>
 
       <div className="relative">

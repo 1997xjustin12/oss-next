@@ -80,6 +80,18 @@ function read(): SavedQuote[] {
   }
 }
 
+/**
+ * Broadcast after the saved quotes change in this tab.
+ *
+ * The native `storage` event only reaches *other* tabs, so without this the
+ * header count would not move when a quote is saved on the page beside it.
+ */
+export const SAVED_QUOTES_EVENT = 'oss:saved-quotes-change'
+
+function announce(): void {
+  window.dispatchEvent(new Event(SAVED_QUOTES_EVENT))
+}
+
 function write(quotes: SavedQuote[]): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(quotes.slice(0, MAX_QUOTES)))
@@ -87,6 +99,12 @@ function write(quotes: SavedQuote[]): void {
     // Storage full or unavailable — the quote is still on screen, only the
     // record of it is lost.
   }
+  announce()
+}
+
+/** How many quotes are saved — cheap enough to read on every change. */
+export function countSavedQuotes(): number {
+  return read().length
 }
 
 /** Every saved quote, newest first. */
@@ -160,4 +178,5 @@ export function clearSavedQuotes(): void {
   } catch {
     // Nothing was stored to begin with.
   }
+  announce()
 }

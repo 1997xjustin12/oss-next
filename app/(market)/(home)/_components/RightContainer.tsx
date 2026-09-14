@@ -3,47 +3,10 @@ import Link from "next/link";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { BASE_URL } from "@/lib/helpers";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
+import { FEATURED_CONTAINERS, type FeaturedContainer } from "@/config/featuredContainers";
+import { StartingPriceLabel } from "./StartingPriceLabel";
 
-type Product = {
-  image: string;
-  type: string;
-  desc: string;
-  price_label: string;
-  cta: { label: string; url: string };
-};
-
-const PRODUCTS: Product[] = [
-  {
-    image: "/images/containers/used-20ft-standard.webp",
-    type: "Used 20ft Standard",
-    desc: "Perfect for residential, small business, and construction site storage. Fits most driveways.",
-    price_label: "Starts at $1,350.00",
-    cta: { label: "Get Free Quote", url: "#" },
-  },
-  {
-    image: "/images/containers/used-40ft-standard.webp",
-    type: "Used 40ft Standard",
-    desc: "Double capacity for farms, retail, contractors, and industrial storage needs nationwide.",
-    price_label: "Starts at $2,000.00",
-    cta: { label: "Get Free Quote", url: "#" },
-  },
-  {
-    image: "/images/containers/used-40ft-hc.webp",
-    type: "Used 40ft High Cube",
-    desc: "Extra headroom for tall equipment, workshop setups, and high-volume inventory storage.",
-    price_label: "Starts at $2,800.00",
-    cta: { label: "Get Free Quote", url: "#" },
-  },
-  {
-    image: "/images/containers/new-40ft-hc.webp",
-    type: "New 40ft High Cube",
-    desc: "Brand-new one-trip containers for maximum longevity, custom builds, and premium storage.",
-    price_label: "Starts at $3,000.00",
-    cta: { label: "Inquire", url: "#" },
-  },
-];
-
-function Card({ item }: { item: Product }) {
+function Card({ item }: { item: FeaturedContainer }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="relative aspect-square bg-stone-200 dark:bg-stone-700 overflow-hidden rounded-sm">
@@ -63,8 +26,9 @@ function Card({ item }: { item: Product }) {
       </div>
       <div className="flex flex-col lg:flex-row lg:items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="text-lg sm:text-[18px] font-bold dark:text-white">
-            {item.price_label}
+          {/* min-h holds the line while the price loads, or when there is none. */}
+          <div className="min-h-7 text-lg sm:text-[18px] font-bold dark:text-white">
+            <StartingPriceLabel cardKey={item.key} />
           </div>
           <div className="text-xs text-[#04B761] font-bold">
             Buy &middot; Rent &middot; Rent-To-Own
@@ -101,9 +65,9 @@ export function RightContainer({
           Configuration.
         </p>
         <div className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 -mx-5 px-5 pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none py-8 sm:py-10 w-full">
-          {PRODUCTS.map((item, index) => (
+          {FEATURED_CONTAINERS.map((item) => (
             <div
-              key={`product-card-${index}`}
+              key={item.key}
               className="w-[75%] shrink-0 snap-start sm:w-auto sm:shrink"
             >
               <Card item={item} />

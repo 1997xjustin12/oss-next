@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
 } from "lucide-react";
 import type { ProductHit } from "@/types/product";
@@ -9,8 +9,10 @@ import {
   getCustomFieldValue,
   isGenericDisplayHit,
   isInStockHit,
+  lowestPrice,
 } from "@/lib/pricing";
 import { normaliseRating } from "@/lib/ratings";
+import { GOOGLE_REVIEW_STATS } from "@/config/reviews";
 import { GuestLeadModal } from "@/components/cart/GuestLeadModal";
 import type { QuoteLine } from "@/components/cart/GuestLeadModal";
 import { getGuestLead, setGuestLead } from "@/lib/guestCapture";
@@ -592,8 +594,12 @@ export function ProductInfoPanel({
   /** Set once a quote has been filed this session, so the modal can say so. */
   const [quoteSaved, setQuoteSaved] = useState(false);
 
-  // When the shell swaps to a different product, reset both states
-  useEffect(() => {
+  // When the shell swaps to a different product, reset both states. Done while
+  // rendering rather than in an effect, so the panel never paints one frame of
+  // the old product's selection against the new product.
+  const [syncedProductId, setSyncedProductId] = useState(product.objectID);
+  if (syncedProductId !== product.objectID) {
+    setSyncedProductId(product.objectID);
     setActiveProduct(product);
     setSelection((prev) => ({
       ...prev,
@@ -608,8 +614,7 @@ export function ProductInfoPanel({
       condIdx: conditionToIndex(getCustomFieldValue(product, "condition")),
       gradeIdx: gradeToGradeIndex(getCustomFieldValue(product, "grade")),
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.objectID]);
+  }
 
   // ── derived pools ───────────────────────────────────────────────────────────
 
@@ -626,6 +631,15 @@ export function ProductInfoPanel({
         (p) => getCustomFieldValue(p, "payment_type") === "rto",
       ),
     [relatedProducts],
+  );
+  /** Cheapest monthly figure at this depot — the "as low as" on each payment key. */
+  const rentFrom = useMemo(
+    () => lowestPrice(rentVariants, { paymentType: "rental" }),
+    [rentVariants],
+  );
+  const rtoFrom = useMemo(
+    () => lowestPrice(rtoVariants, { paymentType: "rto" }),
+    [rtoVariants],
   );
   const candidates = useMemo(() => {
     const type = selection.tab === "rent" ? "rental" : selection.tab;
@@ -1330,19 +1344,26 @@ export function ProductInfoPanel({
         </div>
 
         <div className="flex items-center gap-1.5 text-[15px] sm:text-[20px]">
+        {/* No reviews of its own: the Google rating the reviews section below
+            is built on, with its count linking down to that section. */}
         {rating === 0 && (
           <>
-            <span>4.8</span>
-            <Stars count={Math.round(4.8)} />
+            <span>{GOOGLE_REVIEW_STATS.rating}</span>
+            <Stars count={Math.round(GOOGLE_REVIEW_STATS.rating)} />
+            <a href="#reviews" className="text-[13px] underline underline-offset-2 sm:text-[15px]">
+              ({GOOGLE_REVIEW_STATS.count} reviews)
+            </a>
           </>
         )}
         {rating !== 0 && (
           <>
             <span>{rating.toFixed(1)}</span>
             <Stars count={Math.round(rating)} />
-            <a href="#reviews" className="underline">
-              {reviewCount > 0 && `(${reviewCount})`}
-            </a>
+            {reviewCount > 0 && (
+              <a href="#reviews" className="text-[13px] underline underline-offset-2 sm:text-[15px]">
+                ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+              </a>
+            )}
           </>
         )}
         </div>
@@ -1459,12 +1480,15 @@ export function ProductInfoPanel({
           // "Purchase" wraps in a third of a phone's width; the short form
           // does not, and is what the mobile design uses.
           const shortLabel = key === "buy" ? "Buy" : label;
+          const monthlyFrom = key === "rent" ? rentFrom : rtoFrom;
+          // A non-breaking space when this depot has no such listing, so the
+          // three keys keep one height.
           const note =
             key === "buy"
               ? "Call For Best Pricing"
-              : key === "rent"
-                ? "as low as $96.00 a month"
-                : "as low as $61.36 a month";
+              : monthlyFrom !== null
+                ? `as low as ${formatMoney(monthlyFrom)} a month`
+                : " ";
 
           return (
             <div key={key} className="relative">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useId } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlpLink } from "@/components/shared/PlpLink";
@@ -172,6 +172,8 @@ export function ZipLookup1({
     const storedDepot = localStorage.getItem("zipcode_depot");
 
     if (!initialZip) {
+      // localStorage only exists after hydration, so the stored ZIP arrives here.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setZip(label ?? "");
     } else if (stored === initialZip && label) {
       setZip(label);
@@ -252,6 +254,7 @@ export function ZipLookup1({
     [depotContainers, selectedZipcode, selectedLocation],
   );
 
+  const listboxId = useId();
   const showDropdown = open && (results.length > 0 || loading || !!error);
 
   return (
@@ -283,8 +286,10 @@ export function ZipLookup1({
             placeholder="Enter Zipcode"
             className="w-full bg-white text-theme-dark placeholder-theme-dark/70 px-4 py-3 sm:py-4 text-base sm:text-lg outline-none"
             aria-label="ZIP or postal code"
+            role="combobox"
             aria-autocomplete="list"
             aria-expanded={showDropdown}
+            aria-controls={listboxId}
           />
           {loading && (
             <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted animate-spin pointer-events-none" />
@@ -292,6 +297,7 @@ export function ZipLookup1({
 
           {showDropdown && (
             <ul
+              id={listboxId}
               role="listbox"
               className="absolute z-50 left-0 right-0 top-full mt-1 border border-theme-border bg-white shadow-lg overflow-hidden"
             >
@@ -306,7 +312,7 @@ export function ZipLookup1({
                 </li>
               )}
               {results.map((r) => (
-                <li key={r.placeId} role="option">
+                <li key={r.placeId} role="option" aria-selected={false}>
                   <button
                     onMouseDown={() => handleSelect(r)}
                     className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left text-sm hover:bg-theme-subtle transition-colors"

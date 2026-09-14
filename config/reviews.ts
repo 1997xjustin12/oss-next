@@ -10,16 +10,11 @@
 /** Aggregate shown beside the star badge. Update alongside the list below. */
 export const GOOGLE_REVIEW_STATS = {
   rating: 4.8,
+  // Links to Google itself are deliberately absent: the site's Google Business
+  // Profile URL is not recorded anywhere in this repo, and a wrong Google link
+  // sends people to another business. The product page's count scrolls to the
+  // on-page reviews section (#reviews) instead.
   count: 151,
-  /**
-   * Where the review count links to.
-   *
-   * Placeholder. The site's Google Business Profile URL is not recorded
-   * anywhere in this repo, so this points at the on-page section instead.
-   * Replace it once someone can confirm the real listing — a wrong Google link
-   * is worse than an anchor, because it sends people to another business.
-   */
-  url: '#reviews',
 } as const
 
 export type Review = {

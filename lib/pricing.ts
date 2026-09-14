@@ -132,6 +132,47 @@ export function isInStockHit(hit: ShippingContainerHit): boolean {
   return qty === undefined || qty === null || qty > 0
 }
 
+/**
+ * Which listings a "Starts at" or "as low as" figure is the lowest price of.
+ *
+ * Height is matched by kind rather than by string: the catalogue writes it with
+ * straight and curly quotes alike (`8' 6" Standard`, `9’ 6” High Cube (HC)`).
+ */
+export type PriceSpec = {
+  paymentType: 'buy' | 'rental' | 'rto'
+  /** `length_width`, e.g. `20'`. */
+  size?: string
+  height?: 'standard' | 'high-cube'
+  condition?: 'New' | 'Used'
+}
+
+/**
+ * The lowest price among the hits matching a spec, or null when none match.
+ *
+ * Zero is skipped: a $0 listing is a price nobody entered, not a free
+ * container, and "Starts at $0.00" is the first thing a visitor would believe.
+ * Rental and rent-to-own prices are monthly — `sale_price` already is.
+ */
+export function lowestPrice(
+  hits: Array<ShippingContainerHit & { sale_price: number }>,
+  spec: PriceSpec,
+): number | null {
+  let lowest: number | null = null
+  for (const hit of hits) {
+    if (getCustomFieldValue(hit, 'payment_type') !== spec.paymentType) continue
+    if (spec.size && getCustomFieldValue(hit, 'length_width') !== spec.size) continue
+    if (spec.condition && getCustomFieldValue(hit, 'condition') !== spec.condition) continue
+    if (spec.height) {
+      const isHighCube = getCustomFieldValue(hit, 'height').includes('High Cube')
+      if (isHighCube !== (spec.height === 'high-cube')) continue
+    }
+    const price = hit.sale_price
+    if (!Number.isFinite(price) || price <= 0) continue
+    if (lowest === null || price < lowest) lowest = price
+  }
+  return lowest
+}
+
 // Single place to inject computed/derived properties onto a raw ES hit before
 // it reaches any route handler or component — sale_price is guaranteed
 // present on the result.

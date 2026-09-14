@@ -78,7 +78,6 @@ export default async function Home() {
     <>
       <JsonLd data={jsonLd} />
       <PageHeadScripts path={ROUTES.HOME} />
-      {/* <HeroSection /> */}
       {/* <TrustStrip /> */}
       {/* <ContainerTypes /> */}
       {/* <WhyUs /> */}

@@ -149,6 +149,8 @@ export function useGeoapify(
     const trimmed = query.trim()
 
     if (trimmed.length < minLength) {
+      // Drops the last query's suggestions as the text gets too short to search.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults([])
       setLoading(false)
       return
@@ -230,6 +232,7 @@ export function useGeoapify(
   // fall back to the default location so there's always something to show.
   useEffect(() => {
     const storedDepot = localStorage.getItem('zipcode_depot')
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- starts the fetch; its loading flag is set first
     void fetchDepotContainers(storedDepot || DEFAULT_LOCATION, 'init')
   }, [])
 

@@ -9,6 +9,7 @@ import { getGuestLead } from '@/lib/guestCapture'
 import { readVisitorZip } from '@/lib/visitorZip'
 import { ROUTES } from '@/config/routes'
 import { formatMoney } from '@/lib/formatters'
+import { useCartDeliveryEstimate } from '@/hooks/useCartDeliveryEstimate'
 
 type Props = {
   /** Real total_shipping from /api/orders/get-total — undefined/0 until checkout knows a ZIP. */
@@ -24,7 +25,11 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
   const { cart, clearCart } = useCart()
   const { isAuthenticated } = useAuth()
   const router = useRouter()
-  const total = Math.max(0, cart.totalPrice + shipping + tax)
+  // The backend's delivery figure when it has one; until then, the estimate the
+  // product page added into its subtotal, so the two pages agree on the total.
+  const estimate = useCartDeliveryEstimate(cart.items)
+  const useEstimate = shipping <= 0 && estimate.amount !== null
+  const total = Math.max(0, cart.totalPrice + (useEstimate ? (estimate.amount ?? 0) : shipping) + tax)
 
   /**
    * Checkout, or a detour for someone we cannot yet reach.
@@ -86,11 +91,15 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
           <span className="font-semibold">{formatMoney(cart.totalPrice)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-theme-muted">Delivery fee</span>
-          {loading ? (
+          <span className="text-theme-muted">
+            {useEstimate ? `Est. delivery to ${estimate.zip}` : 'Delivery fee'}
+          </span>
+          {loading || (shipping <= 0 && estimate.loading) ? (
             <span className="font-semibold text-theme-muted italic">Calculating…</span>
           ) : shipping > 0 ? (
             <span className="font-semibold">{formatMoney(shipping)}</span>
+          ) : useEstimate ? (
+            <span className="font-semibold">{formatMoney(estimate.amount)}</span>
           ) : (
             <span className="font-semibold text-theme-muted italic">Calculated at checkout</span>
           )}

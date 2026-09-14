@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { saveVisitorZip } from '@/lib/visitorZip'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Navigation, Loader2, MapPin } from 'lucide-react'
@@ -30,6 +30,8 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   // Sync input with URL: clear when no zipcode param, show pretty label when there is one
   useEffect(() => {
     if (!initialZip) {
+      // Syncs from the URL and localStorage, which only exists after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setZip('')
       return
     }
@@ -120,6 +122,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     }
   }
 
+  const listboxId = useId()
   const showDropdown = open && (results.length > 0 || loading || !!error)
 
   return (
@@ -141,8 +144,10 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
           placeholder="Enter your ZIP / Postal Code"
           className="w-full rounded-md border border-theme-border bg-theme-subtle dark:bg-neutral-800 dark:border-neutral-700 dark:text-gray-100 dark:placeholder-gray-500 px-3 py-2.5 pr-8 text-sm outline-none transition-colors focus:border-theme-primary focus:bg-white dark:focus:bg-neutral-900"
           aria-label="ZIP or postal code"
+          role="combobox"
           aria-autocomplete="list"
           aria-expanded={showDropdown}
+          aria-controls={listboxId}
         />
         {loading && (
           <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted animate-spin pointer-events-none" />
@@ -150,6 +155,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
 
         {showDropdown && (
           <ul
+            id={listboxId}
             role="listbox"
             className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border border-theme-border dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg overflow-hidden"
           >
@@ -160,7 +166,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
               <li className="px-3 py-2.5 text-sm text-theme-primary">{error}</li>
             )}
             {results.map((r) => (
-              <li key={r.placeId} role="option">
+              <li key={r.placeId} role="option" aria-selected={false}>
                 <button
                   onMouseDown={() => handleSelect(r)}
                   className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left text-sm hover:bg-theme-subtle dark:hover:bg-neutral-800 transition-colors"

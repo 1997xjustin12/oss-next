@@ -2,52 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { BASE_URL } from "@/lib/helpers";
+import { formatMoney } from "@/lib/formatters";
+import { lowestPrice } from "@/lib/pricing";
+import { FEATURED_CONTAINERS, type FeaturedContainer } from "@/config/featuredContainers";
+import type { ProductHit } from "@/types/product";
 import { CardCarousel } from "./CardCarousel";
 
-type Product = {
-  image: string;
-  type: string;
-  desc: string;
-  price_label: string;
-  cta: { label: string; url: string };
-};
+// The four featured containers, priced from this page's depot. The "#" CTA
+// links are still placeholders — see the note in ProductDetail.tsx.
 
-// TODO: placeholder data carried over from the homepage component. The prices
-// and the "#" CTA links are not real — see the note in ProductDetail.tsx. The
-// section above it on the PDP already lists genuine related products from
-// Elasticsearch; this one should be wired to the same source before launch.
-const PRODUCTS: Product[] = [
-  {
-    image: "/images/containers/used-20ft-standard.webp",
-    type: "Used 20ft Standard",
-    desc: "Perfect for residential, small business, and construction site storage. Fits most driveways.",
-    price_label: "Starts at $1,350.00",
-    cta: { label: "Get Free Quote", url: "#" },
-  },
-  {
-    image: "/images/containers/used-40ft-standard.webp",
-    type: "Used 40ft Standard",
-    desc: "Double capacity for farms, retail, contractors, and industrial storage needs nationwide.",
-    price_label: "Starts at $2,000.00",
-    cta: { label: "Get Free Quote", url: "#" },
-  },
-  {
-    image: "/images/containers/used-40ft-hc.webp",
-    type: "Used 40ft High Cube",
-    desc: "Extra headroom for tall equipment, workshop setups, and high-volume inventory storage.",
-    price_label: "Starts at $2,800.00",
-    cta: { label: "Get Free Quote", url: "#" },
-  },
-  {
-    image: "/images/containers/new-40ft-hc.webp",
-    type: "New 40ft High Cube",
-    desc: "Brand-new one-trip containers for maximum longevity, custom builds, and premium storage.",
-    price_label: "Starts at $3,000.00",
-    cta: { label: "Inquire", url: "#" },
-  },
-];
-
-function Card({ item }: { item: Product }) {
+function Card({ item, price }: { item: FeaturedContainer; price: number | null }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="relative aspect-square bg-stone-200 dark:bg-stone-700 overflow-hidden rounded-sm">
@@ -67,8 +31,10 @@ function Card({ item }: { item: Product }) {
       </div>
       <div className="flex flex-col lg:flex-row lg:items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="text-lg sm:text-[18px] font-bold dark:text-white">
-            {item.price_label}
+          {/* No price when this depot has no such listing — min-h keeps the
+              cards aligned either way. */}
+          <div className="min-h-7 text-lg sm:text-[18px] font-bold dark:text-white">
+            {price !== null && `Starts at ${formatMoney(price)}`}
           </div>
           <div className="text-xs text-[#04B761] font-bold">
             Buy &middot; Rent &middot; Rent-To-Own
@@ -89,6 +55,9 @@ function Card({ item }: { item: Product }) {
 /**
  * Adapted from (home)/_components/RightContainer.tsx for the product page.
  *
+ * Priced from `relatedProducts` — every container at this page's depot — rather
+ * than fetched: the page already holds them.
+ *
  * The heading defaults to its own copy rather than the homepage's
  * `rightContainer.h2`. Sharing that key would mean editing homepage copy in the
  * Content Editor silently rewrote a section of every product page — and this is
@@ -98,15 +67,17 @@ function Card({ item }: { item: Product }) {
  */
 export function YouMayAlsoNeed({
   heading = "You may also need:",
+  relatedProducts,
 }: {
   heading?: string;
+  relatedProducts: ProductHit[];
 }) {
   return (
     <div className="flex flex-col gap-[10px]">
       <h2 className="text-[16px] md:text-[24px] font-bold">{heading}</h2>
       <CardCarousel label="Containers you may also need">
-        {PRODUCTS.map((item, index) => (
-          <Card key={`product-card-${index}`} item={item} />
+        {FEATURED_CONTAINERS.map((item) => (
+          <Card key={item.key} item={item} price={lowestPrice(relatedProducts, item.spec)} />
         ))}
       </CardCarousel>
       <div className="mt-[30px] text-center hidden md:block">

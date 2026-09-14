@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { findEquivalentContainer, isContainerHit, isGenericDisplayHit } from "@/lib/pricing";
+import { findEquivalentContainer, isContainerHit, isGenericDisplayHit, lowestPrice } from "@/lib/pricing";
 import { resolveContainerVariant } from "@/lib/containerVariant";
 import { ROUTES } from "@/config/routes";
 import { notifyVisitorZipChange, readVisitorZip } from "@/lib/visitorZip";
@@ -400,7 +400,10 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       />
 
       {/* Phones only — the desktop sidebar already carries this. */}
-      <MobileTrustSection />
+      <MobileTrustSection
+        rentFrom={lowestPrice(pool, { paymentType: "rental" })}
+        rtoFrom={lowestPrice(pool, { paymentType: "rto" })}
+      />
 
       {/* BODY TABS */}
       <BodyTabsSection variant={containerVariant} product={activeProduct} />
@@ -441,13 +444,13 @@ export function ProductDetail({ product, relatedProducts }: Props) {
       {/* Phones only — desktop keeps a call button in the sticky panel. */}
       <MobileSpecialistBanner />
 
-      {/* NOTE: this renders four hardcoded containers with placeholder prices
-          and "#" CTA links — see the TODO in YouMayAlsoNeed.tsx. The section
-          directly above it lists the *real* related products for this depot,
-          under the same "You May Also Need" title. Give this one its own
-          heading, or wire it to relatedProducts, before it ships. */}
+      {/* NOTE: four featured containers, priced from this depot's listings,
+          whose CTA links are still "#" placeholders. The section directly above
+          it lists the *real* related products for this depot, under the same
+          "You May Also Need" title — give this one its own heading, and real
+          links, before it ships. */}
       <section className="px-4 sm:px-[5%]">
-        <YouMayAlsoNeed />
+        <YouMayAlsoNeed relatedProducts={pool} />
       </section>
 
       {/* REVIEWS */}

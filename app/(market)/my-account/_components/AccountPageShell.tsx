@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { useHydrated } from '@/hooks/useHydrated'
 import { ROUTES } from '@/config/routes'
 import { AccountLayout } from './AccountLayout'
 
@@ -17,11 +18,7 @@ type Props = {
 export function AccountPageShell({ title, children }: Props) {
   const { isAuthenticated } = useAuth()
   const router = useRouter()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useHydrated()
 
   useEffect(() => {
     if (mounted && !isAuthenticated) router.replace(ROUTES.ACCOUNT.ROOT)

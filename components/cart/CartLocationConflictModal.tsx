@@ -1,9 +1,10 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
-import { MapPinOff, Trash2, ArrowRight, ShoppingCart } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { ROUTES } from '@/config/routes'
+import { CONTACT_NUMBER } from '@/lib/helpers'
 
 type Props = {
   open:            boolean
@@ -21,11 +22,16 @@ type Props = {
   reason?:         'add' | 'zip'
 }
 
-const SECONDARY =
-  'flex-1 inline-flex items-center justify-center gap-2 rounded-md border-2 border-theme-border px-4 py-2.5 text-sm font-bold text-theme-dark dark:text-white dark:border-neutral-700 hover:border-theme-primary hover:text-theme-primary transition-colors'
-const PRIMARY =
-  'flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-theme-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-theme-primary-dark transition-colors'
+const CONTACT_TEL = `tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`
 
+/**
+ * The one-depot-per-order prompt, in the "Whoops!" design: a container photo
+ * on the left, the problem and the way out on the right.
+ *
+ * Go to Cart is the main action for both cases — what is holding the other
+ * location is in the cart. Clearing the cart stays available as the secondary
+ * way through, so nobody is stuck with an order they no longer want.
+ */
 export function CartLocationConflictModal({
   open,
   onClose,
@@ -37,73 +43,69 @@ export function CartLocationConflictModal({
   const isZip = reason === 'zip'
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={isZip ? 'Your Cart Is From Another Location' : 'One Pickup Location at a Time'}
-      footer={
-        <>
+    <Modal open={open} onClose={onClose} title="Whoops! There seems to be a problem." bare maxWidth="max-w-2xl">
+      <div className="grid sm:grid-cols-[5fr_7fr]">
+        {/* Decorative, so it is dropped on phones where the width is needed. */}
+        <div className="relative hidden min-h-[22rem] bg-stone-800 sm:block">
+          <Image
+            src="/images/home-banners/hero-image.webp"
+            alt=""
+            fill
+            sizes="280px"
+            className="object-cover object-[30%_center]"
+          />
+          <div className="absolute left-4 top-4 rounded bg-white/95 px-2 py-1.5 shadow-sm">
+            <Image
+              src="/images/logo/oss-logo.webp"
+              alt="On Site Storage Solutions"
+              width={497}
+              height={98}
+              className="h-auto w-28"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center px-6 pb-6 pt-10 text-center sm:px-8">
+          <h2 className="max-w-xs text-xl font-bold leading-snug text-[#4B4B4B] dark:text-white">
+            Whoops! There seems to be a problem.
+          </h2>
+
+          <p className="mt-3 text-[15px] leading-relaxed text-theme-primary">
+            {isZip
+              ? 'To ensure a smooth shopping experience, please complete your current order or clear your cart before changing your location.'
+              : 'To ensure a smooth shopping experience, please complete your current order or clear your cart before adding items from another location.'}
+          </p>
+
+          <p className="mt-3 text-xs text-theme-muted">
+            In your cart: <strong className="text-theme-dark dark:text-white">{currentLocation}</strong>
+            {' · '}
+            {isZip ? 'New location' : 'This container'}:{' '}
+            <strong className="text-theme-dark dark:text-white">{newLocation}</strong>
+          </p>
+
+          <Link
+            href={ROUTES.CART}
+            onClick={onClose}
+            className="mt-7 inline-flex items-center justify-center rounded-md bg-[#3F3F3F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2"
+          >
+            Go to Cart
+          </Link>
+
           <button
             type="button"
             onClick={() => { onClearCart(); onClose() }}
-            className={SECONDARY}
+            className="mt-3 text-xs font-semibold text-theme-muted underline underline-offset-2 transition-colors hover:text-theme-primary"
           >
-            <Trash2 className="w-4 h-4" />
-            {isZip ? 'Clear Cart & Switch' : 'Clear Cart'}
+            {isZip ? 'Clear cart and switch location' : 'Clear cart'}
           </button>
-          {/* A ZIP change has nothing to check out yet — the useful next step
-              is to see what is holding the old location, so this goes to the
-              cart. Adding a container keeps its original "finish this order"
-              action. */}
-          {isZip ? (
-            <Link href={ROUTES.CART} onClick={onClose} className={PRIMARY}>
-              <ShoppingCart className="w-4 h-4" /> Go to Cart
-            </Link>
-          ) : (
-            <Link href={ROUTES.CHECKOUT} onClick={onClose} className={PRIMARY}>
-              Proceed to Checkout <ArrowRight className="w-4 h-4" />
-            </Link>
-          )}
-        </>
-      }
-    >
-      <div className="flex flex-col gap-4">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-theme-primary-light dark:bg-theme-primary/15">
-          <MapPinOff className="w-6 h-6 text-theme-primary" />
+
+          <p className="mt-auto pt-6 text-sm text-theme-mid dark:text-gray-300">
+            Call Us for more details.{' '}
+            <a href={CONTACT_TEL} className="text-theme-primary hover:underline">
+              {CONTACT_NUMBER}
+            </a>
+          </p>
         </div>
-
-        <p className="text-center">
-          {isZip ? (
-            <>
-              Your cart has a container from <strong>{currentLocation}</strong>. Each order ships
-              from one location, so your location can&rsquo;t change while it&rsquo;s in your cart.
-            </>
-          ) : (
-            <>
-              For a smooth delivery process, you can only add shipping containers from the{' '}
-              <strong>same location</strong> to your cart.
-            </>
-          )}
-        </p>
-
-        <div className="rounded-lg bg-theme-subtle dark:bg-white/5 border border-theme-border dark:border-neutral-800 px-4 py-3 text-xs">
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-bold uppercase tracking-wide text-theme-muted">In Your Cart</span>
-            <span className="font-semibold text-theme-dark dark:text-white">{currentLocation}</span>
-          </div>
-          <div className="flex items-center justify-between gap-2 mt-1.5 pt-1.5 border-t border-theme-border dark:border-neutral-800">
-            <span className="font-bold uppercase tracking-wide text-theme-muted">
-              {isZip ? 'New Location' : 'This Container'}
-            </span>
-            <span className="font-semibold text-theme-primary">{newLocation}</span>
-          </div>
-        </div>
-
-        <p className="text-center text-xs text-theme-muted">
-          {isZip
-            ? 'Finish that order first, or clear your cart to switch to the new location.'
-            : 'Clear your cart to start a new order at this location, or complete checkout for your current order first.'}
-        </p>
       </div>
     </Modal>
   )

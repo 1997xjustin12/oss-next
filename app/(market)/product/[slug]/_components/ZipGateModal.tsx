@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, MapPin, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
@@ -141,6 +141,8 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
     apply(only)
   }, [open, chosen, loading, results, zip, apply])
 
+  const listboxId = useId()
+
   if (!open) return null
 
   // All derived from the lookup rather than mirrored into state: the search is
@@ -237,8 +239,10 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
                   pick(results[0])
                 }
               }}
+              role="combobox"
               aria-autocomplete="list"
               aria-expanded={showList}
+              aria-controls={listboxId}
               placeholder="Enter delivery zip code"
               aria-label="Delivery ZIP or postal code"
               aria-invalid={!!message}
@@ -250,6 +254,7 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
 
             {showList && (
               <ul
+                id={listboxId}
                 role="listbox"
                 className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-theme-border bg-theme-bg shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
               >
