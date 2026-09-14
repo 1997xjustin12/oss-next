@@ -53,12 +53,42 @@ export function BodyTabsSection({ variant, product }: Props) {
   const [bodyTab, setBodyTab] = useState<BodyTab>('overview')
   const { condition, grade } = resolveCombination(product)
 
+  // Every panel is rendered; only the active one is shown.
+  //
+  // This used to render just the active tab, so the Specifications text was not
+  // in the server HTML at all, and a separate <noscript> copy was added to give
+  // crawlers something to read. React treats <noscript> contents as ordinary
+  // markup, but a browser with JavaScript on parses them as plain text. On a
+  // cold render React split that copy into streamed pieces whose placeholders
+  // sat inside the <noscript>, never became elements, and made React's swap
+  // script throw "Cannot read properties of null (reading 'parentNode')" —
+  // reproduced on the first product-page load after a server start.
+  //
+  // With the panels in the page, the specs are in the HTML for everyone and the
+  // <noscript> copy is gone, so that failure has nowhere left to happen. `hidden`
+  // keeps inactive panels out of layout and out of the accessibility tree.
+  const panelProps = (id: BodyTab) => ({
+    role: 'tabpanel' as const,
+    id: `body-panel-${id}`,
+    'aria-labelledby': `body-tab-${id}`,
+    hidden: bodyTab !== id,
+  })
+
   return (
     <section className="px-4 sm:px-[5%]">
-      <div className="flex gap-1 overflow-x-auto border-b-2 border-theme-border mb-8 -mx-1 px-1 scrollbar-none">
+      <div
+        role="tablist"
+        aria-label="Product details"
+        className="flex gap-1 overflow-x-auto border-b-2 border-theme-border mb-8 -mx-1 px-1 scrollbar-none"
+      >
         {bodyTabs.map((t, index) => (
           <button
             key={`body-tabs-${t.id}-${index}`}
+            type="button"
+            role="tab"
+            id={`body-tab-${t.id}`}
+            aria-selected={bodyTab === t.id}
+            aria-controls={`body-panel-${t.id}`}
             onClick={() => setBodyTab(t.id)}
             className={`relative font-bold text-sm sm:text-base px-3 sm:px-5 py-1 whitespace-nowrap transition-colors
               ${bodyTab === t.id ? 'text-white bg-theme-primary rounded-tr-[15px]' : 'text-theme-muted hover:text-theme-dark'}`}
@@ -69,15 +99,17 @@ export function BodyTabsSection({ variant, product }: Props) {
         ))}
       </div>
 
-      {bodyTab === 'overview' && (
-        variant === '40S' ? <Overview40S condition={condition} grade={grade} /> :
-        variant === '40H' ? <Overview40H condition={condition} grade={grade} /> :
-        <Overview20S condition={condition} grade={grade} />
-      )}
+      <div {...panelProps('overview')}>
+        {variant === '40S' ? <Overview40S condition={condition} grade={grade} /> :
+         variant === '40H' ? <Overview40H condition={condition} grade={grade} /> :
+         <Overview20S condition={condition} grade={grade} />}
+      </div>
 
-      {bodyTab === 'specs' && <Specifications variant={variant} />}
+      <div {...panelProps('specs')}>
+        <Specifications variant={variant} />
+      </div>
 
-      {bodyTab === 'conditions' && (
+      <div {...panelProps('conditions')}>
         <div>
           <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2">Understanding Container Conditions</h3>
           <p className="text-sm sm:text-base text-theme-muted mb-6 leading-relaxed">
@@ -112,11 +144,13 @@ export function BodyTabsSection({ variant, product }: Props) {
             </table>
           </div>
         </div>
-      )}
+      </div>
 
-      {bodyTab === 'delivery' && <DeliveryInfo variant={variant} />}
+      <div {...panelProps('delivery')}>
+        <DeliveryInfo variant={variant} />
+      </div>
 
-      {bodyTab === 'warranty' && (
+      <div {...panelProps('warranty')}>
         <div>
           <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2">Shipping Container Warranty</h3>
 
@@ -156,7 +190,7 @@ export function BodyTabsSection({ variant, product }: Props) {
             </p>
           </div>
         </div>
-      )}
+      </div>
     </section>
   )
 }

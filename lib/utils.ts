@@ -90,3 +90,20 @@ export function capitalizeFirst(value: string | null | undefined): string {
     return word[0].toUpperCase() + word.slice(1)
   })
 }
+
+/**
+ * Escape text for use inside HTML — element content or a double-quoted attribute.
+ *
+ * For the rare markup that has to be built as a string rather than as JSX (see
+ * the listing page's <noscript> block). JSX escapes for you; a string does not,
+ * and a product title containing `<` or `"` would otherwise break the markup or
+ * inject into it.
+ */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}

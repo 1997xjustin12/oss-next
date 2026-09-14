@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { cachedEsSearch, DEFAULT_LOCATION } from '@/services/search.service'
 import { getPriceBasis } from '@/lib/pricing'
 import { formatMoney } from '@/lib/formatters'
+import { escapeHtml } from '@/lib/utils'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ROUTES } from '@/config/routes'
@@ -119,6 +120,39 @@ async function fetchListingHits(params: SearchParams): Promise<ProductHit[]> {
   }
 }
 
+/**
+ * The <noscript> product list, as a single HTML string.
+ *
+ * Deliberately not JSX. On a cold render React can split any subtree into
+ * streamed pieces, leaving a placeholder where each piece will go — and a
+ * browser with JavaScript on reads <noscript> contents as plain text, so a
+ * placeholder inside it never becomes an element and React's swap script
+ * crashes the page ("Cannot read properties of null (reading 'parentNode')").
+ * Reproduced on a cold load of ?ptype=rto, with the placeholders landing right
+ * after ordinary <li><a> rows: plain elements are split too, so the only safe
+ * content is something React cannot split. A dangerouslySetInnerHTML string is
+ * written as one chunk and never parsed by React. The same crash took down the
+ * product page until its <noscript> copy was removed.
+ *
+ * Every dynamic value is escaped: JSX did that for free, a string does not.
+ */
+function noscriptListingHtml(heading: string, hits: ProductHit[]): string {
+  const items = hits
+    .map((hit) => {
+      const basis = getPriceBasis(hit)
+      const price = hit.sale_price ? ` — ${formatMoney(hit.sale_price)}${basis.suffix}` : ''
+      const period = basis.period === 'monthly' ? ` (${basis.label.toLowerCase()})` : ''
+      const href = escapeHtml(ROUTES.PRODUCT(String(hit.handle)))
+      return `<li class="mb-2"><a href="${href}">${escapeHtml(String(hit.title ?? ''))}</a>${escapeHtml(price + period)}</li>`
+    })
+    .join('')
+  return (
+    `<section aria-labelledby="noscript-results-heading" class="px-[5%] py-6">` +
+    `<h2 id="noscript-results-heading" class="text-lg font-bold mb-3">${escapeHtml(heading)}</h2>` +
+    `<ul>${items}</ul></section>`
+  )
+}
+
 async function SaleContainersContent({ searchParams }: Props) {
   const params = await searchParams
   const { ptype = 'buy', zipcode, location } = params
@@ -165,27 +199,11 @@ async function SaleContainersContent({ searchParams }: Props) {
           client, so without JavaScript this page is a shop with no products in
           it. These are the same `hits` the ItemList structured data describes,
           as real links a crawler can follow. Dropped by any browser that runs
-          JS, so it costs nothing visually. */}
+          JS, so it costs nothing visually.
+
+          One pre-built HTML string, not JSX children — see noscriptListingHtml. */}
       {hits.length > 0 && (
-        <noscript>
-          <section aria-labelledby="noscript-results-heading" className="px-[5%] py-6">
-            <h2 id="noscript-results-heading" className="text-lg font-bold mb-3">
-              {listingName}
-            </h2>
-            <ul>
-              {hits.map((hit) => {
-                const basis = getPriceBasis(hit)
-                return (
-                  <li key={hit.handle} className="mb-2">
-                    <Link href={ROUTES.PRODUCT(hit.handle)}>{hit.title}</Link>
-                    {hit.sale_price ? ` — ${formatMoney(hit.sale_price)}${basis.suffix}` : ''}
-                    {basis.period === 'monthly' ? ` (${basis.label.toLowerCase()})` : ''}
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
-        </noscript>
+        <noscript dangerouslySetInnerHTML={{ __html: noscriptListingHtml(listingName, hits) }} />
       )}
     </div>
   )

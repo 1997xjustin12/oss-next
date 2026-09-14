@@ -11,7 +11,6 @@ import { breadcrumbNode, faqNode, graph, productNode, siteNodes } from '@/lib/sc
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { ProductDetail } from './_components/ProductDetail'
-import { NoScriptDetails } from './_components/NoScriptDetails'
 import { PdpSkeleton } from './_components/PdpSkeleton'
 import type { ProductHit } from '@/types/product'
 
@@ -101,12 +100,11 @@ async function ProductContent({ params }: Props) {
   return (
     <>
       <JsonLd data={buildJsonLd(product, slug)} />
+      {/* No separate no-JS copy of the specs and FAQ any more. Both are in the
+          server HTML already: the tab section renders every panel (hiding the
+          inactive ones) and the FAQ keeps collapsed answers in the DOM. The old
+          <noscript> copy crashed cold renders — see BodyTabsSection. */}
       <ProductDetail product={product} relatedProducts={related_products} />
-      {/* Specs and FAQ for consumers that don't run JS — the tabbed UI renders
-          neither until hydration. See NoScriptDetails for why. */}
-      {isContainerHit(product) && (
-        <NoScriptDetails variant={resolveContainerVariant(product)} />
-      )}
     </>
   )
 }
