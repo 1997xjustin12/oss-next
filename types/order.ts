@@ -78,3 +78,21 @@ export interface OrderTotal {
   items_count: number
   message: string
 }
+
+/**
+ * Shipment tracking for one order, as our own `/api/auth/orders/tracking` returns it.
+ *
+ * - `available`: the backend returned tracking. `tracking` is its response passed
+ *   through untouched — no order has had a tracking number yet, so the shape is
+ *   unconfirmed and deliberately left untyped until a real one is seen.
+ * - `none`: the order exists but has no tracking number yet (the normal state for
+ *   most orders). `orderStatus` is the backend's status for it.
+ * - `not_found`: not one of this customer's orders. Our route answers this without
+ *   ever asking the backend, which does not check ownership itself.
+ * - `error`: the backend lookup failed.
+ */
+export type OrderTracking =
+  | { state: 'available'; tracking: unknown }
+  | { state: 'none'; orderStatus?: string }
+  | { state: 'not_found' }
+  | { state: 'error' }

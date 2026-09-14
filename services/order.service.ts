@@ -1,4 +1,4 @@
-import type { CheckoutPayload, GetOrderTotalPayload, Order, OrderTotal } from '@/types/order'
+import type { CheckoutPayload, GetOrderTotalPayload, Order, OrderTotal, OrderTracking } from '@/types/order'
 import { logBackendRejection } from '@/lib/backendError'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
@@ -8,6 +8,8 @@ const CHECKOUT_URL = `${BACKEND_URL}api/orders/checkout`
 const GET_TOTAL_URL = `${BACKEND_URL}api/orders/get-total`
 const LIST_ORDERS_URL = `${BACKEND_URL}api/auth/orders`
 const ABANDONED_CART_URL = `${BACKEND_URL}api/abandoned-carts/create/`
+const TRACKING_URL = (orderNumber: string) =>
+  `${BACKEND_URL}orders/tracking/track/${encodeURIComponent(orderNumber)}/`
 
 // TODO: confirm the real response shape against the OSS backend — placeholder
 // passed through raw until /api/orders/checkout is integrated.
@@ -74,6 +76,48 @@ export async function listUserOrders(token: string): Promise<Order[]> {
   }
 
   return (data?.orders ?? data ?? []) as Order[]
+}
+
+/**
+ * Shipment tracking for one order, from the backend's `orders/tracking/track/<n>/`.
+ *
+ * **Only call this for an order already confirmed to belong to the customer.** The
+ * backend answers this route without checking login or ownership (reported
+ * 2026-09-14), so it is `/api/auth/orders/tracking` that keeps customers to their
+ * own orders — see that route. The token is still sent, so nothing changes here
+ * once the backend starts requiring it.
+ *
+ * "No tracking number yet" arrives as a 404 carrying `order_status`. That is the
+ * normal state of most orders, so it is returned as `none`, not as a failure.
+ * Anything else that is not a success is logged with the backend's own reply and
+ * returned as `error` — including the 500 the backend gives for an unknown order.
+ */
+export async function getOrderTracking(orderNumber: string, token: string): Promise<OrderTracking> {
+  let res: Response
+  try {
+    res = await fetch(TRACKING_URL(orderNumber), {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'X-Store-Domain': STORE_DOMAIN ?? '',
+        Authorization: `Bearer ${token}`,
+      },
+      cache: 'no-store',
+    })
+  } catch (err) {
+    console.error('[order.service tracking] request failed:', err)
+    return { state: 'error' }
+  }
+
+  const data = await res.json().catch(() => null)
+
+  if (res.ok) return { state: 'available', tracking: data }
+  if (res.status === 404 && data && typeof data === 'object' && 'order_status' in data) {
+    return { state: 'none', orderStatus: String((data as { order_status: unknown }).order_status) }
+  }
+
+  logBackendRejection('order.service tracking', res.status, data)
+  return { state: 'error' }
 }
 
 // Also called via navigator.sendBeacon on tab close for guests, so callers
