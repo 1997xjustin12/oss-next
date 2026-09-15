@@ -17,6 +17,7 @@ import { AlertTriangle, ArrowUpRight, ChevronDown, Phone, Search, SlidersHorizon
 import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
 import { QuickViewModal } from './QuickViewModal'
+import { TileLink } from './TileLink'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { formatMoney } from '@/lib/formatters'
 import { CONTACT_NUMBER } from '@/lib/helpers'
@@ -470,9 +471,7 @@ function StarRow({ rating }: { rating: number }) {
 }
 
 function ProductHit({ hit }: { hit: HitData }) {
-  const [loading, setLoading] = useState(false)
   const [quickView, setQuickView] = useState(false)
-  const router  = useRouter()
 
   const img      = hit.images?.[0]
   const variant  = hit.variants?.[0]
@@ -497,18 +496,11 @@ function ProductHit({ hit }: { hit: HitData }) {
   return (
     <>
     <article
-      onClick={() => { setLoading(true); router.push(href) }}
-      className="relative grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-5 rounded-lg border border-theme-border bg-white p-4 sm:p-5 cursor-pointer transition-all hover:border-theme-primary/40 hover:shadow-lg"
+      className="relative grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-5 rounded-lg border border-theme-border bg-white p-4 sm:p-5 transition-all hover:border-theme-primary/40 hover:shadow-lg"
     >
-      {loading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 rounded-lg">
-          <div className="w-6 h-6 border-[3px] border-theme-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
-
       {/* Thumbnail */}
       <div className="relative sm:col-span-3 aspect-4/3 rounded-md bg-theme-subtle overflow-hidden">
-        <span className={`absolute top-0 left-0 z-10 rounded-br-md px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white ${BADGE_CLASSES[badge.tone]}`}>
+        <span className={`pointer-events-none absolute top-0 left-0 z-10 rounded-br-md px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white ${BADGE_CLASSES[badge.tone]}`}>
           {badge.label}
         </span>
         {img?.src ? (
@@ -520,7 +512,9 @@ function ProductHit({ hit }: { hit: HitData }) {
 
       {/* Info */}
       <div className="sm:col-span-6 flex min-w-0 flex-col gap-2">
-        <h3 className="text-lg font-extrabold leading-tight text-theme-dark">{hit.title}</h3>
+        <h3 className="text-lg font-extrabold leading-tight text-theme-dark">
+          <TileLink href={href} rounded="lg">{hit.title}</TileLink>
+        </h3>
 
         <div className="flex items-center gap-2 text-xs">
           <StarRow rating={rating} />
@@ -539,7 +533,7 @@ function ProductHit({ hit }: { hit: HitData }) {
         <div className="flex items-center gap-1.5 text-xs font-semibold text-theme-accent">
           <Phone size={12} />
           Found It Cheaper? Call{' '}
-          <a href="tel:8889779085" onClick={(e) => e.stopPropagation()} className="hover:underline">
+          <a href="tel:8889779085" className="relative z-10 hover:underline">
             (888) 977-9085
           </a>
         </div>
@@ -578,15 +572,15 @@ function ProductHit({ hit }: { hit: HitData }) {
         </div>
         <div className="flex w-full max-w-45 flex-col gap-2">
           <button
-            onClick={(e) => { e.stopPropagation(); setQuickView(true) }}
-            className="w-full rounded-md bg-theme-primary px-4 py-2.5 text-sm font-extrabold text-white text-center transition-colors hover:bg-theme-primary-dark"
+            type="button"
+            onClick={() => setQuickView(true)}
+            className="relative z-10 w-full rounded-md bg-theme-primary px-4 py-2.5 text-sm font-extrabold text-white text-center transition-colors hover:bg-theme-primary-dark"
           >
             Quick View
           </button>
           <a
             href="tel:8889779085"
-            onClick={(e) => e.stopPropagation()}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-theme-dark px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-black"
+            className="relative z-10 flex w-full items-center justify-center gap-2 rounded-md bg-theme-dark px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-black"
           >
             <Phone size={13} />
             (888) 977-9085

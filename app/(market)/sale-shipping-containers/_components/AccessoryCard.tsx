@@ -1,10 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Phone, Star } from 'lucide-react'
 import { formatMoney } from '@/lib/formatters'
+import { TileLink } from './TileLink'
 import type { Accessory } from '@/types/product'
 
 type Props = { product: Accessory }
@@ -16,26 +15,16 @@ const BADGE_CLASSES = {
 } satisfies Record<Accessory['badge']['tone'], string>
 
 export function AccessoryCard({ product }: Props) {
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const href = product.permalink ?? `/product/${product.sku.toLowerCase()}`
   const full = Math.round(product.rating)
 
   return (
     <article
-      onClick={() => { setLoading(true); router.push(href) }}
-      className="relative flex flex-col rounded-xl border border-theme-border dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden cursor-pointer transition-all hover:border-theme-primary/50 hover:shadow-lg hover:-translate-y-0.5"
+      className="group relative flex flex-col rounded-xl border border-theme-border dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden transition-all hover:border-theme-primary/50 hover:shadow-lg hover:-translate-y-0.5"
     >
-      {/* Loading overlay */}
-      {loading && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 dark:bg-neutral-900/80 rounded-xl">
-          <div className="w-5 h-5 border-[3px] border-theme-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
-
       {/* Image */}
       <div className="relative aspect-square bg-theme-subtle dark:bg-neutral-800 overflow-hidden">
-        <span className={`absolute top-0 left-0 z-10 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white rounded-br-lg ${BADGE_CLASSES[product.badge.tone]}`}>
+        <span className={`pointer-events-none absolute top-0 left-0 z-10 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white rounded-br-lg ${BADGE_CLASSES[product.badge.tone]}`}>
           {product.badge.label}
         </span>
         {product.thumbnailUrl ? (
@@ -54,7 +43,7 @@ export function AccessoryCard({ product }: Props) {
       {/* Info */}
       <div className="flex flex-col gap-1.5 p-3 flex-1">
         <h3 className="text-sm font-bold leading-snug text-theme-dark dark:text-gray-100 line-clamp-2">
-          {product.title}
+          <TileLink href={href} rounded="xl">{product.title}</TileLink>
         </h3>
 
         {product.rating > 0 && (
@@ -80,9 +69,11 @@ export function AccessoryCard({ product }: Props) {
           <div className="text-lg font-black leading-none text-theme-dark dark:text-gray-100">
             {formatMoney(product.price)}
           </div>
-          <button className="text-xs font-extrabold bg-theme-primary text-white px-3 py-1.5 rounded-md hover:bg-theme-primary-dark transition-colors">
+          {/* Looks like a button; the title link covering the tile does the work,
+              so it is not a second focusable control that goes to the same place. */}
+          <span aria-hidden className="text-xs font-extrabold bg-theme-primary text-white px-3 py-1.5 rounded-md transition-colors group-hover:bg-theme-primary-dark">
             View
-          </button>
+          </span>
         </div>
       </div>
 
@@ -90,8 +81,7 @@ export function AccessoryCard({ product }: Props) {
       <div className="px-3 pb-3">
         <a
           href="tel:8889779085"
-          onClick={(e) => e.stopPropagation()}
-          className="flex items-center justify-center gap-1.5 w-full rounded-md bg-theme-dark dark:bg-neutral-700 text-white text-xs font-bold py-2 hover:bg-black dark:hover:bg-neutral-600 transition-colors"
+          className="relative z-10 flex items-center justify-center gap-1.5 w-full rounded-md bg-theme-dark dark:bg-neutral-700 text-white text-xs font-bold py-2 hover:bg-black dark:hover:bg-neutral-600 transition-colors"
         >
           <Phone size={11} /> (888) 977-9085
         </a>
