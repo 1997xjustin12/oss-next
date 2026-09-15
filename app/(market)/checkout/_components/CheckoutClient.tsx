@@ -28,6 +28,7 @@ import { formatMoney } from '@/lib/formatters';
 import {
   DEFAULT_SHIPPING_METHOD,
   availableShippingOptions,
+  completeZip,
   deliveryPriceLabel,
   isDeliveryBilledLater,
   selectedShippingOption,
@@ -37,7 +38,7 @@ import { Recaptcha } from '@/components/ui/Recaptcha';
 import type { BraintreeDropInHandle } from './BraintreeDropIn';
 import type { CartItem } from '@/types/cart';
 import { toAlpha2 } from '@/lib/country';
-import type { CheckoutPayload, GetOrderTotalPayload, OrderTotal } from '@/types/order';
+import type { GetOrderTotalPayload, OrderTotal, PlaceOrderRequest, PlaceOrderResponse } from '@/types/order';
 
 // Fallback only, used until /api/orders/get-total responds (or if it fails) —
 // the real tax rate is computed server-side off the shipping address and can
@@ -309,7 +310,19 @@ function EmptyCart() {
 }
 
 /* ── Order confirmation state ── */
-function OrderComplete() {
+// Guests have no order history to go to — it needs an account — so they are
+// offered the listing instead of a link that would only ask them to sign in.
+function OrderComplete({
+  orderNumber,
+  email,
+  signedIn,
+}: {
+  orderNumber?: string;
+  email?: string;
+  signedIn: boolean;
+}) {
+  const actionCls =
+    'mt-8 inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark';
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-theme-success-light dark:bg-green-950/40">
@@ -318,16 +331,28 @@ function OrderComplete() {
       <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
         Order placed!
       </h1>
+      {orderNumber && (
+        <p className="mt-2 text-base font-bold text-theme-dark dark:text-neutral-100">Order #{orderNumber}</p>
+      )}
       <p className="mt-2 max-w-sm text-sm text-theme-muted dark:text-neutral-400">
         Your payment went through and your order has been recorded. We&apos;ve sent a confirmation
-        email with your order details.
+        email with your order details
+        {email ? (
+          <>
+            {' '}to <strong className="font-semibold text-theme-dark dark:text-neutral-200">{email}</strong>
+          </>
+        ) : null}
+        .
       </p>
-      <Link
-        href={ROUTES.ACCOUNT.ORDERS}
-        className="mt-8 inline-flex items-center gap-2 rounded-md bg-theme-primary px-6 py-3 text-sm font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-theme-primary-dark"
-      >
-        View Order History
-      </Link>
+      {signedIn ? (
+        <Link href={ROUTES.ACCOUNT.ORDERS} className={actionCls}>
+          View Order History
+        </Link>
+      ) : (
+        <PlpLink href={ROUTES.PLP} className={actionCls}>
+          Continue Shopping
+        </PlpLink>
+      )}
       <a
         href="tel:8889779085"
         className="mt-3 text-sm font-semibold text-theme-primary hover:underline dark:text-red-400"
@@ -339,11 +364,13 @@ function OrderComplete() {
 }
 
 /**
- * Shown when the card was charged but /api/orders/checkout did not record the
- * order. The customer's money has moved, so this deliberately offers no way to
- * retry — a second attempt would charge them again. The Braintree transaction
- * id is surfaced because it is the one reference support can trace the payment
- * by, and it is the same value the backend receives as `transaction_id`.
+ * Shown when the card was charged, the order could not be recorded, and the
+ * charge could not be voided either (/api/checkout/place-order voids it in every
+ * other case, and the customer simply sees an error and can try again). The
+ * customer's money has moved, so this deliberately offers no way to retry — a
+ * second attempt would charge them again. The Braintree transaction id is
+ * surfaced because it is the one reference support can trace the payment by,
+ * and it is the value orders carry as `payment_details`.
  */
 function PaymentTakenNoOrder({ transactionId, detail }: { transactionId?: string; detail?: string }) {
   return (
@@ -410,6 +437,13 @@ export function CheckoutClient() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [orderComplete, setOrderComplete] = useState(false);
+  // What the confirmation screen shows; kept apart from the cart, which is
+  // cleared the moment the order is recorded.
+  const [confirmation, setConfirmation] = useState<{
+    orderNumber?: string;
+    email: string;
+    signedIn: boolean;
+  } | null>(null);
   // Set only in the narrow window where the charge succeeded but the order
   // failed to record — a state the customer must never be able to "retry".
   const [paymentTaken, setPaymentTaken] = useState<{
@@ -573,9 +607,18 @@ export function CheckoutClient() {
   // country, and "Canada (CA)" finds no route at all.
   const shippingZip = shipping.zip.trim();
   const shippingCountryCode = toAlpha2(shipping.country) ?? shipping.country;
+  // Priced only once complete: each request with a ZIP can cost the backend a
+  // paid Google lookup, and every pause while typing one used to send another.
+  const pricedZip = completeZip(shippingZip, shippingCountryCode);
   const itemsKey = items.map((item) => `${item.id}:${item.quantity}`).join(',');
-  const addressKey = `${itemsKey}|${shippingZip}|${shippingCountryCode}`;
-  const quoteKey = `${addressKey}|${hasContainer ? shippingMethod : ''}`;
+  const addressKey = `${itemsKey}|${pricedZip}|${shippingCountryCode}`;
+  // The method only changes the total when the backend charges delivery at
+  // checkout. While delivery is billed after the order, one reply already
+  // prices every method, so switching reads that reply instead of asking again.
+  const addressQuote = quoteResult?.addressKey === addressKey ? quoteResult.total?.shipping : undefined;
+  const methodPriced = hasContainer && addressQuote?.charge_mode === 'charge_at_checkout';
+  const requestMethod = hasContainer ? (methodPriced ? shippingMethod : DEFAULT_SHIPPING_METHOD) : undefined;
+  const quoteKey = `${addressKey}|${requestMethod ?? ''}`;
 
   // Real totals from /api/orders/get-total — debounced so rapid qty/zip
   // edits don't fire a call per keystroke. Every answer, including a failure,
@@ -591,15 +634,15 @@ export function CheckoutClient() {
     const handle = setTimeout(async () => {
       const result = { addressKey, key: quoteKey, total: null as OrderTotal | null, refusal: null as string | null };
       // Only a container cart with a ZIP has delivery to check.
-      const couldNotCheck = hasContainer && shippingZip
+      const couldNotCheck = hasContainer && pricedZip
         ? 'We couldn’t check delivery to this address. Please check the ZIP code and country.'
         : null;
       try {
         const payload: GetOrderTotalPayload = {
           items: lineItems,
-          shipping_zip_code: shippingZip || undefined,
+          shipping_zip_code: pricedZip || undefined,
           shipping_country: shippingCountryCode || undefined,
-          shipping_method: hasContainer ? shippingMethod : undefined,
+          shipping_method: requestMethod,
         };
         const res = await fetch('/api/orders/get-total', {
           method: 'POST',
@@ -623,7 +666,7 @@ export function CheckoutClient() {
       clearTimeout(handle);
       controller.abort();
     };
-  }, [items, hasContainer, shippingZip, shippingCountryCode, shippingMethod, addressKey, quoteKey]);
+  }, [items, hasContainer, pricedZip, shippingCountryCode, requestMethod, addressKey, quoteKey]);
 
   // The last total received, for display while a newer one is on its way. It
   // is never charged from: Place Order waits for the current address below.
@@ -695,6 +738,12 @@ export function CheckoutClient() {
     // by the button says why — worked out from the current quote rather than
     // stored, so it clears itself once the address is corrected.
     if (quoteChecking || deliveryBlocked) return;
+    // Delivery is priced only from a complete ZIP, so an order can't go ahead
+    // on a half-typed one.
+    if (hasContainer && !pricedZip) {
+      setSubmitError('Please enter a complete ZIP or postal code so we can price delivery.');
+      return;
+    }
     if (!paymentReady || !dropinRef.current) {
       setSubmitError('Card payment is not available yet — please check back once it has been set up.');
       return;
@@ -712,20 +761,27 @@ export function CheckoutClient() {
       // customer actually agreed to on the page.
       const billingForm = sameBilling ? shipping : billing;
 
-      const chargeRes = await fetch('/api/braintree_checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nonce,
-          // The server recomputes what to charge from these — it deliberately
-          // does not trust an amount from the browser. `expectedAmount` is only
-          // what we displayed, so it can refuse to charge more than that.
-          items: cartItemsToLineItems(items),
-          shipping_zip_code: shippingZip,
-          shipping_country: shippingCountryCode,
-          shipping_method: deliveryOption?.id,
-          expectedAmount: total.toFixed(2),
-          recaptchaToken,
+      const shipTo = addressToBackendFields(shipping);
+      const billTo = addressToBackendFields(billingForm);
+      // Door direction has no field of its own on the order, and neither was
+      // sent before — it leads the notes so the delivery team sees both.
+      const orderNotes = [doorDirection ? `Door direction: ${doorDirection}` : '', notes.trim()]
+        .filter(Boolean)
+        .join('\n');
+
+      // One request. The server re-prices the cart, charges the card, records
+      // the order with the verified transaction, and voids the charge if the
+      // order can't be recorded — nothing about payment is decided here.
+      const request: PlaceOrderRequest = {
+        nonce,
+        recaptchaToken,
+        items: cartItemsToLineItems(items),
+        shipping_zip_code: pricedZip,
+        shipping_country: shippingCountryCode,
+        shipping_method: deliveryOption?.id,
+        // Only what the page showed: the server refuses to charge more than this.
+        expectedAmount: total.toFixed(2),
+        payer: {
           customer: {
             firstName: billingForm.firstName,
             lastName: billingForm.lastName,
@@ -734,71 +790,57 @@ export function CheckoutClient() {
           },
           billing: addressToBraintree(billingForm),
           shipping: addressToBraintree(shipping),
-        }),
-      });
-      const chargeData = await chargeRes.json().catch(() => null);
-      if (!chargeRes.ok) {
-        throw new Error(chargeData?.error ?? 'Payment could not be processed.');
-      }
-
-      const shipTo = addressToBackendFields(shipping);
-      const billTo = addressToBackendFields(sameBilling ? shipping : billing);
-
-      const payload: CheckoutPayload = {
-        cart_id: cart.cartId,
-        items: cartItemsToLineItems(items),
-        billing_address: billTo.address,
-        billing_city: billTo.city,
-        billing_country: billTo.country,
-        billing_email: billTo.email,
-        billing_first_name: billTo.firstName,
-        billing_last_name: billTo.lastName,
-        billing_phone: billTo.phone,
-        billing_province: billTo.province,
-        billing_zip_code: billTo.zipCode,
-        shipping_address: shipTo.address,
-        shipping_city: shipTo.city,
-        shipping_country: shipTo.country,
-        shipping_email: shipTo.email,
-        shipping_first_name: shipTo.firstName,
-        shipping_last_name: shipTo.lastName,
-        shipping_phone: shipTo.phone,
-        shipping_province: shipTo.province,
-        shipping_zip_code: shipTo.zipCode,
-        shipping_method: deliveryOption?.id,
-        payment_method: 'braintree',
-        transaction_id: chargeData?.transaction?.id,
-        // This code path only runs after a successful Braintree charge, so an
-        // order created here is paid on arrival. Every later status (shipped,
-        // delivered, refunded…) is the backend's to manage. The backend should
-        // still confirm transaction_id before trusting this — see B2.
-        status: 'paid',
+        },
+        order: {
+          cart_id: cart.cartId,
+          billing_address: billTo.address,
+          billing_city: billTo.city,
+          billing_country: billTo.country,
+          billing_email: billTo.email,
+          billing_first_name: billTo.firstName,
+          billing_last_name: billTo.lastName,
+          billing_phone: billTo.phone,
+          billing_province: billTo.province,
+          billing_zip_code: billTo.zipCode,
+          shipping_address: shipTo.address,
+          shipping_city: shipTo.city,
+          shipping_country: shipTo.country,
+          shipping_email: shipTo.email,
+          shipping_first_name: shipTo.firstName,
+          shipping_last_name: shipTo.lastName,
+          shipping_phone: shipTo.phone,
+          shipping_province: shipTo.province,
+          shipping_zip_code: shipTo.zipCode,
+          notes: orderNotes || undefined,
+        },
       };
 
-      const orderRes = await fetch('/api/orders/checkout', {
+      const res = await fetch('/api/checkout/place-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Signed in: the order is attached to the account. A guest sends no
+          // token, which the backend records as a guest order.
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(request),
       });
-      const orderData = await orderRes.json().catch(() => null);
-      if (!orderRes.ok) {
-        // The card has already been charged by this point. This must not fall
-        // through to the generic error path: that leaves the customer on a
-        // checkout page with a live Place Order button, and retrying would
-        // charge them a second time. The cart is deliberately left intact —
-        // no order was recorded, so it is still the only record of what they
-        // bought, and support may need it.
-        console.error('[checkout] charged but order not recorded', orderData);
-        setPaymentTaken({
-          transactionId: chargeData?.transaction?.id,
-          detail: orderData?.error,
-        });
-        return;
+      const result = (await res.json().catch(() => null)) as PlaceOrderResponse | null;
+
+      if (!result?.ok) {
+        if (result?.stage === 'order' && !result.voided) {
+          // Charged, not recorded, and the charge could not be voided: the money
+          // has moved, so this screen offers no retry. The cart is left intact —
+          // it is still the only record of what they bought.
+          console.error('[checkout] charged but order not recorded', result);
+          setPaymentTaken({ transactionId: result.transactionId, detail: result.error });
+          return;
+        }
+        // Nothing was charged, or the charge was voided: safe to correct and retry.
+        throw new Error(result?.error ?? 'Could not complete checkout. Please try again.');
       }
 
+      setConfirmation({ orderNumber: result.orderNumber, email: shipping.email, signedIn: !!authToken });
       clearCart();
       setOrderComplete(true);
     } catch (err) {
@@ -824,7 +866,11 @@ export function CheckoutClient() {
   if (orderComplete) {
     return (
       <div className="min-h-screen bg-theme-subtle dark:bg-neutral-950">
-        <OrderComplete />
+        <OrderComplete
+          orderNumber={confirmation?.orderNumber}
+          email={confirmation?.email}
+          signedIn={confirmation?.signedIn ?? false}
+        />
       </div>
     );
   }

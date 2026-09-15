@@ -100,3 +100,22 @@ export async function chargeBraintreeCheckout(
 
   return result.transaction
 }
+
+/**
+ * Void a charge that has not settled yet.
+ *
+ * Used when the card was charged but the order could not be recorded, so a
+ * customer is never left paying for an order that does not exist. Settlement
+ * runs in batches, so a transaction submitted moments ago is still voidable.
+ * Returns true only when Braintree confirms the void; never throws.
+ */
+export async function voidBraintreeTransaction(transactionId: string): Promise<boolean> {
+  try {
+    const result = await getGateway().transaction.void(transactionId)
+    if (!result.success) console.error('[payment.service void] refused:', transactionId, result.message)
+    return result.success
+  } catch (err) {
+    console.error('[payment.service void] failed:', transactionId, err)
+    return false
+  }
+}

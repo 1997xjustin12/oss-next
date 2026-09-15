@@ -1,7 +1,8 @@
 import type { CartLineItem } from '@/types/cart'
 
-// Wire format for /api/orders/checkout — mirrors the snake_case convention
-// used by CreateCartPayload (types/cart.ts) since it hits the same backend.
+// Wire format for the backend's api/orders/checkout, sent server-side by
+// /api/checkout/place-order — mirrors the snake_case convention used by
+// CreateCartPayload (types/cart.ts) since it hits the same backend.
 export interface CheckoutPayload {
   cart_id?: string
   items: CartLineItem[]
@@ -25,13 +26,62 @@ export interface CheckoutPayload {
   shipping_zip_code: string
   /** The delivery method chosen at checkout, for container orders. */
   shipping_method?: string
+  /** Order notes, with the chosen door direction leading them. */
+  notes?: string
   payment_method?: string
-  transaction_id?: string
-  // The frontend only creates an order after a successful charge, so it always
-  // sends 'paid'. Typed to OrderStatus for consistency, though checkout never
-  // sends any other value.
+  /**
+   * The backend's payment fields. It stores `payment_details` and
+   * `payment_status`; the `transaction_id` sent until 2026-09-15 has no field
+   * there, so every order was recorded with `payment_details: null` and
+   * `payment_status: false`. Set only by the server, after a successful charge.
+   */
+  payment_status?: boolean
+  /** The Braintree transaction id. */
+  payment_details?: string
+  store_domain?: string
+  // An order is only created after a successful charge, so this is always
+  // 'paid'. Typed to OrderStatus for consistency.
   status?: OrderStatus
 }
+
+/**
+ * What checkout sends to /api/checkout/place-order.
+ *
+ * Nothing here decides payment. The server re-prices from `items`, charges,
+ * and records the order with the verified transaction; `expectedAmount` only
+ * lets it refuse to charge more than the page showed.
+ */
+export interface PlaceOrderRequest {
+  nonce: string
+  recaptchaToken?: string | null
+  items: CartLineItem[]
+  /** ISO country code and ZIP used to price delivery (the order keeps the form's own values). */
+  shipping_zip_code?: string
+  shipping_country?: string
+  shipping_method?: string
+  expectedAmount?: string
+  /** Braintree's copy of the payer, for the transaction record. */
+  payer: {
+    customer?: Record<string, string | undefined>
+    billing?: Record<string, string | undefined>
+    shipping?: Record<string, string | undefined>
+  }
+  /** The order's customer fields, as the backend names them. */
+  order: Omit<
+    CheckoutPayload,
+    'items' | 'status' | 'payment_method' | 'payment_status' | 'payment_details' | 'store_domain' | 'shipping_method'
+  >
+}
+
+/**
+ * The outcome of placing an order. Only `stage: 'order'` with `voided: false`
+ * means money moved without an order — the one case the customer must not retry.
+ */
+export type PlaceOrderResponse =
+  | { ok: true; orderNumber?: string; transactionId: string }
+  | { ok: false; stage: 'validation' | 'total' | 'charge'; error: string }
+  | { ok: false; stage: 'order'; voided: true; error: string }
+  | { ok: false; stage: 'order'; voided: false; transactionId: string; error: string }
 
 // Confirmed field names via docs/reference/ORDER_HISTORY_ANSWER.md (extracted from a working
 // reference implementation's OrdersPage.jsx, 2026-07-14) — not yet verified

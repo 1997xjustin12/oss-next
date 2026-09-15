@@ -17,8 +17,7 @@ import { test as base, expect, type Page } from '@playwright/test'
 // that a cart survives login, which is that sync. See README for the list.
 const BLOCKED_ROUTES = [
   '**/api/abandoned-carts/**', // abandoned-cart records and their emails
-  '**/api/braintree_checkout**', // the charge — never reached, this is a backstop
-  '**/api/orders/checkout**', // recording the order
+  '**/api/checkout/place-order**', // the charge and the order — never reached, this is a backstop
   '**/api/subscribers/subscribe**', // newsletter sign-up
   '**/api/auth/register**', // creating accounts
 ]

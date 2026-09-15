@@ -37,6 +37,24 @@ export function shippingRefusal(body: unknown): { code: ShippingRefusalCode; mes
   return null
 }
 
+/**
+ * The ZIP or postal code to price delivery with, or '' while it is incomplete.
+ *
+ * Every pricing request that carries a ZIP can cost the backend a paid Google
+ * lookup, and a half-typed "3", "30", "303" was each sent as one (measured
+ * 2026-09-15: 4 of 11 requests in one checkout). US: the first 5 digits of
+ * 12345 or 12345-6789. Canada: A1A 1A1, returned with its space.
+ */
+export function completeZip(zip: string, country: string | undefined): string {
+  const z = zip.trim().toUpperCase()
+  if (country === 'CA' || /^[A-Z]/.test(z)) {
+    const ca = /^([A-Z]\d[A-Z])\s?(\d[A-Z]\d)$/.exec(z)
+    return ca ? `${ca[1]} ${ca[2]}` : ''
+  }
+  const us = /^(\d{5})(?:-?\d{4})?$/.exec(z)
+  return us ? us[1] : ''
+}
+
 export function availableShippingOptions(quote: ShippingQuote | undefined): ShippingOption[] {
   // "Shipping is Additional" means "quoted and billed after the order". While
   // delivery is billed later anyway, every method already works that way, so

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ShoppingCart, RefreshCw, Truck } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { useStoredZip } from '@/hooks/useStoredZip'
-import { DEFAULT_SHIPPING_METHOD } from '@/lib/shippingQuote'
+import { DEFAULT_SHIPPING_METHOD, completeZip } from '@/lib/shippingQuote'
 import { cartItemsToLineItems } from '@/lib/cart'
 import { applyEnrichParams } from '@/lib/linkEnrich'
 import { readVisitorZip } from '@/lib/visitorZip'
@@ -41,11 +41,15 @@ export function CartPageClient() {
   async function fetchTotals(items: CartItem[], zip: string) {
     const lineItems = cartItemsToLineItems(items)
     const hasContainer = items.some((item) => item.isContainer)
+    const country = /^\d/.test(zip.trim()) ? 'US' : 'CA'
+    // Only a complete ZIP is priced — each request carrying one can cost the
+    // backend a paid Google lookup.
+    const pricedZip = completeZip(zip, country)
     // A container can't be totalled without a delivery address — the backend
     // refuses it outright ("no_address"). Without a stored ZIP there is none to
     // send, so skip a request that always fails; CartSummary then says
     // "Calculated at checkout".
-    if (lineItems.length === 0 || (hasContainer && !zip)) {
+    if (lineItems.length === 0 || (hasContainer && !pricedZip)) {
       setLiveTotal(null)
       setRefusal(null)
       return
@@ -55,10 +59,10 @@ export function CartPageClient() {
     try {
       const payload: GetOrderTotalPayload = {
         items: lineItems,
-        ...(zip
+        ...(pricedZip
           ? {
-              shipping_zip_code: zip,
-              shipping_country: /^\d/.test(zip) ? 'US' : 'CA',
+              shipping_zip_code: pricedZip,
+              shipping_country: country,
               ...(hasContainer ? { shipping_method: DEFAULT_SHIPPING_METHOD } : {}),
             }
           : {}),

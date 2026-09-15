@@ -34,7 +34,7 @@ card or sends email is answered with an empty success in the browser:
 | Blocked | Why |
 |---|---|
 | `/api/abandoned-carts/*` | abandoned-cart records and their emails |
-| `/api/braintree_checkout`, `/api/orders/checkout` | the charge and the order — never reached anyway, no test presses Place Order |
+| `/api/checkout/place-order` | the charge and the order, in one server step — never reached anyway, no test presses Place Order |
 | `/api/subscribers/subscribe` | newsletter sign-up |
 | `/api/auth/register` | new accounts |
 
