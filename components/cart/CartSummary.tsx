@@ -10,6 +10,13 @@ import { readVisitorZip } from '@/lib/visitorZip'
 import { ROUTES } from '@/config/routes'
 import { formatMoney } from '@/lib/formatters'
 import { useCartDeliveryEstimate } from '@/hooks/useCartDeliveryEstimate'
+import {
+  DEFAULT_SHIPPING_METHOD,
+  deliveryPriceLabel,
+  isDeliveryBilledLater,
+  selectedShippingOption,
+} from '@/lib/shippingQuote'
+import type { ShippingQuote } from '@/types/order'
 
 type Props = {
   /** Real total_shipping from /api/orders/get-total — undefined/0 until checkout knows a ZIP. */
@@ -18,18 +25,31 @@ type Props = {
   tax?: number
   /** True while a get-total request is in flight. */
   loading?: boolean
+  /** The backend's delivery quote for the stored ZIP, when it gave one. */
+  quote?: ShippingQuote
+  /** The backend's reason it can't deliver to the stored ZIP. */
+  refusal?: string | null
 }
 
 
-export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
+export function CartSummary({ shipping = 0, tax = 0, loading = false, quote, refusal = null }: Props) {
   const { cart, clearCart } = useCart()
   const { isAuthenticated } = useAuth()
   const router = useRouter()
-  // The backend's delivery figure when it has one; until then, the estimate the
-  // product page added into its subtotal, so the two pages agree on the total.
+  // Delivery is billed after the order (backend `estimate_only`, decided
+  // 2026-09-15), so an estimate is shown beside the total, never inside it —
+  // the total is what checkout will charge. The backend's quote for the default
+  // method comes first; the product page's own estimate is the fallback when
+  // the backend gave none.
   const estimate = useCartDeliveryEstimate(cart.items)
-  const useEstimate = shipping <= 0 && estimate.amount !== null
-  const total = Math.max(0, cart.totalPrice + (useEstimate ? (estimate.amount ?? 0) : shipping) + tax)
+  const charged = shipping > 0
+  const quoted =
+    !charged && quote && !quote.accessories_only && isDeliveryBilledLater(quote)
+      ? selectedShippingOption(quote, DEFAULT_SHIPPING_METHOD)
+      : null
+  const fallbackAmount = !charged && !quote && !refusal ? estimate.amount : null
+  const estimateAmount = quoted ? quoted.cost : fallbackAmount
+  const total = Math.max(0, cart.totalPrice + (charged ? shipping : 0) + tax)
 
   /**
    * Checkout, or a detour for someone we cannot yet reach.
@@ -90,20 +110,45 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false }: Props) {
           </span>
           <span className="font-semibold">{formatMoney(cart.totalPrice)}</span>
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-3">
           <span className="text-theme-muted">
-            {useEstimate ? `Est. delivery to ${estimate.zip}` : 'Delivery fee'}
+            {quoted
+              ? `Est. delivery (${quoted.plain_label})`
+              : fallbackAmount !== null
+                ? `Est. delivery to ${estimate.zip}`
+                : 'Delivery fee'}
           </span>
-          {loading || (shipping <= 0 && estimate.loading) ? (
+          {loading || (!charged && !quote && !refusal && estimate.loading) ? (
             <span className="font-semibold text-theme-muted italic">Calculating…</span>
-          ) : shipping > 0 ? (
+          ) : charged ? (
             <span className="font-semibold">{formatMoney(shipping)}</span>
-          ) : useEstimate ? (
-            <span className="font-semibold">{formatMoney(estimate.amount)}</span>
+          ) : quoted ? (
+            <span className="font-semibold">{deliveryPriceLabel(quoted)}</span>
+          ) : fallbackAmount !== null ? (
+            <span className="font-semibold">{formatMoney(fallbackAmount)}</span>
+          ) : refusal ? (
+            <span className="font-semibold text-theme-muted italic">Not available</span>
           ) : (
             <span className="font-semibold text-theme-muted italic">Calculated at checkout</span>
           )}
         </div>
+        {!loading && estimateAmount !== null && estimateAmount > 0 && (
+          <p className="-mt-1 text-[11px] text-theme-muted">
+            Billed after your order — not included in the total.
+          </p>
+        )}
+        {!loading && refusal && (
+          <p role="alert" className="rounded-md bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            {refusal} Call us at{' '}
+            <a href="tel:8889779085" className="underline">(888) 977-9085</a>.
+          </p>
+        )}
+        {!loading && quote?.need_to_call && !refusal && (
+          <p className="rounded-md bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            {quote.restriction || 'Delivery to this address needs a quick call to arrange.'} Call us at{' '}
+            <a href="tel:8889779085" className="underline">(888) 977-9085</a>.
+          </p>
+        )}
         <hr className="border-theme-border" />
         <div className="flex justify-between">
           <span className="text-theme-muted">Est. Tax</span>

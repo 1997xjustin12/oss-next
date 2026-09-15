@@ -25,6 +25,13 @@ import { getGuestLead, streetLineFromAddress } from '@/lib/guestCapture';
 import { readVisitorZip } from '@/lib/visitorZip';
 import { ROUTES } from '@/config/routes'
 import { formatMoney } from '@/lib/formatters';
+import {
+  DEFAULT_SHIPPING_METHOD,
+  availableShippingOptions,
+  deliveryPriceLabel,
+  isDeliveryBilledLater,
+  selectedShippingOption,
+} from '@/lib/shippingQuote';
 import { BraintreeDropIn } from './BraintreeDropIn';
 import { Recaptcha } from '@/components/ui/Recaptcha';
 import type { BraintreeDropInHandle } from './BraintreeDropIn';
@@ -399,6 +406,11 @@ export function CheckoutClient() {
     detail?: string;
   } | null>(null);
   const [liveTotal, setLiveTotal] = useState<OrderTotal | null>(null);
+  // The delivery method the customer picked; resolved against the backend's
+  // available options below, so an unavailable pick falls back sensibly.
+  const [shippingMethod, setShippingMethod] = useState<string>(DEFAULT_SHIPPING_METHOD);
+  // The backend's "we can't deliver there" message for the entered ZIP.
+  const [deliveryRefusal, setDeliveryRefusal] = useState<string | null>(null);
 
   /**
    * Start the shipping form from what the guest has already told us.
@@ -526,6 +538,7 @@ export function CheckoutClient() {
     setBilling((p) => ({ ...p, [field]: value }));
 
   const { items, totalPrice: clientSubtotal } = cart;
+  const hasContainer = items.some((item) => item.isContainer);
 
   // Real totals from /api/orders/get-total — debounced so rapid qty/zip
   // edits don't fire a call per keystroke. Falls back to a flat estimate
@@ -543,6 +556,7 @@ export function CheckoutClient() {
           items: lineItems,
           shipping_zip_code: shipping.zip || undefined,
           shipping_country: shipping.country || undefined,
+          shipping_method: hasContainer ? shippingMethod : undefined,
         };
         const res = await fetch('/api/orders/get-total', {
           method: 'POST',
@@ -550,19 +564,43 @@ export function CheckoutClient() {
           body: JSON.stringify(payload),
         });
         const data = await res.json().catch(() => null);
-        if (res.ok && data) setLiveTotal(data as OrderTotal);
+        if (res.ok && data) {
+          setLiveTotal(data as OrderTotal);
+          setDeliveryRefusal(null);
+        } else if (data?.code) {
+          // A refusal replaces the last quote — it was for a different ZIP.
+          // "No address yet" is just a form not filled in, not worth a notice.
+          setLiveTotal(null);
+          setDeliveryRefusal(data.code === 'undeliverable' ? data.error : null);
+        }
       } catch {
         // keep whatever total we last had, or the flat estimate below
       }
     }, 600);
 
     return () => clearTimeout(handle);
-  }, [items, shipping.zip, shipping.country]);
+  }, [items, hasContainer, shipping.zip, shipping.country, shippingMethod]);
 
   const subtotal = liveTotal?.sub_total ?? clientSubtotal;
   const tax = liveTotal?.total_tax ?? clientSubtotal * TAX_RATE;
   const shippingCost = liveTotal?.total_shipping ?? 0;
   const total = liveTotal?.total_price ?? subtotal + tax + shippingCost;
+
+  // Delivery for container carts, from the backend's quote. In `estimate_only`
+  // mode (live today) the price is shown but billed after the order, and is
+  // not part of `total` — which is exactly what the card is charged.
+  const quote = liveTotal?.shipping;
+  const deliveryOptions = hasContainer && quote && !quote.accessories_only ? availableShippingOptions(quote) : [];
+  const deliveryOption = deliveryOptions.length ? selectedShippingOption(quote, shippingMethod) : null;
+  const deliveryBilledLater = isDeliveryBilledLater(quote);
+  const deliveryBlocked = !!deliveryRefusal || (hasContainer && quote ? !quote.can_deliver : false);
+  const deliveryNotice =
+    deliveryRefusal ??
+    (hasContainer && quote && !quote.can_deliver
+      ? quote.restriction || 'We can’t deliver to this address.'
+      : hasContainer && quote?.need_to_call
+        ? quote.restriction || 'Delivery to this address needs a quick call to arrange.'
+        : null);
 
   const shipToReady = shipping.city && shipping.state && shipping.zip;
 
@@ -601,6 +639,12 @@ export function CheckoutClient() {
     setAttempted(true);
     setSubmitError(null);
     if (!detailsComplete) return;
+    // Stopped before the card form is touched: the charge route would refuse
+    // this total anyway.
+    if (deliveryBlocked) {
+      setSubmitError(deliveryNotice ?? 'We can’t deliver to this address. Please call us.');
+      return;
+    }
     if (!paymentReady || !dropinRef.current) {
       setSubmitError('Card payment is not available yet — please check back once it has been set up.');
       return;
@@ -629,6 +673,7 @@ export function CheckoutClient() {
           items: cartItemsToLineItems(items),
           shipping_zip_code: shipping.zip,
           shipping_country: shipping.country,
+          shipping_method: deliveryOption?.id,
           expectedAmount: total.toFixed(2),
           recaptchaToken,
           customer: {
@@ -670,6 +715,7 @@ export function CheckoutClient() {
         shipping_phone: shipTo.phone,
         shipping_province: shipTo.province,
         shipping_zip_code: shipTo.zipCode,
+        shipping_method: deliveryOption?.id,
         payment_method: 'braintree',
         transaction_id: chargeData?.transaction?.id,
         // This code path only runs after a successful Braintree charge, so an
@@ -906,6 +952,54 @@ export function CheckoutClient() {
               </div>
             ))}
 
+            {/* Delivery method — container carts, once the backend has quoted the ZIP */}
+            {deliveryOptions.length > 0 && (
+              <fieldset className="mt-4 border-t border-theme-border pt-4 dark:border-neutral-700">
+                <legend className="float-left mb-1 w-full text-[11px] font-bold uppercase tracking-wider text-theme-muted dark:text-neutral-500">
+                  Delivery Method
+                </legend>
+                {quote?.depot && quote.distance_miles != null && (
+                  <p className="clear-left mb-2 text-xs text-theme-muted dark:text-neutral-400">
+                    From our {quote.depot.title} depot · {quote.distance_miles} mi
+                  </p>
+                )}
+                <div className="clear-left space-y-2">
+                  {deliveryOptions.map((option) => {
+                    const selected = deliveryOption?.id === option.id;
+                    return (
+                      <label
+                        key={option.id}
+                        className={`flex cursor-pointer items-start gap-2.5 rounded-md border p-3 transition-colors ${
+                          selected
+                            ? 'border-theme-primary bg-theme-primary-light/40 dark:border-red-500 dark:bg-red-950/20'
+                            : 'border-theme-border hover:border-theme-primary/40 dark:border-neutral-700'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="deliveryMethod"
+                          checked={selected}
+                          onChange={() => setShippingMethod(option.id)}
+                          className="mt-0.5 h-4 w-4 shrink-0 accent-theme-primary"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex justify-between gap-3 text-sm font-semibold text-theme-dark dark:text-neutral-200">
+                            <span>{option.plain_label}</span>
+                            <span className="shrink-0">{deliveryPriceLabel(option)}</span>
+                          </span>
+                          {selected && option.tooltip && (
+                            <span className="mt-1 block text-xs text-theme-muted dark:text-neutral-400">
+                              {option.tooltip}
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
+
             {/* Totals */}
             <div className="mt-4 space-y-2 border-t border-theme-border pt-4 text-sm dark:border-neutral-700">
               <div className="flex justify-between">
@@ -930,6 +1024,21 @@ export function CheckoutClient() {
                   <span className="font-bold text-theme-dark dark:text-neutral-100">{formatMoney(shippingCost)}</span>
                 </div>
               )}
+              {shippingCost <= 0 && deliveryBilledLater && deliveryOption && (
+                <div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-theme-mid dark:text-neutral-400">Est. Delivery</span>
+                    <span className="font-bold text-theme-dark dark:text-neutral-100">
+                      {deliveryPriceLabel(deliveryOption)}
+                    </span>
+                  </div>
+                  {deliveryOption.cost > 0 && (
+                    <p className="mt-0.5 text-xs text-theme-muted dark:text-neutral-500">
+                      Billed after your order — not included in the total charged today.
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="flex justify-between border-t border-theme-border pt-3 dark:border-neutral-700">
                 <span className="text-base font-extrabold text-theme-dark dark:text-neutral-100">Total</span>
                 <span className="text-lg font-extrabold text-theme-dark dark:text-neutral-100">
@@ -937,6 +1046,22 @@ export function CheckoutClient() {
                 </span>
               </div>
             </div>
+
+            {deliveryNotice && (
+              <div
+                role="alert"
+                className="mt-4 flex gap-2 rounded-md bg-amber-50 p-3 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <p>
+                  {deliveryNotice} Call us at{' '}
+                  <a href="tel:8889779085" className="underline">
+                    (888) 977-9085
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
 
             {/* Secure checkout note */}
             <div className="mt-5 flex gap-2.5 rounded-md bg-theme-subtle p-3.5 text-sm text-theme-mid dark:bg-neutral-800 dark:text-neutral-300">

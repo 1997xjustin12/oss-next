@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ShoppingCart, RefreshCw, Truck } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
+import { useStoredZip } from '@/hooks/useStoredZip'
+import { DEFAULT_SHIPPING_METHOD } from '@/lib/shippingQuote'
 import { cartItemsToLineItems } from '@/lib/cart'
 import { applyEnrichParams } from '@/lib/linkEnrich'
 import { readVisitorZip } from '@/lib/visitorZip'
@@ -19,6 +21,9 @@ export function CartPageClient() {
   const [mounted, setMounted] = useState(false)
   const [liveTotal, setLiveTotal] = useState<OrderTotal | null>(null)
   const [totalsLoading, setTotalsLoading] = useState(false)
+  // The backend's reason it can't deliver to the stored ZIP, when that is the answer.
+  const [refusal, setRefusal] = useState<string | null>(null)
+  const { postcode, resolved: zipResolved } = useStoredZip()
 
   useEffect(() => {
     // Hydration-safe mount detection — cart data is client-only (localStorage),
@@ -30,31 +35,47 @@ export function CartPageClient() {
   }, [])
 
   // Real backend totals — same /api/orders/get-total endpoint checkout uses,
-  // so the two pages never disagree. No shipping address exists yet at this
-  // stage, so shipping/tax legitimately come back as 0 until checkout knows
-  // a ZIP; CartSummary shows "Calculated at checkout" rather than implying
-  // they're actually free.
-  async function fetchTotals(items: CartItem[]) {
+  // so the two pages never disagree. With the visitor's stored ZIP the backend
+  // also quotes delivery (for the default method), which CartSummary shows as
+  // an estimate billed after the order.
+  async function fetchTotals(items: CartItem[], zip: string) {
     const lineItems = cartItemsToLineItems(items)
-    // A cart holding a container can't be totalled without a delivery address:
-    // the backend refuses it outright ("no_address"), and the cart page has no
-    // address to send. Skipping the request avoids one that always fails —
-    // CartSummary shows the delivery estimate, or "Calculated at checkout".
-    if (lineItems.length === 0 || items.some((item) => item.isContainer)) {
+    const hasContainer = items.some((item) => item.isContainer)
+    // A container can't be totalled without a delivery address — the backend
+    // refuses it outright ("no_address"). Without a stored ZIP there is none to
+    // send, so skip a request that always fails; CartSummary then says
+    // "Calculated at checkout".
+    if (lineItems.length === 0 || (hasContainer && !zip)) {
       setLiveTotal(null)
+      setRefusal(null)
       return
     }
 
     setTotalsLoading(true)
     try {
-      const payload: GetOrderTotalPayload = { items: lineItems }
+      const payload: GetOrderTotalPayload = {
+        items: lineItems,
+        ...(zip
+          ? {
+              shipping_zip_code: zip,
+              shipping_country: /^\d/.test(zip) ? 'US' : 'CA',
+              ...(hasContainer ? { shipping_method: DEFAULT_SHIPPING_METHOD } : {}),
+            }
+          : {}),
+      }
       const res = await fetch('/api/orders/get-total', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       const data = await res.json().catch(() => null)
-      if (res.ok && data) setLiveTotal(data as OrderTotal)
+      if (res.ok && data) {
+        setLiveTotal(data as OrderTotal)
+        setRefusal(null)
+      } else if (data?.code === 'undeliverable') {
+        setLiveTotal(null)
+        setRefusal(data.error)
+      }
     } catch {
       // keep whatever total we last had
     } finally {
@@ -62,14 +83,16 @@ export function CartPageClient() {
     }
   }
 
-  // Debounced so rapid qty +/- clicks batch into one call instead of one per click.
+  // Debounced so rapid qty +/- clicks batch into one call instead of one per
+  // click. Waits for the stored ZIP to be read, so a container cart isn't
+  // first skipped and then priced.
   useEffect(() => {
-    if (!mounted) return
+    if (!mounted || !zipResolved) return
     const handle = setTimeout(() => {
-      fetchTotals(cart.items)
+      fetchTotals(cart.items, postcode)
     }, 600)
     return () => clearTimeout(handle)
-  }, [mounted, cart.items, cart.totalPrice])
+  }, [mounted, zipResolved, postcode, cart.items, cart.totalPrice])
 
   return (
     <section className="px-[5%] py-8 sm:py-10">
@@ -90,7 +113,7 @@ export function CartPageClient() {
             {mounted && cart.totalItems > 0 && (
               <button
                 type="button"
-                onClick={() => fetchTotals(cart.items)}
+                onClick={() => fetchTotals(cart.items, postcode)}
                 disabled={totalsLoading}
                 className="flex items-center gap-1.5 text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors disabled:opacity-50"
               >
@@ -124,7 +147,13 @@ export function CartPageClient() {
         {!mounted ? (
           <SummarySkeleton />
         ) : (
-          <CartSummary shipping={liveTotal?.total_shipping} tax={liveTotal?.total_tax} loading={totalsLoading} />
+          <CartSummary
+            shipping={liveTotal?.total_shipping}
+            tax={liveTotal?.total_tax}
+            quote={liveTotal?.shipping}
+            refusal={refusal}
+            loading={totalsLoading}
+          />
         )}
       </div>
     </section>

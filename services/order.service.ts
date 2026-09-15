@@ -1,5 +1,6 @@
 import type { CheckoutPayload, GetOrderTotalPayload, Order, OrderTotal, OrderTracking } from '@/types/order'
 import { logBackendRejection } from '@/lib/backendError'
+import { ShippingRefusedError, shippingRefusal } from '@/lib/shippingQuote'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
 const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
@@ -48,6 +49,10 @@ export async function getOrderTotal(payload: GetOrderTotalPayload): Promise<Orde
 
   if (!res.ok) {
     logBackendRejection('order.service get-total', res.status, data)
+    // "Too far to deliver" and "needs an address" are written for customers and
+    // decide what checkout can offer, so they travel with their own message.
+    const refusal = shippingRefusal(data)
+    if (refusal) throw new ShippingRefusedError(refusal.code, refusal.message)
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not calculate order total.')
   }
 

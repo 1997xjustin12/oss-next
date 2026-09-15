@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     items,
     shipping_zip_code,
     shipping_country,
+    shipping_method,
     expectedAmount,
     recaptchaToken,
     customer,
@@ -56,6 +57,8 @@ export async function POST(request: NextRequest) {
       items: items as CartLineItem[],
       shipping_zip_code,
       shipping_country,
+      // The same method the page priced with, so this total matches the one shown.
+      shipping_method: typeof shipping_method === 'string' ? shipping_method : undefined,
     })
 
     if (!Number.isFinite(total?.total_price) || total.total_price <= 0) {
