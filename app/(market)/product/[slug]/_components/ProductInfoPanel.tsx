@@ -1057,28 +1057,30 @@ export function ProductInfoPanel({
   const deliveryTotal = (deliveryOption?.rate ?? 0) * quantity;
 
   /**
-   * The part of delivery that belongs in the subtotal — purchases only.
+   * The part of delivery that belongs in a quote's total — purchases only.
    *
    * Rent and rent-to-own quote a *monthly* payment, and delivery is a one-time
    * charge: folding it in would render "$967.84/mo" and overstate every month
    * after the first. Rent also already includes delivery and pickup in the
    * monthly figure (see priceDisplay.note), so adding it there bills it twice.
    */
-  const deliveryInSubtotal = selection.tab === "buy" ? deliveryTotal : 0;
+  const deliveryInQuote = selection.tab === "buy" ? deliveryTotal : 0;
 
   /**
-   * True while the subtotal is missing a delivery charge it is about to gain.
+   * True while delivery for a purchase is still being priced.
    *
-   * Narrow on purpose. Rent and rent-to-own never add delivery to the figure,
-   * and with no ZIP there is nothing being calculated — in both cases the
-   * subtotal is already final and marking it pending would be a lie in the
-   * other direction.
+   * Narrow on purpose. Rent and rent-to-own never show delivery beside the
+   * figure, and with no ZIP there is nothing being calculated.
    */
-  const subtotalPending =
+  const deliveryPricing =
     selection.tab === "buy" && !isGenericDisplay && !!zipcode && deliveryLoading;
 
   /**
-   * Order total: unit price × quantity, plus delivery where it applies.
+   * Subtotal: unit price × quantity.
+   *
+   * Delivery is billed after the order (the backend runs `estimate_only`,
+   * decided 2026-09-15), so it sits beside this figure rather than in it — the
+   * way the cart and checkout show it, so all three agree on what is charged.
    *
    * Rounded in whole cents rather than multiplied straight: 232.14 × 3 is
    * 696.4200000000001 in binary floating point, and formatMoney would round it
@@ -1086,16 +1088,26 @@ export function ProductInfoPanel({
    * cart and the number on screen identical.
    *
    * Keeps priceDisplay's suffix, so three rentals read as "$696.42/mo" rather
-   * than looking like a one-off total. That suffix is also why delivery stays
-   * out of it for rent and rent-to-own — see deliveryInSubtotal.
+   * than looking like a one-off total.
    */
-  const subtotal = useMemo(() => {
-    const total =
-      Math.round(
-        (activeProduct.sale_price * quantity + deliveryInSubtotal) * 100,
-      ) / 100;
-    return formatMoney(total);
-  }, [activeProduct.sale_price, quantity, deliveryInSubtotal]);
+  const subtotal = useMemo(
+    () => formatMoney(Math.round(activeProduct.sale_price * quantity * 100) / 100),
+    [activeProduct.sale_price, quantity],
+  );
+
+  /**
+   * A quote's "Estimated total": the subtotal plus delivery for a purchase.
+   *
+   * A quote is the whole expected cost, delivery included, and every place it
+   * is shown labels it an estimate and lists delivery as its own line.
+   */
+  const quoteTotal = useMemo(
+    () =>
+      formatMoney(
+        Math.round((activeProduct.sale_price * quantity + deliveryInQuote) * 100) / 100,
+      ),
+    [activeProduct.sale_price, quantity, deliveryInQuote],
+  );
 
   /**
    * The visible Add to cart action.
@@ -1269,7 +1281,7 @@ export function ProductInfoPanel({
       // saveQuote, which uses it to avoid stacking the same one twice.
       zip: zipcode || undefined,
       lines: quoteLines.map(({ label, value }) => ({ label, value })),
-      total: subtotal,
+      total: quoteTotal,
       totalSuffix: priceDisplay.suffix || undefined,
       // setGuestLead has just written it, so this reads back the stamped
       // version rather than rebuilding the timestamp here.
@@ -1783,19 +1795,21 @@ export function ProductInfoPanel({
                 </span>
               )}
             </div>
-            {/* The figure above is real but not yet final — delivery is still
-                being priced and will be added to it. Saying so beats letting a
-                total sit there looking settled and then jump by a few hundred
-                dollars, which is what it did while the delivery row directly
-                above already read "Calculating…". */}
-            {subtotalPending && (
+            {/* Delivery beside the figure, not in it: it is billed after the
+                order, so the subtotal is what checkout charges. One line either
+                way — pricing, then the estimate — so the slab does not jump. */}
+            {deliveryPricing ? (
               <div
                 aria-live="polite"
                 className="text-[11px] font-medium text-white/70"
               >
                 + delivery, still calculating
               </div>
-            )}
+            ) : selection.tab === "buy" && deliveryOption ? (
+              <div className="text-[11px] font-medium text-white/70">
+                + est. delivery {formatMoney(deliveryTotal)}, billed after order
+              </div>
+            ) : null}
           </div>
         </div>
         {/* Actions. One filled button carries the accent; the two supporting
@@ -1973,7 +1987,7 @@ export function ProductInfoPanel({
         productImage={activeProduct.images?.[0]?.src ?? null}
         priceLabel={`${priceDisplay.price}${priceDisplay.suffix ?? ""}`}
         quoteLines={quoteLines}
-        quoteTotal={subtotal}
+        quoteTotal={quoteTotal}
         quoteTotalSuffix={priceDisplay.suffix}
         canAddToCart
         onSubmit={handleLeadSubmit}

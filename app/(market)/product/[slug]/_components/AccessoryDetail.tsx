@@ -27,9 +27,18 @@ export function AccessoryDetail({ product }: Props) {
   const sku = product.variants?.[0]?.sku ?? ''
   const condition = getCustomFieldValue(product, 'condition')
   const location = getCustomFieldValue(product, 'location')
+  // The catalogue has two categories both named "Ramp" (ids 8 and 9, seen
+  // 2026-09-15) and many ramps carry both. A name shown twice says nothing, so
+  // names are de-duplicated; each chip is keyed by its category id, which is
+  // unique where the name is not.
   const visibleCategories = (product.product_category ?? [])
-    .map((c) => c.category_name)
-    .filter((name) => !CONTAINER_CATEGORY_NAMES.includes(name))
+    .filter((c) => !CONTAINER_CATEGORY_NAMES.includes(c.category_name))
+    .filter(
+      (c, i, all) =>
+        all.findIndex(
+          (other) => other.category_name.trim().toLowerCase() === c.category_name.trim().toLowerCase(),
+        ) === i,
+    )
   const promoTag = product.tags?.find((t) => !/stock/i.test(t))
   const inStock = isInStockHit(product)
 
@@ -76,11 +85,11 @@ export function AccessoryDetail({ product }: Props) {
               <div className="flex flex-wrap gap-1.5">
                 {visibleCategories.map(c => (
                   <span
-                    key={c}
+                    key={`category-${c.id ?? c.category_name}`}
                     className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide bg-theme-subtle dark:bg-white/5 text-theme-mid border border-theme-border px-2.5 py-1 rounded"
                   >
                     <Tag className="w-3 h-3" />
-                    {c}
+                    {c.category_name}
                   </span>
                 ))}
               </div>

@@ -38,7 +38,11 @@ export function shippingRefusal(body: unknown): { code: ShippingRefusalCode; mes
 }
 
 export function availableShippingOptions(quote: ShippingQuote | undefined): ShippingOption[] {
-  return quote?.options?.filter((option) => option.available) ?? []
+  // "Shipping is Additional" means "quoted and billed after the order". While
+  // delivery is billed later anyway, every method already works that way, so
+  // offering it as its own choice only confuses (decided 2026-09-15).
+  const billedLater = isDeliveryBilledLater(quote)
+  return quote?.options?.filter((option) => option.available && !(billedLater && option.id === 'additional')) ?? []
 }
 
 /**

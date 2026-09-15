@@ -82,6 +82,15 @@ function toCountryOption(value: string | undefined): string | undefined {
   return undefined;
 }
 
+/** Whether two ZIP/postal codes are the same place: "30303" matches "30303-1234". */
+function sameZip(a: string | undefined, b: string | undefined): boolean {
+  const norm = (zip: string | undefined) => {
+    const z = (zip ?? '').trim().toUpperCase().replace(/\s+/g, '');
+    return /^\d{5}/.test(z) ? z.slice(0, 5) : z;
+  };
+  return !!norm(a) && norm(a) === norm(b);
+}
+
 const emptyAddress: AddressForm = {
   firstName: '',
   lastName: '',
@@ -382,6 +391,8 @@ function PaymentTakenNoOrder({ transactionId, detail }: { transactionId?: string
 /* ── Main Client Component ── */
 export function CheckoutClient() {
   const { cart, removeItem, updateQty, clearCart } = useCart();
+  const { items, totalPrice: clientSubtotal } = cart;
+  const hasContainer = items.some((item) => item.isContainer);
   const { token: authToken, user: authUser } = useAuth();
   const dropinRef = useRef<BraintreeDropInHandle>(null);
 
@@ -405,12 +416,21 @@ export function CheckoutClient() {
     transactionId?: string;
     detail?: string;
   } | null>(null);
-  const [liveTotal, setLiveTotal] = useState<OrderTotal | null>(null);
+  // The latest answer from /api/orders/get-total, stamped with exactly what it
+  // was asked about. A refusal for one ZIP must never block another — that is
+  // how changing the ZIP left "we cannot deliver" standing (seen 2026-09-15).
+  const [quoteResult, setQuoteResult] = useState<{
+    /** Cart + ZIP + country: what delivery availability depends on. */
+    addressKey: string;
+    /** addressKey + delivery method: what the total depends on. */
+    key: string;
+    total: OrderTotal | null;
+    /** Why delivery can't be offered for addressKey, when that is the answer. */
+    refusal: string | null;
+  } | null>(null);
   // The delivery method the customer picked; resolved against the backend's
   // available options below, so an unavailable pick falls back sensibly.
   const [shippingMethod, setShippingMethod] = useState<string>(DEFAULT_SHIPPING_METHOD);
-  // The backend's "we can't deliver there" message for the entered ZIP.
-  const [deliveryRefusal, setDeliveryRefusal] = useState<string | null>(null);
 
   /**
    * Start the shipping form from what the guest has already told us.
@@ -483,11 +503,23 @@ export function CheckoutClient() {
    */
   const accountPrefilled = useRef(false);
   useEffect(() => {
-    if (accountPrefilled.current || !authToken || !authUser) return;
+    // Waits for the cart: it is restored from storage by the provider's effect,
+    // which runs after this component's, so on the first pass it is always
+    // empty and a container in it would go unseen.
+    if (accountPrefilled.current || !authToken || !authUser || items.length === 0) return;
     accountPrefilled.current = true;
 
     const profile = authUser.profile ?? {};
-    const shippingZip = profile.shippingZip || readVisitorZip().postcode;
+    const visitorZip = readVisitorZip().postcode;
+    // A container was priced for the visitor's stored ZIP, and the ZIP widgets
+    // refuse to change it while a container is in the cart — so that ZIP is
+    // where the order is going (decided 2026-09-15). The profile's street, city
+    // and state only apply when they are for that same ZIP: mixing them with
+    // another ZIP is how checkout read "Beverly Hills, CA 30303", and starting
+    // from the profile's own ZIP is how it opened on "we cannot deliver".
+    const profileAddressApplies =
+      !hasContainer || !visitorZip || sameZip(profile.shippingZip, visitorZip);
+    const shippingZip = hasContainer && visitorZip ? visitorZip : profile.shippingZip || visitorZip;
     const fromAccount = (prev: AddressForm) => ({
       firstName: prev.firstName || authUser.firstName || '',
       lastName: prev.lastName || authUser.lastName || '',
@@ -498,12 +530,12 @@ export function CheckoutClient() {
     setShipping((prev) => ({
       ...prev,
       ...fromAccount(prev),
-      address1: prev.address1 || profile.shippingAddress || '',
-      city: prev.city || profile.shippingCity || '',
-      state: prev.state || profile.shippingState || '',
+      address1: prev.address1 || (profileAddressApplies ? profile.shippingAddress || '' : ''),
+      city: prev.city || (profileAddressApplies ? profile.shippingCity || '' : ''),
+      state: prev.state || (profileAddressApplies ? profile.shippingState || '' : ''),
       zip: prev.zip || shippingZip || '',
       country:
-        prev.country === emptyAddress.country
+        prev.country === emptyAddress.country && profileAddressApplies
           ? (toCountryOption(profile.shippingCountry) ?? prev.country)
           : prev.country,
     }));
@@ -520,8 +552,8 @@ export function CheckoutClient() {
           : prev.country,
     }));
 
-    // City and state from the ZIP when the profile has a ZIP but not those.
-    if (!shippingZip || (profile.shippingCity && profile.shippingState)) return;
+    // City and state from the ZIP when the profile's don't apply or are missing.
+    if (!shippingZip || (profileAddressApplies && profile.shippingCity && profile.shippingState)) return;
     void lookupZip(shippingZip, emptyAddress.country).then((result) => {
       if (!result) return;
       setShipping((prev) => ({
@@ -530,66 +562,85 @@ export function CheckoutClient() {
         state: prev.state || result.state || '',
       }));
     });
-  }, [authToken, authUser]);
+  }, [authToken, authUser, items.length, hasContainer]);
 
   const updateShipping = (field: keyof AddressForm, value: string) =>
     setShipping((p) => ({ ...p, [field]: value }));
   const updateBilling = (field: keyof AddressForm, value: string) =>
     setBilling((p) => ({ ...p, [field]: value }));
 
-  const { items, totalPrice: clientSubtotal } = cart;
-  const hasContainer = items.some((item) => item.isContainer);
+  // What a quote is for. The backend is sent an ISO code: it geocodes the
+  // country, and "Canada (CA)" finds no route at all.
+  const shippingZip = shipping.zip.trim();
+  const shippingCountryCode = toAlpha2(shipping.country) ?? shipping.country;
+  const itemsKey = items.map((item) => `${item.id}:${item.quantity}`).join(',');
+  const addressKey = `${itemsKey}|${shippingZip}|${shippingCountryCode}`;
+  const quoteKey = `${addressKey}|${hasContainer ? shippingMethod : ''}`;
 
   // Real totals from /api/orders/get-total — debounced so rapid qty/zip
-  // edits don't fire a call per keystroke. Falls back to a flat estimate
-  // (TAX_RATE) until this resolves, or if it fails.
+  // edits don't fire a call per keystroke. Every answer, including a failure,
+  // is recorded against the key it was asked for, and a request overtaken by a
+  // newer one is cancelled, so an old ZIP's answer can't land on a new ZIP.
   useEffect(() => {
-    // Nothing to price once the cart is empty — harmless to leave any prior
-    // liveTotal in place since this page redirects to the empty-cart view
-    // before it would ever be rendered again.
+    // Nothing to price once the cart is empty — this page redirects to the
+    // empty-cart view before a stale quote could be rendered again.
     const lineItems = cartItemsToLineItems(items);
     if (lineItems.length === 0) return;
 
+    const controller = new AbortController();
     const handle = setTimeout(async () => {
+      const result = { addressKey, key: quoteKey, total: null as OrderTotal | null, refusal: null as string | null };
+      // Only a container cart with a ZIP has delivery to check.
+      const couldNotCheck = hasContainer && shippingZip
+        ? 'We couldn’t check delivery to this address. Please check the ZIP code and country.'
+        : null;
       try {
         const payload: GetOrderTotalPayload = {
           items: lineItems,
-          shipping_zip_code: shipping.zip || undefined,
-          shipping_country: shipping.country || undefined,
+          shipping_zip_code: shippingZip || undefined,
+          shipping_country: shippingCountryCode || undefined,
           shipping_method: hasContainer ? shippingMethod : undefined,
         };
         const res = await fetch('/api/orders/get-total', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
+          signal: controller.signal,
         });
         const data = await res.json().catch(() => null);
-        if (res.ok && data) {
-          setLiveTotal(data as OrderTotal);
-          setDeliveryRefusal(null);
-        } else if (data?.code) {
-          // A refusal replaces the last quote — it was for a different ZIP.
-          // "No address yet" is just a form not filled in, not worth a notice.
-          setLiveTotal(null);
-          setDeliveryRefusal(data.code === 'undeliverable' ? data.error : null);
-        }
+        if (res.ok && data) result.total = data as OrderTotal;
+        else if (data?.code === 'undeliverable') result.refusal = data.error;
+        // "No address yet" is a form not filled in, not worth a notice.
+        else if (data?.code !== 'no_address') result.refusal = couldNotCheck;
       } catch {
-        // keep whatever total we last had, or the flat estimate below
+        if (controller.signal.aborted) return;
+        result.refusal = couldNotCheck;
       }
+      setQuoteResult(result);
     }, 600);
 
-    return () => clearTimeout(handle);
-  }, [items, hasContainer, shipping.zip, shipping.country, shippingMethod]);
+    return () => {
+      clearTimeout(handle);
+      controller.abort();
+    };
+  }, [items, hasContainer, shippingZip, shippingCountryCode, shippingMethod, addressKey, quoteKey]);
+
+  // The last total received, for display while a newer one is on its way. It
+  // is never charged from: Place Order waits for the current address below.
+  const liveTotal = quoteResult?.total ?? null;
+  const quoteChecking = quoteResult?.key !== quoteKey;
+  const quoteForAddress = quoteResult?.addressKey === addressKey;
 
   const subtotal = liveTotal?.sub_total ?? clientSubtotal;
   const tax = liveTotal?.total_tax ?? clientSubtotal * TAX_RATE;
   const shippingCost = liveTotal?.total_shipping ?? 0;
   const total = liveTotal?.total_price ?? subtotal + tax + shippingCost;
 
-  // Delivery for container carts, from the backend's quote. In `estimate_only`
-  // mode (live today) the price is shown but billed after the order, and is
-  // not part of `total` — which is exactly what the card is charged.
-  const quote = liveTotal?.shipping;
+  // Delivery for container carts, from the backend's quote for THIS address
+  // only. In `estimate_only` mode (live today) the price is shown but billed
+  // after the order, and is not part of `total` — which is what is charged.
+  const quote = quoteForAddress ? liveTotal?.shipping : undefined;
+  const deliveryRefusal = quoteForAddress ? (quoteResult?.refusal ?? null) : null;
   const deliveryOptions = hasContainer && quote && !quote.accessories_only ? availableShippingOptions(quote) : [];
   const deliveryOption = deliveryOptions.length ? selectedShippingOption(quote, shippingMethod) : null;
   const deliveryBilledLater = isDeliveryBilledLater(quote);
@@ -639,12 +690,11 @@ export function CheckoutClient() {
     setAttempted(true);
     setSubmitError(null);
     if (!detailsComplete) return;
-    // Stopped before the card form is touched: the charge route would refuse
-    // this total anyway.
-    if (deliveryBlocked) {
-      setSubmitError(deliveryNotice ?? 'We can’t deliver to this address. Please call us.');
-      return;
-    }
+    // Stopped before the card form is touched. The button is disabled while the
+    // current address is being checked; when delivery is refused, the notice
+    // by the button says why — worked out from the current quote rather than
+    // stored, so it clears itself once the address is corrected.
+    if (quoteChecking || deliveryBlocked) return;
     if (!paymentReady || !dropinRef.current) {
       setSubmitError('Card payment is not available yet — please check back once it has been set up.');
       return;
@@ -671,8 +721,8 @@ export function CheckoutClient() {
           // does not trust an amount from the browser. `expectedAmount` is only
           // what we displayed, so it can refuse to charge more than that.
           items: cartItemsToLineItems(items),
-          shipping_zip_code: shipping.zip,
-          shipping_country: shipping.country,
+          shipping_zip_code: shippingZip,
+          shipping_country: shippingCountryCode,
           shipping_method: deliveryOption?.id,
           expectedAmount: total.toFixed(2),
           recaptchaToken,
@@ -987,7 +1037,10 @@ export function CheckoutClient() {
                             <span>{option.plain_label}</span>
                             <span className="shrink-0">{deliveryPriceLabel(option)}</span>
                           </span>
-                          {selected && option.tooltip && (
+                          {/* Every method's description is shown, not just the
+                              chosen one's: it is what tells a customer which
+                              method their site can take before they pick. */}
+                          {option.tooltip && (
                             <span className="mt-1 block text-xs text-theme-muted dark:text-neutral-400">
                               {option.tooltip}
                             </span>
@@ -1243,6 +1296,16 @@ export function CheckoutClient() {
                 </div>
               )}
 
+              {attempted && detailsComplete && deliveryBlocked && deliveryNotice && !quoteChecking && (
+                <div
+                  role="alert"
+                  className="mb-4 flex items-center gap-2 rounded-md bg-amber-50 p-3 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                >
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {deliveryNotice}
+                </div>
+              )}
+
               {submitError && (
                 <div className="mb-4 flex items-center gap-2 rounded-md border border-theme-primary/30 bg-theme-primary-light p-3 text-xs font-semibold text-theme-primary dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -1253,7 +1316,7 @@ export function CheckoutClient() {
               <button
                 type="button"
                 onClick={handlePlaceOrder}
-                disabled={orderComplete || submitting}
+                disabled={orderComplete || submitting || quoteChecking}
                 className={`w-full rounded-md py-3.5 text-base font-extrabold uppercase tracking-wide text-white transition-all disabled:cursor-not-allowed ${
                   orderComplete
                     ? 'cursor-default bg-theme-success-dark'
@@ -1267,6 +1330,10 @@ export function CheckoutClient() {
                 ) : submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="h-5 w-5 animate-spin" /> Placing Order…
+                  </span>
+                ) : quoteChecking ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" /> {hasContainer ? 'Checking delivery…' : 'Updating total…'}
                   </span>
                 ) : (
                   'Place Order'

@@ -16,7 +16,7 @@ export function TopBar() {
         </span>
       </div>
       <div className="flex items-center gap-4">
-        <Link href={ROUTES.ACCOUNT.ROOT} className="text-gray-500 text-xs transition-colors hover:text-white line-through">My Account</Link>
+        <Link href={ROUTES.ACCOUNT.ROOT} className="text-white text-xs transition-colors hover:text-white/80">My Account</Link>
       </div>
     </div>
   );

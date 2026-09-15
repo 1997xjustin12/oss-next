@@ -115,7 +115,15 @@ function reducer(state: Cart, action: Action): Cart {
       return { ...state, items, ...totals(items), updatedAt: new Date().toISOString() }
     }
     case 'CLEAR_CART':
-      return { ...EMPTY_CART, updatedAt: new Date().toISOString() }
+      // Keeps the saved cart's id so it can still be closed. Dropping it meant
+      // the sync never closed the backend's saved cart, and the next load put
+      // the cleared items straight back — right after an order (2026-09-15).
+      return {
+        ...EMPTY_CART,
+        cartId: state.cartId,
+        referenceNumber: state.referenceNumber,
+        updatedAt: new Date().toISOString(),
+      }
     case 'RESTORE_CART':
       return action.payload
     case 'SET_SERVER_META':
@@ -145,6 +153,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // once per relevant dependency change, not on every keystroke of cart state.
   const cartRef = useRef(cart)
   useEffect(() => { cartRef.current = cart }, [cart])
+  const tokenRef = useRef(token)
+  useEffect(() => { tokenRef.current = token }, [token])
+  // Bumped by clearCart, so a saved-cart load that started before a clear
+  // cannot put the cleared items back when it lands.
+  const clearVersionRef = useRef(0)
 
   const wasAuthenticatedRef = useRef(isAuthenticated)
   const beaconSentRef = useRef(false)
@@ -173,14 +186,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // with nothing added while signed out the merge is just the saved cart. If
   // the saved cart is empty the local cart is kept, and the sync effect below
   // creates the saved cart from it.
+  //
+  // Keyed by who is signed in, not by the token. The token rotates every ten
+  // minutes (AuthContext), and reloading on each rotation merged the saved cart
+  // back in at a random moment — which is how an order's items reappeared some
+  // minutes after checkout had emptied the cart.
+  const signedInUserKey = isAuthenticated ? (user?.id ?? user?.username ?? 'signed-in') : null
   useEffect(() => {
-    if (!isAuthenticated || !token) return
+    const authToken = tokenRef.current
+    if (!signedInUserKey || !authToken) return
     let cancelled = false
+    const clearVersion = clearVersionRef.current
+    const stale = () => cancelled || clearVersionRef.current !== clearVersion
 
-    fetch('/api/cart/active', { headers: { Authorization: `Bearer ${token}` } })
+    fetch('/api/cart/active', { headers: { Authorization: `Bearer ${authToken}` } })
       .then((res) => (res.ok ? res.json() : null))
       .then(async (data: unknown) => {
-        if (cancelled || !data) return
+        if (stale() || !data) return
         const server = parseServerCart(data)
         if (!server) return
 
@@ -188,7 +210,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         // real catalogue products before they become the cart — see
         // rebuildRestoredItems for what breaking this cost.
         const saved = server.items.length > 0 ? await rebuildRestoredItems(server.items) : []
-        if (cancelled) return
+        if (stale()) return
 
         const { items, removed, keptLocation } = mergeGuestCartIntoSaved(saved, cartRef.current.items)
 
@@ -205,7 +227,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       })
 
     return () => { cancelled = true }
-  }, [isAuthenticated, token])
+  }, [signedInUserKey])
 
   // ── sync mutations to the backend (debounced, logged-in only) ──
   // Depends on cart.items (not the whole cart) so this doesn't re-fire from
@@ -287,7 +309,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     },
     removeItem: (id)   => dispatch({ type: 'REMOVE_ITEM', id }),
     updateQty:  (id, qty) => dispatch({ type: 'UPDATE_QTY', id, qty, guest: !isAuthenticated }),
-    clearCart:  ()     => dispatch({ type: 'CLEAR_CART' }),
+    clearCart: () => {
+      clearVersionRef.current += 1
+      dispatch({ type: 'CLEAR_CART' })
+
+      // Signed in: close the saved cart now, not after the sync's debounce, so
+      // a reload or navigation in between cannot bring the cleared items back.
+      // If this fails, the debounced sync still closes it (CLEAR_CART keeps the
+      // cart id for exactly that).
+      const authToken = tokenRef.current
+      if (!isAuthenticated || !authToken) return
+      fetch('/api/cart/close', { method: 'POST', headers: { Authorization: `Bearer ${authToken}` } })
+        .then((res) => {
+          if (!res.ok) return
+          dispatch({ type: 'RESET_SERVER_CART' })
+          // Something was added straight after the clear (the location
+          // conflict's "clear and add"): give it a new saved cart, since the
+          // one it may have synced to has just been closed.
+          const current = cartRef.current
+          if (current.items.length > 0 && user) {
+            syncCartToBackend({ ...current, cartId: undefined, referenceNumber: undefined, isAbandoned: null }, authToken, user, dispatch)
+          }
+        })
+        .catch(() => {})
+    },
   }
 
   return (

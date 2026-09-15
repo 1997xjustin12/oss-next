@@ -28,6 +28,10 @@ export async function checkoutOrder(payload: CheckoutPayload, token?: string): P
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    // Field-level refusals (`{ items: ["…"] }`) carry none of the keys below, so
+    // without this the only record of a refused order — after the card has been
+    // charged — was "Could not complete checkout." (seen 2026-09-15).
+    logBackendRejection('order.service checkout', res.status, data)
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not complete checkout.')
   }
 

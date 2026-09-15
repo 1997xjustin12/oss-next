@@ -83,6 +83,10 @@ export function OrdersList() {
   const { addContainerToCart } = useAddContainerToCart()
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [products, setProducts] = useState<Record<string, ProductHit>>({})
+  // Whether the catalogue lookup for the ordered products has finished. Only a
+  // finished lookup can say a product is no longer available; a pending or
+  // failed one says nothing.
+  const [productLookup, setProductLookup] = useState<'loading' | 'done' | 'failed'>('loading')
   const [error, setError] = useState<string | null>(null)
   const [reviewLoadingFor, setReviewLoadingFor] = useState<string | number | null>(null)
   const [reviewTarget, setReviewTarget] = useState<{
@@ -103,12 +107,21 @@ export function OrdersList() {
         setOrders(list)
 
         const ids = [...new Set(list.flatMap((o) => o.items.map((i) => String(i.product_id))))]
-        if (ids.length === 0) return
+        if (ids.length === 0) {
+          setProductLookup('done')
+          return
+        }
 
         const enrichRes = await fetch(`/api/products/by-ids?ids=${ids.join(',')}`)
-        if (!enrichRes.ok || cancelled) return
+        if (cancelled) return
+        if (!enrichRes.ok) {
+          setProductLookup('failed')
+          return
+        }
         const { products: found } = (await enrichRes.json()) as { products: ProductHit[] }
+        if (cancelled) return
         setProducts(Object.fromEntries(found.map((p) => [String(p.product_id), p])))
+        setProductLookup('done')
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load orders.')
@@ -117,7 +130,7 @@ export function OrdersList() {
     return () => { cancelled = true }
   }, [token])
 
-  function handleBuyAgain(productId: string | number, quantity: number) {
+  function handleBuyAgain(productId: string | number) {
     const product = products[String(productId)]
     if (!product) return
 
@@ -125,7 +138,9 @@ export function OrdersList() {
       id: product.objectID,
       name: product.title,
       price: product.sale_price,
-      quantity,
+      // Always one, whatever the original order held (decided 2026-09-15): the
+      // customer sets the quantity in the cart.
+      quantity: 1,
       sku: product.variants?.[0]?.sku,
       image: product.images?.[0]?.src,
       rawHit: product,
@@ -198,8 +213,14 @@ export function OrdersList() {
           <div className="flex flex-col gap-3 mb-3">
             {order.items.map((item, itemIndex) => {
               const product = products[String(item.product_id)]
+              const canReorder = REORDERABLE.includes(order.status)
+              const canReview = REVIEWABLE.includes(order.status)
               return (
-                <div key={`order-item-${order.order_number}-${item.product_id}-${itemIndex}`} className="flex items-center gap-3">
+                <div
+                  key={`order-item-${order.order_number}-${item.product_id}-${itemIndex}`}
+                  data-order-item
+                  className="flex flex-wrap items-center gap-x-3 gap-y-2"
+                >
                   <div className="w-12 h-12 rounded-md bg-theme-subtle dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
                     {product?.images?.[0]?.src ? (
                       <Image src={product.images[0].src} alt={product.title} width={48} height={48} className="object-cover w-full h-full" />
@@ -219,6 +240,45 @@ export function OrdersList() {
                       Qty {item.quantity} · {formatOrderMoney(item.price)} each
                     </p>
                   </div>
+
+                  {/* Each item's actions sit on its own line — with them all in
+                      one row under the order, an order of several items showed
+                      identical "Buy Again" buttons with no way to tell which
+                      product each one re-added. Right of the item on wider
+                      screens; under its text (past the thumbnail) on a phone. */}
+                  {(canReorder || canReview) && (
+                    <div className="flex w-full items-center gap-4 pl-15 sm:w-auto sm:pl-0">
+                      {product ? (
+                        <>
+                          {canReorder && (
+                            <button
+                              type="button"
+                              aria-label={`Buy Again: ${product.title}`}
+                              onClick={() => handleBuyAgain(item.product_id)}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              Buy Again
+                            </button>
+                          )}
+                          {canReview && (
+                            <button
+                              type="button"
+                              aria-label={`Write / Edit Review: ${product.title}`}
+                              disabled={reviewLoadingFor === item.product_id}
+                              onClick={() => openReviewForm(item.product_id, product.title)}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors disabled:opacity-50"
+                            >
+                              <Star className="w-3.5 h-3.5" />
+                              {reviewLoadingFor === item.product_id ? 'Loading…' : 'Write / Edit Review'}
+                            </button>
+                          )}
+                        </>
+                      ) : productLookup === 'done' ? (
+                        <span className="text-xs text-theme-muted dark:text-gray-400">No longer available</span>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -228,40 +288,6 @@ export function OrdersList() {
             <span className="text-sm font-semibold text-theme-muted dark:text-gray-400">Total</span>
             <span className="text-lg font-extrabold dark:text-white">{formatOrderMoney(order.total_price)}</span>
           </div>
-
-          {(REORDERABLE.includes(order.status) || REVIEWABLE.includes(order.status)) && (
-            <div className="flex gap-4 flex-wrap mt-3 pt-3 border-t border-theme-border dark:border-gray-700">
-              {order.items.map((item, itemIndex) => {
-                const product = products[String(item.product_id)]
-                if (!product) return null
-                return (
-                  <div key={`item-actions-${order.order_number}-${item.product_id}-${itemIndex}`} className="flex items-center gap-4">
-                    {REORDERABLE.includes(order.status) && (
-                      <button
-                        type="button"
-                        onClick={() => handleBuyAgain(item.product_id, item.quantity)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        Buy Again
-                      </button>
-                    )}
-                    {REVIEWABLE.includes(order.status) && (
-                      <button
-                        type="button"
-                        disabled={reviewLoadingFor === item.product_id}
-                        onClick={() => openReviewForm(item.product_id, product.title)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors disabled:opacity-50"
-                      >
-                        <Star className="w-3.5 h-3.5" />
-                        {reviewLoadingFor === item.product_id ? 'Loading…' : 'Write / Edit Review'}
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
         </div>
       ))}
 

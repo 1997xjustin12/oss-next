@@ -28,6 +28,14 @@ export async function getActiveCart(token?: string): Promise<unknown> {
 
   const data = await res.json().catch(() => null)
 
+  // "No saved cart" is a normal state, not a failure — every customer is in it
+  // before their first add, and again once an order or Clear cart closes the
+  // cart. The backend says so with 404 `{"message":"No active cart found","cart":null}`
+  // (seen 2026-09-15); answered as no cart, so the route replies 200.
+  if (res.status === 404 && (data?.cart === null || /no active cart/i.test(String(data?.message ?? '')))) {
+    return null
+  }
+
   if (!res.ok) {
     logBackendRejection('cart.service load', res.status, data)
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not load cart.')
@@ -72,6 +80,9 @@ export async function closeCart(token?: string): Promise<unknown> {
   })
 
   const data = await res.json().catch(() => null)
+
+  // Nothing to close: the customer has no saved cart (see getActiveCart).
+  if (res.status === 404) return null
 
   if (!res.ok) {
     logBackendRejection('cart.service close', res.status, data)
