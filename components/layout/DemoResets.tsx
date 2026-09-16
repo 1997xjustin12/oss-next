@@ -19,11 +19,24 @@ import { clearVisitorZip, clearDetectedLocation } from '@/lib/visitorZip'
  *   ?reset-guest=1   resetGuestCapture()   forget the captured lead
  *   ?reset-zip=1     resetVisitorZip()     forget where the visitor is
  *   ?reset-quotes=1  resetSavedQuotes()    empty the saved quotes list
- *   ?reset-all=1     resetDemoState()      all three
+ *   ?reset-all=1     resetDemoState()      all three, and the detected location
  *
  * The parameters work on a phone, on a preview deploy, and in front of an
  * audience — none of which suit opening DevTools — and strip themselves from
  * the URL afterwards, so a link pasted into chat does not reset on every open.
+ *
+ * Two things `reset-all` does that the targeted parameters do not, both because
+ * "all" has to mean the visitor is a stranger again:
+ *
+ *   * It clears `userZipCode`, the geolocation detector's cache. Left behind,
+ *     it is a ZIP still sitting in storage after a reset that claimed to forget
+ *     the visitor's location, and `ZipAutoDetect` skips detection whenever it
+ *     is set — so the site would neither know where the visitor is nor ever
+ *     ask again.
+ *   * It drops `?zipcode=` from the address bar. The app's own listing links
+ *     carry one, `readVisitorZip` lets the URL beat storage, and appending
+ *     `&reset-all=1` to such a link otherwise cleared the keys while the page
+ *     carried on using the ZIP beside it.
  *
  * Everything here only clears this browser's own storage. Nothing server-side
  * is touched, which is why none of it is gated to non-production: the worst it
@@ -100,7 +113,8 @@ export function DemoResets() {
     if (!guest && !zip && !quotes) return
 
     if (guest) forgetGuest()
-    if (zip) forgetZip()
+    // `all` takes the detector's cache with it — see the header.
+    if (zip) forgetZip({ includeGeolocation: all })
     if (quotes) forgetQuotes()
 
     // Drop the parameters so a reload, a shared link or a back-navigation does
@@ -111,6 +125,10 @@ export function DemoResets() {
     next.delete(RESET_ZIP)
     next.delete(RESET_QUOTES)
     next.delete(RESET_ALL)
+    // The ZIP in the address bar outranks storage, so forgetting the stored one
+    // while leaving this behind forgets nothing. `location` stays: it is which
+    // depot's inventory the page is showing, not where the visitor is.
+    if (zip) next.delete('zipcode')
     const query = next.toString()
     window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
   }, [pathname, searchParams])
