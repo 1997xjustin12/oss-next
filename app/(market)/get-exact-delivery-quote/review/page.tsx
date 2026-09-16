@@ -34,7 +34,7 @@ export default function DeliveryQuoteReviewPage({ searchParams }: { searchParams
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:py-6">
             <div className="min-w-0">
               <h1 className="text-lg font-bold uppercase tracking-tight text-white sm:text-xl">
-                Your <span className="text-[#F5C24A]">delivery quote</span>
+                Your <span className="text-[#F5C24A]">Delivery Quote</span>
               </h1>
               <p className="mt-1 max-w-md text-xs leading-relaxed text-white/70 sm:text-sm">
                 We have your details. Here is what you asked about.

@@ -33,7 +33,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'hero.h1',
     section: 'Hero',
-    label: 'Main headline',
+    label: 'Main Headline',
     element: 'h1',
     default: 'Local Shipping Containers Delivered Nationwide & Canada',
     help: 'The page’s only H1. Shared by all three layout variants.',
@@ -41,7 +41,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'hero.h2',
     section: 'Hero',
-    label: 'Sub-headline',
+    label: 'Sub-Headline',
     element: 'h2',
     accent: true,
     default:
@@ -52,7 +52,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'rightContainer.h2',
     section: 'Find The Right Container',
-    label: 'Section heading',
+    label: 'Section Heading',
     element: 'h2',
     default: 'Find The Right Container For Your Needs',
   },
@@ -60,7 +60,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'howItWorks.h2',
     section: 'How It Works',
-    label: 'Section heading',
+    label: 'Section Heading',
     element: 'h2',
     default: 'How It Works',
   },
@@ -72,7 +72,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'onsiteDifference.h2',
     section: 'The On-Site Difference',
-    label: 'Section heading',
+    label: 'Section Heading',
     element: 'h2',
     default: 'The On-Site Storage Difference',
   },
@@ -84,7 +84,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'trustedBy.h2',
     section: 'Trusted By',
-    label: 'Section heading',
+    label: 'Section Heading',
     element: 'h2',
     accent: true,
     default: '[[Trusted By ]]Organizations Like',
@@ -93,7 +93,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'quoteForm.h2',
     section: 'Quote Form',
-    label: 'Section heading',
+    label: 'Section Heading',
     element: 'h2',
     default: 'Get Your Free Container Quote in Minutes',
   },
@@ -101,7 +101,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'reviews.h2',
     section: 'Customer Reviews',
-    label: 'Section heading',
+    label: 'Section Heading',
     element: 'h2',
     accent: true,
     default: 'What Our [[Customers]] Say',
@@ -111,7 +111,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   {
     key: 'states.h2',
     section: 'States We Serve',
-    label: 'Section heading',
+    label: 'Section Heading',
     element: 'h2',
     default: 'Delivering Across All 50 States',
   },

@@ -106,7 +106,7 @@ export function MobileTrustSection({ rentFrom, rtoFrom }: Props) {
 
       <div className="px-4 pb-8 ">
         <h2 className="mt-7 text-center text-[15px] font-semibold text-theme-dark">
-          Containers for Every Budget -{" "}
+          Containers For Every Budget -{" "}
           <span className="text-theme-primary">Low Monthly Payments</span>
         </h2>
 

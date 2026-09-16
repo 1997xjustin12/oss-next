@@ -283,7 +283,7 @@ export function GuestLeadModal({
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="guest-name" className={LABEL}>
-                      Full name <span className="text-theme-primary">*</span>
+                      Full Name <span className="text-theme-primary">*</span>
                     </label>
                     <input
                       ref={firstFieldRef}
@@ -328,7 +328,7 @@ export function GuestLeadModal({
 
                   <div className="relative">
                     <label htmlFor="guest-address" className={LABEL}>
-                      Delivery address
+                      Delivery Address
                     </label>
                     <input
                       id="guest-address"
@@ -442,7 +442,7 @@ export function GuestLeadModal({
                 Step 2 of 2
               </p>
               <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-white sm:text-3xl">
-                Your quote
+                Your Quote
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
                 {fullName ? `Thanks, ${fullName.split(' ')[0]}. ` : ''}
@@ -528,7 +528,7 @@ export function GuestLeadModal({
                 {canAddToCart ? (
                   <>
                     <button type="button" onClick={addToCart} className={PRIMARY_BUTTON}>
-                      Add to cart
+                      Add To Cart
                     </button>
                     <PlpLink href={ROUTES.PLP} className={SECONDARY_BUTTON}>
                       Continue shopping
@@ -550,7 +550,7 @@ export function GuestLeadModal({
                   onClick={() => setStep('details')}
                   className="text-xs font-semibold text-theme-muted underline underline-offset-2 hover:text-theme-dark dark:hover:text-white"
                 >
-                  Edit my details
+                  Edit My Details
                 </button>
                 <Link
                   href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`}

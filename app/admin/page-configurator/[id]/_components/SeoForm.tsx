@@ -52,7 +52,7 @@ function ScriptRow({ index, script }: { index: number; script?: HeadScript }) {
   return (
     <fieldset className="rounded-md border border-theme-border p-3 dark:border-neutral-800">
       <legend className="px-1 text-xs font-semibold text-theme-muted dark:text-neutral-500">
-        {script ? script.name : 'Add a script'}
+        {script ? script.name : 'Add A Script'}
       </legend>
 
       {script && <input type="hidden" name={`${prefix}.id`} value={script.id} />}
@@ -75,7 +75,7 @@ function ScriptRow({ index, script }: { index: number; script?: HeadScript }) {
 
           <div>
             <label className={LABEL_CLASS} htmlFor={`${prefix}.strategy`}>
-              Loading strategy
+              Loading Strategy
             </label>
             <select
               id={`${prefix}.strategy`}
@@ -105,7 +105,7 @@ function ScriptRow({ index, script }: { index: number; script?: HeadScript }) {
 
         <div>
           <label className={LABEL_CLASS} htmlFor={`${prefix}.code`}>
-            Inline code
+            Inline Code
           </label>
           <textarea
             id={`${prefix}.code`}
@@ -139,7 +139,7 @@ function ScriptRow({ index, script }: { index: number; script?: HeadScript }) {
                 className="h-4 w-4 rounded border-theme-border accent-red-600 dark:border-neutral-700"
               />
               <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-              Delete on save
+              Delete On Save
             </label>
           )}
         </div>
@@ -173,7 +173,7 @@ export function SeoForm({ page, seo, defaults }: Props) {
         >
           <div>
             <label className={LABEL_CLASS} htmlFor="title">
-              Meta title
+              Meta Title
             </label>
             <input
               id="title"
@@ -188,7 +188,7 @@ export function SeoForm({ page, seo, defaults }: Props) {
 
           <div>
             <label className={LABEL_CLASS} htmlFor="description">
-              Meta description
+              Meta Description
             </label>
             <textarea
               id="description"
@@ -203,7 +203,7 @@ export function SeoForm({ page, seo, defaults }: Props) {
 
           <div>
             <label className={LABEL_CLASS} htmlFor="agentSummary">
-              Agent summary
+              Agent Summary
             </label>
             <textarea
               id="agentSummary"
@@ -288,7 +288,7 @@ export function SeoForm({ page, seo, defaults }: Props) {
         >
           <div>
             <label className={LABEL_CLASS} htmlFor="ogTitle">
-              OG title
+              OG Title
             </label>
             <input
               id="ogTitle"
@@ -302,7 +302,7 @@ export function SeoForm({ page, seo, defaults }: Props) {
 
           <div>
             <label className={LABEL_CLASS} htmlFor="ogDescription">
-              OG description
+              OG Description
             </label>
             <textarea
               id="ogDescription"
@@ -316,7 +316,7 @@ export function SeoForm({ page, seo, defaults }: Props) {
 
           <div>
             <label className={LABEL_CLASS} htmlFor="ogImage">
-              OG image
+              OG Image
             </label>
             <input
               id="ogImage"
@@ -354,7 +354,7 @@ export function SeoForm({ page, seo, defaults }: Props) {
             className="inline-flex items-center gap-2 rounded-md bg-theme-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-theme-primary-dark focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-neutral-950"
           >
             <Save className="h-4 w-4" aria-hidden="true" />
-            Save changes
+            Save Changes
           </button>
 
           {seo?.updatedAt && (
@@ -374,7 +374,7 @@ export function SeoForm({ page, seo, defaults }: Props) {
           className="inline-flex items-center gap-2 rounded-md border border-theme-border px-3 py-2 text-sm font-semibold text-theme-mid transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-red-900 dark:hover:bg-red-950/40 dark:hover:text-red-400"
         >
           <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          Reset to defaults
+          Reset To Defaults
         </button>
         <p className={HELP_CLASS}>
           Deletes every override saved for this page, including its scripts. The page reverts to the

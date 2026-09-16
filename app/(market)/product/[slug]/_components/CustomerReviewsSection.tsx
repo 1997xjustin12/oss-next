@@ -147,7 +147,7 @@ function ReviewCard({ review }: { review: Review }) {
             onClick={() => setExpanded((e) => !e)}
             className="mt-auto self-start text-[11px] text-theme-muted underline underline-offset-2 transition-colors hover:text-theme-dark dark:hover:text-white"
           >
-            {expanded ? 'Show less' : 'Read more'}
+            {expanded ? 'Show Less' : 'Read More'}
           </button>
         )}
       </div>

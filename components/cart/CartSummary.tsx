@@ -202,7 +202,7 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false, quote, ref
           onClick={clearCart}
           className="mt-4 w-full text-center text-[12px] text-theme-muted hover:text-theme-primary underline transition-colors"
         >
-          Clear cart
+          Clear Cart
         </button>
       )}
     </aside>

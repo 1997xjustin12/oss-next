@@ -168,7 +168,7 @@ export function AccessoryDetail({ product }: Props) {
                 className="flex-1 flex items-center justify-center gap-2.5 bg-theme-primary hover:bg-theme-primary-dark text-white font-bold text-base px-6 py-3.5 rounded-lg transition-colors"
               >
                 <ShoppingCart className="w-5 h-5 shrink-0" />
-                {added ? 'Added to Cart!' : 'Add to Cart'}
+                {added ? 'Added to Cart!' : 'Add To Cart'}
               </button>
               <a
                 href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`}

@@ -34,14 +34,14 @@ const CARD =
 const OPTIONS = [
   {
     version: 'default' as const,
-    label: 'Default — full summary',
+    label: 'Default — Full Summary',
     rows: ['Unit', 'Condition', 'Unit price', 'Distance', 'Delivery', 'Sales tax'],
     description:
       'The summary customers see today. It answers what delivery costs and where the container ships from without anyone having to reach checkout to find out.',
   },
   {
     version: 'v2' as const,
-    label: 'Version 2 — container details only',
+    label: 'Version 2 — Container Details Only',
     rows: ['Unit', 'Condition', 'Unit price'],
     description:
       'Drops the Distance, Delivery and Sales tax rows. The summary describes the container, and the price block below still shows the delivery estimate — so nothing is hidden, it is said once instead of twice.',
@@ -107,7 +107,7 @@ async function VersionChoice({ searchParams }: Props) {
       <section className={CARD}>
         <h2 className="flex items-center gap-2 text-sm font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
           <LayoutPanelTop className="h-4 w-4 text-theme-primary" aria-hidden />
-          Summary version
+          Summary Version
         </h2>
 
         <ul className="mt-4 space-y-3">
@@ -152,7 +152,7 @@ async function VersionChoice({ searchParams }: Props) {
                         type="submit"
                         className="inline-flex items-center gap-1.5 rounded-md bg-theme-primary px-3.5 py-2 text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus:ring-2 focus:ring-theme-primary/40"
                       >
-                        Switch to this
+                        Switch To This
                       </button>
                     </form>
                   )}

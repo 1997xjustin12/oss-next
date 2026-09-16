@@ -25,7 +25,7 @@ export type ProductVideo = {
 /** Slot 1 — shown on every product regardless of size. */
 export const SHARED_PRODUCT_VIDEO: ProductVideo = {
   id: "_eezA15UXHM",
-  title: "About our shipping containers",
+  title: "About Our Shipping Containers",
 };
 
 /**
@@ -36,9 +36,9 @@ export const SHARED_PRODUCT_VIDEO: ProductVideo = {
  * one video. A size with no entry simply shows slot 1 alone.
  */
 export const PRODUCT_VIDEOS_BY_SIZE: Record<string, ProductVideo> = {
-  "20": { id: "_3Dvb5y_odc", title: "20ft shipping container" },
-  "40": { id: "6QwrSRcqG0s", title: "40ft shipping container" },
-  "40HC": { id: "TnTojWCN-3U", title: "40ft high cube shipping container" },
+  "20": { id: "_3Dvb5y_odc", title: "20ft Shipping Container" },
+  "40": { id: "6QwrSRcqG0s", title: "40ft Shipping Container" },
+  "40HC": { id: "TnTojWCN-3U", title: "40ft High Cube Shipping Container" },
 
   // Between them the three keys above cover 9,761 of the 10,528 products.
   // Still uncovered:

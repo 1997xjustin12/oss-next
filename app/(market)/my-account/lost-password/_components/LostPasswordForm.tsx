@@ -70,7 +70,7 @@ export function LostPasswordForm() {
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <div>
           <label htmlFor="lost-password-identifier" className="block text-sm font-semibold text-theme-dark-2 mb-1.5 dark:text-gray-300">
-            Username or email <span className="text-theme-primary dark:text-red-400">*</span>
+            Username Or Email <span className="text-theme-primary dark:text-red-400">*</span>
           </label>
           <input
             id="lost-password-identifier"
@@ -93,7 +93,7 @@ export function LostPasswordForm() {
                        transition-colors disabled:cursor-not-allowed disabled:opacity-60
                        focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
-            {isSubmitting ? 'Sending…' : 'Reset password'}
+            {isSubmitting ? 'Sending…' : 'Reset Password'}
           </button>
 
           <Link href={ROUTES.ACCOUNT.ROOT} className="text-sm font-semibold text-theme-primary hover:underline dark:text-red-400">

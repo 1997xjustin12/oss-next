@@ -26,7 +26,7 @@ const conditionTable = [
 const warrantySteps = [
   { Icon: Truck, title: 'Container Arrives', desc: 'Your container is delivered and placed exactly where you need it.' },
   { Icon: Eye, title: 'Inspect It Same Day', desc: "Take a look. If it doesn't meet your expectations, just let us know before the day is over." },
-  { Icon: RotateCcw, title: 'Get a Full Refund', desc: "We'll refund your purchase in full, minus the shipping fee — no hassle, no stress." },
+  { Icon: RotateCcw, title: 'Get A Full Refund', desc: "We'll refund your purchase in full, minus the shipping fee — no hassle, no stress." },
 ]
 
 const bodyTabs = [

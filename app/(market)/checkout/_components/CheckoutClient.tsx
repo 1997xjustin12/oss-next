@@ -293,7 +293,7 @@ function EmptyCart() {
         <ShoppingCart className="h-9 w-9 text-theme-muted dark:text-neutral-500" />
       </div>
       <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
-        Your cart is empty
+        Your Cart Is Empty
       </h1>
       <p className="mt-2 max-w-sm text-sm text-theme-muted dark:text-neutral-400">
         You haven&apos;t added any containers or accessories yet. Browse our inventory to get started.
@@ -955,8 +955,8 @@ export function CheckoutClient() {
 
             <div className="mb-5 space-y-2">
               {[
-                { label: 'Same as shipping address', value: true },
-                { label: 'Use different billing address', value: false },
+                { label: 'Same As Shipping Address', value: true },
+                { label: 'Use Different Billing Address', value: false },
               ].map(({ label, value }) => (
                 <label
                   key={label}

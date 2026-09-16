@@ -41,7 +41,7 @@ export type CacheTagInfo = {
 export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
   {
     tag: CACHE_TAGS.PAGES,
-    label: 'Content pages',
+    label: 'Content Pages',
     description:
       'The ~1,700 WordPress-authored pages served through the catch-all route, plus their Markdown views.',
     lifetime: 'days — refreshed daily, kept a week',
@@ -54,7 +54,7 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
   },
   {
     tag: CACHE_TAGS.SEARCH,
-    label: 'Search & listings',
+    label: 'Search & Listings',
     description: 'Elasticsearch results behind the product listing page and its filters.',
     lifetime: 'minutes — refreshed every minute, kept an hour',
   },
@@ -66,13 +66,13 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
   },
   {
     tag: CACHE_TAGS.SEO,
-    label: 'SEO overrides',
+    label: 'SEO Overrides',
     description: 'Per-page titles, meta and scripts set in the Page Configurator.',
     lifetime: 'hours — refreshed hourly, kept a day',
   },
   {
     tag: CACHE_TAGS.CONTENT,
-    label: 'On-page copy',
+    label: 'On-Page Copy',
     description: 'Headings and visible copy set in the Content Editor.',
     lifetime: 'hours — refreshed hourly, kept a day',
   },

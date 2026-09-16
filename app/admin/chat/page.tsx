@@ -38,14 +38,14 @@ const CARD =
 const OPTIONS = [
   {
     mode: 'strict' as const,
-    label: 'On — sales markets only',
+    label: 'On — Sales Markets Only',
     countries: CHAT_COUNTRIES_STRICT,
     description:
       'The assistant answers visitors in the US and Canada, the markets the catalogue ships to. Everyone else is told it is unavailable. This is the setting to run on.',
   },
   {
     mode: 'relaxed' as const,
-    label: 'Off — also allow the Philippines',
+    label: 'Off — Also Allow The Philippines',
     countries: CHAT_COUNTRIES_RELAXED,
     description:
       'Adds the Philippines so the team can use the assistant on the live site without a VPN. Every message still costs a model call, so this is a wider spend — not a wider market.',
@@ -97,7 +97,7 @@ export default async function ChatSettingsPage({ searchParams }: Props) {
       <section className={CARD}>
         <h2 className="flex items-center gap-2 text-sm font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
           <MessagesSquare className="h-4 w-4 text-theme-primary" aria-hidden />
-          Country restriction
+          Country Restriction
         </h2>
 
         <ul className="mt-4 space-y-3">
@@ -142,7 +142,7 @@ export default async function ChatSettingsPage({ searchParams }: Props) {
                         type="submit"
                         className="inline-flex items-center gap-1.5 rounded-md bg-theme-primary px-3.5 py-2 text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus:ring-2 focus:ring-theme-primary/40"
                       >
-                        Switch to this
+                        Switch To This
                       </button>
                     </form>
                   )}

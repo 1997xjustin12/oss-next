@@ -62,7 +62,7 @@ export default async function CachePage({ searchParams }: Props) {
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 text-sm font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
               <DatabaseZap className="h-4 w-4 text-theme-primary" aria-hidden />
-              Purge everything
+              Purge Everything
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-theme-muted dark:text-neutral-400">
               Clears every cached page, product, listing and article at once. The next visitor to each
@@ -78,14 +78,14 @@ export default async function CachePage({ searchParams }: Props) {
               className="inline-flex items-center gap-1.5 rounded-md bg-theme-primary px-3.5 py-2 text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus:ring-2 focus:ring-theme-primary/40"
             >
               <Trash2 className="h-4 w-4" aria-hidden />
-              Purge all
+              Purge All
             </button>
           </form>
         </div>
       </section>
 
       <h2 className="mb-3 text-sm font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
-        Or purge one area
+        Or Purge One Area
       </h2>
 
       <ul className="space-y-3">

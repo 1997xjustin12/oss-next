@@ -17,8 +17,8 @@ type Props = {
 
 const DEFAULT_SORT_OPTIONS: SortOption[] = [
   { value: 'default',   label: 'Default' },
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
+  { value: 'price_asc', label: 'Price: Low To High' },
+  { value: 'price_desc', label: 'Price: High To Low' },
   { value: 'best_rated', label: 'Best Rated' },
 ]
 

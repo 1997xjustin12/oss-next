@@ -25,12 +25,12 @@ export function QuoteSubmitButton() {
       {pending ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-          Sending your details
+          Sending Your Details
         </>
       ) : (
         <>
           {/* Was: Next: review quote */}
-          Continue to checkout
+          Continue To Checkout
           <ArrowRight className="h-4 w-4" aria-hidden />
         </>
       )}

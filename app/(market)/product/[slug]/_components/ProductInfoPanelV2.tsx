@@ -1218,7 +1218,7 @@ export function ProductInfoPanelV2({
     if (condition) lines.push({ label: "Condition", value: condition });
 
     lines.push({
-      label: "Unit price",
+      label: "Unit Price",
       value: `${priceDisplay.price}${priceDisplay.suffix ?? ""}`,
     });
     lines.push({ label: "Quantity", value: String(quantity) });
@@ -1772,12 +1772,12 @@ export function ProductInfoPanelV2({
           >
             <CartIcon />
             {isGenericDisplay
-              ? "Add to cart"
+              ? "Add To Cart"
               : added
-                ? "Added to cart"
+                ? "Added To Cart"
                 : !inStock
-                  ? "Out of stock"
-                  : "Add to cart"}
+                  ? "Out Of Stock"
+                  : "Add To Cart"}
           </button>
 
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">

@@ -58,7 +58,7 @@ export async function QuoteReviewBody({ searchParams }: { searchParams: SearchPa
         Step 4 of 4
       </p>
       <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-theme-dark sm:text-3xl dark:text-white">
-        Your quote
+        Your Quote
       </h2>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
         {firstName ? `Thanks, ${firstName}. ` : 'Thanks. '}

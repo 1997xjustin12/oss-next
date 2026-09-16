@@ -14,7 +14,7 @@ export default function SavedQuotesPage() {
       <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <header className="mb-6">
           <h1 className="text-2xl font-extrabold tracking-tight text-theme-dark dark:text-white sm:text-3xl">
-            Saved quotes
+            Saved Quotes
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-theme-muted">
             Every quote you have saved, with the price and delivery it had at the

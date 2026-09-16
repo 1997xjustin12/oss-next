@@ -71,7 +71,7 @@ function ReviewCard({ review, colorIndex }: { review: Review; colorIndex: number
             onClick={() => setExpanded((e) => !e)}
             className="self-start text-xs font-semibold text-theme-primary hover:underline"
           >
-            {expanded ? 'Hide' : 'Read more'}
+            {expanded ? 'Hide' : 'Read More'}
           </button>
         )}
       </div>

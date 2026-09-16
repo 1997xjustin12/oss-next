@@ -59,14 +59,14 @@ export function GuestCartCaptureModal({ open, onCapture, onDismiss }: Props) {
             type="submit"
             className="rounded-md bg-theme-primary hover:bg-theme-primary-dark text-white font-bold px-4 py-2.5 text-sm transition-colors"
           >
-            Save my cart
+            Save My Cart
           </button>
           <button
             type="button"
             onClick={onDismiss}
             className="text-xs text-theme-muted hover:text-theme-dark dark:hover:text-white underline text-center transition-colors"
           >
-            No thanks
+            No Thanks
           </button>
         </form>
       </div>

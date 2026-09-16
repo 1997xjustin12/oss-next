@@ -195,7 +195,7 @@ export function ProductVariantShell({
               )}
 
               <h2 className="mt-6 text-center text-[16px] font-medium">
-                Containers for Every Budget -{" "}
+                Containers For Every Budget -{" "}
                 <span className="text-theme-primary">Low Monthly Payments</span>
               </h2>
 

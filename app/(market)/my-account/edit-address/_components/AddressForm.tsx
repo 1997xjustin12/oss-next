@@ -12,8 +12,8 @@ const ADDRESS_FIELDS: Record<AddressKey, { address: string; city: string; state:
 }
 
 const ADDRESS_TYPES: { key: AddressKey; label: string; hint: string }[] = [
-  { key: 'billing', label: 'Billing address', hint: 'The address used on your invoices and payment receipts.' },
-  { key: 'shipping', label: 'Shipping address', hint: 'The default delivery address for your container orders.' },
+  { key: 'billing', label: 'Billing Address', hint: 'The address used on your invoices and payment receipts.' },
+  { key: 'shipping', label: 'Shipping Address', hint: 'The default delivery address for your container orders.' },
 ]
 
 export function AddressForm() {
@@ -88,7 +88,7 @@ export function AddressForm() {
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="addr-phone" className={labelClass}>
-            Phone number
+            Phone Number
           </label>
           <input
             id="addr-phone"
@@ -114,7 +114,7 @@ export function AddressForm() {
                 <div className="flex flex-col gap-3">
                   <div>
                     <label htmlFor={`${key}-address`} className={labelClass}>
-                      Street address
+                      Street Address
                     </label>
                     <input
                       id={`${key}-address`}
@@ -156,7 +156,7 @@ export function AddressForm() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label htmlFor={`${key}-zip`} className={labelClass}>
-                        ZIP code
+                        ZIP Code
                       </label>
                       <input
                         id={`${key}-zip`}
@@ -194,7 +194,7 @@ export function AddressForm() {
                      transition-colors disabled:cursor-not-allowed disabled:opacity-60
                      focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
         >
-          {isSubmitting ? 'Saving…' : 'Save addresses'}
+          {isSubmitting ? 'Saving…' : 'Save Addresses'}
         </button>
       </form>
     </div>

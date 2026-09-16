@@ -65,7 +65,7 @@ export function LoginForm({ showTitle = true, className = '' }: Props) {
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <div>
           <label htmlFor="login-email" className="block text-sm font-semibold text-theme-dark-2 mb-1.5 dark:text-gray-300">
-            Email address <span className="text-theme-primary dark:text-red-400">*</span>
+            Email Address <span className="text-theme-primary dark:text-red-400">*</span>
           </label>
           <input
             id="login-email"
@@ -118,7 +118,7 @@ export function LoginForm({ showTitle = true, className = '' }: Props) {
                          transition-colors disabled:cursor-not-allowed disabled:opacity-60
                          focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
             >
-              {isSubmitting ? 'Logging in…' : 'Log in'}
+              {isSubmitting ? 'Logging In…' : 'Log In'}
             </button>
 
             <label
@@ -132,7 +132,7 @@ export function LoginForm({ showTitle = true, className = '' }: Props) {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 rounded border-theme-border text-theme-primary focus:ring-theme-primary dark:border-gray-600 dark:bg-gray-800"
               />
-              Remember me
+              Remember Me
             </label>
           </div>
         </div>

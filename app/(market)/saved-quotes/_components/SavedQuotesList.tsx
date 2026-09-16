@@ -134,7 +134,7 @@ export function SavedQuotesList() {
       <div className="rounded-lg border border-theme-border bg-theme-subtle px-6 py-14 text-center">
         <FileText className="mx-auto h-10 w-10 text-theme-border" aria-hidden />
         <h2 className="mt-4 text-xl font-bold text-theme-dark dark:text-white">
-          No saved quotes yet
+          No Saved Quotes Yet
         </h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-theme-muted">
           Save a quote from any container page and it will be kept here, with the
@@ -166,7 +166,7 @@ export function SavedQuotesList() {
               onClick={() => setOpenIds(allOpen ? [] : quotes.map((quote) => quote.id))}
               className="text-[13px] font-semibold text-theme-muted underline underline-offset-2 transition-colors hover:text-theme-primary"
             >
-              {allOpen ? 'Collapse all' : 'Expand all'}
+              {allOpen ? 'Collapse All' : 'Expand All'}
             </button>
           )}
           <button
@@ -174,7 +174,7 @@ export function SavedQuotesList() {
             onClick={clearAll}
             className="text-[13px] font-semibold text-theme-muted underline underline-offset-2 transition-colors hover:text-theme-primary"
           >
-            Clear all
+            Clear All
           </button>
         </div>
       </div>
@@ -228,7 +228,7 @@ export function SavedQuotesList() {
 
                   <span className="hidden shrink-0 text-right sm:block">
                     <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-theme-muted">
-                      Quoted total
+                      Quoted Total
                     </span>
                     <span className="block text-lg font-bold leading-tight tabular-nums text-theme-dark dark:text-white">
                       {quote.total}

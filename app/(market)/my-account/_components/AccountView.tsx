@@ -26,7 +26,7 @@ export function AccountView() {
             onClick={logout}
             className="font-semibold text-theme-primary hover:underline dark:text-red-400"
           >
-            Log out
+            Log Out
           </button>
           <span className="text-theme-muted dark:text-gray-400">)</span>
         </p>

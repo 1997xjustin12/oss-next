@@ -22,7 +22,7 @@ export default function EditAccountPage() {
           <AccountDetailsForm />
 
           <div className="mt-10 max-w-xl border-t border-theme-border pt-8 dark:border-gray-700">
-            <h2 className="mb-5 text-xl font-bold text-theme-dark dark:text-white">Change password</h2>
+            <h2 className="mb-5 text-xl font-bold text-theme-dark dark:text-white">Change Password</h2>
             <ChangePasswordForm />
           </div>
         </AccountPageShell>

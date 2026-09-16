@@ -28,7 +28,7 @@ export default function PaymentMethodsPage() {
               type="button"
               className="mt-2 rounded-md bg-theme-primary hover:bg-theme-primary-dark text-white font-semibold px-5 py-2.5 text-sm transition-colors"
             >
-              Add payment method
+              Add Payment Method
             </button>
           </div>
         </AccountPageShell>

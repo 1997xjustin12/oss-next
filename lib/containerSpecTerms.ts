@@ -47,7 +47,7 @@ export const CONDITION_TERMS: Record<ContainerCondition, SpecTerm> = {
 
 export const GRADE_TERMS: Record<ContainerGrade, SpecTerm> = {
   'AS IS':                { label: 'AS IS',                slug: 'asis', abbr: 'AS IS' },
-  'Wind and Water Tight': { label: 'Wind and Water Tight', slug: 'wwt',  abbr: 'WWT'   },
+  'Wind and Water Tight': { label: 'Wind And Water Tight', slug: 'wwt',  abbr: 'WWT'   },
   'Cargo Worthy':         { label: 'Cargo Worthy',         slug: 'cw',   abbr: 'CW'    },
   IICL:                   { label: 'IICL',                 slug: 'iicl', abbr: 'IICL'  },
 }

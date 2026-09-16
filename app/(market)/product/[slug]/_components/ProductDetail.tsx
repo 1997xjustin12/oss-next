@@ -416,7 +416,7 @@ export function ProductDetail({ product, relatedProducts, panelV2 = false }: Pro
 
       <section className="px-4 sm:px-[5%]">
         <div className="flex flex-col gap-[10px]">
-          <h2 className="text-[16px] md:text-[24px] font-bold">Ideal for:</h2>
+          <h2 className="text-[16px] md:text-[24px] font-bold">Ideal For:</h2>
           <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[10px]">
             {IDEAL_FOR.map((item) => (
               <li

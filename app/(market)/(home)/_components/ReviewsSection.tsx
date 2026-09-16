@@ -62,7 +62,7 @@ function ReviewCard({ review }: { review: Review }) {
           onClick={() => setExpanded((e) => !e)}
           className="self-start text-xs font-semibold text-[#C60C29] hover:underline"
         >
-          {expanded ? 'Hide' : 'Read more'}
+          {expanded ? 'Hide' : 'Read More'}
         </button>
       </div>
     </article>

@@ -137,7 +137,7 @@ export function MaintenanceControl() {
           onClick={() => call('GET')}
           className="mt-3 w-full text-center text-xs font-semibold text-theme-primary hover:underline disabled:opacity-60 dark:text-red-400"
         >
-          Refresh status
+          Refresh Status
         </button>
 
         {error && (

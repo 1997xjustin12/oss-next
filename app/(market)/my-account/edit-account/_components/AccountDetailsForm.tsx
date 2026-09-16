@@ -99,7 +99,7 @@ export function AccountDetailsForm() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label htmlFor="acc-first-name" className={labelClass}>
-              First name <span className="text-theme-primary dark:text-red-400">*</span>
+              First Name <span className="text-theme-primary dark:text-red-400">*</span>
             </label>
             <input
               id="acc-first-name"
@@ -113,7 +113,7 @@ export function AccountDetailsForm() {
           </div>
           <div>
             <label htmlFor="acc-last-name" className={labelClass}>
-              Last name <span className="text-theme-primary dark:text-red-400">*</span>
+              Last Name <span className="text-theme-primary dark:text-red-400">*</span>
             </label>
             <input
               id="acc-last-name"
@@ -129,7 +129,7 @@ export function AccountDetailsForm() {
 
         <div>
           <label htmlFor="acc-email" className={labelClass}>
-            Email address <span className="text-theme-primary dark:text-red-400">*</span>
+            Email Address <span className="text-theme-primary dark:text-red-400">*</span>
           </label>
           <input
             id="acc-email"
@@ -150,7 +150,7 @@ export function AccountDetailsForm() {
                        transition-colors disabled:cursor-not-allowed disabled:opacity-60
                        focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
-            {isSubmitting ? 'Saving…' : 'Save changes'}
+            {isSubmitting ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
       </form>

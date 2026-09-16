@@ -64,8 +64,8 @@ const COMPANY_LINKS = [
 
 const POLICY_LINKS = [
   {href:`${BASE_URL}/privacy-policy/`, label:"Privacy Policy"},
-  {href:`${BASE_URL}/terms-and-conditions/`, label:"Terms and Conditions"},
-  {href:`${BASE_URL}/terms-and-conditions/#refund-policy`, label:"Refunds and Returns"},
+  {href:`${BASE_URL}/terms-and-conditions/`, label:"Terms And Conditions"},
+  {href:`${BASE_URL}/terms-and-conditions/#refund-policy`, label:"Refunds And Returns"},
   {href:`${BASE_URL}/shipping-policy/`, label:"Shipping Policy"},
 ];
 

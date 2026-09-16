@@ -56,7 +56,7 @@ export function QuoteSummaryPanel({ quote }: { quote: DeliveryQuoteContext }) {
   return (
     <aside className="lg:sticky lg:top-6 lg:self-start">
       <div className="rounded-lg border border-theme-border bg-theme-bg p-5 shadow-sm sm:p-6 dark:border-neutral-800 dark:bg-neutral-900">
-        <h2 className="text-base font-bold text-theme-primary sm:text-lg">Your quote summary</h2>
+        <h2 className="text-base font-bold text-theme-primary sm:text-lg">Your Quote Summary</h2>
 
         <ul className="mt-4 space-y-4">
           {lines.map((line) => (

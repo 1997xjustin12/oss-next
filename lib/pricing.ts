@@ -90,10 +90,10 @@ export function getPriceBasis(hit: ShippingContainerHit): PriceBasis {
   const termMonths = Number(getCustomFieldValue(hit, 'payment_term').match(/\d+/)?.[0] ?? '') || undefined
 
   if (paymentType === 'rental') {
-    return { period: 'monthly', label: 'Monthly rental', suffix: '/month', termMonths }
+    return { period: 'monthly', label: 'Monthly Rental', suffix: '/month', termMonths }
   }
   if (paymentType === 'rto') {
-    return { period: 'monthly', label: 'Monthly rent-to-own payment', suffix: '/month', termMonths }
+    return { period: 'monthly', label: 'Monthly Rent-To-Own Payment', suffix: '/month', termMonths }
   }
   return { period: 'one-time', label: 'Price', suffix: '' }
 }

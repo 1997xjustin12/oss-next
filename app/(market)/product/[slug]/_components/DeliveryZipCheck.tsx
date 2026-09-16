@@ -336,7 +336,7 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
             onClick={handleUseMyLocation}
             className="text-[13px] text-theme-primary underline underline-offset-2 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary"
           >
-            Use my current location
+            Use My Current Location
           </button>
           {locateError && (
             <p role="status" className="mt-1 text-[12px] text-theme-muted">

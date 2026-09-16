@@ -1,10 +1,10 @@
 import { Headphones, RefreshCw, ShieldCheck, Truck } from 'lucide-react'
 
 const ITEMS = [
-  { icon: ShieldCheck, title: 'Quality containers', copy: 'Inspected, secure, built to last' },
-  { icon: Headphones, title: 'Expert support', copy: 'Real people, real answers' },
-  { icon: Truck, title: 'Nationwide delivery', copy: 'Fast, reliable to your location' },
-  { icon: RefreshCw, title: 'Rent & rent-to-own', copy: 'Flexible options for your budget' },
+  { icon: ShieldCheck, title: 'Quality Containers', copy: 'Inspected, secure, built to last' },
+  { icon: Headphones, title: 'Expert Support', copy: 'Real people, real answers' },
+  { icon: Truck, title: 'Nationwide Delivery', copy: 'Fast, reliable to your location' },
+  { icon: RefreshCw, title: 'Rent & Rent-To-Own', copy: 'Flexible options for your budget' },
 ] as const
 
 /** Reassurance below the form, for the visitor deciding whether to fill it in. */

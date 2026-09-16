@@ -26,7 +26,7 @@ export function WishlistPageClient() {
         My Wishlist
         {mounted && items.length > 0 && (
           <span className="text-base sm:text-lg font-normal text-theme-muted">
-            ({items.length} {items.length === 1 ? 'item' : 'items'})
+            ({items.length} {items.length === 1 ? 'Item' : 'Items'})
           </span>
         )}
       </h1>
@@ -53,7 +53,7 @@ function EmptyWishlist() {
   return (
     <div className="rounded-xl border border-theme-border bg-white p-10 sm:p-16 text-center">
       <Heart className="w-14 h-14 mx-auto text-theme-border mb-4" />
-      <h2 className="text-2xl font-bold mb-1.5">Your wishlist is empty</h2>
+      <h2 className="text-2xl font-bold mb-1.5">Your Wishlist Is Empty</h2>
       <p className="text-sm text-theme-muted mb-6 max-w-xs mx-auto">
         Save containers you&apos;re considering — tap the heart on any product page.
       </p>

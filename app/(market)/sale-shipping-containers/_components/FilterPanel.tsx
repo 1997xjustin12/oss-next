@@ -52,7 +52,7 @@ export const SHIPPING_CONTAINER_FILTERS = [
       { label: "AS IS", value: "AS IS" },
       { label: "Cargo Worthy (CW)", value: "Cargo Worthy (CW)" },
       { label: "IICL", value: "IICL" },
-      { label: "Wind and Water Tight (WWT)", value: "Wind and Water tight (WWT)" },
+      { label: "Wind And Water Tight (WWT)", value: "Wind and Water tight (WWT)" },
     ],
   },
   {

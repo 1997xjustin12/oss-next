@@ -36,7 +36,7 @@ export function Reviews() {
           id="reviews-title"
           className="text-[32px] sm:text-[38px] font-black text-theme-dark leading-[1.05] mb-3 tracking-[-0.02em]"
         >
-          Trusted by Thousands Across the USA
+          Trusted By Thousands Across The USA
         </h2>
         <p className="text-[15px] text-theme-muted leading-[1.65] max-w-[580px] mx-auto">
           Real customers, verified reviews — here&apos;s what people say about working with

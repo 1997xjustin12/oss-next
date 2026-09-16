@@ -99,7 +99,7 @@ export function ContentForm({ page, content }: Props) {
             className="inline-flex items-center gap-2 rounded-md bg-theme-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-theme-primary-dark focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 focus-visible:outline-none dark:focus-visible:ring-offset-neutral-950"
           >
             <Save className="h-4 w-4" aria-hidden="true" />
-            Save changes
+            Save Changes
           </button>
 
           {content?.updatedAt && (
@@ -121,7 +121,7 @@ export function ContentForm({ page, content }: Props) {
           className="inline-flex items-center gap-2 rounded-md border border-theme-border px-3 py-2 text-sm font-semibold text-theme-mid transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-red-900 dark:hover:bg-red-950/40 dark:hover:text-red-400"
         >
           <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          Reset all headings
+          Reset All Headings
         </button>
         <p className={HELP_CLASS}>
           Clears every heading override on this page. The copy reverts to what&apos;s defined in{' '}

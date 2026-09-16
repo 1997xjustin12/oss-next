@@ -6,7 +6,7 @@ import { CONTACT_NUMBER } from '@/lib/helpers'
 // that is down. Static by default — nothing here opts into dynamic rendering.
 
 export const metadata = {
-  title: 'Down for Maintenance',
+  title: 'Down For Maintenance',
   // noindex while the wall is up; `follow` so link equity isn't lost. The proxy
   // also serves this with a 503 + Retry-After so crawlers come back rather than
   // treating the outage as permanent.
@@ -20,7 +20,7 @@ export default function MaintenancePage() {
         <Wrench className="h-9 w-9 text-theme-muted dark:text-neutral-500" />
       </div>
       <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-neutral-100">
-        We&apos;ll be back shortly
+        We&apos;ll Be Back Shortly
       </h1>
       <p className="mt-2 max-w-sm text-sm text-theme-muted dark:text-neutral-400">
         On-Site Storage Solutions is down for scheduled maintenance. Thanks for your patience —

@@ -170,7 +170,7 @@ export function ChangePasswordForm() {
                        transition-colors disabled:cursor-not-allowed disabled:opacity-60
                        focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
-            {isSubmitting ? 'Saving…' : 'Change password'}
+            {isSubmitting ? 'Saving…' : 'Change Password'}
           </button>
         </div>
       </form>

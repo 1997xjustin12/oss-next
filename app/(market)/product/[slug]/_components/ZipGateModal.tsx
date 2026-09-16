@@ -293,7 +293,7 @@ export function ZipGateModal({ open, onResolved, onDismiss }: Props) {
             disabled={busy}
             className="mt-4 flex h-12 w-full items-center justify-center rounded bg-theme-primary text-base font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {busy ? 'Checking…' : 'Get your Best Price'}
+            {busy ? 'Checking…' : 'Get Your Best Price'}
           </button>
         </form>
       </div>

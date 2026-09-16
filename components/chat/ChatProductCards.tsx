@@ -96,9 +96,9 @@ export function ChatProductCards({ products }: { products: ChatProductCard[] }) 
                       Added
                     </>
                   ) : card.inStock ? (
-                    'Add to cart'
+                    'Add To Cart'
                   ) : (
-                    'Out of stock'
+                    'Out Of Stock'
                   )}
                 </button>
               ) : (

@@ -25,19 +25,19 @@ import { one, type SearchParams } from './searchParams'
 const INTERESTS = [
   { value: 'purchase', label: 'Purchase', defaultChecked: true },
   { value: 'rent', label: 'Rent', defaultChecked: false },
-  { value: 'rent-to-own', label: 'Rent-to-own', defaultChecked: false },
+  { value: 'rent-to-own', label: 'Rent-To-Own', defaultChecked: false },
 ] as const
 
 const TIMELINES = [
-  { value: 'asap', label: 'As soon as possible' },
-  { value: '1-2-weeks', label: 'Within 1-2 weeks' },
-  { value: '1-month', label: 'Within a month' },
-  { value: '1-3-months', label: '1-3 months out' },
-  { value: 'just-researching', label: 'Just researching for now' },
+  { value: 'asap', label: 'As Soon As Possible' },
+  { value: '1-2-weeks', label: 'Within 1-2 Weeks' },
+  { value: '1-month', label: 'Within A Month' },
+  { value: '1-3-months', label: '1-3 Months Out' },
+  { value: 'just-researching', label: 'Just Researching For Now' },
 ] as const
 
 const CONTACT_METHODS = [
-  { value: 'phone', label: 'Phone call', Icon: Phone },
+  { value: 'phone', label: 'Phone Call', Icon: Phone },
   { value: 'email', label: 'Email', Icon: Mail },
 ] as const
 
@@ -96,7 +96,7 @@ export async function QuoteForm({
 
       <p className="text-sm font-medium text-theme-muted">Step 3 of 4:</p>
       <h2 className="mt-1 text-xl font-bold text-theme-primary sm:text-2xl">
-        Your contact information
+        Your Contact Information
       </h2>
       <p className="mt-1 text-xs text-theme-muted">
         We&rsquo;ll use this to send you your exact delivery quote.
@@ -165,7 +165,7 @@ export async function QuoteForm({
       {/* CSS-only radio group — no client JS for a two-option choice. */}
       <fieldset className="mt-6">
         <legend className="text-sm font-semibold text-theme-dark dark:text-white">
-          Best way to contact you{' '}
+          Best Way To Contact You{' '}
           <span className="text-theme-primary" aria-hidden>
             *
           </span>
@@ -246,7 +246,7 @@ export async function QuoteForm({
 
       <div className="mt-6">
         <label htmlFor="details" className="text-sm font-semibold text-theme-dark dark:text-white">
-          Additional details <span className="font-normal text-theme-muted">(optional)</span>
+          Additional Details <span className="font-normal text-theme-muted">(optional)</span>
         </label>
         <textarea
           id="details"

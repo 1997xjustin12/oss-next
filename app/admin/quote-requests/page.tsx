@@ -47,7 +47,7 @@ async function QuoteRequestList() {
             <th scope="col" className={TH}>Destination</th>
             <th scope="col" className={TH}>Product</th>
             <th scope="col" className={TH}>Notes</th>
-            <th scope="col" className={TH}>Submitted by</th>
+            <th scope="col" className={TH}>Submitted By</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-neutral-100">

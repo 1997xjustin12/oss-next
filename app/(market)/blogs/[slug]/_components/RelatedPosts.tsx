@@ -14,7 +14,7 @@ export async function RelatedPosts({ currentSlug }: { currentSlug: string }) {
   return (
     <section aria-labelledby="related-heading" className="mt-14 border-t border-theme-border pt-10 dark:border-neutral-800">
       <h2 id="related-heading" className="mb-6 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-white">
-        More articles
+        More Articles
       </h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (

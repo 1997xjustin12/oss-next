@@ -61,7 +61,7 @@ export default async function AgentPolicyPage() {
       </header>
 
       <section>
-        <h2 className={H2}>What you may do</h2>
+        <h2 className={H2}>What You May Do</h2>
         <p className={P}>
           Read anything public: the catalog, prices, delivery availability, guides and policies.
           Quote it, summarise it, and act on it for a customer. You may also submit a quote request
@@ -85,7 +85,7 @@ export default async function AgentPolicyPage() {
             <thead>
               <tr>
                 <th scope="col" className={TH}>Surface</th>
-                <th scope="col" className={TH}>Use it for</th>
+                <th scope="col" className={TH}>Use It For</th>
               </tr>
             </thead>
             <tbody>
@@ -117,7 +117,7 @@ export default async function AgentPolicyPage() {
       </section>
 
       <section>
-        <h2 className={H2}>Rate limits</h2>
+        <h2 className={H2}>Rate Limits</h2>
         <p className={P}>
           60 requests per minute per IP on the read endpoints and the MCP server; 5 per minute on
           quote submission, because each one reaches a person. Exceeding a limit returns{' '}
@@ -145,7 +145,7 @@ export default async function AgentPolicyPage() {
       </section>
 
       <section>
-        <h2 className={H2}>Crawler policy</h2>
+        <h2 className={H2}>Crawler Policy</h2>
         <p className={P}>
           <code className={CODE}>/robots.txt</code> names each crawler individually. Crawlers whose
           results cite and link back are welcome; crawlers that only collect training data are not.
@@ -167,7 +167,7 @@ export default async function AgentPolicyPage() {
       </section>
 
       <section>
-        <h2 className={H2}>MCP tools</h2>
+        <h2 className={H2}>MCP Tools</h2>
         <p className={P}>
           Add <code className={CODE}>{absoluteUrl('/api/mcp')}</code> as a custom connector in Claude
           or ChatGPT. No key, no OAuth. Available tools:

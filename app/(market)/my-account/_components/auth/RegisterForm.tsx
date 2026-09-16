@@ -204,7 +204,7 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
 
         <div>
           <label htmlFor="reg-email" className={labelClass}>
-            Email address <span className="text-theme-primary dark:text-red-400">*</span>
+            Email Address <span className="text-theme-primary dark:text-red-400">*</span>
           </label>
           <input
             id="reg-email"
@@ -244,7 +244,7 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
 
         <div>
           <label htmlFor="reg-confirm-password" className={labelClass}>
-            Confirm password <span className="text-theme-primary dark:text-red-400">*</span>
+            Confirm Password <span className="text-theme-primary dark:text-red-400">*</span>
           </label>
           <div className="relative">
             <input
@@ -294,7 +294,7 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
                        transition-colors disabled:cursor-not-allowed disabled:opacity-60
                        focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
           >
-            {isSubmitting ? 'Creating account…' : 'Register'}
+            {isSubmitting ? 'Creating Account…' : 'Register'}
           </button>
         </div>
       </form>

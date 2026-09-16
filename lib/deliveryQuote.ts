@@ -150,7 +150,7 @@ export async function resolveDeliveryQuote(params: {
       if (cheapest?.rate != null) {
         deliveryCharge = cheapest.rate_formatted || formatMoney(cheapest.rate)
         deliveryPending = false
-        lines.push({ label: 'Estimated delivery', value: deliveryCharge })
+        lines.push({ label: 'Estimated Delivery', value: deliveryCharge })
         runningTotal += cheapest.rate
       }
     } else {

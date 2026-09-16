@@ -96,7 +96,7 @@ export function CartLocationConflictModal({
             onClick={() => { onClearCart(); onClose() }}
             className="mt-3 text-xs font-semibold text-theme-muted underline underline-offset-2 transition-colors hover:text-theme-primary"
           >
-            {isZip ? 'Clear cart and switch location' : 'Clear cart'}
+            {isZip ? 'Clear Cart And Switch Location' : 'Clear Cart'}
           </button>
 
           <p className="mt-auto pt-6 text-sm text-theme-mid dark:text-gray-300">

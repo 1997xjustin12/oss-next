@@ -102,7 +102,7 @@ async function AgentTrafficReport() {
   const mcpSection =
     mcpRows.length > 0 ? (
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-neutral-900">MCP tool calls</h2>
+        <h2 className="text-sm font-semibold text-neutral-900">MCP Tool Calls</h2>
         <p className="text-xs text-neutral-600">
           Which tools assistants actually invoke over <code>/api/mcp</code>. A tool that is
           never called is either badly described or unnecessary; a high error rate means the
@@ -164,7 +164,7 @@ async function AgentTrafficReport() {
               <th scope="col" className="px-4 py-2.5 font-semibold">Policy</th>
               <th scope="col" className="px-4 py-2.5 font-semibold text-right">Requests</th>
               <th scope="col" className="px-4 py-2.5 font-semibold">Statuses</th>
-              <th scope="col" className="px-4 py-2.5 font-semibold">Top paths</th>
+              <th scope="col" className="px-4 py-2.5 font-semibold">Top Paths</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">

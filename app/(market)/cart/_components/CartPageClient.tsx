@@ -110,7 +110,7 @@ export function CartPageClient() {
               Shopping Cart
               {mounted && (
                 <span className="text-base sm:text-lg font-normal text-theme-muted">
-                  ({cart.totalItems} {cart.totalItems === 1 ? 'item' : 'items'})
+                  ({cart.totalItems} {cart.totalItems === 1 ? 'Item' : 'Items'})
                 </span>
               )}
             </h1>
@@ -122,7 +122,7 @@ export function CartPageClient() {
                 className="flex items-center gap-1.5 text-sm font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${totalsLoading ? 'animate-spin' : ''}`} />
-                Refresh totals
+                Refresh Totals
               </button>
             )}
           </div>
@@ -179,7 +179,7 @@ function EmptyCart() {
   return (
     <div className="rounded-xl border border-theme-border bg-white p-10 sm:p-16 text-center">
       <ShoppingCart className="w-14 h-14 mx-auto text-theme-border mb-4" />
-      <h2 className="text-2xl font-bold mb-1.5">Your cart is empty</h2>
+      <h2 className="text-2xl font-bold mb-1.5">Your Cart Is Empty</h2>
       <p className="text-sm text-theme-muted mb-6 max-w-xs mx-auto">
         Browse our containers and add items to get started.
       </p>

@@ -151,7 +151,7 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-theme-primary text-white font-bold px-4 py-2.5 text-sm hover:bg-theme-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-theme-primary"
               >
                 <ShoppingCart className="w-4 h-4" />
-                {added ? 'Added to Cart!' : 'Add to Cart'}
+                {added ? 'Added to Cart!' : 'Add To Cart'}
               </button>
             </div>
             {isGenericLocation && (
