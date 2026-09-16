@@ -11,6 +11,8 @@ import { findLocationConflict, requestCartLocationConflict } from '@/lib/cart'
 import type { FormattedContainerHit } from '@/types/product'
 export type { ShippingContainerHit, FormattedContainerHit } from '@/types/product'
 
+import { isAbandonedRequest } from '@/lib/pageUnloading'
+
 const GEOAPIFY_PROXY = '/api/geoapify'
 
 export interface GeoapifyResult {
@@ -163,8 +165,6 @@ export function useGeoapify(
       setLoading(true)
       setError(null)
 
-      console.log('[useGeoapify] query effect triggered — query:', trimmed)
-
       try {
         const params = new URLSearchParams({
           text:   trimmed,
@@ -181,10 +181,12 @@ export function useGeoapify(
 
         const json = (await res.json()) as { features?: unknown[] }
         const parsed = (json.features ?? []).map(parseFeature)
-        console.log('[useGeoapify] query results — query:', trimmed, 'results:', parsed)
         setResults(parsed)
       } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
+        // AbortError: a newer keystroke superseded this one. isAbandonedRequest:
+        // the visitor navigated away and the browser cancelled it. Neither is a
+        // lookup failure worth reporting.
+        if ((err as Error).name !== 'AbortError' && !isAbandonedRequest(err)) {
           console.error('[useGeoapify] query error — query:', trimmed, err)
           setError('Could not fetch location suggestions.')
           setResults([])
@@ -206,8 +208,6 @@ export function useGeoapify(
   }
 
   async function fetchDepotContainers(location: string, source: 'init' | 'select') {
-    console.log(`[useGeoapify] fetchDepotContainers triggered (${source}) — location:`, location)
-
     setDepotContainersLoading(true)
     setDepotContainersError(null)
 
@@ -217,9 +217,10 @@ export function useGeoapify(
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
       const json = (await res.json()) as { data?: FormattedContainerHit[] }
-      console.log(`[useGeoapify] depotContainers (${source}) — location:`, location, 'data:', json.data ?? [])
       setDepotContainers(json.data ?? [])
     } catch (err) {
+      // The visitor left mid-request: nothing failed, and nothing is listening.
+      if (isAbandonedRequest(err)) return
       console.error(`[useGeoapify] fetchDepotContainers error (${source}) — location:`, location, err)
       setDepotContainersError('Could not fetch containers for this location.')
       setDepotContainers([])

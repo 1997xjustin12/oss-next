@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { isAbandonedRequest } from '@/lib/pageUnloading'
 import type { DeliveryRates, DeliveryRatesErrorReason } from '@/types/delivery'
 
 /**
@@ -90,6 +91,9 @@ export function useDeliveryRates({ slug, zipcode, state, enabled = true }: Param
         })
         .catch((err: unknown) => {
           if (controller.signal.aborted) return
+          // The browser cancels in-flight requests when the visitor navigates
+          // away. Nothing failed, and this component is about to go with it.
+          if (isAbandonedRequest(err)) return
           console.error('[useDeliveryRates]', err)
           setSettled({ key, rates: null, error: UNAVAILABLE })
         })

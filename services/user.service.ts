@@ -133,9 +133,6 @@ export async function loginUser(username: string, password: string): Promise<Aut
     throw new Error(data?.error ?? data?.detail ?? 'Invalid username or password.')
   }
 
-  // TEMP DEBUG — remove once the real response shape is confirmed.
-  console.log('[loginUser] raw response keys:', Object.keys(data ?? {}))
-
   return await normalizeSession(data ?? {}, username)
 }
 
