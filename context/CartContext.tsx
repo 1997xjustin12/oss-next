@@ -97,20 +97,23 @@ function reducer(state: Cart, action: Action): Cart {
       return { ...state, items, ...totals(items), updatedAt: new Date().toISOString() }
     }
     case 'UPDATE_QTY': {
-      const items = action.qty <= 0
-        ? state.items.filter(i => i.id !== action.id)
-        : state.items.map(i => {
+      // Never below one, and never a removal. The steppers decrement by one, so
+      // "quantity 0 removes the line" meant a second press at 1 emptied the
+      // cart — the same click that had been harmless every press before it,
+      // with no warning and no undo. Removing is what Remove is for.
+      const qty = Math.max(1, Math.floor(action.qty))
+      const items = state.items.map(i => {
             if (i.id !== action.id) return i
-            const delta = action.qty - i.quantity
+            const delta = qty - i.quantity
             // Raised while signed out: the extra counts as a guest addition.
             // Lowered: the guest portion can never exceed what is left.
             const guestQuantity =
               delta > 0 && action.guest
                 ? (i.guestQuantity ?? 0) + delta
                 : i.guestQuantity !== undefined
-                  ? Math.min(i.guestQuantity, action.qty)
+                  ? Math.min(i.guestQuantity, qty)
                   : undefined
-            return { ...i, quantity: action.qty, guestQuantity }
+            return { ...i, quantity: qty, guestQuantity }
           })
       return { ...state, items, ...totals(items), updatedAt: new Date().toISOString() }
     }

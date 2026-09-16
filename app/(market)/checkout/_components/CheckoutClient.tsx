@@ -1026,11 +1026,15 @@ export function CheckoutClient() {
 
                 {/* Qty stepper */}
                 <div className="flex items-center gap-1.5 pt-1">
+                  {/* Stops at one. Going lower used to delete the line, which
+                      from a stepper reads as a miscount rather than a deletion
+                      — Remove, below, is the way out. */}
                   <button
                     type="button"
                     onClick={() => updateQty(item.id, item.quantity - 1)}
+                    disabled={item.quantity <= 1}
                     aria-label={`Decrease quantity of ${item.name}`}
-                    className="flex h-6 w-6 items-center justify-center rounded border border-theme-border text-theme-mid transition-colors hover:border-theme-primary hover:text-theme-primary dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-red-500 dark:hover:text-red-400"
+                    className="flex h-6 w-6 items-center justify-center rounded border border-theme-border text-theme-mid transition-colors enabled:hover:border-theme-primary enabled:hover:text-theme-primary disabled:cursor-not-allowed disabled:opacity-40 dark:border-neutral-700 dark:text-neutral-300 dark:enabled:hover:border-red-500 dark:enabled:hover:text-red-400"
                   >
                     <Minus className="h-3 w-3" />
                   </button>

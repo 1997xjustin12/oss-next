@@ -61,9 +61,12 @@ export function CartItemRow({ item }: Props) {
             <div className="flex flex-wrap items-center gap-3">
               {/* Qty stepper */}
               <div className="flex items-center border border-theme-border rounded-md overflow-hidden">
+                {/* Stops at one — see the same guard in CartContext's
+                    UPDATE_QTY. Remove is the way to take a line out. */}
                 <button
                   onClick={() => updateQty(item.id, item.quantity - 1)}
-                  className="w-8 h-8 flex items-center justify-center bg-theme-subtle hover:bg-theme-primary hover:text-white text-theme-muted transition-colors"
+                  disabled={item.quantity <= 1}
+                  className="w-8 h-8 flex items-center justify-center bg-theme-subtle enabled:hover:bg-theme-primary enabled:hover:text-white text-theme-muted transition-colors disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="w-3.5 h-3.5" />
