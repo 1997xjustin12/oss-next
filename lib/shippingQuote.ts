@@ -55,6 +55,53 @@ export function completeZip(zip: string, country: string | undefined): string {
   return us ? us[1] : ''
 }
 
+/**
+ * The backend's reason for withholding a rate rather than refusing the method.
+ *
+ * It stops quoting above $1,000 and asks for a conversation instead — which
+ * happens at distance (tilt bed is $6/mile) and, more often, at quantity: one
+ * truck carries one container, so three containers is three trucks and crosses
+ * the line five miles from the depot. Measured 2026-09-16 at 5.75 mi: two
+ * containers withholds flat bed, three withholds both.
+ */
+const CALL_FOR_QUOTE = 'call_for_quote'
+
+/**
+ * Methods the backend can deliver by, but will not price online.
+ *
+ * Shown to the customer and never selectable: a rate nobody has quoted cannot
+ * be charged for. They are separated from `availableShippingOptions` rather
+ * than flagged within it so no selection path can reach one by accident.
+ *
+ * They were hidden entirely until 2026-09-16. That left an order of three
+ * containers showing Pickup as its only option, pre-selected because it was the
+ * only one, under a total reading "Est. Delivery Free" — a delivery order
+ * quietly turned into a collection.
+ */
+export function callForQuoteOptions(quote: ShippingQuote | undefined): ShippingOption[] {
+  return (
+    quote?.options?.filter(
+      (option) => !option.available && option.hidden_reason === CALL_FOR_QUOTE && option.id !== 'additional',
+    ) ?? []
+  )
+}
+
+/**
+ * Why this method has to be quoted by phone, in the customer's terms.
+ *
+ * The withheld figure is deliberately not shown. The backend stopped quoting
+ * precisely so the number comes from a person who knows what the job involves;
+ * printing it anyway would quote it, just without the conversation.
+ */
+export function callForQuoteReason(option: ShippingOption): string {
+  // Trucks, not containers: the backend derives them from total length, so an
+  // order of two does not always need two.
+  if (option.trucks > 1) {
+    return `This order takes ${option.trucks} trucks, which we price with you over the phone.`
+  }
+  return 'At this distance we price this method with you over the phone.'
+}
+
 export function availableShippingOptions(quote: ShippingQuote | undefined): ShippingOption[] {
   // "Shipping is Additional" means "quoted and billed after the order". While
   // delivery is billed later anyway, every method already works that way, so

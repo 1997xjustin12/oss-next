@@ -16,7 +16,9 @@ import {
   AlertCircle,
   ShoppingCart,
   Loader2,
+  PhoneCall,
 } from 'lucide-react';
+import { SITE } from '@/config/site';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { cartItemsToLineItems } from '@/lib/cart';
@@ -28,6 +30,8 @@ import { formatMoney } from '@/lib/formatters';
 import {
   DEFAULT_SHIPPING_METHOD,
   availableShippingOptions,
+  callForQuoteOptions,
+  callForQuoteReason,
   cheapestQuotedMethod,
   completeZip,
   deliveryPriceLabel,
@@ -692,6 +696,10 @@ export function CheckoutClient() {
   const deliveryRefusal = quoteForAddress ? (quoteResult?.refusal ?? null) : null;
   const deliveryOptions = hasContainer && quote && !quote.accessories_only ? availableShippingOptions(quote) : [];
   const deliveryOption = deliveryOptions.length ? selectedShippingOption(quote, activeMethod) : null;
+  // Methods the backend can run but will not price online. Listed under the
+  // selectable ones with a number to ring, rather than dropped — see
+  // callForQuoteOptions.
+  const callForQuote = hasContainer && quote && !quote.accessories_only ? callForQuoteOptions(quote) : [];
   const deliveryBilledLater = isDeliveryBilledLater(quote);
   const deliveryBlocked = !!deliveryRefusal || (hasContainer && quote ? !quote.can_deliver : false);
   const deliveryNotice =
@@ -1059,7 +1067,7 @@ export function CheckoutClient() {
             ))}
 
             {/* Delivery method — container carts, once the backend has quoted the ZIP */}
-            {deliveryOptions.length > 0 && (
+            {(deliveryOptions.length > 0 || callForQuote.length > 0) && (
               <fieldset className="mt-4 border-t border-theme-border pt-4 dark:border-neutral-700">
                 <legend className="float-left mb-1 w-full text-[11px] font-bold uppercase tracking-wider text-theme-muted dark:text-neutral-500">
                   Delivery Method
@@ -1105,6 +1113,35 @@ export function CheckoutClient() {
                       </label>
                     );
                   })}
+
+                  {/* Methods we run but will not price online. Deliberately not
+                      radios: nothing here can be selected, because the amount
+                      has not been quoted and so cannot be charged. They are
+                      listed anyway — an order of three containers otherwise
+                      showed Pickup as the only way to get one, which is not
+                      true and reads as though we stopped delivering. */}
+                  {callForQuote.map((option) => (
+                    <div
+                      key={option.id}
+                      className="rounded-md border border-dashed border-theme-border p-3 dark:border-neutral-700"
+                    >
+                      <div className="flex justify-between gap-3 text-sm font-semibold text-theme-dark dark:text-neutral-200">
+                        <span>{option.plain_label}</span>
+                        <span className="shrink-0 text-theme-muted">Call for rate</span>
+                      </div>
+                      <p className="mt-1 text-xs text-theme-muted dark:text-neutral-400">
+                        {callForQuoteReason(option)}
+                        {option.tooltip ? ` ${option.tooltip}` : ''}
+                      </p>
+                      <a
+                        href={`tel:${SITE.telephone}`}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-theme-primary px-3 py-1.5 text-xs font-bold text-theme-primary transition-colors hover:bg-theme-primary hover:text-white"
+                      >
+                        <PhoneCall className="h-3.5 w-3.5" aria-hidden />
+                        Call {SITE.telephoneDisplay}
+                      </a>
+                    </div>
+                  ))}
                 </div>
               </fieldset>
             )}
