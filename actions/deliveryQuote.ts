@@ -27,29 +27,62 @@ import {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-/** Params that describe the container, carried through so the summary survives. */
-function contextQuery(formData: FormData): string {
+/**
+ * Params that describe the container, carried through so the summary survives.
+ *
+ * `zip` is passed in rather than read from the form: the destination now comes
+ * from the address fields, and the review page has to price the place the
+ * visitor just typed, not the one the link was opened with.
+ */
+function contextQuery(formData: FormData, zip: string): string {
   const query = new URLSearchParams()
-  for (const key of ['handle', 'zip', 'qty'] as const) {
-    const value = String(formData.get(key) ?? '').trim()
-    if (value) query.set(key, value)
-  }
+  const handle = String(formData.get('handle') ?? '').trim()
+  const qty = String(formData.get('qty') ?? '').trim()
+  if (handle) query.set('handle', handle)
+  if (zip) query.set('zip', zip)
+  if (qty) query.set('qty', qty)
   return query.toString()
 }
 
 export async function submitDeliveryQuote(formData: FormData) {
+  const field = (name: string) => String(formData.get(name) ?? '').trim()
+
+  const address1 = field('address1')
+  const address2 = field('address2')
+  const city = field('city')
+  const state = field('state')
+  const addressZip = field('addressZip')
+  const country = field('country') || 'US'
+
   const draft: QuoteDraft = {
-    fullName: String(formData.get('fullName') ?? '').trim(),
-    phone: String(formData.get('phone') ?? '').trim(),
-    email: String(formData.get('email') ?? '').trim(),
-    address: String(formData.get('address') ?? '').trim(),
+    fullName: field('fullName'),
+    phone: field('phone'),
+    email: field('email'),
+    // One line for everything that displays an address, composed here so the
+    // review page, the lead and the product page's picker cannot disagree
+    // about it. `address` also still arrives from older drafts.
+    address:
+      [address1, address2, city, [state, addressZip].filter(Boolean).join(' ')]
+        .filter(Boolean)
+        .join(', ') || field('address'),
+    address1,
+    address2,
+    city,
+    state,
+    zip: addressZip,
+    country,
     contactMethod: String(formData.get('contactMethod') ?? 'phone'),
     interests: formData.getAll('interests').map(String),
-    timeline: String(formData.get('timeline') ?? ''),
-    details: String(formData.get('details') ?? '').trim(),
+    timeline: field('timeline'),
+    details: field('details'),
   }
-  const zip = String(formData.get('zip') ?? '').trim()
-  const query = contextQuery(formData)
+
+  // The address the visitor gave beats the ZIP the page was opened with: they
+  // have just told us where the container is going, and pricing the quote to
+  // the ZIP in the link instead would quote a different place to the one on the
+  // form. The link's ZIP remains the fallback for a draft with no address ZIP.
+  const zip = addressZip || field('zip')
+  const query = contextQuery(formData, zip)
 
   const store = await cookies()
   store.set(QUOTE_DRAFT_COOKIE, encodeURIComponent(JSON.stringify(draft)), {
@@ -68,7 +101,9 @@ export async function submitDeliveryQuote(formData: FormData) {
 
   if (!draft.fullName) fail('name')
   if (!EMAIL_PATTERN.test(draft.email)) fail('email')
-  if (!draft.address) fail('address')
+  // The parts, not the composed line: that line is non-empty as soon as any one
+  // field is filled, so checking it would pass an address with no city.
+  if (!address1 || !city || !state) fail('address')
   if (!draft.phone) fail('phone')
   // The destination is not a field in this form — it is chosen in the summary
   // panel's ZIP editor — so no browser validation covers it. Without it there is

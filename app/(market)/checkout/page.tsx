@@ -42,6 +42,12 @@ async function CarryQuoteDetails() {
       email={draft.email}
       phone={draft.phone}
       address={draft.address}
+      address1={draft.address1}
+      address2={draft.address2}
+      city={draft.city}
+      state={draft.state}
+      zip={draft.zip}
+      country={draft.country}
     />
   );
 }

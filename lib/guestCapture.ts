@@ -15,7 +15,22 @@ export type GuestLead = {
   fullName: string
   email: string
   phone: string
+  /**
+   * The address on one line, for anything that shows it back to the visitor.
+   *
+   * Every writer sets this; only the delivery-quote form sets the parts below,
+   * because it is the only one that asks for them separately. Readers that need
+   * fields — checkout — use the parts when they are there and fall back to
+   * `streetLineFromAddress` when they are not.
+   */
   address: string
+  address1?: string
+  address2?: string
+  city?: string
+  state?: string
+  zip?: string
+  /** 'US' or 'CA'. */
+  country?: string
   /** ISO timestamp, so a stale lead can be spotted later. */
   capturedAt: string
 }

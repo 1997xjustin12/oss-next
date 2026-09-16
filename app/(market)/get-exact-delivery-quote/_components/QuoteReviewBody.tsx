@@ -51,6 +51,12 @@ export async function QuoteReviewBody({ searchParams }: { searchParams: SearchPa
           email={draft.email}
           phone={draft.phone}
           address={draft.address || quote.zip || ''}
+          address1={draft.address1}
+          address2={draft.address2}
+          city={draft.city}
+          state={draft.state}
+          zip={draft.zip || quote.zip || ''}
+          country={draft.country}
         />
       )}
 

@@ -25,19 +25,36 @@ export function PersistGuestLead({
   email,
   phone,
   address,
+  address1 = '',
+  address2 = '',
+  city = '',
+  state = '',
+  zip = '',
+  country = '',
 }: {
   fullName: string
   email: string
   phone: string
   address: string
+  /**
+   * The address in parts, when the flow collected them. Optional because the
+   * product page's picker has only ever had a place label — a lead stored
+   * without them is still a lead, it just leaves checkout more to fill in.
+   */
+  address1?: string
+  address2?: string
+  city?: string
+  state?: string
+  zip?: string
+  country?: string
 }) {
   useEffect(() => {
     // Guard on email: it is the field `getGuestLead` treats as making a lead
     // real, so writing without one would store a record that reads back as null
     // and leave the visitor a stranger anyway.
     if (!email) return
-    setGuestLead({ fullName, email, phone, address })
-  }, [fullName, email, phone, address])
+    setGuestLead({ fullName, email, phone, address, address1, address2, city, state, zip, country })
+  }, [fullName, email, phone, address, address1, address2, city, state, zip, country])
 
   return null
 }

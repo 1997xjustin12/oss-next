@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { CACHE_TAGS } from '@/config/cache'
+import { countGeoapifyCall } from '@/lib/geoapifyGuard'
 
 const GEOAPIFY_URL = 'https://api.geoapify.com/v1/geocode/autocomplete'
 const API_KEY = process.env.GEOAPIFY_API_KEY ?? process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ?? ''
@@ -21,6 +22,9 @@ export class GeoapifyUpstreamError extends Error {
 
 // Address/postcode autocomplete results are effectively static reference data,
 // so cache them fairly aggressively per unique query.
+//
+// `type` is optional: postcode lookups pass one, address lookups leave it off
+// so Geoapify can answer with streets and buildings as well.
 export async function cachedGeoapifyAutocomplete(
   params: GeoapifyAutocompleteParams,
 ): Promise<{ features?: unknown[] }> {
@@ -28,7 +32,15 @@ export async function cachedGeoapifyAutocomplete(
   cacheLife('days')
   cacheTag(CACHE_TAGS.ALL)
 
-  const query = new URLSearchParams({ ...params, apiKey: API_KEY })
+  // Inside the cached body on purpose: it runs on a miss and not on a hit, so
+  // the counter measures what is actually spent upstream rather than how often
+  // the field was typed in. See lib/geoapifyGuard.ts.
+  await countGeoapifyCall()
+
+  const query = new URLSearchParams({
+    ...Object.fromEntries(Object.entries(params).filter(([, value]) => value !== '')),
+    apiKey: API_KEY,
+  })
   const upstream = await fetch(`${GEOAPIFY_URL}?${query}`, {
     signal: AbortSignal.timeout(5000),
   })

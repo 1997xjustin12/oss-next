@@ -502,6 +502,13 @@ export function CheckoutClient() {
     prefilled.current = true;
 
     const [first = '', ...rest] = (lead?.fullName ?? '').trim().split(/\s+/);
+    // The delivery-quote form asks for the address in these same fields, so
+    // when someone came through it there is nothing left to guess at. Older
+    // leads — and the product page's place picker — carry only the one-line
+    // address, where `streetLineFromAddress` keeps a real street and discards a
+    // ZIP or a "City, ST 00000" label rather than filling the field with
+    // something that looks right and is not.
+    const leadZip = (lead?.zip ?? '').trim();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setShipping((prev) => ({
       ...prev,
@@ -509,15 +516,25 @@ export function CheckoutClient() {
       lastName: prev.lastName || rest.join(' '),
       email: prev.email || lead?.email || '',
       phone: prev.phone || lead?.phone || '',
-      address1: prev.address1 || streetLineFromAddress(lead?.address ?? ''),
-      zip: prev.zip || postcode,
+      address1: prev.address1 || lead?.address1 || streetLineFromAddress(lead?.address ?? ''),
+      address2: prev.address2 || lead?.address2 || '',
+      city: prev.city || lead?.city || '',
+      state: prev.state || lead?.state || '',
+      country:
+        lead?.country === 'CA' ? 'Canada (CA)' : lead?.country === 'US' ? 'United States (US)' : prev.country,
+      // The ZIP the visitor typed into the quote form is the delivery address;
+      // the stored visitor ZIP is wherever they last priced from, which is the
+      // same place far more often than not, but the address wins when they differ.
+      zip: prev.zip || leadZip || postcode,
     }));
 
     // City and state come from the ZIP through the same lookup the field's own
     // blur handler uses. Filling the ZIP programmatically never fires a blur, so
     // without this the two fields below it would sit empty next to a filled one.
-    if (!postcode) return;
-    void lookupZip(postcode, emptyAddress.country).then((result) => {
+    // Skipped when the lead already carried them — it would only re-fetch what
+    // the visitor has already told us.
+    if (!postcode || (lead?.city && lead?.state)) return;
+    void lookupZip(leadZip || postcode, emptyAddress.country).then((result) => {
       if (!result) return;
       setShipping((prev) => ({
         ...prev,

@@ -6,6 +6,7 @@ import { readQuoteDraft } from '@/lib/quoteDraft'
 import { submitDeliveryQuote } from '@/actions/deliveryQuote'
 import { QuoteTextField } from './QuoteTextField'
 import { CartLeadFields } from './CartLeadFields'
+import { ShippingAddressFields } from './ShippingAddressFields'
 import { one, type SearchParams } from './searchParams'
 
 /**
@@ -146,21 +147,23 @@ export async function QuoteForm({
           defaultValue={draft?.email}
           required
         />
-        {/* Was "Confirm Email Address". Retyping an address proves nothing —
-            the overwhelming way people fill a confirmation field is to paste
-            what they just typed, so it catches almost no typos while costing
-            every visitor a field. This asks for something we do not already
-            have and genuinely need: delivery is priced per address, and a ZIP
-            alone cannot say whether a truck can reach the site. */}
-        <QuoteTextField
-          id="address"
-          name="address"
-          label="Complete Delivery Address"
-          autoComplete="street-address"
-          defaultValue={draft?.address}
-          required
-        />
       </div>
+
+      {/* Was a single "Complete Delivery Address" box. Delivery is priced per
+          address and a ZIP alone cannot say whether a truck can reach the site,
+          so this asks in the shape checkout needs — which is also what lets the
+          answers fill checkout in later. See ShippingAddressFields. */}
+      <ShippingAddressFields
+        quotedZip={zip}
+        defaults={{
+          address1: draft?.address1 || draft?.address,
+          address2: draft?.address2,
+          city: draft?.city,
+          state: draft?.state,
+          zip: draft?.zip,
+          country: draft?.country,
+        }}
+      />
 
       {/* CSS-only radio group — no client JS for a two-option choice. */}
       <fieldset className="mt-6">
