@@ -19,10 +19,11 @@ import {
   PhoneCall,
 } from 'lucide-react';
 import { SITE } from '@/config/site';
+import { AddressAutocomplete, type AddressSuggestion } from '@/components/shared/AddressAutocomplete';
+import { useZipPlace } from '@/hooks/useZipPlace';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { cartItemsToLineItems } from '@/lib/cart';
-import { lookupZip } from '@/lib/zippopotam';
 import { getGuestLead, streetLineFromAddress } from '@/lib/guestCapture';
 import { readVisitorZip } from '@/lib/visitorZip';
 import { ROUTES } from '@/config/routes'
@@ -208,11 +209,50 @@ function AddressFields({
   data: AddressForm;
   onChange: (field: keyof AddressForm, value: string) => void;
 }) {
-  async function handleZipBlur() {
-    const result = await lookupZip(data.zip, data.country);
-    if (!result) return;
-    if (result.city) onChange('city', result.city);
-    if (result.state) onChange('state', result.state);
+  // City, State and Country follow the ZIP as it is typed, through the free
+  // zippopotam lookup — see hooks/useZipPlace. This replaced a lookup on blur,
+  // which never ran when the ZIP arrived prefilled (nothing focuses a field to
+  // blur it) and so left the two fields beside it empty next to a filled one.
+  const { place } = useZipPlace(data.zip, data.country);
+  const appliedZip = useRef('');
+
+  useEffect(() => {
+    if (!place) return;
+    const key = `${place.countryCode}:${place.latitude},${place.longitude}`;
+    if (appliedZip.current === key) return;
+    // The first resolved ZIP only fills blanks — it may be describing an
+    // address that arrived prefilled, whose own city and state are better than
+    // the ZIP's first place. A ZIP the visitor then edits overwrites both,
+    // because a city left over from the previous ZIP is simply wrong.
+    const first = appliedZip.current === '';
+    appliedZip.current = key;
+
+    if (place.city && !(first && data.city)) onChange('city', place.city);
+    if (place.state && !(first && data.state)) onChange('state', place.state);
+    if (place.countryCode === 'CA' && data.country !== 'Canada (CA)') {
+      onChange('country', 'Canada (CA)');
+    } else if (place.countryCode === 'US' && data.country !== 'United States (US)') {
+      onChange('country', 'United States (US)');
+    }
+    // `data` and `onChange` are deliberately out of the dependencies: this must
+    // run when a ZIP resolves, not on every keystroke in the form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [place]);
+
+  function pickAddress(suggestion: AddressSuggestion) {
+    onChange('address1', suggestion.street);
+    if (suggestion.city) onChange('city', suggestion.city);
+    if (suggestion.stateCode || suggestion.state) {
+      onChange('state', suggestion.stateCode || suggestion.state);
+    }
+    if (suggestion.postcode) {
+      onChange('zip', suggestion.postcode);
+      // The picked address is the source of truth for its own ZIP, so the
+      // effect above must not treat it as a change to fill over.
+      appliedZip.current = `${suggestion.countryCode}:picked-${suggestion.postcode}`;
+    }
+    if (suggestion.countryCode === 'CA') onChange('country', 'Canada (CA)');
+    if (suggestion.countryCode === 'US') onChange('country', 'United States (US)');
   }
 
   return (
@@ -235,7 +275,18 @@ function AddressFields({
 
       <div>
         <Label required>Address 1</Label>
-        <TextInput value={data.address1} onChange={(v) => onChange('address1', v)} placeholder="Street address" />
+        <AddressAutocomplete
+          id="checkout-address1"
+          value={data.address1}
+          onChange={(v) => onChange('address1', v)}
+          onPick={pickAddress}
+          // Results near the ZIP in the form below, rather than wherever the
+          // street name happens to be most famous.
+          bias={place}
+          placeholder="Street address"
+          className={inputCls}
+          showHint={false}
+        />
       </div>
 
       <div>
@@ -263,12 +314,7 @@ function AddressFields({
         </div>
         <div>
           <Label required>Postcode / ZIP</Label>
-          <TextInput
-            value={data.zip}
-            onChange={(v) => onChange('zip', v)}
-            onBlur={handleZipBlur}
-            placeholder="ZIP"
-          />
+          <TextInput value={data.zip} onChange={(v) => onChange('zip', v)} placeholder="ZIP" />
         </div>
       </div>
 
@@ -528,20 +574,10 @@ export function CheckoutClient() {
       zip: prev.zip || leadZip || postcode,
     }));
 
-    // City and state come from the ZIP through the same lookup the field's own
-    // blur handler uses. Filling the ZIP programmatically never fires a blur, so
-    // without this the two fields below it would sit empty next to a filled one.
-    // Skipped when the lead already carried them — it would only re-fetch what
-    // the visitor has already told us.
-    if (!postcode || (lead?.city && lead?.state)) return;
-    void lookupZip(leadZip || postcode, emptyAddress.country).then((result) => {
-      if (!result) return;
-      setShipping((prev) => ({
-        ...prev,
-        city: prev.city || result.city || '',
-        state: prev.state || result.state || '',
-      }));
-    });
+    // City, state and country are no longer fetched here: AddressFields watches
+    // the ZIP and fills them itself, whether it was typed or prefilled. Doing it
+    // in both places meant two lookups for one ZIP and two answers racing to
+    // write the same fields.
   }, [authToken]);
 
   /**
@@ -609,16 +645,8 @@ export function CheckoutClient() {
           : prev.country,
     }));
 
-    // City and state from the ZIP when the profile's don't apply or are missing.
-    if (!shippingZip || (profileAddressApplies && profile.shippingCity && profile.shippingState)) return;
-    void lookupZip(shippingZip, emptyAddress.country).then((result) => {
-      if (!result) return;
-      setShipping((prev) => ({
-        ...prev,
-        city: prev.city || result.city || '',
-        state: prev.state || result.state || '',
-      }));
-    });
+    // City and state from the ZIP are AddressFields' job now — see the same note
+    // on the guest prefill above.
   }, [authToken, authUser, items.length, hasContainer]);
 
   const updateShipping = (field: keyof AddressForm, value: string) =>

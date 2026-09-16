@@ -10,6 +10,8 @@ export type GeoapifyAutocompleteParams = {
   limit:  string
   type:   string
   filter: string
+  /** e.g. `proximity:-84.39,33.75` — rank results near a point. Optional. */
+  bias?:  string
 }
 
 export class GeoapifyUpstreamError extends Error {

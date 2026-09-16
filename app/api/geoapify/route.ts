@@ -48,6 +48,10 @@ export async function GET(req: NextRequest) {
       // so the listing page's ZIP lookup is unchanged.
       type: searchParams.get('type') === 'any' ? '' : (searchParams.get('type') ?? 'postcode'),
       filter: searchParams.get('filter') ?? 'countrycode:us,ca',
+      // Ranks results near the ZIP the visitor already gave. Passed straight
+      // through: Geoapify validates it, and an unparseable bias comes back as
+      // unbiased results rather than an error.
+      bias: searchParams.get('bias') ?? '',
     })
     return NextResponse.json(data)
   } catch (err) {
