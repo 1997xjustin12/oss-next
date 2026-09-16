@@ -1290,6 +1290,7 @@ export function ProductInfoPanelV2({
     saveQuote({
       productTitle: activeProduct.desc_title || activeProduct.title,
       handle: String(activeProduct.handle ?? ""),
+      image: activeProduct.images?.[0]?.src,
       // The destination is part of what makes this quote this quote — see
       // saveQuote, which uses it to avoid stacking the same one twice.
       zip: zipcode || undefined,

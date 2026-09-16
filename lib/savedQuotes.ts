@@ -45,6 +45,15 @@ export type SavedQuote = {
   /** Product handle, so the entry can link back to the page it came from. */
   handle: string
   /**
+   * The container's first photo, copied at save time like everything else here.
+   *
+   * A URL rather than a re-lookup: the list has no product data of its own, and
+   * fetching one per row to show a thumbnail would make opening this page cost
+   * a request per saved quote. Optional — entries saved before this field
+   * existed, and products with no photo, render the placeholder instead.
+   */
+  image?: string
+  /**
    * Delivery destination, bare postcode.
    *
    * Stored rather than left inside `lines` because the same container quoted to
