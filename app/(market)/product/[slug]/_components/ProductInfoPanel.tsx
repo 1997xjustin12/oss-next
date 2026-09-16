@@ -1045,6 +1045,16 @@ export function ProductInfoPanel({
     ? cheapestDeliveryOption(deliveryRates)
     : null;
   const deliveryMiles = deliveryRates?.distance_miles ?? null;
+  /**
+   * The distance to show, and where it ships from.
+   *
+   * WordPress answers `distance_miles: 0` for every ZIP checked (2026-09-16)
+   * while still returning real rates, and "0 mi" printed above a $450 delivery
+   * reads as broken rather than close by. Anything that rounds to zero is
+   * treated as no distance at all, and the row names the depot instead.
+   */
+  const deliveryMilesRounded = deliveryMiles !== null ? Math.round(deliveryMiles) : 0;
+  const depotName = deliveryRates?.depot.stores[0] ?? "";
 
   /**
    * Delivery for the whole order.
@@ -1651,6 +1661,30 @@ export function ProductInfoPanel({
               {priceDisplay.suffix}
             </span>
           </li>
+          {/* Where it ships from. Sits above Delivery (swapped 2026-09-16) so
+              the origin comes first and the charge below reads as its
+              consequence. Miles only when the source gives a real distance —
+              see deliveryMilesRounded. */}
+          {!deliveryLoading && (deliveryMilesRounded > 0 || depotName) && (
+            <li className="flex items-baseline justify-between gap-6 py-2.5">
+              <span className="shrink-0 text-theme-muted">
+                {deliveryMilesRounded > 0 ? "Distance" : "Delivered from"}
+              </span>
+              <span className="text-right font-medium tabular-nums text-theme-dark">
+                {deliveryMilesRounded > 0 ? (
+                  <>
+                    {deliveryMilesRounded.toLocaleString()} mi
+                    {depotName && (
+                      <span className="font-normal text-theme-muted"> from {depotName}</span>
+                    )}
+                  </>
+                ) : (
+                  depotName
+                )}
+              </span>
+            </li>
+          )}
+
           {/* Delivery. Four states, because "no price" has four different
               meanings here and they call for different things from the
               visitor: no ZIP yet (give us one), still loading, a real quote,
@@ -1701,25 +1735,6 @@ export function ProductInfoPanel({
               </Link>
             )}
           </li>
-
-          {/* Distance, once there is a route to describe. Sits under Delivery
-              rather than beside it: it explains the number above, and pairing
-              a price with the miles behind it is what stops a delivery charge
-              reading as arbitrary. */}
-          {deliveryMiles !== null && !deliveryLoading && (
-            <li className="flex items-baseline justify-between gap-6 py-2.5">
-              <span className="shrink-0 text-theme-muted">Distance</span>
-              <span className="text-right font-medium tabular-nums text-theme-dark">
-                {Math.round(deliveryMiles).toLocaleString()} mi
-                {deliveryRates?.depot.stores[0] && (
-                  <span className="font-normal text-theme-muted">
-                    {" "}
-                    from {deliveryRates.depot.stores[0]}
-                  </span>
-                )}
-              </span>
-            </li>
-          )}
 
           {/* Only shown when the visitor gave a ZIP and we still could not
               price it — otherwise it is noise on a page that is working. */}

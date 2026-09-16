@@ -12,6 +12,8 @@
  * source did). Every read of `ratings` should go through here.
  */
 
+import { GOOGLE_REVIEW_STATS } from '@/config/reviews'
+
 export interface ProductRatings {
   rating: number
   review_count: number
@@ -30,6 +32,21 @@ export interface NormalisedRating {
 function toNumber(val: unknown): number {
   const n = typeof val === 'number' ? val : Number(val)
   return Number.isFinite(n) ? n : 0
+}
+
+/**
+ * What to show a visitor: the product's own rating, or the company's Google
+ * rating when it has none.
+ *
+ * Most of the catalogue has no reviews of its own, and a bare 0 with empty
+ * stars reads as "rated zero" rather than "not rated yet". The product page has
+ * shown the Google rating in that case since `2e87a95`; the listing kept
+ * showing the 0, which is the same product described two different ways.
+ */
+export function displayRating(ratings: RawRatings): NormalisedRating & { fromGoogle: boolean } {
+  const own = normaliseRating(ratings)
+  if (own.value > 0) return { ...own, fromGoogle: false }
+  return { value: GOOGLE_REVIEW_STATS.rating, count: GOOGLE_REVIEW_STATS.count, fromGoogle: true }
 }
 
 export function normaliseRating(ratings: RawRatings): NormalisedRating {

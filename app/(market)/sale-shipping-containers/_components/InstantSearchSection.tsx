@@ -21,7 +21,7 @@ import { TileLink } from './TileLink'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { formatMoney } from '@/lib/formatters'
 import { CONTACT_NUMBER } from '@/lib/helpers'
-import { normaliseRating } from '@/lib/ratings'
+import { displayRating } from '@/lib/ratings'
 import type { RawRatings } from '@/lib/ratings'
 import type { Accessory, BadgeTone } from '@/types/product'
 
@@ -441,9 +441,10 @@ function hitToAccessory(hit: HitData): Accessory {
     sku:          hit.variants?.[0]?.sku ?? '',
     category:     hit.product_category?.[0]?.category_name ?? '',
     badge:        { label: promoTag ?? 'In Stock', tone },
-    rating:       normaliseRating(hit.ratings).value,
-    // review_count now ships with the index, so this is no longer hardcoded 0
-    reviews:      normaliseRating(hit.ratings).count,
+    // Its own rating when it has one, else the company's Google rating — the
+    // same rule the product page uses, so a tile and its page agree.
+    rating:       displayRating(hit.ratings).value,
+    reviews:      displayRating(hit.ratings).count,
   }
 }
 
@@ -483,7 +484,7 @@ function ProductHit({ hit }: { hit: HitData }) {
   const grade    = getCF(hit.custom_fields, 'grade')
   const sku      = variant?.sku ?? ''
   const href     = `/product/${hit.handle}`
-  const { value: rating, count: reviewCount } = normaliseRating(hit.ratings)
+  const { value: rating, count: reviewCount } = displayRating(hit.ratings)
 
   const badge = (() => {
     const tag = hit.tags?.find((t) => /best|popular/i.test(t)) ?? hit.tags?.[0] ?? ''
@@ -518,7 +519,7 @@ function ProductHit({ hit }: { hit: HitData }) {
 
         <div className="flex items-center gap-2 text-xs">
           <StarRow rating={rating} />
-          <span className="text-theme-dark-2">{rating}</span>
+          <span className="text-theme-dark-2">{rating.toFixed(1)}</span>
           {reviewCount > 0 && (
             <span className="text-theme-muted">
               ({reviewCount} review{reviewCount === 1 ? '' : 's'})
@@ -568,7 +569,13 @@ function ProductHit({ hit }: { hit: HitData }) {
           <div className="text-3xl font-black leading-none text-theme-dark">
             {price > 0 ? formatMoney(price) : 'Call for Price'}
           </div>
-          {price > 0 && <div className="text-[11px] text-theme-muted">+ delivery, no tax</div>}
+          {/* No "+ delivery, no tax" line (removed 2026-09-16, decided with the
+              user): it promised something about tax the site cannot stand
+              behind — the cart only claims "no sales tax on most container
+              orders", and the backend has no tax rates loaded — and it read as
+              "+ delivery" on Rent and Rent-To-Own tiles, whose monthly price
+              already covers delivery and pickup. Delivery and tax are shown
+              where they are actually worked out: the product page and checkout. */}
         </div>
         <div className="flex w-full max-w-45 flex-col gap-2">
           <button
