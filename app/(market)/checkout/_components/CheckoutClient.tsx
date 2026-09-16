@@ -28,6 +28,7 @@ import { formatMoney } from '@/lib/formatters';
 import {
   DEFAULT_SHIPPING_METHOD,
   availableShippingOptions,
+  cheapestQuotedMethod,
   completeZip,
   deliveryPriceLabel,
   isDeliveryBilledLater,
@@ -462,9 +463,10 @@ export function CheckoutClient() {
     /** Why delivery can't be offered for addressKey, when that is the answer. */
     refusal: string | null;
   } | null>(null);
-  // The delivery method the customer picked; resolved against the backend's
-  // available options below, so an unavailable pick falls back sensibly.
-  const [shippingMethod, setShippingMethod] = useState<string>(DEFAULT_SHIPPING_METHOD);
+  // The delivery method the customer picked, or null while they have not —
+  // in which case the cheapest quotable one is pre-selected below, matching
+  // what the product page and cart showed them.
+  const [shippingMethod, setShippingMethod] = useState<string | null>(null);
 
   /**
    * Start the shipping form from what the guest has already told us.
@@ -617,7 +619,11 @@ export function CheckoutClient() {
   // prices every method, so switching reads that reply instead of asking again.
   const addressQuote = quoteResult?.addressKey === addressKey ? quoteResult.total?.shipping : undefined;
   const methodPriced = hasContainer && addressQuote?.charge_mode === 'charge_at_checkout';
-  const requestMethod = hasContainer ? (methodPriced ? shippingMethod : DEFAULT_SHIPPING_METHOD) : undefined;
+  // Nothing chosen yet: the cheapest method that delivers, which is what the
+  // product page and cart already quoted. Falls back to the default only
+  // before the first quote arrives, where the method changes no total anyway.
+  const activeMethod = shippingMethod ?? cheapestQuotedMethod(addressQuote)?.id ?? DEFAULT_SHIPPING_METHOD;
+  const requestMethod = hasContainer ? (methodPriced ? activeMethod : DEFAULT_SHIPPING_METHOD) : undefined;
   const quoteKey = `${addressKey}|${requestMethod ?? ''}`;
 
   // Real totals from /api/orders/get-total — debounced so rapid qty/zip
@@ -685,7 +691,7 @@ export function CheckoutClient() {
   const quote = quoteForAddress ? liveTotal?.shipping : undefined;
   const deliveryRefusal = quoteForAddress ? (quoteResult?.refusal ?? null) : null;
   const deliveryOptions = hasContainer && quote && !quote.accessories_only ? availableShippingOptions(quote) : [];
-  const deliveryOption = deliveryOptions.length ? selectedShippingOption(quote, shippingMethod) : null;
+  const deliveryOption = deliveryOptions.length ? selectedShippingOption(quote, activeMethod) : null;
   const deliveryBilledLater = isDeliveryBilledLater(quote);
   const deliveryBlocked = !!deliveryRefusal || (hasContainer && quote ? !quote.can_deliver : false);
   const deliveryNotice =

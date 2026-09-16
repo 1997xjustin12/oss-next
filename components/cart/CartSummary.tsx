@@ -12,6 +12,7 @@ import { formatMoney } from '@/lib/formatters'
 import { useCartDeliveryEstimate } from '@/hooks/useCartDeliveryEstimate'
 import {
   DEFAULT_SHIPPING_METHOD,
+  cheapestQuotedMethod,
   deliveryPriceLabel,
   isDeliveryBilledLater,
   selectedShippingOption,
@@ -43,9 +44,11 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false, quote, ref
   // the backend gave none.
   const estimate = useCartDeliveryEstimate(cart.items)
   const charged = shipping > 0
+  // The cheapest method that delivers — the same one the product page quotes
+  // and checkout now pre-selects, so the figure does not change between pages.
   const quoted =
     !charged && quote && !quote.accessories_only && isDeliveryBilledLater(quote)
-      ? selectedShippingOption(quote, DEFAULT_SHIPPING_METHOD)
+      ? (cheapestQuotedMethod(quote) ?? selectedShippingOption(quote, DEFAULT_SHIPPING_METHOD))
       : null
   const fallbackAmount = !charged && !quote && !refusal ? estimate.amount : null
   const estimateAmount = quoted ? quoted.cost : fallbackAmount

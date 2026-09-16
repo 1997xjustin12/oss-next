@@ -64,6 +64,25 @@ export function availableShippingOptions(quote: ShippingQuote | undefined): Ship
 }
 
 /**
+ * The cheapest method that actually delivers the container.
+ *
+ * Pickup is $0 because the customer collects it, and "Shipping is Additional"
+ * is $0 because it is quoted later — neither is a delivery price, and counting
+ * them would make every order look free to deliver. Rates differ by method
+ * (tilt bed $6/mile from a $450 minimum, flat bed $3.50/mile from $650), so
+ * the cheapest one changes with distance: tilt nearby, flat once the miles add
+ * up. The product page has always shown the cheapest; this is how checkout
+ * agrees with it instead of always pre-selecting tilt bed.
+ */
+export function cheapestQuotedMethod(quote: ShippingQuote | undefined): ShippingOption | null {
+  return (
+    availableShippingOptions(quote)
+      .filter((option) => option.id !== 'pickup' && option.id !== 'additional' && option.cost > 0)
+      .sort((a, b) => a.cost - b.cost)[0] ?? null
+  )
+}
+
+/**
  * The option a method id resolves to: the one asked for when it is available,
  * else the backend's own pick, else the first available one.
  */
