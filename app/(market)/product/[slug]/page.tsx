@@ -11,6 +11,7 @@ import { breadcrumbNode, faqNode, graph, productNode, siteNodes } from '@/lib/sc
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { ProductDetail } from './_components/ProductDetail'
+import { isProductPanelV2 } from '@/lib/productPanel'
 import { PdpSkeleton } from './_components/PdpSkeleton'
 import type { ProductHit } from '@/types/product'
 
@@ -93,7 +94,9 @@ function buildJsonLd(product: ProductHit, slug: string) {
 
 async function ProductContent({ params }: Props) {
   const { slug } = await params
-  const result = await getProductByHandle(slug)
+  // In parallel: the switch is a cached Redis read, and nothing about the
+  // product depends on it, so it must not add its latency to the product's.
+  const [result, panelV2] = await Promise.all([getProductByHandle(slug), isProductPanelV2()])
   if (!result) notFound()
   const { product, related_products } = result
 
@@ -104,7 +107,7 @@ async function ProductContent({ params }: Props) {
           server HTML already: the tab section renders every panel (hiding the
           inactive ones) and the FAQ keeps collapsed answers in the DOM. The old
           <noscript> copy crashed cold renders — see BodyTabsSection. */}
-      <ProductDetail product={product} relatedProducts={related_products} />
+      <ProductDetail product={product} relatedProducts={related_products} panelV2={panelV2} />
     </>
   )
 }

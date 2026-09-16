@@ -19,12 +19,13 @@ export const ADMIN_ROUTES = {
   QUOTE_REQUESTS: '/admin/quote-requests',
   CACHE: '/admin/cache',
   CHAT: '/admin/chat',
+  PRODUCT_PANEL: '/admin/product-panel',
 } as const;
 
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -68,6 +69,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'AI Assistant',
     icon: 'MessagesSquare',
     hint: 'Where the chat is offered',
+  },
+  {
+    href: ADMIN_ROUTES.PRODUCT_PANEL,
+    label: 'Product Panel',
+    icon: 'LayoutPanelTop',
+    hint: 'Which summary rows show',
   },
 ];
 

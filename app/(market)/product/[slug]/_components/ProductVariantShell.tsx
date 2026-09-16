@@ -11,6 +11,7 @@ import {
 import type { ProductHit } from "@/types/product";
 import { ProductImageGallery } from "@/components/product/ProductImageGallery";
 import { ProductInfoPanel } from "./ProductInfoPanel";
+import { ProductInfoPanelV2 } from "./ProductInfoPanelV2";
 import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { BASE_URL } from "@/lib/helpers";
 import { ROUTES } from "@/config/routes";
@@ -83,6 +84,8 @@ type Props = {
   onVariantChange: (product: ProductHit) => void;
   /** Forwarded to ProductInfoPanel's ZIP field — see LocationChangeStrategy. */
   locationChange?: LocationChangeStrategy;
+  /** Render the V2 info panel instead of the default one — see lib/productPanel. */
+  panelV2?: boolean;
 };
 
 export function ProductVariantShell({
@@ -90,8 +93,13 @@ export function ProductVariantShell({
   activeProduct,
   onVariantChange,
   locationChange,
+  panelV2 = false,
 }: Props) {
   const crumb = getListingCrumb(activeProduct);
+  // Which summary the store is showing, decided on the server and passed down
+  // rather than read here: this is a Client Component, and a fetch from the
+  // browser would render one panel and then swap it under the visitor.
+  const InfoPanel = panelV2 ? ProductInfoPanelV2 : ProductInfoPanel;
 
   // Keyed off the active product, so the size-specific slot follows the size
   // picker. Cheap enough to recompute on render — two object lookups.
@@ -204,7 +212,7 @@ export function ProductVariantShell({
           </div>
 
           {/* Product info */}
-          <ProductInfoPanel
+          <InfoPanel
             product={activeProduct}
             relatedProducts={relatedProducts}
             categoryLabel={crumb.label}

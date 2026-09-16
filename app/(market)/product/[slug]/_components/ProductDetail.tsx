@@ -72,7 +72,12 @@ const IDEAL_FOR: IdealForItem[] = [
   },
 ];
 
-type Props = { product: ProductHit; relatedProducts: ProductHit[] };
+type Props = {
+  product: ProductHit;
+  relatedProducts: ProductHit[];
+  /** Render the V2 info panel — the admin switch, read by the page. */
+  panelV2?: boolean;
+};
 
 /**
  * The yard nearest a postcode, or null.
@@ -163,7 +168,7 @@ function useLeavingRef() {
   return leaving;
 }
 
-export function ProductDetail({ product, relatedProducts }: Props) {
+export function ProductDetail({ product, relatedProducts, panelV2 = false }: Props) {
   // Shared across ProductVariantShell, BodyTabsSection, and FaqAccordion so
   // they all react to whichever variant the shopper currently has selected.
   const [activeProduct, setActiveProduct] = useState(product);
@@ -397,6 +402,7 @@ export function ProductDetail({ product, relatedProducts }: Props) {
         activeProduct={activeProduct}
         onVariantChange={setActiveProduct}
         locationChange={locationChange}
+        panelV2={panelV2}
       />
 
       {/* Phones only — the desktop sidebar already carries this. */}
