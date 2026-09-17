@@ -3,6 +3,7 @@ import { Anton, Roboto } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
+import { cartNoticeMode } from "@/lib/cartNotice";
 import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { LinkEnricher } from "@/components/layout/LinkEnricher";
@@ -45,9 +46,15 @@ export const metadata: Metadata = {
     "Buy or rent new and used shipping containers across the USA & Canada. 20ft, 40ft, high cube, reefer & more. 130+ depots, nationwide delivery, lowest prices guaranteed since 2002.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Which confirmation an add to cart shows, chosen in Admin → Cart Notice.
+  // Read here because CartProvider mounts the component and is a Client
+  // Component; it is a cached read, so the layout stays prerenderable rather
+  // than every page paying a Redis round trip. See lib/cartNotice.ts.
+  const addedNotice = await cartNoticeMode();
+
   return (
     <html lang="en" className={`${roboto.variable} ${anton.variable}`}>
       <body suppressHydrationWarning>
@@ -66,7 +73,7 @@ export default function RootLayout({
         <link rel="service-desc" type="application/json" href="/openapi.json" title="Agent API description" />
 
         <AuthProvider>
-          <CartProvider>
+          <CartProvider addedNotice={addedNotice}>
             <WishlistProvider>
               {children}
               <Suspense><GuestCartCapture /></Suspense>

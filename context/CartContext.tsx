@@ -2,6 +2,8 @@
 
 import { createContext, useEffect, useReducer, useRef, useState } from 'react'
 import { AddedToCartModal } from '@/components/cart/AddedToCartModal'
+import { AddedToCartToast } from '@/components/cart/AddedToCartToast'
+import type { CartNoticeMode } from '@/lib/cartNotice'
 import { CartLocationConflictHost } from '@/components/cart/CartLocationConflictHost'
 import { CartMergeNoticeHost } from '@/components/cart/CartMergeNoticeHost'
 import { useAuth } from '@/hooks/useAuth'
@@ -142,7 +144,18 @@ function reducer(state: Cart, action: Action): Cart {
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({
+  children,
+  addedNotice = 'modal',
+}: {
+  children: React.ReactNode
+  /**
+   * Which confirmation an add to cart shows. Decided on the server and passed
+   * down rather than read here: this is a Client Component, and fetching the
+   * setting from the browser would show one and then swap it mid-visit.
+   */
+  addedNotice?: CartNoticeMode
+}) {
   const { user, token, isAuthenticated } = useAuth()
   const [cart, dispatch] = useReducer(reducer, EMPTY_CART)
   // Drives the global AddedToCartModal — set on every addItem() call unless
@@ -341,7 +354,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   return (
     <CartContext value={value}>
       {children}
-      <AddedToCartModal item={addedItem} onClose={() => setAddedItem(null)} />
+      {addedNotice === 'toast' ? (
+        <AddedToCartToast item={addedItem} onClose={() => setAddedItem(null)} />
+      ) : (
+        <AddedToCartModal item={addedItem} onClose={() => setAddedItem(null)} />
+      )}
       {/* The location-conflict prompt for every page — see CartLocationConflictHost. */}
       <CartLocationConflictHost />
       {/* Explains saved containers removed by the login merge. */}

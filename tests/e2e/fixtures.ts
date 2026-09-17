@@ -190,14 +190,25 @@ export async function setZipOnProductPage(page: Page, zip: string) {
   await expectNoErrorScreen(page)
 }
 
-/** Add the product on screen to the cart and go to the cart through the confirmation. */
+/**
+ * Add the product on screen to the cart and go to the cart through the
+ * confirmation.
+ *
+ * Accepts either confirmation, because which one appears is a live setting —
+ * Admin → Cart Notice, stored in Redis and therefore shared by this dev box and
+ * production. Asserting on the modal alone would mean flipping that switch for
+ * customers broke the test suite for everyone.
+ */
 export async function addToCartAndOpenCart(page: Page) {
   const add = page.getByRole('button', { name: /^Add to cart$/i }).first()
   await expect(add).toBeEnabled()
   await add.click()
-  const added = page.getByRole('dialog', { name: 'Added to Cart!' })
-  await expect(added).toBeVisible()
-  await added.locator('a[href="/cart"]').first().click()
+
+  const modal = page.getByRole('dialog', { name: 'Added to Cart!' })
+  const toast = page.locator('[role="status"]').filter({ hasText: /Added To Cart/i })
+  const confirmation = modal.or(toast).first()
+  await expect(confirmation).toBeVisible()
+  await confirmation.locator('a[href="/cart"]').first().click()
   await expect(page).toHaveURL(/\/cart/)
   await expectNoErrorScreen(page)
 }

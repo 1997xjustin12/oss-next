@@ -20,12 +20,13 @@ export const ADMIN_ROUTES = {
   CACHE: '/admin/cache',
   CHAT: '/admin/chat',
   PRODUCT_PANEL: '/admin/product-panel',
+  CART_NOTICE: '/admin/cart-notice',
 } as const;
 
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -75,6 +76,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'Product Panel',
     icon: 'LayoutPanelTop',
     hint: 'Which summary rows show',
+  },
+  {
+    href: ADMIN_ROUTES.CART_NOTICE,
+    label: 'Cart Notice',
+    icon: 'BellRing',
+    hint: 'Modal or toast on add',
   },
 ];
 
