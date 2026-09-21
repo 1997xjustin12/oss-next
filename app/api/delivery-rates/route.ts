@@ -29,12 +29,12 @@ export async function GET(req: NextRequest) {
   // `refresh` means "recalculate", so it has to skip our cache as well as
   // WordPress's transient — reading it back through getDeliveryRates would
   // serve the very entry the caller asked us to bypass.
-  const result = refresh
-    ? await fetchDeliveryRates(query, { refresh: true })
-    : await getDeliveryRates(query)
+  const result = refresh ? await fetchDeliveryRates(query) : await getDeliveryRates(query)
 
   if (!result.ok) {
-    // 'unavailable' is ours (upstream down); the rest are the caller's request.
+    // 'unavailable' is ours (the backend is down); the rest describe what was
+    // asked for — a ZIP out of range included, which is an answer about the
+    // address rather than a fault on either side.
     const status = result.reason === 'unavailable' ? 502 : 400
     return NextResponse.json(result, { status })
   }

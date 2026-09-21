@@ -1,6 +1,17 @@
 import type { DeliveryRates, DeliveryRateOption } from '@/types/delivery'
 
 /**
+ * Collecting it yourself is not a delivery price.
+ *
+ * Two spellings because two systems: WordPress called it `pick-up`, the Django
+ * backend calls it `pickup`. Quotes saved before the switch still carry the
+ * old key, so both are recognised rather than one being migrated.
+ */
+function isPickup(option: DeliveryRateOption): boolean {
+  return option.key === 'pick-up' || option.key === 'pickup'
+}
+
+/**
  * Readers for a delivery-rate response.
  *
  * Pure functions over the shape, deliberately kept out of
@@ -20,7 +31,7 @@ import type { DeliveryRates, DeliveryRateOption } from '@/types/delivery'
  */
 export function hasQuotedDelivery(rates: DeliveryRates): boolean {
   return rates.options.some(
-    (o) => o.key !== 'pick-up' && o.available && !o.call_for_rate && o.rate !== null,
+    (o) => !isPickup(o) && o.available && !o.call_for_rate && o.rate !== null,
   )
 }
 
@@ -33,5 +44,5 @@ export function quotedDeliveryOptions(rates: DeliveryRates): DeliveryRateOption[
 
 /** The cheapest quotable delivery method, or null when the customer must call. */
 export function cheapestDeliveryOption(rates: DeliveryRates): DeliveryRateOption | null {
-  return quotedDeliveryOptions(rates).find((o) => o.key !== 'pick-up') ?? null
+  return quotedDeliveryOptions(rates).find((o) => !isPickup(o)) ?? null
 }

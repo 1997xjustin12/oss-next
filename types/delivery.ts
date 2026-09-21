@@ -105,6 +105,12 @@ export type DeliveryRatesErrorReason =
   | 'product-not-found'
   /** ZIP could not be resolved to a location (422). Upstream suggests a `state`. */
   | 'unresolved-zipcode'
+  /**
+   * The address is out of range — the backend refused with a customer-facing
+   * reason ("658.72 mi from Atlanta, GA, limit 250.00 mi"). An answer, not a
+   * fault: it stays true until the address changes.
+   */
+  | 'undeliverable'
   /** Upstream errored, timed out, or returned something unreadable. */
   | 'unavailable'
 
