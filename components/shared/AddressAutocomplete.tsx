@@ -17,13 +17,27 @@ import { isAbandonedRequest } from '@/lib/pageUnloading'
  *
  * ## Results near the visitor
  *
- * `bias` is the position of the ZIP in the form beside this field, resolved for
- * free through zippopotam (see useZipPlace). Without it Geoapify ranks "123
- * Peachtree St NE" by its own idea of importance and can put a match four
- * hundred miles away above the one in the visitor's town. The coordinates are
- * rounded to two decimals — about a kilometre — deliberately: it is as precise
- * as a ZIP-level bias can honestly be, and it means everyone typing in the same
- * town shares one cache entry upstream instead of one per visitor.
+ * `near` is the position of the ZIP in the form beside this field, resolved for
+ * free through zippopotam (see useZipPlace), and `country` is that form's own
+ * country field. Together they do two different jobs:
+ *
+ *   * **filter** — `countrycode` and a circle around the ZIP. Geoapify drops
+ *     everything outside them, so a Florida street stops appearing for someone
+ *     delivering to Atlanta.
+ *   * **bias** — ranks what survives, nearest first.
+ *
+ * The circle is wide on purpose. A hard filter does not fail politely: asked
+ * for "350 5th Ave, New York" inside a 25km Atlanta circle, Geoapify returns
+ * Atlanta's 5th Avenues rather than nothing, so too tight a radius turns a
+ * wrong address into a plausible-looking suggestion. {@link SEARCH_RADIUS_M}
+ * is set to cover a metro area and its outskirts, every row shows its own city,
+ * state and ZIP, and the fields stay typeable for the address no database
+ * knows.
+ *
+ * Coordinates are rounded to two decimals — about a kilometre — deliberately:
+ * it is as precise as a ZIP-level filter can honestly be, and it means everyone
+ * typing in the same town shares one cache entry upstream instead of one per
+ * visitor.
  *
  * ## Spending as little of the Geoapify quota as possible
  *
@@ -57,6 +71,14 @@ const MIN_LENGTH = 5
 const DEBOUNCE_MS = 450
 /** How long to stop asking after the endpoint says it is rate limited. */
 const BACK_OFF_MS = 60_000
+/**
+ * How far from the ZIP a suggested address may be — 50km, about 30 miles.
+ *
+ * Wide enough for a metro area and the rural edges a container actually goes
+ * to, narrow enough to drop the same street name in another state. See the
+ * header on why erring wide is the safer direction.
+ */
+const SEARCH_RADIUS_M = 50_000
 
 function toSuggestion(feature: unknown): AddressSuggestion | null {
   const properties = (feature as { properties?: Record<string, unknown> })?.properties
@@ -90,7 +112,8 @@ export function AddressAutocomplete({
   value,
   onChange,
   onPick,
-  bias,
+  near,
+  country,
   required = false,
   placeholder = '123 Peachtree St NE',
   className,
@@ -102,8 +125,13 @@ export function AddressAutocomplete({
   value: string
   onChange: (value: string) => void
   onPick: (suggestion: AddressSuggestion) => void
-  /** Where to look first — the ZIP field's position. See useZipPlace. */
-  bias?: { latitude: number; longitude: number } | null
+  /**
+   * The ZIP field's position, from useZipPlace. Filters suggestions to its
+   * surroundings and ranks the survivors nearest-first.
+   */
+  near?: { latitude: number; longitude: number } | null
+  /** The form's country field, as 'US' or 'CA'. Narrows the search to it. */
+  country?: string
   required?: boolean
   placeholder?: string
   className: string
@@ -124,14 +152,22 @@ export function AddressAutocomplete({
   const boxRef = useRef<HTMLDivElement | null>(null)
 
   const query = value.trim()
-  // Part of the cache key as well as the request: the same text near two
-  // different towns is two different questions.
-  const biasParam = bias
-    ? `proximity:${bias.longitude.toFixed(2)},${bias.latitude.toFixed(2)}`
-    : ''
+
+  // Both are part of the cache key as well as the request: the same text in two
+  // different towns, or two different countries, is two different questions.
+  const point = near ? `${near.longitude.toFixed(2)},${near.latitude.toFixed(2)}` : ''
+  const biasParam = point ? `proximity:${point}` : ''
+  const filterParam = [
+    // Falls back to both markets until the form's country is known, which is
+    // the state the field starts in.
+    `countrycode:${(country || 'us,ca').toLowerCase()}`,
+    point ? `circle:${point},${SEARCH_RADIUS_M}` : '',
+  ]
+    .filter(Boolean)
+    .join('|')
 
   useEffect(() => {
-    const key = `${biasParam}|${query.toLowerCase()}`
+    const key = `${filterParam}|${biasParam}|${query.toLowerCase()}`
     if (query.length < MIN_LENGTH) return
     if (Date.now() < backOffUntil.current) return
 
@@ -155,7 +191,7 @@ export function AddressAutocomplete({
           limit: '5',
           // Streets and buildings, not just postcodes — see the route.
           type: 'any',
-          filter: 'countrycode:us,ca',
+          filter: filterParam,
         })
         if (biasParam) params.set('bias', biasParam)
 
@@ -189,7 +225,7 @@ export function AddressAutocomplete({
     }, DEBOUNCE_MS)
 
     return () => clearTimeout(timer)
-  }, [query, biasParam])
+  }, [query, biasParam, filterParam])
 
   // Close when the visitor moves on, without stealing the click that picks a
   // suggestion — pointerdown outside the box is the one event that means "not

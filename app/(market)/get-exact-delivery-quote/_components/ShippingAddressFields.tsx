@@ -129,7 +129,8 @@ export function ShippingAddressFields({
             value={address1}
             onChange={setAddress1}
             onPick={pick}
-            bias={place}
+            near={place}
+            country={country}
             required
             className={`${FIELD} pr-10`}
           />

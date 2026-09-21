@@ -280,9 +280,10 @@ function AddressFields({
           value={data.address1}
           onChange={(v) => onChange('address1', v)}
           onPick={pickAddress}
-          // Results near the ZIP in the form below, rather than wherever the
-          // street name happens to be most famous.
-          bias={place}
+          // Confined to the country and the area around the ZIP in the form
+          // below, rather than wherever the street name is most famous.
+          near={place}
+          country={toAlpha2(data.country)}
           placeholder="Street address"
           className={inputCls}
           showHint={false}
