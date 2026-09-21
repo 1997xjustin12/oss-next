@@ -1080,15 +1080,6 @@ export function ProductInfoPanelV2({
   const deliveryInQuote = selection.tab === "buy" ? deliveryTotal : 0;
 
   /**
-   * True while delivery for a purchase is still being priced.
-   *
-   * Narrow on purpose. Rent and rent-to-own never show delivery beside the
-   * figure, and with no ZIP there is nothing being calculated.
-   */
-  const deliveryPricing =
-    selection.tab === "buy" && !isGenericDisplay && !!zipcode && deliveryLoading;
-
-  /**
    * Subtotal: unit price × quantity.
    *
    * Delivery is billed after the order (the backend runs `estimate_only`,
@@ -1732,21 +1723,13 @@ export function ProductInfoPanelV2({
                 </span>
               )}
             </div>
-            {/* Delivery beside the figure, not in it: it is billed after the
-                order, so the subtotal is what checkout charges. One line either
-                way — pricing, then the estimate — so the slab does not jump. */}
-            {deliveryPricing ? (
-              <div
-                aria-live="polite"
-                className="text-[11px] font-medium text-white/70"
-              >
-                + delivery, still calculating
-              </div>
-            ) : selection.tab === "buy" && deliveryOption ? (
-              <div className="text-[11px] font-medium text-white/70">
-                + est. delivery {formatMoney(deliveryTotal)}, billed after order
-              </div>
-            ) : null}
+            {/* V2 says nothing about delivery here. The default panel prints
+                the estimate beside the subtotal; this version drops it for the
+                same reason it drops the Delivery, Distance and Sales tax rows
+                from the summary — the price block states the price, and what
+                delivery costs is settled later. Removing it also takes the
+                "still calculating" line with it, so the slab no longer changes
+                height while a quote is in flight. */}
           </div>
         </div>
         {/* Actions. One filled button carries the accent; the two supporting
