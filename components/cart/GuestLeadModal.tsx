@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import Image from 'next/image'
-import { ArrowLeft, Check, Container, MapPin, Phone, X } from 'lucide-react'
+import { ArrowLeft, Check, MapPin, Phone, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import Link from 'next/link'
@@ -38,14 +37,19 @@ export type QuoteLine = {
   value: string
   /** Renders quieter — for context lines like distance rather than money. */
   muted?: boolean
+  /**
+   * A cost rather than a description of what is being bought.
+   *
+   * The first one gets a rule above it, which is what separates "here is the
+   * container" from "here is what it costs" without a second heading.
+   */
+  charge?: boolean
 }
 
 type Props = {
   open: boolean
   /** What is being quoted, so the modal never reads as a random interruption. */
   productTitle: string
-  /** Thumbnail of the container being quoted, shown on the second step. */
-  productImage?: string | null
   priceLabel: string
   /** Rows of the quote view, already formatted. */
   quoteLines: QuoteLine[]
@@ -55,8 +59,11 @@ type Props = {
   quoteTotalSuffix?: string
   /** Details captured. The modal then advances to the quote itself. */
   onSubmit: (lead: Omit<GuestLead, 'capturedAt'>) => void
-  /** Quote view's primary action. */
-  onAddToCart: () => void
+  /**
+   * File the quote. The caller saves it and flips `quoteSaved`, which is what
+   * moves step two from "here is your quote" to "we will email it to you".
+   */
+  onSaveQuote: () => void
   /** Close without adding — the X, Escape, or the backdrop. */
   onDismiss: () => void
   /**
@@ -69,15 +76,12 @@ type Props = {
    */
   onAddressZipChange?: (postcode: string) => void
   /**
-   * Whether this container can actually reach the cart.
+   * True once the caller has filed this quote.
    *
-   * False for a reference listing, which has no depot, no SKU and a
-   * placeholder location. The quote is then the whole outcome, so the second
-   * step drops the Add to cart button rather than offering an action that
-   * would put an un-fulfillable line into the cart.
+   * This is the whole difference between step two's two states: unsaved offers
+   * Save Quote, saved says the quotation is coming by email and drops the
+   * button, because the action has already been taken.
    */
-  canAddToCart?: boolean
-  /** True once the caller has filed this quote, so the second view can say so. */
   quoteSaved?: boolean
 }
 
@@ -97,16 +101,14 @@ type Step = 'details' | 'quote'
 export function GuestLeadModal({
   open,
   productTitle,
-  productImage,
   priceLabel,
   quoteLines,
   quoteTotal,
   quoteTotalSuffix,
   onSubmit,
-  onAddToCart,
+  onSaveQuote,
   onDismiss,
   onAddressZipChange,
-  canAddToCart = true,
   quoteSaved = false,
 }: Props) {
   const [step, setStep] = useState<Step>('details')
@@ -196,10 +198,6 @@ export function GuestLeadModal({
     onDismiss()
   }
 
-  function addToCart() {
-    setStep('details')
-    onAddToCart()
-  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -451,132 +449,138 @@ export function GuestLeadModal({
             </section>
 
             {/* ── Step 2: the quote ───────────────────────────────────────── */}
-            <section
-              className="w-1/2 px-5 py-8 sm:px-10 sm:py-9"
-              aria-hidden={!onQuote}
-              inert={!onQuote}
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-primary">
-                Step 2 of 2
-              </p>
-              <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-white sm:text-3xl">
-                Your Quote
+            <section className="w-1/2" aria-hidden={!onQuote} inert={!onQuote}>
+              <div className="bg-theme-primary px-5 py-4 sm:px-8">
+                <p className="text-lg font-bold text-white">Step 2 of 2</p>
+              </div>
+
+              <div className="px-5 py-6 sm:px-8 sm:py-7">
+              <h2 className="text-xl font-extrabold tracking-tight text-theme-dark dark:text-white sm:text-2xl">
+                Your Quote:
               </h2>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
-                {fullName ? `Thanks, ${fullName.split(' ')[0]}. ` : ''}
-                {canAddToCart
-                  ? "Here’s what you selected"
-                  : "Here’s what you asked about — a specialist will follow up"}
-                {email ? <> — we&rsquo;ve got you at <span className="font-semibold text-theme-dark dark:text-white">{email}</span></> : null}.
-              </p>
+              {/* The two states of this step, in one sentence each. Before
+                  saving it is a quote they are reading; after, it is a promise
+                  about what happens next — and repeating "here is your quote"
+                  at that point would read as though nothing had happened. */}
+              {quoteSaved ? (
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
+                  Thank you for providing your information. We will send your final
+                  quotation to your email address within 24 hours.
+                </p>
+              ) : (
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
+                  {fullName ? (
+                    <>
+                      Thanks, <span className="font-bold text-theme-dark dark:text-white">{fullName.split(' ')[0]}</span>.{' '}
+                    </>
+                  ) : null}
+                  Here&rsquo;s what you asked about — a specialist will follow up.
+                  {email ? (
+                    <>
+                      {' '}We&rsquo;ve got you at{' '}
+                      <span className="font-bold text-theme-dark dark:text-white">{email}</span>.
+                    </>
+                  ) : null}
+                </p>
+              )}
 
               <div className="mt-5 overflow-hidden rounded-md border border-theme-border dark:border-neutral-800">
-                {/* The picture belongs on the header rather than the price rows:
-                    there is one container here, and repeating its thumbnail
-                    beside every line would say it three times. */}
-                <div className="flex items-center gap-3 border-b border-theme-border bg-theme-subtle px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800/60">
-                  <span className="relative h-12 w-16 shrink-0 overflow-hidden rounded bg-theme-bg dark:bg-neutral-900">
-                    {productImage ? (
-                      <Image src={productImage} alt="" fill sizes="64px" className="object-cover" />
-                    ) : (
-                      <Container
-                        className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-theme-muted"
-                        aria-hidden
-                      />
-                    )}
-                  </span>
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-theme-subtle px-4 py-3 dark:bg-neutral-800/60">
                   <span className="min-w-0 text-sm font-bold text-theme-dark dark:text-white">
                     {productTitle}
                   </span>
+                  {/* Beside what it describes, not at the foot of the modal:
+                      the details are what produced these figures, so the way
+                      back to them belongs next to them. */}
+                  <button
+                    type="button"
+                    onClick={() => setStep('details')}
+                    className="shrink-0 text-sm font-semibold text-theme-primary underline underline-offset-2 hover:text-theme-primary-dark"
+                  >
+                    Edit my details
+                  </button>
                 </div>
-                <ul className="divide-y divide-theme-border px-4 text-sm dark:divide-neutral-800">
-                  {quoteLines.map((line) => (
-                    <li
-                      key={line.label}
-                      className="flex items-baseline justify-between gap-6 py-2.5"
-                    >
-                      <span className="shrink-0 text-theme-muted">{line.label}</span>
-                      <span
-                        className={`text-right tabular-nums ${
-                          line.muted
-                            ? 'text-theme-muted'
-                            : 'font-medium text-theme-dark dark:text-white'
+                <ul className="px-4 text-sm">
+                  {quoteLines.map((line, index) => {
+                    // A single rule where the costs start, rather than one
+                    // between every row: the rows above describe the container,
+                    // the rows below are what it comes to.
+                    const firstCharge =
+                      !!line.charge && !quoteLines.slice(0, index).some((l) => l.charge)
+                    return (
+                      <li
+                        key={line.label}
+                        className={`flex items-baseline justify-between gap-6 py-2.5 ${
+                          firstCharge
+                            ? 'mt-1 border-t border-theme-border pt-3.5 dark:border-neutral-800'
+                            : ''
                         }`}
                       >
-                        {line.value}
-                      </span>
-                    </li>
-                  ))}
+                        <span className="shrink-0 text-theme-muted">{line.label}</span>
+                        <span
+                          className={`text-right tabular-nums ${
+                            line.muted && !line.charge
+                              ? 'text-theme-muted'
+                              : 'font-bold text-theme-dark dark:text-white'
+                          }`}
+                        >
+                          {line.value}
+                        </span>
+                      </li>
+                    )
+                  })}
                 </ul>
-                <div className="flex items-end justify-between gap-4 border-t border-theme-border bg-theme-subtle px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800/60">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-muted">
-                    Estimated total
+                <div className="flex items-center justify-between gap-4 bg-theme-subtle px-4 py-3.5 dark:bg-neutral-800/60">
+                  <span className="text-sm font-bold text-theme-dark dark:text-white">
+                    Estimated Total
                   </span>
-                  <span className="text-2xl font-bold leading-none tabular-nums tracking-tight text-theme-dark dark:text-white">
+                  <span className="text-lg font-bold leading-none tabular-nums text-theme-primary">
                     {quoteTotal}
                     {quoteTotalSuffix && (
-                      <span className="ml-0.5 text-sm font-semibold text-theme-muted">
-                        {quoteTotalSuffix}
-                      </span>
+                      <span className="ml-0.5 text-sm font-semibold">{quoteTotalSuffix}</span>
                     )}
                   </span>
                 </div>
               </div>
 
+              {/* Saving is the whole action of this step, so it disappears once
+                  it has been taken rather than sitting there inviting a second
+                  press that would do nothing. */}
+              {!quoteSaved && (
+                <button
+                  type="button"
+                  onClick={onSaveQuote}
+                  className={`${PRIMARY_BUTTON} mt-5 h-12 w-full text-base`}
+                >
+                  Save Quote
+                </button>
+              )}
+
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <PlpLink href={ROUTES.PLP} className={`${SECONDARY_BUTTON} gap-2`}>
+                  <ArrowLeft className="h-4 w-4" aria-hidden />
+                  Continue Shopping
+                </PlpLink>
+                <Link
+                  href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`}
+                  className={`${SECONDARY_BUTTON} gap-2`}
+                >
+                  <Phone className="h-4 w-4" aria-hidden />
+                  {/* Before saving, the offer is expertise; after, the quote is
+                      already coming and the reason to ring is the price. */}
+                  {quoteSaved ? 'Call for Lowest Price' : `Talk to an expert ${CONTACT_NUMBER}`}
+                </Link>
+              </div>
+
               {quoteSaved && (
-                <p className="mt-3 flex flex-wrap items-center gap-x-1.5 text-xs font-semibold text-theme-primary">
-                  <Check className="h-3.5 w-3.5" aria-hidden />
-                  Saved to your quotes.
-                  <Link
-                    href={ROUTES.SAVED_QUOTES}
-                    className="font-semibold underline underline-offset-2"
-                  >
+                <p className="mt-5 text-center text-xs text-theme-muted">
+                  <Check className="mr-1 inline h-3.5 w-3.5 text-theme-primary" aria-hidden />
+                  Saved to this browser.{' '}
+                  <Link href={ROUTES.SAVED_QUOTES} className="underline underline-offset-2">
                     View saved quotes
                   </Link>
                 </p>
               )}
-
-              <p className="mt-3 text-xs leading-relaxed text-theme-muted">
-                {canAddToCart
-                  ? 'Delivery is an estimate until we confirm site access. Sales tax is calculated at checkout.'
-                  : 'This is a reference listing, so these figures are a guide. We’ll come back with real pricing and availability at the depot nearest you.'}
-              </p>
-
-              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row-reverse">
-                {canAddToCart ? (
-                  <>
-                    <button type="button" onClick={addToCart} className={PRIMARY_BUTTON}>
-                      Add To Cart
-                    </button>
-                    <PlpLink href={ROUTES.PLP} className={SECONDARY_BUTTON}>
-                      Continue shopping
-                    </PlpLink>
-                  </>
-                ) : (
-                  // Nothing to add, so the only action is to keep looking —
-                  // shown as the primary, since a lone outlined button reads
-                  // like the real one is missing.
-                  <PlpLink href={ROUTES.PLP} className={PRIMARY_BUTTON}>
-                    Continue shopping
-                  </PlpLink>
-                )}
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-theme-border pt-4 dark:border-neutral-800">
-                <button
-                  type="button"
-                  onClick={() => setStep('details')}
-                  className="text-xs font-semibold text-theme-muted underline underline-offset-2 hover:text-theme-dark dark:hover:text-white"
-                >
-                  Edit My Details
-                </button>
-                <Link
-                  href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:underline"
-                >
-                  <Phone className="h-3.5 w-3.5" aria-hidden />
-                  Questions? {CONTACT_NUMBER}
-                </Link>
               </div>
             </section>
           </div>

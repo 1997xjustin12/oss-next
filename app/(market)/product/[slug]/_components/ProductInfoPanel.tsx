@@ -1222,6 +1222,18 @@ export function ProductInfoPanel({
 
     // Mirrors the Summary row: a resolved route over $1,000 is withheld
     // upstream, and saying "Call for rate" is the honest version of that.
+    if (deliveryMiles !== null) {
+      lines.push({
+        label: "Distance",
+        value: `${Math.round(deliveryMiles).toLocaleString()} mi${
+          deliveryRates?.depot.stores[0]
+            ? ` from ${deliveryRates.depot.stores[0]}`
+            : ""
+        }`,
+        muted: true,
+      });
+    }
+
     lines.push({
       // Names the method once it is known — "Tilt Bed Delivery" is the
       // difference between a number the customer can check and one they have
@@ -1241,19 +1253,18 @@ export function ProductInfoPanel({
               ? "Call for rate"
               : "Enter a ZIP code for a rate",
       muted: !deliveryOption,
+      charge: true,
     });
 
-    if (deliveryMiles !== null) {
-      lines.push({
-        label: "Distance",
-        value: `${Math.round(deliveryMiles).toLocaleString()} mi${
-          deliveryRates?.depot.stores[0]
-            ? ` from ${deliveryRates.depot.stores[0]}`
-            : ""
-        }`,
-        muted: true,
-      });
-    }
+    // The row the design asks for. The figure stays honest until the backend
+    // has tax rates loaded — it returns $0 for every address today — so this
+    // says where it is worked out rather than inventing one.
+    lines.push({
+      label: "Sales Tax",
+      value: "Calculated at checkout",
+      muted: true,
+      charge: true,
+    });
 
     return lines;
   }, [
@@ -1282,7 +1293,16 @@ export function ProductInfoPanel({
    */
   function handleLeadSubmit(lead: Omit<GuestLead, "capturedAt">) {
     setGuestLead(lead);
+  }
 
+  /**
+   * File the quote, from the modal's Save Quote button.
+   *
+   * Separate from handleLeadSubmit since the 2026-09-22 design: giving details
+   * and filing the quote used to happen in one move, which left the second step
+   * announcing something the visitor had not asked for and no button to press.
+   */
+  function handleSaveQuote() {
     const stored = getGuestLead();
     saveQuote({
       productTitle: activeProduct.desc_title || activeProduct.title,
@@ -1296,7 +1316,7 @@ export function ProductInfoPanel({
       totalSuffix: priceDisplay.suffix || undefined,
       // setGuestLead has just written it, so this reads back the stamped
       // version rather than rebuilding the timestamp here.
-      lead: stored ?? { ...lead, capturedAt: new Date().toISOString() },
+      lead: stored ?? { fullName: "", email: "", phone: "", address: "", capturedAt: new Date().toISOString() },
     });
     setQuoteSaved(true);
   }
@@ -2000,17 +2020,12 @@ export function ProductInfoPanel({
       <GuestLeadModal
         open={leadModalOpen}
         productTitle={activeProduct.desc_title || activeProduct.title}
-        productImage={activeProduct.images?.[0]?.src ?? null}
         priceLabel={`${priceDisplay.price}${priceDisplay.suffix ?? ""}`}
         quoteLines={quoteLines}
         quoteTotal={quoteTotal}
         quoteTotalSuffix={priceDisplay.suffix}
-        canAddToCart
         onSubmit={handleLeadSubmit}
-        onAddToCart={() => {
-          setLeadModalOpen(false);
-          addSelectedToCart();
-        }}
+        onSaveQuote={handleSaveQuote}
         onDismiss={() => {
           setLeadModalOpen(false);
           setQuoteSaved(false);
