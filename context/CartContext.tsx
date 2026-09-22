@@ -357,7 +357,13 @@ export function CartProvider({
       {addedNotice === 'toast' ? (
         <AddedToCartToast item={addedItem} onClose={() => setAddedItem(null)} />
       ) : (
-        <AddedToCartModal item={addedItem} onClose={() => setAddedItem(null)} />
+        <AddedToCartModal
+          item={addedItem}
+          onClose={() => setAddedItem(null)}
+          // Silently: an accessory added from inside the confirmation must not
+          // replace the confirmation it was added from.
+          onAddAccessory={(accessory) => value.addItem(accessory, false)}
+        />
       )}
       {/* The location-conflict prompt for every page — see CartLocationConflictHost. */}
       <CartLocationConflictHost />

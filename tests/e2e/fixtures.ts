@@ -204,7 +204,7 @@ export async function addToCartAndOpenCart(page: Page) {
   await expect(add).toBeEnabled()
   await add.click()
 
-  const modal = page.getByRole('dialog', { name: 'Added to Cart!' })
+  const modal = page.getByRole('dialog', { name: /^Added To Cart$/i })
   const toast = page.locator('[role="status"]').filter({ hasText: /Added To Cart/i })
   const confirmation = modal.or(toast).first()
   await expect(confirmation).toBeVisible()

@@ -25,9 +25,17 @@ type Props = {
    * panel edge, leaving a picker whose options cannot be read or clicked.
    */
   allowOverflow?: boolean
+  /**
+   * Suppress the floating close button `bare` would otherwise draw.
+   *
+   * For a caller whose own header is a coloured band: the floating button is a
+   * pale pill meant to sit over a photo, and on a solid red bar it reads as a
+   * smudge. Such a caller draws its own X inside the band instead.
+   */
+  hideCloseButton?: boolean
 }
 
-export function Modal({ open, onClose, title, children, footer, bare = false, maxWidth = 'max-w-md', allowOverflow = false }: Props) {
+export function Modal({ open, onClose, title, children, footer, bare = false, maxWidth = 'max-w-md', allowOverflow = false, hideCloseButton = false }: Props) {
   useEffect(() => {
     if (!open) return
     function onKey(e: KeyboardEvent) {
@@ -78,14 +86,16 @@ export function Modal({ open, onClose, title, children, footer, bare = false, ma
 
         {bare ? (
           <>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-theme-bg/90 dark:bg-neutral-800/90 text-theme-muted hover:text-theme-dark dark:hover:text-white shadow transition-colors"
-            >
-              <X className="w-4.5 h-4.5" />
-            </button>
+            {!hideCloseButton && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-theme-bg/90 dark:bg-neutral-800/90 text-theme-muted hover:text-theme-dark dark:hover:text-white shadow transition-colors"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
+            )}
             {children}
           </>
         ) : (
