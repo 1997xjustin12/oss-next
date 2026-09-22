@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
-import { Check, Container, MapPin, Phone, X } from 'lucide-react'
+import { ArrowLeft, Check, Container, MapPin, Phone, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import Link from 'next/link'
@@ -204,10 +204,15 @@ export function GuestLeadModal({
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
 
-    // Only the two fields worth following up on are required. Asking for an
-    // address and then blocking on it costs more leads than it captures.
+    // All four are required as of the 2026-09-22 design, which marks each with
+    // an asterisk. This reverses an earlier call — "asking for an address and
+    // then blocking on it costs more leads than it captures" — so it is worth
+    // knowing which way it was decided if lead volume drops: the phone and
+    // address checks below are the two to drop.
     if (!fullName.trim()) return setError('Enter your name so we know who to reach.')
+    if (!phone.trim()) return setError('Enter a phone number we can reach you on.')
     if (!EMAIL_PATTERN.test(email.trim())) return setError('Enter a valid email address.')
+    if (!address.trim()) return setError('Enter the delivery ZIP so we can price the trucking.')
 
     setError(null)
     onSubmit({
@@ -233,7 +238,13 @@ export function GuestLeadModal({
           type="button"
           onClick={close}
           aria-label="Close"
-          className="absolute right-3 top-3 z-10 rounded-md p-2 text-theme-muted transition-colors hover:bg-theme-subtle hover:text-theme-dark dark:hover:bg-white/10 dark:hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary"
+          // Step one puts a red band behind this, where a muted grey X is
+          // nearly invisible; step two is white card behind it as before.
+          className={`absolute right-3 top-3 z-10 rounded-md p-2 transition-colors focus:outline-none focus-visible:ring-2 ${
+            onQuote
+              ? 'text-theme-muted hover:bg-theme-subtle hover:text-theme-dark focus-visible:ring-theme-primary dark:hover:bg-white/10 dark:hover:text-white'
+              : 'text-white/80 hover:bg-white/15 hover:text-white focus-visible:ring-white'
+          }`}
         >
           <X className="h-5 w-5" aria-hidden />
         </button>
@@ -249,28 +260,27 @@ export function GuestLeadModal({
             }`}
           >
             {/* ── Step 1: details ─────────────────────────────────────────── */}
-            <section
-              className="w-1/2 px-5 py-8 sm:px-10 sm:py-9"
-              aria-hidden={onQuote}
-              inert={onQuote}
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-primary">
-                Step 1 of 2
-              </p>
+            <section className="w-1/2" aria-hidden={onQuote} inert={onQuote}>
+              {/* The step band belongs to the panel, not the shell, so it
+                  slides away with the step it names. */}
+              <div className="bg-theme-primary px-5 py-4 sm:px-8">
+                <p className="text-lg font-bold text-white">Step 1 of 2</p>
+              </div>
+
+              <div className="px-5 py-6 sm:px-8 sm:py-7">
               <h2
                 id="guest-lead-title"
-                className="mt-2 text-2xl font-extrabold tracking-tight text-theme-dark dark:text-white sm:text-3xl"
+                className="text-xl font-extrabold tracking-tight text-theme-dark dark:text-white sm:text-2xl"
               >
                 Where should we send your quote?
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
-                Delivery is priced by site access and distance from the depot, so
-                the final figure comes from a person rather than a calculator.
-                Leave your details and we&rsquo;ll price this container for your
-                address.
+                Delivery price and sales tax is based on the delivery location, site
+                access, and distance from the depot. Fill in details below to get the
+                exact delivery price and sales tax.
               </p>
 
-              <div className="mt-5 flex items-baseline justify-between gap-4 rounded-md border border-theme-border bg-theme-subtle px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800/60">
+              <div className="mt-5 flex items-baseline justify-between gap-4 rounded-md bg-theme-subtle px-4 py-3.5 dark:bg-neutral-800/60">
                 <span className="text-sm font-semibold text-theme-dark dark:text-white">
                   {productTitle}
                 </span>
@@ -297,23 +307,8 @@ export function GuestLeadModal({
                   </div>
 
                   <div>
-                    <label htmlFor="guest-email" className={LABEL}>
-                      Email <span className="text-theme-primary">*</span>
-                    </label>
-                    <input
-                      id="guest-email"
-                      type="email"
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="jane@company.com"
-                      className={FIELD}
-                    />
-                  </div>
-
-                  <div>
                     <label htmlFor="guest-phone" className={LABEL}>
-                      Phone
+                      Phone Number <span className="text-theme-primary">*</span>
                     </label>
                     <input
                       id="guest-phone"
@@ -326,9 +321,24 @@ export function GuestLeadModal({
                     />
                   </div>
 
+                  <div>
+                    <label htmlFor="guest-email" className={LABEL}>
+                      Email Address <span className="text-theme-primary">*</span>
+                    </label>
+                    <input
+                      id="guest-email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="jane@company.com"
+                      className={FIELD}
+                    />
+                  </div>
+
                   <div className="relative">
                     <label htmlFor="guest-address" className={LABEL}>
-                      Delivery Address
+                      Delivery Address <span className="text-theme-primary">*</span>
                     </label>
                     <input
                       id="guest-address"
@@ -411,24 +421,32 @@ export function GuestLeadModal({
                   </p>
                 )}
 
-                <div className="mt-6 flex">
-                  <button type="submit" className={PRIMARY_BUTTON}>
-                    Get Quote
+                <button type="submit" className={`${PRIMARY_BUTTON} mt-5 h-12 w-full text-base`}>
+                  Get Quote
+                </button>
+
+                {/* Both ways out, side by side and the same weight: leaving
+                    empty-handed and phoning instead are the same size of
+                    decision. Go Back closes — step one has nothing behind it. */}
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <button type="button" onClick={close} className={`${SECONDARY_BUTTON} gap-2`}>
+                    <ArrowLeft className="h-4 w-4" aria-hidden />
+                    Go Back
                   </button>
+                  <Link
+                    href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`}
+                    className={`${SECONDARY_BUTTON} gap-2`}
+                  >
+                    <Phone className="h-4 w-4" aria-hidden />
+                    Call for Lowest Price
+                  </Link>
                 </div>
               </form>
 
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-theme-border pt-4 dark:border-neutral-800">
-                <p className="text-xs text-theme-muted">
-                  We use this to send your quote. We do not sell your details.
-                </p>
-                <Link
-                  href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:underline"
-                >
-                  <Phone className="h-3.5 w-3.5" aria-hidden />
-                  Prefer to talk? {CONTACT_NUMBER}
-                </Link>
+              <p className="mt-5 text-center text-xs text-theme-muted">
+                We use your contact info only to process your request. We do not sell
+                your personal data.
+              </p>
               </div>
             </section>
 

@@ -92,6 +92,10 @@ test.describe('guest', () => {
       await modal.locator('#guest-name').fill(`${LEAD.first} ${LEAD.last}`)
       await modal.locator('#guest-email').fill(LEAD.email)
       await modal.locator('#guest-phone').fill(LEAD.phone)
+      // Required since the 2026-09-22 design marked all four fields with an
+      // asterisk. Typed rather than picked from the suggestions: this step is
+      // about the quote appearing, not about the address lookup.
+      await modal.locator('#guest-address').fill(ZIP)
       await modal.getByRole('button', { name: 'Get Quote' }).click()
       // Both steps stay in the page — the details panel is only slid aside and
       // made inert, so typed details survive a step back. Moving on means that
