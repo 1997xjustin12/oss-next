@@ -79,8 +79,8 @@ type Props = {
    * True once the caller has filed this quote.
    *
    * This is the whole difference between step two's two states: unsaved offers
-   * Save Quote, saved says the quotation is coming by email and drops the
-   * button, because the action has already been taken.
+   * Save Quote, saved says the quotation is coming by email and turns that same
+   * button into "Quote Saved!" — the confirmation sits where the action was.
    */
   quoteSaved?: boolean
 }
@@ -543,18 +543,26 @@ export function GuestLeadModal({
                 </div>
               </div>
 
-              {/* Saving is the whole action of this step, so it disappears once
-                  it has been taken rather than sitting there inviting a second
-                  press that would do nothing. */}
-              {!quoteSaved && (
-                <button
-                  type="button"
-                  onClick={onSaveQuote}
-                  className={`${PRIMARY_BUTTON} mt-5 h-12 w-full text-base`}
-                >
-                  Save Quote
-                </button>
-              )}
+              {/* One button, two jobs: the action, then the receipt for it.
+                  Disabled rather than removed once saved — the confirmation is
+                  worth more in the place the visitor just pressed than in a line
+                  of text somewhere below it, and leaving it live would invite a
+                  second press that files nothing. */}
+              <button
+                type="button"
+                onClick={quoteSaved ? undefined : onSaveQuote}
+                disabled={quoteSaved}
+                className={`${PRIMARY_BUTTON} mt-5 h-12 w-full text-base disabled:cursor-default disabled:hover:bg-theme-primary`}
+              >
+                {quoteSaved ? (
+                  <>
+                    <Check className="mr-2 h-5 w-5" aria-hidden />
+                    Quote Saved!
+                  </>
+                ) : (
+                  'Save Quote'
+                )}
+              </button>
 
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <PlpLink href={ROUTES.PLP} className={`${SECONDARY_BUTTON} gap-2`}>
@@ -574,7 +582,6 @@ export function GuestLeadModal({
 
               {quoteSaved && (
                 <p className="mt-5 text-center text-xs text-theme-muted">
-                  <Check className="mr-1 inline h-3.5 w-3.5 text-theme-primary" aria-hidden />
                   Saved to this browser.{' '}
                   <Link href={ROUTES.SAVED_QUOTES} className="underline underline-offset-2">
                     View saved quotes
