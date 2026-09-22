@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { PlpLink } from '@/components/shared/PlpLink';
 import Image from 'next/image';
@@ -637,8 +637,37 @@ export function CheckoutClient() {
   // Priced only once complete: each request with a ZIP can cost the backend a
   // paid Google lookup, and every pause while typing one used to send another.
   const pricedZip = completeZip(shippingZip, shippingCountryCode);
+  /**
+   * The rest of the delivery address, in the backend's own field names.
+   *
+   * Sent so the total is priced against the address the order will carry
+   * rather than its ZIP alone — the backend geocodes from city and state, and
+   * needs the address to work a sales tax rate out from.
+   *
+   * Memoised on the four values so it can be an effect dependency: rebuilt
+   * every render, it would re-quote on every keystroke anywhere on the page.
+   */
+  const pricedAddress = useMemo(
+    () => ({
+      shipping_address_1: shipping.address1.trim() || undefined,
+      shipping_address_2: shipping.address2.trim() || undefined,
+      shipping_city: shipping.city.trim() || undefined,
+      shipping_state: shipping.state.trim() || undefined,
+    }),
+    [shipping.address1, shipping.address2, shipping.city, shipping.state],
+  );
   const itemsKey = items.map((item) => `${item.id}:${item.quantity}`).join(',');
-  const addressKey = `${itemsKey}|${pricedZip}|${shippingCountryCode}`;
+  // Everything the quote was asked for, so editing any part of the address
+  // marks the answer on screen as being for the previous one.
+  const addressKey = [
+    itemsKey,
+    pricedZip,
+    shippingCountryCode,
+    pricedAddress.shipping_address_1 ?? '',
+    pricedAddress.shipping_address_2 ?? '',
+    pricedAddress.shipping_city ?? '',
+    pricedAddress.shipping_state ?? '',
+  ].join('|');
   // The method only changes the total when the backend charges delivery at
   // checkout. While delivery is billed after the order, one reply already
   // prices every method, so switching reads that reply instead of asking again.
@@ -674,6 +703,7 @@ export function CheckoutClient() {
           shipping_zip_code: pricedZip || undefined,
           shipping_country: shippingCountryCode || undefined,
           shipping_method: requestMethod,
+          ...pricedAddress,
         };
         const res = await fetch('/api/orders/get-total', {
           method: 'POST',
@@ -697,7 +727,7 @@ export function CheckoutClient() {
       clearTimeout(handle);
       controller.abort();
     };
-  }, [items, hasContainer, pricedZip, shippingCountryCode, requestMethod, addressKey, quoteKey]);
+  }, [items, hasContainer, pricedZip, shippingCountryCode, pricedAddress, requestMethod, addressKey, quoteKey]);
 
   // The last total received, for display while a newer one is on its way. It
   // is never charged from: Place Order waits for the current address below.
@@ -814,6 +844,9 @@ export function CheckoutClient() {
         shipping_zip_code: pricedZip,
         shipping_country: shippingCountryCode,
         shipping_method: deliveryOption?.id,
+        // The server re-prices before charging; give it the address the page
+        // was quoted for, not a ZIP it would price something else from.
+        ...pricedAddress,
         // Only what the page showed: the server refuses to charge more than this.
         expectedAmount: total.toFixed(2),
         payer: {

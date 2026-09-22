@@ -59,6 +59,16 @@ export interface PlaceOrderRequest {
   shipping_zip_code?: string
   shipping_country?: string
   shipping_method?: string
+  /**
+   * The same address parts checkout priced with, so the re-price that decides
+   * the charge asks the question the customer was shown an answer to. The
+   * `order` block below carries the address the order is recorded with;
+   * these are the pricing copy, exactly as `shipping_zip_code` already is.
+   */
+  shipping_address_1?: string
+  shipping_address_2?: string
+  shipping_city?: string
+  shipping_state?: string
   expectedAmount?: string
   /** Braintree's copy of the payer, for the transaction record. */
   payer: {
@@ -118,6 +128,24 @@ export interface GetOrderTotalPayload {
   shipping_country?: string
   /** A `ShippingOption.id`. Accepted by the backend (checked 2026-09-15); only sent for container carts. */
   shipping_method?: string
+  /**
+   * The delivery address in the backend's own field names, sent by every
+   * caller that has one — checkout and the order re-price.
+   *
+   * These are read, not decoration: with `shipping_city` + `shipping_state`
+   * and no ZIP at all the backend still quotes, and geocodes to a different
+   * distance than the ZIP does (5.15 mi against 5.75 mi for the same Atlanta
+   * depot, checked 2026-09-22). Its own refusal names them — "a shipping zip
+   * code (or city + state) is required for a delivery quote". Unprefixed
+   * `city`/`state` are rejected.
+   *
+   * They are sent so sales tax can be worked out from the real address.
+   * **Today that returns 0 regardless** — see the note above OrderTotal.
+   */
+  shipping_address_1?: string
+  shipping_address_2?: string
+  shipping_city?: string
+  shipping_state?: string
 }
 
 /** One delivery method in a quote, as the backend returns it (seen 2026-09-15). */
@@ -156,6 +184,14 @@ export interface ShippingQuote {
 // location (10.5% for a 90210/US test — not a flat rate). Since 2026-09-15 a
 // container cart with a ZIP also returns a delivery quote in `shipping`; in
 // `estimate_only` mode that quote is not in total_shipping or total_price.
+//
+// **total_tax is 0 for every address as of 2026-09-22.** Re-checked against the
+// live backend with a full street address, city and state supplied, on a
+// purchase, a rent-to-own and the 90210 case that once returned 10.5%: all
+// zero. So the storefront now sends everything the backend would need, and the
+// remaining work is rates being loaded on the backend — not a missing field
+// here. Re-run docs/reference when that lands; nothing in this app should need
+// to change.
 export interface OrderTotal {
   sub_total: number
   total_tax: number

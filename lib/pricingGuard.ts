@@ -55,6 +55,14 @@ export function orderTotalCacheKey(payload: GetOrderTotalPayload): string {
     (payload.shipping_zip_code ?? '').trim().toUpperCase(),
     (payload.shipping_country ?? '').trim().toUpperCase(),
     payload.shipping_method ?? '',
+    // Part of the key because they are part of the question: the backend
+    // geocodes from city and state, so two addresses sharing a cached answer
+    // would be two addresses quoted the same distance. Safe to include — the
+    // key is hashed, so the street never sits in Redis in the clear.
+    (payload.shipping_address_1 ?? '').trim().toUpperCase(),
+    (payload.shipping_address_2 ?? '').trim().toUpperCase(),
+    (payload.shipping_city ?? '').trim().toUpperCase(),
+    (payload.shipping_state ?? '').trim().toUpperCase(),
   ].join('|')
   return `${KEY_PREFIX}get-total:${createHash('sha256').update(raw).digest('hex').slice(0, 40)}`
 }

@@ -80,6 +80,10 @@ export async function POST(request: NextRequest) {
       shipping_zip_code: body.shipping_zip_code,
       shipping_country: body.shipping_country,
       shipping_method: body.shipping_method,
+      shipping_address_1: body.shipping_address_1,
+      shipping_address_2: body.shipping_address_2,
+      shipping_city: body.shipping_city,
+      shipping_state: body.shipping_state,
     })
     if (!Number.isFinite(total?.total_price) || total.total_price <= 0) {
       throw new Error('Order total came back invalid.')
