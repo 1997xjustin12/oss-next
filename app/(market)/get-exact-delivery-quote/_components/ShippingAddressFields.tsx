@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AddressAutocomplete, type AddressSuggestion } from '@/components/shared/AddressAutocomplete'
 import { useZipPlace } from '@/hooks/useZipPlace'
 import { readVisitorZip } from '@/lib/visitorZip'
 
@@ -22,8 +21,13 @@ import { readVisitorZip } from '@/lib/visitorZip'
  *     stored in this browser — by the time anybody reaches step 3 they have
  *     given it at least once already;
  *   * City, State and Country follow the ZIP whenever it changes, through the
- *     free zippopotam lookup rather than the metered one (see useZipPlace);
- *   * the street field's suggestions are ranked near that ZIP.
+ *     free zippopotam lookup rather than the metered one (see useZipPlace).
+ *
+ * The street line is typed, not suggested. An address autocomplete lived here
+ * until 2026-09-22 and was removed: it was the only thing spending metered
+ * Geoapify quota on keystrokes, and for a field people know the answer to it
+ * bought little — the ZIP is what the rest of the form is built from, and that
+ * lookup is free.
  *
  * The ZIP is read in an effect rather than during render: it lives in
  * localStorage, which does not exist on the server, and reading it inline would
@@ -86,21 +90,6 @@ export function ShippingAddressFields({
     setCountry((current) => (place.countryCode === 'CA' || place.countryCode === 'US' ? place.countryCode : current))
   }, [place])
 
-  function pick(suggestion: AddressSuggestion) {
-    setAddress1(suggestion.street)
-    if (suggestion.city) setCity(suggestion.city)
-    if (suggestion.stateCode || suggestion.state) setState(suggestion.stateCode || suggestion.state)
-    if (suggestion.postcode) {
-      setZip(suggestion.postcode)
-      // The picked address is the source of truth for its own ZIP, so the
-      // effect above must not treat it as a change to fill over.
-      appliedZip.current = `${suggestion.countryCode}:picked-${suggestion.postcode}`
-    }
-    if (suggestion.countryCode === 'US' || suggestion.countryCode === 'CA') {
-      setCountry(suggestion.countryCode)
-    }
-  }
-
   const zipDiffers = useMemo(
     () => !!quotedZip && !!zip && zip.trim().slice(0, 5) !== quotedZip.trim().slice(0, 5),
     [quotedZip, zip],
@@ -123,16 +112,15 @@ export function ShippingAddressFields({
           <label htmlFor="address1" className={LABEL}>
             Street Address
           </label>
-          <AddressAutocomplete
+          <input
             id="address1"
             name="address1"
             value={address1}
-            onChange={setAddress1}
-            onPick={pick}
-            near={place}
-            country={country}
+            onChange={(e) => setAddress1(e.target.value)}
             required
-            className={`${FIELD} pr-10`}
+            autoComplete="street-address"
+            placeholder="123 Peachtree St NE"
+            className={FIELD}
           />
         </div>
 

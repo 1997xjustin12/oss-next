@@ -53,3 +53,9 @@ onsite_headless_prototype
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Secrets archives — never commit. env.7z reached a public repo on 2026-09-22.
+*.7z
+*.zip
+env*
+!env.example*

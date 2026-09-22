@@ -19,7 +19,6 @@ import {
   PhoneCall,
 } from 'lucide-react';
 import { SITE } from '@/config/site';
-import { AddressAutocomplete, type AddressSuggestion } from '@/components/shared/AddressAutocomplete';
 import { useZipPlace } from '@/hooks/useZipPlace';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
@@ -239,21 +238,6 @@ function AddressFields({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [place]);
 
-  function pickAddress(suggestion: AddressSuggestion) {
-    onChange('address1', suggestion.street);
-    if (suggestion.city) onChange('city', suggestion.city);
-    if (suggestion.stateCode || suggestion.state) {
-      onChange('state', suggestion.stateCode || suggestion.state);
-    }
-    if (suggestion.postcode) {
-      onChange('zip', suggestion.postcode);
-      // The picked address is the source of truth for its own ZIP, so the
-      // effect above must not treat it as a change to fill over.
-      appliedZip.current = `${suggestion.countryCode}:picked-${suggestion.postcode}`;
-    }
-    if (suggestion.countryCode === 'CA') onChange('country', 'Canada (CA)');
-    if (suggestion.countryCode === 'US') onChange('country', 'United States (US)');
-  }
 
   return (
     <div className="space-y-4">
@@ -275,19 +259,10 @@ function AddressFields({
 
       <div>
         <Label required>Address 1</Label>
-        <AddressAutocomplete
-          id="checkout-address1"
-          value={data.address1}
-          onChange={(v) => onChange('address1', v)}
-          onPick={pickAddress}
-          // Confined to the country and the area around the ZIP in the form
-          // below, rather than wherever the street name is most famous.
-          near={place}
-          country={toAlpha2(data.country)}
-          placeholder="Street address"
-          className={inputCls}
-          showHint={false}
-        />
+        {/* Typed, not suggested. The address autocomplete that lived here
+            until 2026-09-22 was the only metered lookup firing on keystrokes;
+            the ZIP below still fills City, State and Country for free. */}
+        <TextInput value={data.address1} onChange={(v) => onChange('address1', v)} placeholder="Street address" />
       </div>
 
       <div>
