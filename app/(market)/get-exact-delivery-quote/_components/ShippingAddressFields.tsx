@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useZipPlace } from '@/hooks/useZipPlace'
+import { getGuestLead } from '@/lib/guestCapture'
 import { readVisitorZip } from '@/lib/visitorZip'
 
 /**
@@ -55,11 +56,21 @@ export function ShippingAddressFields({
   /** The ZIP the quote is priced against, so the field starts where the quote is. */
   quotedZip?: string
 }) {
-  const [address1, setAddress1] = useState(defaults.address1 ?? '')
-  const [city, setCity] = useState(defaults.city ?? '')
-  const [state, setState] = useState(defaults.state ?? '')
-  const [zip, setZip] = useState(defaults.zip || quotedZip || '')
-  const [country, setCountry] = useState(defaults.country || 'US')
+  /**
+   * What the guest-lead modal stored, for the blanks the draft does not fill.
+   *
+   * Only the parts: a lead captured from the modal has a one-line `address`
+   * that is really a ZIP, and splitting that into a street would put something
+   * plausible and wrong in the street box.
+   */
+  const lead = useState(() => getGuestLead())[0]
+
+  const [address1, setAddress1] = useState(defaults.address1 || lead?.address1 || '')
+  const [address2, setAddress2] = useState(defaults.address2 || lead?.address2 || '')
+  const [city, setCity] = useState(defaults.city || lead?.city || '')
+  const [state, setState] = useState(defaults.state || lead?.state || '')
+  const [zip, setZip] = useState(defaults.zip || quotedZip || lead?.zip || '')
+  const [country, setCountry] = useState(defaults.country || lead?.country || 'US')
 
   // The ZIP this browser already knows, when the form started without one.
   useEffect(() => {
@@ -97,20 +108,15 @@ export function ShippingAddressFields({
 
   return (
     <div className="mt-6">
-      <h3 className="text-sm font-semibold text-theme-dark dark:text-white">
-        Delivery Address{' '}
-        <span className="text-theme-primary" aria-hidden>
-          *
-        </span>
-      </h3>
+      <h3 className="text-lg font-bold text-theme-primary sm:text-xl">Delivery Address:</h3>
       <p className="mt-1 text-xs text-theme-muted">
         Where the container is going. We use this to price the delivery and to fill in your checkout.
       </p>
 
       <div className="mt-3 grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
+        <div>
           <label htmlFor="address1" className={LABEL}>
-            Street Address
+            Address <span className="text-theme-primary">*</span>
           </label>
           <input
             id="address1"
@@ -119,45 +125,56 @@ export function ShippingAddressFields({
             onChange={(e) => setAddress1(e.target.value)}
             required
             autoComplete="street-address"
-            placeholder="123 Peachtree St NE"
-            className={FIELD}
-          />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label htmlFor="address2" className={LABEL}>
-            Apartment, Suite, Gate Code{' '}
-            <span className="font-normal text-theme-muted">(optional)</span>
-          </label>
-          <input
-            id="address2"
-            name="address2"
-            defaultValue={defaults.address2}
-            autoComplete="address-line2"
-            placeholder="Unit 4, or how to reach the site"
+            placeholder="Address"
             className={FIELD}
           />
         </div>
 
         <div>
-          <label htmlFor="addressZip" className={LABEL}>
-            ZIP / Postal Code
+          <label htmlFor="address2" className={LABEL}>
+            Apartment <span className="font-normal text-theme-muted">(optional)</span>
           </label>
           <input
-            id="addressZip"
-            name="addressZip"
-            value={zip}
-            onChange={(e) => setZip(e.target.value)}
-            required
-            inputMode="text"
-            autoComplete="postal-code"
+            id="address2"
+            name="address2"
+            value={address2}
+            onChange={(e) => setAddress2(e.target.value)}
+            autoComplete="address-line2"
+            placeholder="Apartment"
             className={FIELD}
           />
-          {zipDiffers && (
-            <p className="mt-1.5 text-xs font-medium text-theme-primary">
-              Your quote will be priced to {zip.trim()} instead of {quotedZip}.
-            </p>
-          )}
+        </div>
+
+        <div>
+          <label htmlFor="city" className={LABEL}>
+            City <span className="text-theme-primary">*</span>
+          </label>
+          <input
+            id="city"
+            name="city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            required
+            autoComplete="address-level2"
+            placeholder="City"
+            className={FIELD}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="state" className={LABEL}>
+            State <span className="text-theme-primary">*</span>
+          </label>
+          <input
+            id="state"
+            name="state"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            required
+            autoComplete="address-level1"
+            placeholder="State"
+            className={FIELD}
+          />
         </div>
 
         <div>
@@ -177,33 +194,25 @@ export function ShippingAddressFields({
         </div>
 
         <div>
-          <label htmlFor="city" className={LABEL}>
-            City
+          <label htmlFor="addressZip" className={LABEL}>
+            Zipcode <span className="text-theme-primary">*</span>
           </label>
           <input
-            id="city"
-            name="city"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
+            id="addressZip"
+            name="addressZip"
+            value={zip}
+            onChange={(e) => setZip(e.target.value)}
             required
-            autoComplete="address-level2"
+            inputMode="text"
+            autoComplete="postal-code"
+            placeholder="Zipcode"
             className={FIELD}
           />
-        </div>
-
-        <div>
-          <label htmlFor="state" className={LABEL}>
-            State / Province
-          </label>
-          <input
-            id="state"
-            name="state"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-            required
-            autoComplete="address-level1"
-            className={FIELD}
-          />
+          {zipDiffers && (
+            <p className="mt-1.5 text-xs font-medium text-theme-primary">
+              Your quote will be priced to {zip.trim()} instead of {quotedZip}.
+            </p>
+          )}
         </div>
       </div>
     </div>

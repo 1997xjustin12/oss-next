@@ -39,10 +39,15 @@ export type QuoteDraft = {
   zip: string
   /** 'US' or 'CA' — the two the storefront sells into. */
   country: string
-  contactMethod: string
-  interests: string[]
-  timeline: string
+  /**
+   * The "Shipping note" field.
+   *
+   * Named `details` because that is what the form field and the lead note have
+   * always been called; the 2026-09-23 design only relabelled it.
+   */
   details: string
+  /** False when the visitor unticked "invoice address is the same". */
+  invoiceSameAsDelivery: boolean
 }
 
 export async function readQuoteDraft(): Promise<QuoteDraft | null> {
@@ -66,10 +71,10 @@ export async function readQuoteDraft(): Promise<QuoteDraft | null> {
       state: String(draft.state ?? ''),
       zip: String(draft.zip ?? ''),
       country: String(draft.country ?? 'US'),
-      contactMethod: String(draft.contactMethod ?? 'phone'),
-      interests: Array.isArray(draft.interests) ? draft.interests.map(String) : [],
-      timeline: String(draft.timeline ?? ''),
       details: String(draft.details ?? ''),
+      // Absent on a draft written before 2026-09-23. Those were all "same as
+      // delivery", since there was nowhere to say otherwise.
+      invoiceSameAsDelivery: draft.invoiceSameAsDelivery !== false,
     }
   } catch {
     // A cookie we cannot parse is one written by an older shape of this form.

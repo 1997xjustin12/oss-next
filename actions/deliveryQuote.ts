@@ -71,10 +71,8 @@ export async function submitDeliveryQuote(formData: FormData) {
     state,
     zip: addressZip,
     country,
-    contactMethod: String(formData.get('contactMethod') ?? 'phone'),
-    interests: formData.getAll('interests').map(String),
-    timeline: field('timeline'),
     details: field('details'),
+    invoiceSameAsDelivery: formData.get('invoiceSameAsDelivery') === 'yes',
   }
 
   // The address the visitor gave beats the ZIP the page was opened with: they
@@ -110,6 +108,13 @@ export async function submitDeliveryQuote(formData: FormData) {
   // no delivery charge to show, which is the one thing the review page exists to
   // show, so the submission is refused rather than quoting nothing.
   if (!zip) fail('zip')
+  // Both are `required` on the checkbox, so the browser stops an honest submit
+  // first. Re-checked here because browser validation is a convenience, not a
+  // guarantee — a posted form can simply omit them, and a lead recorded without
+  // the visitor agreeing to the terms is a record of something that did not
+  // happen.
+  if (formData.get('confirmDelivery') !== 'yes' || formData.get('agreeTerms') !== 'yes')
+    fail('consent')
 
   await deliverQuoteRequest(
     {
@@ -133,9 +138,9 @@ ${String(formData.get('cartSummary')).trim()}` +
 Cart subtotal: ${String(formData.get('cartTotal')).trim()}`
               : '')
           : '',
-        `Preferred contact: ${draft.contactMethod}`,
-        draft.interests.length ? `Interested in: ${draft.interests.join(', ')}` : '',
-        draft.timeline ? `Timeline: ${draft.timeline}` : '',
+        // Only worth saying when it is not the default — a line on every lead
+        // repeating the usual case is noise sales learns to skip.
+        draft.invoiceSameAsDelivery ? '' : 'Invoice address differs from the delivery address.',
       ]
         .filter(Boolean)
         .join('\n'),

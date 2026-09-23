@@ -68,7 +68,12 @@ test.describe('guest', () => {
       await page.locator('#fullName').fill(`${LEAD.first} ${LEAD.last} (automated test, ignore)`)
       await page.locator('#phone').fill(LEAD.phone)
       await page.locator('#email').fill(LEAD.email)
-      await page.locator('#address').fill('123 Test Street, Atlanta, GA 30303')
+      // The address is separate fields, and city/state/ZIP arrive filled from
+      // the ZIP already given — only the street is ever blank here.
+      await page.locator('#address1').fill('123 Test Street')
+      // Both required since the 2026-09-23 design, and re-checked in the action.
+      await page.locator('input[name="confirmDelivery"]').check()
+      await page.locator('input[name="agreeTerms"]').check()
       await page.getByRole('button', { name: /Continue to checkout/i }).click()
       await expect(page).toHaveURL(/\/checkout/)
       await expectNoErrorScreen(page)

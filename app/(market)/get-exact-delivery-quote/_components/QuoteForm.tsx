@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { ArrowLeft, Check, ChevronDown, Mail, Phone } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 import { resolveDeliveryQuote } from '@/lib/deliveryQuote'
 import { readQuoteDraft } from '@/lib/quoteDraft'
 import { submitDeliveryQuote } from '@/actions/deliveryQuote'
-import { QuoteTextField } from './QuoteTextField'
+import { ContactFields } from './ContactFields'
 import { CartLeadFields } from './CartLeadFields'
 import { ShippingAddressFields } from './ShippingAddressFields'
 import { one, type SearchParams } from './searchParams'
@@ -18,29 +18,18 @@ import { one, type SearchParams } from './searchParams'
  * route, so the banner, headings and value props above and below it stay
  * static and indexable while this arrives.
  *
- * No client JS beyond the submit button: the radio group and checkboxes are
- * styled with `peer-checked`, and validation is the browser's plus a real
- * re-check in the action.
+ * The contact and address blocks are client components, because both fall back
+ * to what the guest-lead modal left in `localStorage` — a server-rendered form
+ * cannot see it, which is why this page used to greet a visitor who had just
+ * given their details with an empty form. Everything else here is
+ * server-rendered, and validation is the browser's plus a re-check in the
+ * action.
+ *
+ * Preferred contact, interest and timeline were asked here until 2026-09-23.
+ * The design dropped them and the client confirmed it: they cost three more
+ * decisions on a form whose only job is to get a quote sent. Sales no longer
+ * receives "Preferred contact / Interested in / Timeline" on a quote lead.
  */
-
-const INTERESTS = [
-  { value: 'purchase', label: 'Purchase', defaultChecked: true },
-  { value: 'rent', label: 'Rent', defaultChecked: false },
-  { value: 'rent-to-own', label: 'Rent-To-Own', defaultChecked: false },
-] as const
-
-const TIMELINES = [
-  { value: 'asap', label: 'As Soon As Possible' },
-  { value: '1-2-weeks', label: 'Within 1-2 Weeks' },
-  { value: '1-month', label: 'Within A Month' },
-  { value: '1-3-months', label: '1-3 Months Out' },
-  { value: 'just-researching', label: 'Just Researching For Now' },
-] as const
-
-const CONTACT_METHODS = [
-  { value: 'phone', label: 'Phone Call', Icon: Phone },
-  { value: 'email', label: 'Email', Icon: Mail },
-] as const
 
 /** Keyed by the code the action redirects back with. */
 const ERRORS: Record<string, string> = {
@@ -49,13 +38,14 @@ const ERRORS: Record<string, string> = {
   address: 'Please give the full delivery address — street, city and state.',
   phone: 'Please add a phone number we can reach you on.',
   zip: 'Please set the delivery ZIP code — we cannot quote delivery without it.',
+  consent: 'Please confirm the delivery requirement and agree to the terms.',
 }
-
-const OPTION_CHIP =
-  'flex items-center justify-center gap-2 rounded-md border border-theme-border bg-theme-bg px-3 py-2.5 text-sm font-medium text-theme-muted transition-colors peer-checked:border-theme-primary peer-checked:bg-theme-primary/5 peer-checked:text-theme-primary peer-focus-visible:ring-2 peer-focus-visible:ring-theme-primary/40 dark:border-neutral-700 dark:bg-neutral-900 dark:peer-checked:bg-theme-primary/15 dark:peer-checked:text-red-300'
 
 const SELECT_LIKE =
   'w-full appearance-none rounded-md border border-theme-border bg-theme-bg px-4 py-3 text-sm text-theme-dark outline-none transition-colors focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/25 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white'
+
+const CHECKBOX = 'mt-0.5 h-4 w-4 shrink-0 accent-theme-primary'
+const CHECKBOX_ROW = 'flex items-start gap-2.5 text-sm text-theme-dark dark:text-neutral-200'
 
 export async function QuoteForm({
   searchParams,
@@ -95,9 +85,12 @@ export async function QuoteForm({
           the cart lives in localStorage and this form is server-rendered. */}
       <CartLeadFields />
 
+      {/* "Step 3 of 4" against the design's "Step 2 of 4": the progress bar
+          above this card counts Product and Location as the first two, and the
+          client confirmed the design was mislabelled rather than a renumbering. */}
       <p className="text-sm font-medium text-theme-muted">Step 3 of 4:</p>
       <h2 className="mt-1 text-xl font-bold text-theme-primary sm:text-2xl">
-        Your Contact Information
+        Your Contact Information:
       </h2>
       <p className="mt-1 text-xs text-theme-muted">
         We&rsquo;ll use this to send you your exact delivery quote.
@@ -112,42 +105,9 @@ export async function QuoteForm({
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
-        <QuoteTextField
-          id="fullName"
-          name="fullName"
-          label="Full Name"
-          autoComplete="name"
-          defaultValue={draft?.fullName}
-          required
-        />
-
-        <div>
-          <QuoteTextField
-            id="phone"
-            name="phone"
-            type="tel"
-            label="Phone Number"
-            autoComplete="tel"
-            defaultValue={draft?.phone}
-            required
-          />
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-theme-success-dark dark:text-emerald-400">
-            <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            We&rsquo;ll use this to send you your exact delivery quote.
-          </p>
-        </div>
-
-        <QuoteTextField
-          id="email"
-          name="email"
-          type="email"
-          label="Email Address"
-          autoComplete="email"
-          defaultValue={draft?.email}
-          required
-        />
-      </div>
+      <ContactFields
+        defaults={{ fullName: draft?.fullName, phone: draft?.phone, email: draft?.email }}
+      />
 
       {/* Was a single "Complete Delivery Address" box. Delivery is priced per
           address and a ZIP alone cannot say whether a truck can reach the site,
@@ -165,101 +125,67 @@ export async function QuoteForm({
         }}
       />
 
-      {/* CSS-only radio group — no client JS for a two-option choice. */}
-      <fieldset className="mt-6">
-        <legend className="text-sm font-semibold text-theme-dark dark:text-white">
-          Best Way To Contact You{' '}
-          <span className="text-theme-primary" aria-hidden>
-            *
-          </span>
-          <span className="sr-only">(required)</span>
-        </legend>
-
-        <div className="mt-2.5 grid max-w-md grid-cols-2 gap-3">
-          {CONTACT_METHODS.map(({ value, label, Icon }) => (
-            <label key={value} className="relative block cursor-pointer">
-              <input
-                type="radio"
-                name="contactMethod"
-                value={value}
-                defaultChecked={(draft?.contactMethod ?? 'phone') === value}
-                className="peer sr-only"
-              />
-              <span className={OPTION_CHIP}>
-                <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                {label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset className="mt-6">
-        <legend className="text-sm font-semibold text-theme-dark dark:text-white">
-          What are you interested in?{' '}
-          <span className="font-normal text-theme-muted">(Select all that apply)</span>
-        </legend>
-
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:gap-10">
-          {INTERESTS.map((item) => (
-            <label
-              key={item.value}
-              className="relative flex cursor-pointer items-center gap-2.5 text-sm text-theme-mid dark:text-neutral-200"
-            >
-              <input
-                type="checkbox"
-                name="interests"
-                value={item.value}
-                defaultChecked={draft ? draft.interests.includes(item.value) : item.defaultChecked}
-                className="peer h-5 w-5 shrink-0 appearance-none rounded border border-theme-border bg-theme-subtle transition-colors checked:border-theme-primary checked:bg-theme-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary/40 dark:border-neutral-600 dark:bg-neutral-700 dark:checked:bg-neutral-900"
-              />
-              <Check
-                className="pointer-events-none absolute left-0.5 top-1/2 h-4 w-4 -translate-y-1/2 stroke-[3] text-theme-primary opacity-0 transition-opacity peer-checked:opacity-100"
-                aria-hidden
-              />
-              {item.label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <div className="mt-6">
-        <label htmlFor="timeline" className="text-sm font-semibold text-theme-dark dark:text-white">
-          When are you looking to get a container?
-        </label>
-        <div className="relative mt-2.5 max-w-md">
-          <select
-            id="timeline"
-            name="timeline"
-            defaultValue={draft?.timeline || '1-2-weeks'}
-            className={`${SELECT_LIKE} pr-10`}
-          >
-            {TIMELINES.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-muted"
-            aria-hidden
-          />
-        </div>
-      </div>
+      {/* Nothing on this page collects a billing address, so unticking this
+          changes no field here — it travels to the lead so whoever prices the
+          order knows to ask for one. Ticked by default, as checkout is. */}
+      <label className={`mt-6 ${CHECKBOX_ROW}`}>
+        <input
+          type="checkbox"
+          name="invoiceSameAsDelivery"
+          value="yes"
+          defaultChecked
+          className={CHECKBOX}
+        />
+        Invoice address is the same as delivery address
+      </label>
 
       <div className="mt-6">
         <label htmlFor="details" className="text-sm font-semibold text-theme-dark dark:text-white">
-          Additional Details <span className="font-normal text-theme-muted">(optional)</span>
+          Shipping note <span className="font-normal text-theme-muted">(optional)</span>
         </label>
-        <textarea
+        {/* Still `details` on the wire: the action and the stored lead already
+            carry that name, so renaming the field would only rename it. */}
+        <input
           id="details"
           name="details"
-          rows={3}
           defaultValue={draft?.details}
-          placeholder="Tell us anything that will help us provide the most accurate quote."
-          className={`${SELECT_LIKE} mt-2.5 block max-w-xl resize-y placeholder:text-theme-muted`}
+          placeholder="Anything that helps us deliver — gate codes, access, timing."
+          className={`${SELECT_LIKE} mt-2.5 block h-12 w-full placeholder:text-theme-muted`}
         />
       </div>
+
+      {/* Both required, and neither ticked to begin with. The design draws them
+          ticked, but a pre-ticked consent is not consent — the visitor has to
+          be the one who agrees. Enforced by the browser and re-checked in the
+          action, the same pair checkout already gates Place Order on. */}
+      <label className={`mt-6 ${CHECKBOX_ROW}`}>
+        <input type="checkbox" name="confirmDelivery" value="yes" required className={CHECKBOX} />
+        I confirm I&rsquo;ve read the delivery requirement and my site is suitable for delivery.
+      </label>
+
+      <label className={`mt-3 ${CHECKBOX_ROW}`}>
+        <input type="checkbox" name="agreeTerms" value="yes" required className={CHECKBOX} />
+        <span>
+          I agree to the{' '}
+          <Link
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-theme-primary hover:underline"
+          >
+            terms &amp; conditions
+          </Link>{' '}
+          and{' '}
+          <Link
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-theme-primary hover:underline"
+          >
+            privacy policy
+          </Link>
+        </span>
+      </label>
 
       <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Link
