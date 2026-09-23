@@ -592,7 +592,6 @@ export function ProductInfoPanel({
   /** Open only while a signed-out visitor is being asked for their details. */
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   /** Set once a quote has been filed this session, so the modal can say so. */
-  const [quoteSaved, setQuoteSaved] = useState(false);
 
   // When the shell swaps to a different product, reset both states. Done while
   // rendering rather than in an effect, so the panel never paints one frame of
@@ -1322,18 +1321,17 @@ export function ProductInfoPanel({
    *
    * Does not add to the cart: they have not asked to yet.
    */
+  /**
+   * Take the details and file the quote, from the modal's Get Quote button.
+   *
+   * One press, because step two announces that the quotation is on its way —
+   * so the quote has to exist by the time it says so. These were split between
+   * 2026-09-22 and 2026-09-23, when step two carried a Save Quote button of its
+   * own; the client's flow put them back together.
+   */
   function handleLeadSubmit(lead: Omit<GuestLead, "capturedAt">) {
     setGuestLead(lead);
-  }
 
-  /**
-   * File the quote, from the modal's Save Quote button.
-   *
-   * Separate from handleLeadSubmit since the 2026-09-22 design: giving details
-   * and filing the quote used to happen in one move, which left the second step
-   * announcing something the visitor had not asked for and no button to press.
-   */
-  function handleSaveQuote() {
     const stored = getGuestLead();
     saveQuote({
       productTitle: activeProduct.desc_title || activeProduct.title,
@@ -1347,9 +1345,8 @@ export function ProductInfoPanel({
       totalSuffix: priceDisplay.suffix || undefined,
       // setGuestLead has just written it, so this reads back the stamped
       // version rather than rebuilding the timestamp here.
-      lead: stored ?? { fullName: "", email: "", phone: "", address: "", capturedAt: new Date().toISOString() },
+      lead: stored ?? { ...lead, capturedAt: new Date().toISOString() },
     });
-    setQuoteSaved(true);
   }
 
   function addSelectedToCart() {
@@ -2068,12 +2065,7 @@ export function ProductInfoPanel({
         quoteTotal={quoteTotal}
         quoteTotalSuffix={priceDisplay.suffix}
         onSubmit={handleLeadSubmit}
-        onSaveQuote={handleSaveQuote}
-        onDismiss={() => {
-          setLeadModalOpen(false);
-          setQuoteSaved(false);
-        }}
-        quoteSaved={quoteSaved}
+        onDismiss={() => setLeadModalOpen(false)}
         onAddressZipChange={setPickedZip}
       />
 

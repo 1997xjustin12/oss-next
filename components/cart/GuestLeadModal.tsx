@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, Check, MapPin, Phone, X } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, X } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import Link from 'next/link'
@@ -10,6 +10,7 @@ import { PlpLink } from '@/components/shared/PlpLink'
 import { ROUTES } from '@/config/routes'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { getGuestLead } from '@/lib/guestCapture'
+import { readVisitorZip } from '@/lib/visitorZip'
 import type { GuestLead } from '@/lib/guestCapture'
 
 /**
@@ -18,8 +19,10 @@ import type { GuestLead } from '@/lib/guestCapture'
  *
  * Two views on one track:
  *
- *   1. **Details** — name, email, phone, address. One action: Get Quote.
- *   2. **Quote** — the priced selection, with Continue shopping / Add to cart.
+ *   1. **Details** — name, email, phone, ZIP. One action: Get Quote, which
+ *      both records the lead and files the quote.
+ *   2. **Quote** — the priced selection, and confirmation that the quotation
+ *      is coming by email. One state: there is nothing left to press.
  *
  * The second view is the point. Asking for contact details in exchange for
  * nothing is a toll gate; asking in exchange for a quote the visitor can read
@@ -57,13 +60,15 @@ type Props = {
   quoteTotal: string
   /** e.g. `/mo` — kept separate so it can be set smaller than the figure. */
   quoteTotalSuffix?: string
-  /** Details captured. The modal then advances to the quote itself. */
-  onSubmit: (lead: Omit<GuestLead, 'capturedAt'>) => void
   /**
-   * File the quote. The caller saves it and flips `quoteSaved`, which is what
-   * moves step two from "here is your quote" to "we will email it to you".
+   * Details captured, and the quote filed.
+   *
+   * One action, because that is what the visitor pressed. A separate Save
+   * Quote button lived on step two between 2026-09-22 and 2026-09-23 and was
+   * removed: the step announces that the quotation is coming by email, so
+   * there is nothing left for a second press to do.
    */
-  onSaveQuote: () => void
+  onSubmit: (lead: Omit<GuestLead, 'capturedAt'>) => void
   /** Close without adding — the X, Escape, or the backdrop. */
   onDismiss: () => void
   /**
@@ -75,14 +80,6 @@ type Props = {
    * label, and worse than showing none.
    */
   onAddressZipChange?: (postcode: string) => void
-  /**
-   * True once the caller has filed this quote.
-   *
-   * This is the whole difference between step two's two states: unsaved offers
-   * Save Quote, saved says the quotation is coming by email and turns that same
-   * button into "Quote Saved!" — the confirmation sits where the action was.
-   */
-  quoteSaved?: boolean
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -106,10 +103,8 @@ export function GuestLeadModal({
   quoteTotal,
   quoteTotalSuffix,
   onSubmit,
-  onSaveQuote,
   onDismiss,
   onAddressZipChange,
-  quoteSaved = false,
 }: Props) {
   const [step, setStep] = useState<Step>('details')
   /**
@@ -125,9 +120,36 @@ export function GuestLeadModal({
   const [fullName, setFullName] = useState(stored?.fullName ?? '')
   const [email, setEmail] = useState(stored?.email ?? '')
   const [phone, setPhone] = useState(stored?.phone ?? '')
-  const [address, setAddress] = useState(stored?.address ?? '')
+  /**
+   * The ZIP, from the lead if we have one and from the browser's own ZIP if
+   * not.
+   *
+   * Nobody reaches this modal without having given a ZIP — the product page
+   * behind it will not price anything until they do — so an empty box here was
+   * the site asking twice for something it had already been told.
+   */
+  const [address, setAddress] = useState(stored?.address || readVisitorZip().postcode || '')
   const [error, setError] = useState<string | null>(null)
   const [addressOpen, setAddressOpen] = useState(false)
+
+  /**
+   * Re-seed the ZIP each time the dialog opens.
+   *
+   * The panel renders this component on every page load, so the initialiser
+   * above runs before the visitor has typed anything — and typing a ZIP into
+   * the page behind is usually the first thing they do. Seeding only at mount
+   * therefore left the box empty in exactly the case where we knew the answer.
+   *
+   * Adjusted during render rather than from an effect: this is state derived
+   * from a prop changing, which is React's own pattern for it, and it avoids a
+   * paint with the wrong value in the box. It only fills a blank, so it never
+   * overwrites what the visitor typed here.
+   */
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setAddress((current) => current || readVisitorZip().postcode || '')
+  }
 
   const firstFieldRef = useRef<HTMLInputElement>(null)
 
@@ -366,17 +388,23 @@ export function GuestLeadModal({
                       className={FIELD}
                     />
 
-                    {/* Opens downward, capped below the 226px the slide
-                        track leaves under this field — the track clips
-                        overflow, so an uncapped list would be cut off. Upward
-                        fits too, but lands squarely on the Email input and
-                        reads as that field's suggestions rather than this
-                        one's. */}
+                    {/* Opens upward, capped so the slide track — which clips
+                        overflow — cannot cut it off.
+
+                        This used to drop downward, on the reasoning that
+                        upward lands on the Email input and reads as that
+                        field's suggestions. That is true and it is still the
+                        cost of this. It is the smaller cost: this is the last
+                        field on the form, so Get Quote sits ~16px below it and
+                        a downward list covers the button at any height. On a
+                        phone that made the primary action untappable — a tap
+                        on Get Quote picked a suggestion instead. Measured at
+                        390px: list y 645–703, button y 661–709. */}
                     {addressOpen &&
                       (addressResults.length > 0 || addressLoading || !!addressError) && (
                         <ul
                           role="listbox"
-                          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-y-auto rounded-md border border-theme-border bg-theme-bg shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
+                          className="absolute bottom-full left-0 right-0 z-20 mb-1 max-h-52 overflow-y-auto rounded-md border border-theme-border bg-theme-bg shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
                         >
                           {addressLoading && addressResults.length === 0 && (
                             <li className="px-3 py-2.5 text-sm text-theme-muted">Searching…</li>
@@ -458,31 +486,13 @@ export function GuestLeadModal({
               <h2 className="text-xl font-extrabold tracking-tight text-theme-dark dark:text-white sm:text-2xl">
                 Your Quote:
               </h2>
-              {/* The two states of this step, in one sentence each. Before
-                  saving it is a quote they are reading; after, it is a promise
-                  about what happens next — and repeating "here is your quote"
-                  at that point would read as though nothing had happened. */}
-              {quoteSaved ? (
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
-                  Thank you for providing your information. We will send your final
-                  quotation to your email address within 24 hours.
-                </p>
-              ) : (
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
-                  {fullName ? (
-                    <>
-                      Thanks, <span className="font-bold text-theme-dark dark:text-white">{fullName.split(' ')[0]}</span>.{' '}
-                    </>
-                  ) : null}
-                  Here&rsquo;s what you asked about — a specialist will follow up.
-                  {email ? (
-                    <>
-                      {' '}We&rsquo;ve got you at{' '}
-                      <span className="font-bold text-theme-dark dark:text-white">{email}</span>.
-                    </>
-                  ) : null}
-                </p>
-              )}
+              {/* One state since 2026-09-23. Get Quote files the quote, so by
+                  the time this step is on screen the quotation is already on
+                  its way and there is nothing conditional left to say. */}
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
+                Thank you for providing your information. We will send your final
+                quotation to your email address within 24 hours.
+              </p>
 
               <div className="mt-5 overflow-hidden rounded-md border border-theme-border dark:border-neutral-800">
                 <div className="flex flex-wrap items-center justify-between gap-3 bg-theme-subtle px-4 py-3 dark:bg-neutral-800/60">
@@ -543,28 +553,9 @@ export function GuestLeadModal({
                 </div>
               </div>
 
-              {/* One button, two jobs: the action, then the receipt for it.
-                  Disabled rather than removed once saved — the confirmation is
-                  worth more in the place the visitor just pressed than in a line
-                  of text somewhere below it, and leaving it live would invite a
-                  second press that files nothing. */}
-              <button
-                type="button"
-                onClick={quoteSaved ? undefined : onSaveQuote}
-                disabled={quoteSaved}
-                className={`${PRIMARY_BUTTON} mt-5 h-12 w-full text-base disabled:cursor-default disabled:hover:bg-theme-primary`}
-              >
-                {quoteSaved ? (
-                  <>
-                    <Check className="mr-2 h-5 w-5" aria-hidden />
-                    Quote Saved!
-                  </>
-                ) : (
-                  'Save Quote'
-                )}
-              </button>
-
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {/* No Save Quote button: Get Quote on step one already filed it.
+                  A button here had nothing left to do but be pressed twice. */}
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <PlpLink href={ROUTES.PLP} className={`${SECONDARY_BUTTON} gap-2`}>
                   <ArrowLeft className="h-4 w-4" aria-hidden />
                   Continue Shopping
@@ -574,20 +565,11 @@ export function GuestLeadModal({
                   className={`${SECONDARY_BUTTON} gap-2`}
                 >
                   <Phone className="h-4 w-4" aria-hidden />
-                  {/* Before saving, the offer is expertise; after, the quote is
-                      already coming and the reason to ring is the price. */}
-                  {quoteSaved ? 'Call for Lowest Price' : `Talk to an expert ${CONTACT_NUMBER}`}
+                  {/* The quotation is already coming, so the reason to ring is
+                      the price rather than the advice. */}
+                  Call for Lowest Price
                 </Link>
               </div>
-
-              {quoteSaved && (
-                <p className="mt-5 text-center text-xs text-theme-muted">
-                  Saved to this browser.{' '}
-                  <Link href={ROUTES.SAVED_QUOTES} className="underline underline-offset-2">
-                    View saved quotes
-                  </Link>
-                </p>
-              )}
               </div>
             </section>
           </div>
