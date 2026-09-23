@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
 import { CheckCircle2, Globe, Lock, MessagesSquare } from 'lucide-react';
 import { setChatCountriesAction } from '@/actions/chatRegion';
 import { CHAT_COUNTRIES_RELAXED, CHAT_COUNTRIES_STRICT } from '@/config/chat';
@@ -52,10 +54,9 @@ const OPTIONS = [
   },
 ];
 
-export default async function ChatSettingsPage({ searchParams }: Props) {
-  const [{ saved }, strict] = await Promise.all([searchParams, readChatStrictFlag()]);
+export default function ChatSettingsPage({ searchParams }: Props) {
+  // Env, not request data — safe to read in the static shell.
   const locked = isRegionLocked();
-  const current = strict ? CHAT_COUNTRIES_STRICT : CHAT_COUNTRIES_RELAXED;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -69,19 +70,10 @@ export default async function ChatSettingsPage({ searchParams }: Props) {
         </p>
       </header>
 
-      {saved && (
-        <p
-          role="status"
-          className="mb-6 flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3.5 py-2.5 text-sm font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400"
-        >
-          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-          Saved. The assistant is now offered in {current.join(', ')}. It can take up to 20 seconds
-          to apply everywhere.
-        </p>
-      )}
-
       {/* Stated before the choice, because otherwise the screen reads as though
-          it has no effect and the switch looks broken. */}
+          it has no effect and the switch looks broken. Above the saved banner
+          rather than below it since the banner streams in — a warning that
+          appears after the thing it qualifies is a warning arriving late. */}
       {!locked && (
         <p className="mb-6 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -91,6 +83,53 @@ export default async function ChatSettingsPage({ searchParams }: Props) {
             everyone whichever option is selected. Your choice is still saved and does apply in
             production.
           </span>
+        </p>
+      )}
+
+      {/* Reading the stored setting is request-time work, so it streams in
+          behind its own boundary, as on /admin/product-panel. Without one,
+          cacheComponents reports uncached data on every render and navigation
+          — this screen logged that error on every visit until 2026-09-23. */}
+      <Suspense
+        fallback={
+          <div className="h-72 animate-pulse rounded-lg bg-theme-subtle dark:bg-neutral-900" />
+        }
+      >
+        <CountryChoice searchParams={searchParams} />
+      </Suspense>
+
+      <footer className="mt-8 rounded-lg border border-dashed border-theme-border p-4 text-xs leading-relaxed text-theme-muted dark:border-neutral-700 dark:text-neutral-500">
+        <p>
+          <strong className="font-semibold">If this setting cannot be read</strong> — Redis
+          unreachable, say — the assistant falls back to US and Canada rather than switching itself
+          off. Customers keep their assistant; only testing from the Philippines stops until it
+          recovers.
+        </p>
+        <p className="mt-2">
+          This is a usage control, not a security boundary. It reads the visitor&rsquo;s country from
+          the hosting platform, which a VPN defeats in both directions. Nothing behind it should
+          treat the country as proven.
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+async function CountryChoice({ searchParams }: Props) {
+  await connection();
+  const [{ saved }, strict] = await Promise.all([searchParams, readChatStrictFlag()]);
+  const current = strict ? CHAT_COUNTRIES_STRICT : CHAT_COUNTRIES_RELAXED;
+
+  return (
+    <>
+      {saved && (
+        <p
+          role="status"
+          className="mb-6 flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3.5 py-2.5 text-sm font-semibold text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400"
+        >
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+          Saved. The assistant is now offered in {current.join(', ')}. It can take up to 20 seconds
+          to apply everywhere.
         </p>
       )}
 
@@ -152,20 +191,6 @@ export default async function ChatSettingsPage({ searchParams }: Props) {
           })}
         </ul>
       </section>
-
-      <footer className="mt-8 rounded-lg border border-dashed border-theme-border p-4 text-xs leading-relaxed text-theme-muted dark:border-neutral-700 dark:text-neutral-500">
-        <p>
-          <strong className="font-semibold">If this setting cannot be read</strong> — Redis
-          unreachable, say — the assistant falls back to US and Canada rather than switching itself
-          off. Customers keep their assistant; only testing from the Philippines stops until it
-          recovers.
-        </p>
-        <p className="mt-2">
-          This is a usage control, not a security boundary. It reads the visitor&rsquo;s country from
-          the hosting platform, which a VPN defeats in both directions. Nothing behind it should
-          treat the country as proven.
-        </p>
-      </footer>
-    </div>
+    </>
   );
 }
