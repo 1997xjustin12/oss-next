@@ -81,6 +81,22 @@ export type DeliveryRates = {
   is_rent_to_own: boolean
   handling_fee: number
   relocation_fee: number
+  /**
+   * Sales tax as a fraction of the goods sub-total, or null when the quote
+   * carried none.
+   *
+   * A rate rather than an amount because the quote upstream is always for a
+   * single unit while the product page prices whatever quantity is on screen —
+   * the same reason delivery is multiplied locally. It comes from the very
+   * reply the delivery quote comes from, so showing tax on a product page
+   * costs no extra call.
+   *
+   * Null covers both "no rate configured" and a zero sub-total. The UI keeps
+   * saying "Calculated at checkout" for null rather than printing $0.00, which
+   * is what it said for every address until the backend loaded rates on
+   * 2026-09-23.
+   */
+  tax_rate: number | null
   options: DeliveryRateOption[]
   /** Set when no delivery option can be quoted and the customer should call. */
   call_for_rate: boolean

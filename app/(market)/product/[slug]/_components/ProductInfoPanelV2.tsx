@@ -1080,6 +1080,28 @@ export function ProductInfoPanelV2({
   const deliveryInQuote = selection.tab === "buy" ? deliveryTotal : 0;
 
   /**
+   * Sales tax on the goods, for purchases.
+   *
+   * The visitor gives a ZIP to price delivery, and the reply that comes back
+   * prices tax for the same destination — so the page already holds everything
+   * needed to say what tax will be, and deferring it to checkout was leaving an
+   * answer unread rather than not having one.
+   *
+   * Purchases only, on the same reasoning as delivery above: rent and
+   * rent-to-own quote a *monthly* payment, while the rate upstream was worked
+   * out against the container's full price. Applying it to a monthly figure
+   * would put a number on screen that no invoice will match, so those tabs keep
+   * saying where it gets worked out.
+   *
+   * Rounded to whole cents here for the same reason the subtotal is: so the
+   * figure added into the total is the figure printed on the line.
+   */
+  const taxTotal =
+    selection.tab === "buy" && deliveryRates?.tax_rate
+      ? Math.round(activeProduct.sale_price * quantity * deliveryRates.tax_rate * 100) / 100
+      : null;
+
+  /**
    * Subtotal: unit price × quantity.
    *
    * Delivery is billed after the order (the backend runs `estimate_only`,
@@ -1100,17 +1122,22 @@ export function ProductInfoPanelV2({
   );
 
   /**
-   * A quote's "Estimated total": the subtotal plus delivery for a purchase.
+   * A quote's "Estimated total": the subtotal, plus delivery and tax for a
+   * purchase.
    *
-   * A quote is the whole expected cost, delivery included, and every place it
-   * is shown labels it an estimate and lists delivery as its own line.
+   * A quote is the whole expected cost, and every place it is shown labels it
+   * an estimate and lists delivery and tax as their own lines. Tax joined it on
+   * 2026-09-23, when the backend began returning a rate — until then the total
+   * was the only honest thing it could be, which was subtotal plus delivery.
    */
   const quoteTotal = useMemo(
     () =>
       formatMoney(
-        Math.round((activeProduct.sale_price * quantity + deliveryInQuote) * 100) / 100,
+        Math.round(
+          (activeProduct.sale_price * quantity + deliveryInQuote + (taxTotal ?? 0)) * 100,
+        ) / 100,
       ),
-    [activeProduct.sale_price, quantity, deliveryInQuote],
+    [activeProduct.sale_price, quantity, deliveryInQuote, taxTotal],
   );
 
   /**
@@ -1250,13 +1277,16 @@ export function ProductInfoPanelV2({
       charge: true,
     });
 
-    // The row the design asks for. The figure stays honest until the backend
-    // has tax rates loaded — it returns $0 for every address today — so this
-    // says where it is worked out rather than inventing one.
+    // A real figure once the destination is known, and the old deferral
+    // otherwise — on a rental, before a ZIP, or if the backend quotes no rate.
     lines.push({
       label: "Sales Tax",
-      value: "Calculated at checkout",
-      muted: true,
+      value: deliveryLoading
+        ? "Calculating…"
+        : taxTotal !== null
+          ? formatMoney(taxTotal)
+          : "Calculated at checkout",
+      muted: taxTotal === null,
       charge: true,
     });
 
@@ -1271,6 +1301,7 @@ export function ProductInfoPanelV2({
     deliveryTotal,
     deliveryMiles,
     deliveryRates,
+    taxTotal,
     zipcode,
     selection.tab,
   ]);

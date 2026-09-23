@@ -133,6 +133,7 @@ function toDeliveryRates(
   product: ProductHit,
   slug: string,
   zipcode: string,
+  taxRate: number | null,
 ): DeliveryRates {
   const options = (quote.options ?? [])
     .filter((option) => !NOT_A_DELIVERY_PRICE.has(option.id))
@@ -173,6 +174,7 @@ function toDeliveryRates(
     is_rent_to_own: false,
     handling_fee: 0,
     relocation_fee: 0,
+    tax_rate: taxRate,
     options,
     call_for_rate: !options.some((o) => o.key !== 'pickup' && !o.call_for_rate && o.rate !== null),
     phone: SITE.telephoneDisplay,
@@ -231,7 +233,17 @@ export async function fetchDeliveryRates(
       return { ok: false, reason: 'unavailable', message: FALLBACK_MESSAGE }
     }
 
-    return { ok: true, rates: toDeliveryRates(total.shipping, product, slug, zipcode) }
+    // The same reply that priced delivery also prices tax for this
+    // destination. Kept as a rate against the sub-total it was worked out
+    // from, so the page can apply it to the quantity on screen.
+    const taxable = Number(total.sub_total)
+    const taxed = Number(total.total_tax)
+    const taxRate =
+      Number.isFinite(taxable) && Number.isFinite(taxed) && taxable > 0 && taxed > 0
+        ? taxed / taxable
+        : null
+
+    return { ok: true, rates: toDeliveryRates(total.shipping, product, slug, zipcode, taxRate) }
   } catch (err) {
     // "Too far to deliver" and "we need an address" are answers, not faults:
     // they are written for the customer and stay true until the address
