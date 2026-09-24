@@ -355,7 +355,11 @@ export function CartProvider({
     <CartContext value={value}>
       {children}
       {addedNotice === 'toast' ? (
-        <AddedToCartToast item={addedItem} onClose={() => setAddedItem(null)} />
+        <AddedToCartToast
+          item={addedItem}
+          items={value.cart.items}
+          onClose={() => setAddedItem(null)}
+        />
       ) : (
         <AddedToCartModal
           item={addedItem}

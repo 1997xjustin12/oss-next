@@ -113,13 +113,25 @@ test.describe('guest', () => {
 
     await test.step('add to cart', () => addToCartAndOpenCart(page))
 
-    await test.step('checkout goes straight to checkout this time', async () => {
+    // Changed 2026-09-24: a guest goes through the quote form on every order,
+    // not just their first. The form is prefilled from what they gave the
+    // modal, which is what makes always showing it cheap — so this step checks
+    // the prefill rather than just the redirect.
+    await test.step('checkout still detours to the quote form — already filled in', async () => {
       await page.locator('main a[href="/checkout"]').first().click()
-      await expect(page).toHaveURL(/\/checkout$/)
+      await expect(page).toHaveURL(/\/get-exact-delivery-quote/)
       await expectNoErrorScreen(page)
+      await expect(page.locator('#fullName')).toHaveValue(`${LEAD.first} ${LEAD.last}`)
+      await expect(page.locator('#email')).toHaveValue(LEAD.email)
+      await expect(page.locator('#addressZip')).toHaveValue(ZIP)
     })
 
     await test.step('checkout is filled in from the details they gave', async () => {
+      // No expectNoErrorScreen here: a populated checkout renders no <h1> — the
+      // only ones on that route belong to its confirmation, empty-cart and
+      // error states — so the guard waits for an element that will not arrive.
+      // The value assertions below prove the page rendered anyway.
+      await page.goto('/checkout')
       await expect(page.getByPlaceholder('First Name').first()).toHaveValue(LEAD.first)
       await expect(page.getByPlaceholder('Email Address').first()).toHaveValue(LEAD.email)
       await expectPricesFormatted(page)

@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { CheckCircle2, X } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { checkoutDestination } from '@/lib/checkoutRoute'
 import { ROUTES } from '@/config/routes'
 import { formatMoney } from '@/lib/formatters'
 import type { CartItem } from '@/types/cart'
@@ -36,8 +39,28 @@ import type { CartItem } from '@/types/cart'
 
 const DISMISS_MS = 5_000
 
-export function AddedToCartToast({ item, onClose }: { item: CartItem | null; onClose: () => void }) {
+export function AddedToCartToast({
+  item,
+  items,
+  onClose,
+}: {
+  item: CartItem | null
+  /**
+   * The whole cart, for working out where Checkout goes.
+   *
+   * Passed in rather than read from `useCart()`, because CartProvider renders
+   * this toast: importing the hook here would close the loop
+   * AddedToCartToast -> useCart -> CartContext -> AddedToCartToast. That same
+   * cycle through the provider broke the product page on 2026-09-23 — the
+   * context came up half-initialised and the page behaved as though it had
+   * never been given a ZIP.
+   */
+  items: CartItem[]
+  onClose: () => void
+}) {
   const [paused, setPaused] = useState(false)
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
     if (!item || paused) return
@@ -76,9 +99,20 @@ export function AddedToCartToast({ item, onClose }: { item: CartItem | null; onC
             >
               View Cart
             </Link>
+            {/* Guests go through the delivery-quote form, the same as the cart
+                summary's button. This link used to go straight to checkout for
+                everyone, including a guest who had given us nothing — the one
+                way to reach Place Order without ever seeing the form. */}
             <Link
               href={ROUTES.CHECKOUT}
-              onClick={onClose}
+              onClick={(event) => {
+                const destination = checkoutDestination(isAuthenticated, items)
+                if (destination !== ROUTES.CHECKOUT) {
+                  event.preventDefault()
+                  router.push(destination)
+                }
+                onClose()
+              }}
               className="text-xs font-semibold text-theme-muted underline-offset-2 hover:text-theme-primary hover:underline"
             >
               Checkout
