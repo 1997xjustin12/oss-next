@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Play, X, ZoomIn, Maximize2 } from 'lucide-react'
@@ -32,6 +32,18 @@ type Props = {
  * everything downstream — counters, arrows, thumbnails, dots — counts slides
  * rather than images and needs no special case beyond how each one renders.
  */
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
+
+function subscribeToReducedMotion(onChange: () => void) {
+  const query = window.matchMedia(REDUCED_MOTION)
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+
+function getReducedMotion() {
+  return window.matchMedia(REDUCED_MOTION).matches
+}
+
 type Slide =
   | { kind: 'video'; src: string; poster: string; label: string }
   | { kind: 'image'; src: string }
@@ -54,6 +66,16 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
   const current = slides[active]
   const isVideo = current?.kind === 'video'
   const videoRef = useRef<HTMLVideoElement>(null)
+  /**
+   * Honoured, because this plays on its own and never stops.
+   *
+   * An autoplaying loop with no controls is the exact thing "reduce motion"
+   * asks us not to do, and WCAG 2.2.2 wants anything moving for more than five
+   * seconds to be stoppable. So for those visitors it does not start itself and
+   * gets its control bar back, which is both the accommodation and the way to
+   * play it.
+   */
+  const reduceMotion = useSyncExternalStore(subscribeToReducedMotion, getReducedMotion, () => false)
 
   /**
    * Nothing is fetched on page load, and the first frames are ready by the
@@ -126,6 +148,42 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
     }
   }, [isVideo, current?.src])
 
+  /**
+   * Plays while it is on screen, pauses when it is not.
+   *
+   * The gallery sits at the top of a long page, so without this the video
+   * carries on decoding and buffering while someone reads the specifications
+   * two screens below — spending battery and bandwidth on a picture nobody can
+   * see. Pausing also stops the browser buffering further, which is most of the
+   * saving.
+   */
+  useEffect(() => {
+    if (!isVideo || reduceMotion) return
+    const el = videoRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Read live rather than trusting the render-time value. During
+          // hydration `useSyncExternalStore` has to return the server's answer
+          // — false — so for one commit this effect can run believing motion is
+          // allowed, and start a 5MB fetch for a visitor who asked for neither.
+          if (window.matchMedia(REDUCED_MOTION).matches) return
+          // Rejects when the browser declines to autoplay. Muted autoplay is
+          // allowed everywhere this storefront supports, but a rejected promise
+          // is still an unhandled rejection if nobody catches it.
+          void el.play().catch(() => {})
+        } else {
+          el.pause()
+        }
+      },
+      { threshold: 0.25 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [isVideo, reduceMotion, current?.src])
+
   const prev = useCallback(() => {
     setActive(i => (i - 1 + total) % total)
     setZoomed(false)
@@ -190,13 +248,22 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
           className="relative aspect-4/3 rounded-xl overflow-hidden border-2 border-theme-border bg-theme-subtle group cursor-zoom-in hover:border-theme-primary transition-colors"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
-          // A video owns its own clicks — play, scrub, volume — so it is not
-          // also a button that opens the lightbox.
-          onClick={isVideo ? undefined : () => setLightbox(true)}
-          role={isVideo ? undefined : 'button'}
-          aria-label={isVideo ? undefined : 'Open image fullscreen'}
-          tabIndex={isVideo ? undefined : 0}
-          onKeyDown={isVideo ? undefined : (e) => e.key === 'Enter' && setLightbox(true)}
+          // With no control bar of its own, the video is a preview that opens
+          // the real player — the same gesture as every image beside it. Under
+          // reduced motion it keeps its controls, so the click belongs to it.
+          onClick={isVideo && reduceMotion ? undefined : () => setLightbox(true)}
+          role={isVideo && reduceMotion ? undefined : 'button'}
+          aria-label={
+            isVideo && reduceMotion
+              ? undefined
+              : isVideo
+                ? 'Open video fullscreen'
+                : 'Open image fullscreen'
+          }
+          tabIndex={isVideo && reduceMotion ? undefined : 0}
+          onKeyDown={
+            isVideo && reduceMotion ? undefined : (e) => e.key === 'Enter' && setLightbox(true)
+          }
         >
           {current?.kind === 'video' ? (
             <video
@@ -204,12 +271,25 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
               key={current.src}
               src={current.src}
               poster={current.poster || undefined}
-              controls
+              // Silent, looping, no control bar: a moving photograph rather
+              // than something to operate. The lightbox has the real player.
+              //
+              // `muted` is not a preference — no browser autoplays a video with
+              // sound, so without it this simply would not start.
+              loop
+              muted
               playsInline
-              // No autoplay: this sits at the top of the page, and a video that
-              // starts itself is the reason people reach for the back button.
-              // `none` rather than `metadata` — the warming effect above
-              // upgrades it once the browser is idle, so page load pays nothing.
+              disablePictureInPicture
+              // Under reduced motion it does not start itself, so it needs the
+              // controls back to be playable at all.
+              controls={reduceMotion}
+              // Deliberately no `autoPlay` attribute. During hydration
+              // `reduceMotion` has to be the server's answer — false — so the
+              // attribute rendered as true for one commit, and Chrome began
+              // fetching all 5MB before React could correct it. Measured: a
+              // visitor who asked for reduced motion downloaded the whole video
+              // and never played it. The in-view observer starts playback
+              // instead, where the preference can be read live.
               preload="none"
               aria-label={current.label}
               className="absolute inset-0 h-full w-full bg-black object-cover"
