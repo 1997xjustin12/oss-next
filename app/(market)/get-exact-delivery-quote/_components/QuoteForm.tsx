@@ -1,7 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 
-import { resolveDeliveryQuote } from '@/lib/deliveryQuote'
 import { readQuoteDraft } from '@/lib/quoteDraft'
 import { submitDeliveryQuote } from '@/actions/deliveryQuote'
 import { ContactFields } from './ContactFields'
@@ -54,10 +52,7 @@ export async function QuoteForm({ searchParams }: { searchParams: SearchParams }
   const zip = one(params.zip)
   const qty = one(params.qty)
 
-  const [quote, draft] = await Promise.all([
-    resolveDeliveryQuote({ handle, zip, qty }),
-    readQuoteDraft(),
-  ])
+  const draft = await readQuoteDraft()
 
   const error = one(params.error)
   const errorMessage = error
@@ -184,19 +179,6 @@ export async function QuoteForm({ searchParams }: { searchParams: SearchParams }
         </span>
       </label>
 
-      {/* Back only. The one way forward is "Proceed with checkout" in the
-          summary panel, which submits this form — the 2026-09-29 design puts
-          the action beside the total it commits to, and two red buttons doing
-          the same thing on one screen is a choice nobody asked for. */}
-      <div className="mt-8">
-        <Link
-          href={quote.backHref}
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-theme-border bg-theme-bg px-6 py-3 text-sm font-semibold text-theme-dark transition-colors hover:border-theme-primary hover:text-theme-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back
-        </Link>
-      </div>
     </form>
   )
 }
