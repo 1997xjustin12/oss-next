@@ -1,11 +1,23 @@
 'use client'
 
 import Image from 'next/image'
-import { Clock, Container, Info, Lock } from 'lucide-react'
+import { Container, Lock } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { formatMoney } from '@/lib/formatters'
 import type { DeliveryQuoteContext } from '@/types/deliveryQuote'
 import { DeliveryZipEditor } from './DeliveryZipEditor'
+import { QuoteProceedButton } from './QuoteProceedButton'
+
+/**
+ * The card brands and wallets accepted, shown under the action.
+ *
+ * Empty until the artwork lands. The row renders nothing while it is, rather
+ * than eight broken images — drop the files into `public/images/payment/` and
+ * list them here to turn it on. Expected by the 2026-09-29 design: Discover,
+ * Visa, Mastercard, American Express, Diners Club, US Wire Transfer, Apple Pay,
+ * Google Pay.
+ */
+const PAYMENT_METHODS: { src: string; alt: string }[] = []
 
 /**
  * What the visitor is being quoted on, beside the form.
@@ -145,7 +157,7 @@ export function QuoteSummaryPanel({ quote }: { quote: DeliveryQuoteContext }) {
 
           <div className="mt-4 flex items-start justify-between gap-4 border-t border-theme-border pt-4 text-sm dark:border-neutral-800">
             <span className="shrink-0 font-semibold text-theme-mid dark:text-neutral-300">
-              Est. delivery charge
+              Delivery charge
             </span>
             <span
               className={
@@ -158,6 +170,19 @@ export function QuoteSummaryPanel({ quote }: { quote: DeliveryQuoteContext }) {
             </span>
           </div>
 
+          {/* Left out rather than shown as $0.00 when the backend quotes no tax
+              for the destination — see DeliveryQuoteContext.salesTax. */}
+          {!fromCart && quote.salesTax && (
+            <div className="mt-4 flex items-start justify-between gap-4 border-t border-theme-border pt-4 text-sm dark:border-neutral-800">
+              <span className="shrink-0 font-semibold text-theme-mid dark:text-neutral-300">
+                Sales Tax
+              </span>
+              <span className="text-right font-semibold tabular-nums text-theme-dark dark:text-white">
+                {quote.salesTax}
+              </span>
+            </div>
+          )}
+
           {/* Deliberately no combined total for a multi-item cart. Delivery for
               several containers is not the sum of their separate rates — it
               depends on how many trucks and how much total length — so adding
@@ -165,33 +190,34 @@ export function QuoteSummaryPanel({ quote }: { quote: DeliveryQuoteContext }) {
               number that is wrong. */}
           {!fromCart && quote.total && !quote.deliveryPending && (
             <div className="mt-4 flex items-end justify-between gap-4 border-t border-theme-border pt-4 dark:border-neutral-800">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-theme-muted">
-                Estimated total
-              </span>
-              <span className="text-2xl font-bold leading-none tabular-nums tracking-tight text-theme-dark dark:text-white">
+              <span className="text-lg font-bold text-theme-dark dark:text-white">Total</span>
+              <span className="text-2xl font-bold leading-none tabular-nums tracking-tight text-theme-primary">
                 {quote.total}
               </span>
             </div>
           )}
         </div>
 
-        <div className="mt-5 space-y-2.5 rounded-md border border-sky-100 bg-sky-50 p-4 dark:border-sky-900/60 dark:bg-sky-950/40">
-          <p className="flex gap-2.5 text-xs leading-relaxed text-theme-mid dark:text-neutral-300">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" aria-hidden />
-            You&rsquo;ll receive your exact delivery price including taxes after we confirm your
-            details.
-          </p>
-          <p className="flex gap-2.5 text-xs leading-relaxed text-theme-mid dark:text-neutral-300">
-            <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" aria-hidden />
-            We typically respond in under 15 minutes during business hours.
-          </p>
-        </div>
-      </div>
+        {/* The only way forward on this page — the form's own submit button was
+            removed when this arrived, so the action sits beside the total it
+            commits to. */}
+        <QuoteProceedButton />
 
-      <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-theme-muted">
-        <Lock className="h-3 w-3" aria-hidden />
-        Your information is secure and will never be shared.
-      </p>
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-theme-muted">
+          <Lock className="h-3 w-3" aria-hidden />
+          Your information is secure and will never be shared.
+        </p>
+
+        {PAYMENT_METHODS.length > 0 && (
+          <ul className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            {PAYMENT_METHODS.map((method) => (
+              <li key={method.src}>
+                <Image src={method.src} alt={method.alt} width={38} height={24} className="h-6 w-auto" />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </aside>
   )
 }

@@ -7,6 +7,7 @@ import { submitDeliveryQuote } from '@/actions/deliveryQuote'
 import { ContactFields } from './ContactFields'
 import { CartLeadFields } from './CartLeadFields'
 import { ShippingAddressFields } from './ShippingAddressFields'
+import { QUOTE_FORM_ID } from './quoteFormId'
 import { one, type SearchParams } from './searchParams'
 
 /**
@@ -47,14 +48,7 @@ const SELECT_LIKE =
 const CHECKBOX = 'mt-0.5 h-4 w-4 shrink-0 accent-theme-primary'
 const CHECKBOX_ROW = 'flex items-start gap-2.5 text-sm text-theme-dark dark:text-neutral-200'
 
-export async function QuoteForm({
-  searchParams,
-  submitButton,
-}: {
-  searchParams: SearchParams
-  /** The client submit button, passed in so this stays a Server Component. */
-  submitButton: React.ReactNode
-}) {
+export async function QuoteForm({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
   const handle = one(params.handle)
   const zip = one(params.zip)
@@ -72,6 +66,9 @@ export async function QuoteForm({
 
   return (
     <form
+      // Named so the summary panel's "Proceed with checkout" can submit it
+      // from outside this tree — see QuoteProceedButton.
+      id={QUOTE_FORM_ID}
       action={submitDeliveryQuote}
       className="rounded-lg border border-theme-border bg-theme-bg p-5 shadow-sm sm:p-7 dark:border-neutral-800 dark:bg-neutral-900"
     >
@@ -187,7 +184,11 @@ export async function QuoteForm({
         </span>
       </label>
 
-      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Back only. The one way forward is "Proceed with checkout" in the
+          summary panel, which submits this form — the 2026-09-29 design puts
+          the action beside the total it commits to, and two red buttons doing
+          the same thing on one screen is a choice nobody asked for. */}
+      <div className="mt-8">
         <Link
           href={quote.backHref}
           className="inline-flex items-center justify-center gap-2 rounded-md border border-theme-border bg-theme-bg px-6 py-3 text-sm font-semibold text-theme-dark transition-colors hover:border-theme-primary hover:text-theme-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
@@ -195,8 +196,6 @@ export async function QuoteForm({
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
         </Link>
-
-        {submitButton}
       </div>
     </form>
   )

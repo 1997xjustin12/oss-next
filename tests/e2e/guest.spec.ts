@@ -74,7 +74,7 @@ test.describe('guest', () => {
       // Both required since the 2026-09-23 design, and re-checked in the action.
       await page.locator('input[name="confirmDelivery"]').check()
       await page.locator('input[name="agreeTerms"]').check()
-      await page.getByRole('button', { name: /Continue to checkout/i }).click()
+      await page.getByRole('button', { name: /Proceed with checkout/i }).click()
       await expect(page).toHaveURL(/\/checkout/)
       await expectNoErrorScreen(page)
       await expect(page.getByPlaceholder('Email Address').first()).toHaveValue(LEAD.email)

@@ -102,6 +102,7 @@ export async function resolveDeliveryQuote(params: {
   let deliveryLabel: string | null = zip
   let deliveryCharge: string | null = null
   let deliveryPending = true
+  let salesTax: string | null = null
 
   if (hasPrice) {
     // A rent-to-own row's price is the contract total, not a purchase price.
@@ -148,10 +149,27 @@ export async function resolveDeliveryQuote(params: {
       // route, or a price over the ceiling upstream will not publish. Prefer
       // upstream's own formatting so this page and the PDP read the same.
       if (cheapest?.rate != null) {
-        deliveryCharge = cheapest.rate_formatted || formatMoney(cheapest.rate)
+        // Multiplied by quantity, as the product page does: one truck carries
+        // one container, so upstream's single-unit rate is not the charge for
+        // an order of three. Without this the same order was quoted $450 here
+        // and $900 on the product page.
+        const deliveryTotal = cheapest.rate * quantity
+        deliveryCharge = formatMoney(deliveryTotal)
         deliveryPending = false
         lines.push({ label: 'Estimated Delivery', value: deliveryCharge })
-        runningTotal += cheapest.rate
+        runningTotal += deliveryTotal
+      }
+
+      // Tax comes back with the same reply that priced delivery, as a rate
+      // against the goods sub-total — see DeliveryRates.tax_rate. Applied to
+      // the container price only: delivery is billed after the order, so it is
+      // not part of what the backend taxed.
+      if (result.rates.tax_rate && hasPrice) {
+        const taxable = Math.round(unitPrice * quantity * result.rates.tax_rate * 100) / 100
+        if (taxable > 0) {
+          salesTax = formatMoney(taxable)
+          runningTotal += taxable
+        }
       }
     } else {
       deliveryCharge = 'Quoted after we confirm your address'
@@ -170,6 +188,7 @@ export async function resolveDeliveryQuote(params: {
     deliveryLabel,
     deliveryCharge,
     deliveryPending,
+    salesTax,
     lines,
     total: runningTotal > 0 ? formatMoney(runningTotal) : null,
     backHref: handle ? `/product/${handle}` : '/sale-shipping-containers',

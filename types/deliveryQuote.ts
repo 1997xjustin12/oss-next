@@ -49,6 +49,15 @@ export type DeliveryQuoteContext = {
   deliveryCharge: string | null
   /** True when `deliveryCharge` is a note rather than a figure. */
   deliveryPending: boolean
+  /**
+   * Formatted sales tax for this quote, or null when none is quoted.
+   *
+   * Worked out from the rate the delivery lookup already returns, so it costs
+   * no extra call. Null covers a destination the backend charges no tax on and
+   * a quote with no price to tax — the panel then leaves the row out rather
+   * than printing a confident $0.00.
+   */
+  salesTax: string | null
   lines: QuoteLine[]
   total: string | null
   /** Where Back goes: the product page when we know it, else the listing. */

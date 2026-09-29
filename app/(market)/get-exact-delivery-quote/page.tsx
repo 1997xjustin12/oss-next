@@ -7,7 +7,6 @@ import { QuoteStepIndicator } from './_components/QuoteStepIndicator'
 import { QuoteForm } from './_components/QuoteForm'
 import { QuoteSummarySection } from './_components/QuoteSummarySection'
 import { QuoteValueProps } from './_components/QuoteValueProps'
-import { QuoteSubmitButton } from './_components/QuoteSubmitButton'
 import { QuoteFormSkeleton, QuoteSummarySkeleton } from './_components/QuoteSkeletons'
 import type { SearchParams } from './_components/searchParams'
 
@@ -56,7 +55,7 @@ export default function DeliveryQuotePage({ searchParams }: { searchParams: Sear
         <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_390px]">
             <Suspense fallback={<QuoteFormSkeleton />}>
-              <QuoteForm searchParams={searchParams} submitButton={<QuoteSubmitButton />} />
+              <QuoteForm searchParams={searchParams} />
             </Suspense>
 
             <Suspense fallback={<QuoteSummarySkeleton />}>
