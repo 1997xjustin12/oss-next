@@ -56,6 +56,15 @@ export function MobileAddToCartBar({
   watch: React.RefObject<HTMLElement | null>
 }) {
   const [visible, setVisible] = useState(false)
+  /**
+   * Plays once, the first time the bar appears.
+   *
+   * Tied to the first appearance rather than every one: the bar comes and goes
+   * as the ordering block scrolls past, and a button that jumps each time is
+   * one people learn to look past — the opposite of emphasis.
+   */
+  const [nudge, setNudge] = useState(false)
+  const hasNudged = useRef(false)
   const barRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -73,6 +82,14 @@ export function MobileAddToCartBar({
     observer.observe(target)
     return () => observer.disconnect()
   }, [watch])
+
+  useEffect(() => {
+    if (!visible || hasNudged.current) return
+    hasNudged.current = true
+    setNudge(true)
+    const timer = setTimeout(() => setNudge(false), 900)
+    return () => clearTimeout(timer)
+  }, [visible])
 
   // Publish the height for the chat launcher to clear. Measured rather than
   // hard-coded: the title wraps to two lines on a narrow phone, and a guessed
@@ -103,7 +120,7 @@ export function MobileAddToCartBar({
       // DOM cannot be measured or transitioned, and the height it publishes is
       // what the launcher positions against.
       className={[
-        'fixed inset-x-0 bottom-0 z-9980 border-t border-theme-border bg-theme-bg shadow-[0_-4px_16px_rgba(0,0,0,0.10)] transition-transform duration-200 lg:hidden dark:border-neutral-700 dark:bg-neutral-900',
+        'fixed inset-x-0 bottom-0 z-9980 border-t-2 border-theme-primary bg-theme-bg shadow-[0_-8px_28px_rgba(0,0,0,0.22)] transition-transform duration-300 ease-out lg:hidden dark:bg-neutral-900',
         visible ? 'translate-y-0' : 'pointer-events-none translate-y-full',
       ].join(' ')}
       // Hidden from assistive tech and from tab order while off screen, so a
@@ -125,10 +142,10 @@ export function MobileAddToCartBar({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 text-[11px] font-semibold leading-tight text-theme-dark dark:text-white">
+          <p className="line-clamp-1 text-[11px] font-medium leading-tight text-theme-muted">
             {title}
           </p>
-          <p className="mt-0.5 text-sm font-bold text-theme-dark dark:text-white">
+          <p className="mt-0.5 text-lg font-extrabold leading-none tracking-tight text-theme-dark dark:text-white">
             {price}
             {priceSuffix ? (
               <span className="text-[11px] font-semibold text-theme-muted">{priceSuffix}</span>
@@ -140,7 +157,15 @@ export function MobileAddToCartBar({
           type="button"
           onClick={onAddToCart}
           disabled={disabled}
-          className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-[10px] bg-theme-primary px-4 text-[13px] font-bold text-white transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
+          className={[
+            'inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-[10px] bg-theme-primary px-5 text-sm font-bold uppercase tracking-wide text-white',
+            // A ring rather than a heavier shadow: on a white bar the glow is
+            // what separates the button from the surface it sits on.
+            'shadow-[0_4px_14px_rgba(189,17,42,0.45)] ring-2 ring-theme-primary/30',
+            'transition-colors hover:bg-theme-primary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2',
+            'disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none disabled:ring-0',
+            nudge ? 'sticky-cart-nudge' : '',
+          ].join(' ')}
         >
           <ShoppingCart className="h-4 w-4" aria-hidden />
           {label}
