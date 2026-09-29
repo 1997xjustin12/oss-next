@@ -326,5 +326,7 @@ async function logAgent(request: NextRequest, status: number): Promise<void> {
 // happened to the resource PDFs, and to /llms.txt before them. Add the
 // extension when a new kind of asset lands in public/.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|pdf)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|pdf|mp4|webm)$).*)',
+  ],
 }

@@ -18,6 +18,7 @@ import { ROUTES } from "@/config/routes";
 import { capitalizeWords } from "@/lib/utils";
 import { videoSizeKey } from "@/lib/productVideos";
 import { videosForSize } from "@/config/productVideos";
+import { getContainerVideo } from "@/lib/containerVideo";
 import { YouTubeEmbed } from "@/components/product/YouTubeEmbed";
 import { InfoCard } from "@/components/ui/InfoCard";
 
@@ -104,6 +105,10 @@ export function ProductVariantShell({
   // Keyed off the active product, so the size-specific slot follows the size
   // picker. Cheap enough to recompute on render — two object lookups.
   const videos = videosForSize(videoSizeKey(activeProduct));
+  // Resolved from the active product, so a variant or depot change swaps it
+  // with the photographs rather than leaving a 40ft walkaround above a 20ft
+  // container. Null for the products with no film, which is most of them.
+  const containerVideo = getContainerVideo(activeProduct);
   const allImages = (activeProduct.images ?? [])
     .map((img) => img.src)
     .filter(Boolean);
@@ -164,6 +169,7 @@ export function ProductVariantShell({
             <ProductImageGallery
               key={String(activeProduct.objectID)}
               images={allImages}
+              video={containerVideo}
               title={activeProduct.title}
               tag={promoTag}
               inStock={isInStockHit(activeProduct)}
