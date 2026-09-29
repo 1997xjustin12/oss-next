@@ -14,7 +14,7 @@
  * component name and the removed rows, marked in place.
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import {
 } from "lucide-react";
 import type { ProductHit } from "@/types/product";
@@ -35,6 +35,7 @@ import type { GuestLead } from "@/lib/guestCapture";
 import { Stars } from "@/components/product/Stars";
 import { DeliveryZipCheck } from "./DeliveryZipCheck";
 import { ZipGateModal } from "./ZipGateModal";
+import { MobileAddToCartBar } from "./MobileAddToCartBar";
 import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { CONTACT_NUMBER } from "@/lib/helpers";
 import Link from "next/link";
@@ -557,6 +558,11 @@ export function ProductInfoPanelV2({
   }));
 
   const [added, setAdded] = useState(false);
+  /**
+   * The real Add To Cart button, watched by the sticky mobile bar so it only
+   * appears once this has scrolled away.
+   */
+  const addToCartRef = useRef<HTMLButtonElement>(null);
 
   /**
    * How many units the CTA will add.
@@ -1796,7 +1802,12 @@ export function ProductInfoPanelV2({
           )}
 
           <button
+            ref={addToCartRef}
             type="button"
+            // Keeps any scroll-into-view — a jump link, a browser restoring
+            // position, an automated click — from parking this button beneath
+            // the sticky bar, which would be covering the control it mirrors.
+            style={{ scrollMarginBottom: "calc(var(--sticky-cart-h, 0px) + 1rem)" }}
             onClick={handleAddToCartClick}
             disabled={!isGenericDisplay && !inStock}
             className="flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[#BD112A] text-sm font-bold text-white shadow-[inset_0_2px_2px_0_#BD112A,inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2px_0_rgba(255,255,255,0.50),0_4px_15px_0_rgba(0,0,0,0.15)] transition-colors hover:bg-[#A50F24] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F3A5C] disabled:cursor-not-allowed disabled:opacity-45 sm:h-10"
@@ -1928,6 +1939,29 @@ export function ProductInfoPanelV2({
       {/* Sits with the location-conflict modal so both cart-blocking dialogs
           live in one place. */}
       {/* Sits with the other cart-blocking dialogs. */}
+      {/* Everything it shows comes from the same state the ordering block
+          above reads, and pressing it calls the same handler — so a variant or
+          depot change moves both together and it cannot add a container the
+          visitor was not looking at. */}
+      <MobileAddToCartBar
+        image={activeProduct.images?.[0]?.src ?? null}
+        title={activeProduct.desc_title || activeProduct.title}
+        price={priceDisplay.price}
+        priceSuffix={priceDisplay.suffix}
+        label={
+          isGenericDisplay
+            ? "Add To Cart"
+            : added
+              ? "Added"
+              : !inStock
+                ? "Sold Out"
+                : "Add To Cart"
+        }
+        disabled={!isGenericDisplay && !inStock}
+        onAddToCart={handleAddToCartClick}
+        watch={addToCartRef}
+      />
+
       <ZipGateModal
         open={zipGateOpen}
         onResolved={(postcode, depot) => {
