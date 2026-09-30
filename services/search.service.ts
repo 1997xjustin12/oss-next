@@ -285,7 +285,18 @@ export async function getProductsByIds(productIds: (string | number)[]): Promise
     const esResponse = await client.search({
       index: INDEX,
       size: ids.length,
-      query: { terms: { product_id: ids } },
+      query: {
+        bool: {
+          filter: [
+            { terms: { product_id: ids } },
+            // Published only, and safe to be: order history already handles a
+            // product it cannot resolve — the line reads "No longer available"
+            // and Buy Again returns early rather than re-adding it. Which is
+            // the honest outcome for something withdrawn from sale since.
+            { term: { status: 'publish' } },
+          ],
+        },
+      },
     })
 
     return esResponse.hits.hits.map((hit) =>
@@ -331,6 +342,12 @@ export async function getProductsBySkus(skus: string[]): Promise<ProductHit[]> {
             ...wanted.map((sku) => ({ match_phrase: { 'variants.sku': sku } })),
           ],
           minimum_should_match: 1,
+          // Published only. This is what rebuildRestoredItems resolves a saved
+          // cart against, and its rule is already "a line whose product is no
+          // longer in the catalogue is dropped: it cannot be ordered". A
+          // withdrawn product is exactly that, so this makes the rule true
+          // rather than leaving an unorderable line to reach checkout.
+          filter: [{ term: { status: 'publish' } }],
         },
       },
     })
@@ -471,6 +488,13 @@ export async function cachedEsSearch(input: SearchInput) {
       filters.push(cfFilter('payment_term', termFilter.map((t) => `['${t}']`)))
     }
   }
+
+  // Published only — see cachedCustomFieldsSearch for the counts. This is the
+  // widest of the product queries: the listing page, instant search, the agent
+  // API, the MCP tools and the Markdown renderer all come through here, and
+  // none of them should be offering something that is not for sale. Pushed
+  // after the caller's own filters so it cannot be displaced by one of them.
+  filters.push({ term: { status: 'publish' } })
 
   const aggs        = buildAggs(facets)
   const sortClauses = buildSort(sortParam)
