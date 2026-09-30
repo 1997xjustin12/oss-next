@@ -40,7 +40,20 @@ function buildProductDescription(product: ProductHit, location: string): string 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const result = await getProductByHandle(slug)
-  if (!result) return { title: 'Product Not Found' }
+  /**
+   * `notFound()` here, not only in the body below.
+   *
+   * The page streams behind a Suspense boundary, so by the time
+   * `ProductContent` discovers the miss the 200 has already gone out and the
+   * 404 page renders underneath it — a soft 404, which reads as a real page to
+   * a crawler. Metadata is awaited before the shell flushes, so this is the
+   * last point where the status can still be set. Measured 2026-09-30: an
+   * unpublished handle returned HTTP 200 with the "Product Not Found" page.
+   *
+   * Costs no extra lookup — `getProductByHandle` is cached, so the body's call
+   * is the same one.
+   */
+  if (!result) notFound()
   const { product } = result
 
   const rawLocation = getCustomFieldValue(product, 'location')
@@ -112,6 +125,20 @@ async function ProductContent({ params }: Props) {
   )
 }
 
+/**
+ * The shell stays free of `params`, deliberately.
+ *
+ * Checking the handle here would let a miss set a real 404 status instead of
+ * the soft one described in `generateMetadata` — but `params` is runtime data,
+ * and reading it outside the Suspense boundary is what `cacheComponents`
+ * forbids: tried on 2026-09-30, and every render logged "Route
+ * '/product/[slug]': Next.js encountered runtime data during prerendering".
+ *
+ * So the status cannot be fixed from inside this route while its shell is
+ * prerendered. The place that could is proxy.ts, which already rewrites
+ * unknown paths to `/_not-found` with a 404 and would need the published
+ * handle list to do the same here.
+ */
 export default function ProductPage(props: Props) {
   return (
     <Suspense fallback={<PdpSkeleton />}>

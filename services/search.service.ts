@@ -218,6 +218,14 @@ export async function getShippingContainersByLocation(location: string) {
 // grade/payment-type) tied together only by sharing a location — so we
 // fetch every container at that location as `related_products`, mirroring
 // the old WP endpoint's { product, related_products } response shape.
+//
+// **Published only.** An unpublished handle returns null, which the PDP turns
+// into a 404 — a `private` or `draft` product is not something the storefront
+// has to show anyone, and until 2026-09-30 its URL rendered a complete,
+// purchasable page. Every other caller wants the same answer: the agent API,
+// the chat product cards, the MCP tools, the markdown renderer and the
+// delivery quote should none of them be quoting something that is not for
+// sale, so the rule lives here rather than at six call sites.
 export async function getProductByHandle(handle: string): Promise<ProductDetailResponse | null> {
   'use cache'
   cacheLife('hours')
@@ -227,7 +235,16 @@ export async function getProductByHandle(handle: string): Promise<ProductDetailR
     const esResponse = await client.search({
       index: INDEX,
       size: 1,
-      query: { term: { 'handle.keyword': handle } },
+      query: {
+        bool: {
+          filter: [
+            { term: { 'handle.keyword': handle } },
+            // Same field the sitemap, the feeds and cachedCustomFieldsSearch
+            // filter on — see the note there about `status` being a text field.
+            { term: { status: 'publish' } },
+          ],
+        },
+      },
     })
 
     const hit = esResponse.hits.hits[0]
