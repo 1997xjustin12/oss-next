@@ -147,6 +147,30 @@ export async function cachedCustomFieldsSearch(input: CustomFieldsSearchInput) {
     filterClauses.push({ terms: { 'product_category.category_name.keyword': categories } })
   }
 
+  /**
+   * Published only.
+   *
+   * The index is not a catalogue of what is for sale — it holds every product
+   * document, and as of 2026-09-30 that is 10,264 `publish` against 249
+   * `private` and 15 `draft`. **107 of those unpublished ones are in a
+   * shipping-container category**, so without this clause they reached both
+   * callers of this function: the listing API, and the PDP's related products.
+   *
+   * The second is the one that mattered. `related_products` is not a "you may
+   * also like" row — ProductInfoPanel builds the size, condition and grade
+   * selector from it, so an unpublished variant appeared as a selectable
+   * option, priced, and could be added to the cart. A draft container was
+   * purchasable on the Chicago depot's pages, which carried 45 of them.
+   *
+   * `status` rather than `published`: the two agree exactly on every document,
+   * and this is the field `getAllProductHandles` and `getAllProductsForFeed`
+   * already filter on, so the sitemap, the feeds and the storefront now answer
+   * the same question the same way. It is a `text` field, so a `term` query
+   * matches on its single analysed token — aggregating on it needs
+   * `status.keyword` instead.
+   */
+  filterClauses.push({ term: { status: 'publish' } })
+
   const esResponse = await client.search({
     index: INDEX,
     from:  page * hitsPerPage,
