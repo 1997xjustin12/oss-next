@@ -5,5 +5,7 @@
 /** Every file present under `public/resources/pdp-videos/`, as bare filenames. */
 export const CONTAINER_VIDEO_FILES: readonly string[] = [
   'new_20s_iicl.mp4',
+  'new_20s_iicl.webp',
   'used_20s_wwt.mp4',
+  'used_20s_wwt.webp',
 ]
