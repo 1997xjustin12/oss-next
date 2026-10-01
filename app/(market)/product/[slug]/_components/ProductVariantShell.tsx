@@ -19,6 +19,7 @@ import { capitalizeWords } from "@/lib/utils";
 import { videoSizeKey } from "@/lib/productVideos";
 import { videosForSize } from "@/config/productVideos";
 import { getContainerVideo } from "@/lib/containerVideo";
+import { getContainerImages } from "@/lib/containerImages";
 import { YouTubeEmbed } from "@/components/product/YouTubeEmbed";
 import { InfoCard } from "@/components/ui/InfoCard";
 
@@ -109,9 +110,19 @@ export function ProductVariantShell({
   // with the photographs rather than leaving a 40ft walkaround above a 20ft
   // container. Null for the products with no film, which is most of them.
   const containerVideo = getContainerVideo(activeProduct);
-  const allImages = (activeProduct.images ?? [])
-    .map((img) => img.src)
-    .filter(Boolean);
+  /**
+   * Curated photographs when this spec has them, the product's own otherwise.
+   *
+   * A replacement rather than an addition: a content manager who picks the
+   * shots for a spec means those instead of the record's, not alongside them.
+   * Resolved from `activeProduct`, so changing size, condition or grade swaps
+   * the set with everything else on the page.
+   */
+  const curatedImages = getContainerImages(activeProduct);
+  const allImages =
+    curatedImages.length > 0
+      ? curatedImages
+      : (activeProduct.images ?? []).map((img) => img.src).filter(Boolean);
   const promoTag = activeProduct.tags?.find((t) => !/stock/i.test(t));
 
   return (

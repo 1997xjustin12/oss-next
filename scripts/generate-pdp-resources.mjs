@@ -10,9 +10,10 @@
  * and shipped as data.
  *
  * Run it whenever a file is added, removed or renamed under
- * `public/resources/pdp/` or `public/resources/pdp-videos/`. `predev` and `prebuild`
- * do that automatically, so in practice dropping a correctly-named file in is
- * the whole workflow.
+ * `public/resources/pdp/`, `public/resources/pdp-videos/` or
+ * `public/resources/pdp-images/`. `predev` and `prebuild` do that
+ * automatically, so in practice dropping a correctly-named file in is the
+ * whole workflow.
  */
 
 import { readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
@@ -72,4 +73,16 @@ writeManifest({
   exportName: 'CONTAINER_VIDEO_FILES',
   docLine: 'Every file present under `public/resources/pdp-videos/`, as bare filenames.',
   files: listFiles('resources', 'pdp-videos'),
+})
+
+// Curated gallery photographs, named <stem>_<n> — see config/containerImages.ts.
+// Present ones replace the product record's own images; an absent stem leaves
+// the record's images alone, so the gallery needs to know which before it
+// renders either.
+writeManifest({
+  outPath: ['lib', 'data', 'containerImageManifest.ts'],
+  source: 'public/resources/pdp-images/',
+  exportName: 'CONTAINER_IMAGE_FILES',
+  docLine: 'Every file present under `public/resources/pdp-images/`, as bare filenames.',
+  files: listFiles('resources', 'pdp-images'),
 })
