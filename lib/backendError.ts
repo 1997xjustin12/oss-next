@@ -19,5 +19,5 @@ export function logBackendRejection(where: string, status: number, body: unknown
   } catch {
     reason = String(body)
   }
-  console.error(`[${where}] backend refused (HTTP ${status}):`, (reason ?? 'no body').slice(0, 800))
+  console.error('[backendError] backend refused — where, status:', where, status, (reason ?? 'no body').slice(0, 800))
 }

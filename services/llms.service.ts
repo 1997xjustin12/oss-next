@@ -339,7 +339,7 @@ export async function buildLlmsFullTxt(): Promise<string> {
         if (!body) return null
         return [`## ${page.title}`, '', `Source: ${absoluteUrl(path)}`, '', body].join('\n')
       } catch (err) {
-        console.error(`[llms] failed to inline ${path}:`, err)
+        console.error('[llms] failed to inline path:', path, err)
         return null
       }
     }),

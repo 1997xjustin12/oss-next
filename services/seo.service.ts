@@ -106,7 +106,7 @@ export async function getPageSeo(path: string): Promise<PageSeo | null> {
     const raw = await getRedisClient().get<unknown>(seoKey(path));
     return normalize(raw);
   } catch (error) {
-    console.error(`[seo] failed reading overrides for ${path}:`, error);
+    console.error('[seo] failed reading overrides for path:', path, error);
     return null;
   }
 }

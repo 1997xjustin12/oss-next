@@ -63,7 +63,7 @@ export async function getPageContent(path: string): Promise<PageContent | null> 
     const raw = await getRedisClient().get<unknown>(contentKey(path));
     return normalize(raw);
   } catch (error) {
-    console.error(`[content] failed reading copy for ${path}:`, error);
+    console.error('[content] failed reading copy for path:', path, error);
     return null;
   }
 }

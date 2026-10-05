@@ -108,7 +108,7 @@ async function backendFetch<T>(path: string): Promise<FetchResult<T>> {
     if (!res.ok) return { ok: false, status: res.status, data: null }
     return { ok: true, status: res.status, data: (await res.json()) as T }
   } catch (err) {
-    console.error(`[blog] request failed for ${path}:`, err)
+    console.error('[blog] request failed for path:', path, err)
     return { ok: false, status: 502, data: null }
   }
 }
