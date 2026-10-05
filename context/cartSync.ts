@@ -4,7 +4,7 @@ import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import type { Cart, CartItem } from '@/types/cart'
 import type { ProductHit } from '@/types/product'
 import type { User } from '@/types/user'
-import type { Action } from './CartContext'
+import type { Action } from './cartActions'
 
 type SyncDispatch = (action: Action) => void
 

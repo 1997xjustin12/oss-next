@@ -22,7 +22,7 @@ import { DEFAULT_LOCATION } from '@/lib/constants'
 import { formatMoney } from '@/lib/formatters'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { displayRating } from '@/lib/ratings'
-import type { RawRatings } from '@/lib/ratings'
+import type { CustomField, HitData } from './hitData'
 import type { Accessory, BadgeTone } from '@/types/product'
 
 const INDEX         = process.env.NEXT_PUBLIC_SEARCH_INDEX ?? 'onsite_products_index'
@@ -377,48 +377,7 @@ async function runSearch(
   return emptyResults(requests)
 }
 
-// ─── Types matching the actual Elasticsearch document ────────────────────────
-
-type Variant = {
-  price:            string
-  compare_at_price: string
-  sku:              string
-  qty:              number
-}
-
-type ProductImage = {
-  src:      string
-  alt:      string
-  position: number
-}
-
-type ProductCategory = {
-  category_name: string
-  id:            number
-}
-
-type CustomField = {
-  name:     string
-  label?:   string
-  value:    string
-  choices?: string[]
-}
-
-export type HitData = {
-  objectID:         string
-  title:            string
-  handle:           string
-  product_type:     string
-  tags:             string[]
-  status:           string
-  published:        boolean
-  variants:         Variant[]
-  images:           ProductImage[]
-  product_category: ProductCategory[]
-  custom_fields:    CustomField[]
-  ratings:          RawRatings
-  sale_price:       number
-}
+// The document shapes live in ./hitData — see the note there about the cycle.
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

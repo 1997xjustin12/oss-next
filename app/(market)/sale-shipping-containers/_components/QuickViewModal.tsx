@@ -12,7 +12,7 @@ import { DEFAULT_LOCATION } from '@/lib/constants'
 import { displayRating } from '@/lib/ratings'
 import { formatMoney } from '@/lib/formatters'
 import { ROUTES } from '@/config/routes'
-import type { HitData } from './InstantSearchSection'
+import type { HitData } from './hitData'
 
 type Props = {
   open:  boolean

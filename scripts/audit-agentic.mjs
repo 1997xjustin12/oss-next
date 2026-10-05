@@ -64,8 +64,12 @@ function collectTypes(node, out = []) {
   return out
 }
 
+// Every caller passes a literal tag name, but the pattern is built by
+// interpolation — escape rather than depend on that staying true.
+const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 function count(html, tag) {
-  return (html.match(new RegExp(`<${tag}(?=[\\s>])`, 'gi')) || []).length
+  return (html.match(new RegExp(`<${escapeRegExp(tag)}(?=[\\s>])`, 'gi')) || []).length
 }
 
 async function checkPage(path, expectedTypes) {

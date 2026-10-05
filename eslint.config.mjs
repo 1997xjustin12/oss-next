@@ -39,6 +39,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Playwright's own output. Both are gitignored but this list replaces the
+    // defaults rather than extending them, so they were still being linted:
+    // `npx eslint .` reported 2,999 problems, every one of them inside
+    // minified report assets Playwright had written.
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 

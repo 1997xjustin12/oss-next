@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
     )
     return reply(200, { ok: true, orderNumber: orderNumberFrom(created), transactionId })
   } catch (err) {
-    console.error(`[/api/checkout/place-order] order not recorded after charge ${transactionId}`, err)
+    console.error('[/api/checkout/place-order] order not recorded after charge', transactionId, err)
 
     // ── 4. Undo the charge ──────────────────────────────────────────────────
     if (await voidBraintreeTransaction(transactionId)) {

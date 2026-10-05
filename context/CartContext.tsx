@@ -14,15 +14,11 @@ import type { Cart, CartItem } from '@/types/cart'
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
-export type Action =
-  | { type: 'ADD_ITEM';     payload: CartItem; guest?: boolean }
-  | { type: 'REMOVE_ITEM';  id: string }
-  | { type: 'UPDATE_QTY';   id: string; qty: number; guest?: boolean }
-  | { type: 'CLEAR_CART' }
-  | { type: 'RESTORE_CART'; payload: Cart }
-  | { type: 'SET_SERVER_META'; payload: { cartId?: string; referenceNumber?: string } }
-  | { type: 'SET_ABANDONED'; payload: string | null }
-  | { type: 'RESET_SERVER_CART' }
+// Defined in ./cartActions so cartSync can name it without importing this
+// module back — see the note there. Imported for the reducer below and
+// re-exported, because callers already reach for it here.
+import type { Action } from './cartActions'
+export type { Action }
 
 // ── Context shape ─────────────────────────────────────────────────────────────
 

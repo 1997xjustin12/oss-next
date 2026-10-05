@@ -241,6 +241,18 @@ function optimiseImages($: ReturnType<typeof load>): void {
  * after chrome removal (looked up by its element id in the page CSS), not
  * merely the first background rule in the stylesheet.
  */
+/**
+ * Make a string safe to interpolate into a RegExp.
+ *
+ * The id below is already narrow — it comes out of a `[a-z0-9]+` capture, so no
+ * metacharacter can reach the pattern. But building a regex by interpolation
+ * and keeping the safety argument somewhere else is how the next person widens
+ * that capture and quietly creates a ReDoS. Escaping removes the argument.
+ */
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 function lcpCandidates($: ReturnType<typeof load>, css: string): string[] {
   const urls: string[] = []
 
@@ -249,7 +261,7 @@ function lcpCandidates($: ReturnType<typeof load>, css: string): string[] {
   if (id) {
     const rule = css.match(
       new RegExp(
-        `elementor-element-${id}[^{]*\\{[^}]*background-image:\\s*url\\(["']?(https?:[^)"']+?)["']?\\)`,
+        `elementor-element-${escapeRegExp(id)}[^{]*\\{[^}]*background-image:\\s*url\\(["']?(https?:[^)"']+?)["']?\\)`,
         'i',
       ),
     )

@@ -221,7 +221,7 @@ export function useGeoapify(
     } catch (err) {
       // The visitor left mid-request: nothing failed, and nothing is listening.
       if (isAbandonedRequest(err)) return
-      console.error(`[useGeoapify] fetchDepotContainers error (${source}) — location:`, location, err)
+      console.error('[useGeoapify] fetchDepotContainers error — source, location:', source, location, err)
       setDepotContainersError('Could not fetch containers for this location.')
       setDepotContainers([])
     } finally {

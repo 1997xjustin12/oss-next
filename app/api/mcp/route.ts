@@ -175,7 +175,7 @@ async function handleRequest(method: string, params: Record<string, unknown>, id
         // An unexpected throw is still a tool execution failure, not a
         // protocol error — return it as a readable result so the model can
         // react rather than seeing the transport break.
-        console.error(`[mcp] tool ${name} threw:`, err)
+        console.error('[mcp] tool threw:', name, err)
         await recordMcpToolCall(name, true)
         return rpcResult(id, {
           content: [{ type: 'text', text: `The ${name} tool failed unexpectedly. Retry shortly.` }],

@@ -117,7 +117,7 @@ async function toCard(handle: string): Promise<ChatProductCard | null> {
   } catch (err) {
     // One bad handle must not fail the batch — the rest of the shelf is still
     // useful, and a missing card is invisible to the shopper.
-    console.error(`[chat] could not resolve product "${handle}":`, err)
+    console.error('[chat] could not resolve product:', handle, err)
     return null
   }
 }
