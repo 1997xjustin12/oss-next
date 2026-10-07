@@ -22,6 +22,8 @@ import { DEFAULT_LOCATION } from '@/lib/constants'
 import { formatMoney } from '@/lib/formatters'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { displayRating } from '@/lib/ratings'
+import { getContainerImages } from '@/lib/containerImages'
+import { isContainerHit } from '@/lib/pricing'
 import type { CustomField, HitData } from './hitData'
 import type { Accessory, BadgeTone } from '@/types/product'
 
@@ -433,7 +435,21 @@ function StarRow({ rating }: { rating: number }) {
 function ProductHit({ hit }: { hit: HitData }) {
   const [quickView, setQuickView] = useState(false)
 
-  const img      = hit.images?.[0]
+  /**
+   * The curated photograph for this spec, where one exists.
+   *
+   * Same override the product page applies, for the same reason — a tile and
+   * the page it opens should not show two different containers. `_1` is the
+   * first of the set by the numeric ordering in `getContainerImages`, which is
+   * the shot chosen to lead.
+   *
+   * Guarded on `isContainerHit`: the spec resolvers fall back to 20ft / Used /
+   * AS IS for a product carrying none of those fields, so an accessory that
+   * reached this card would otherwise resolve to the `used_20s_asis` stem and
+   * wear a shipping container's photograph.
+   */
+  const curated  = isContainerHit(hit) ? getContainerImages(hit) : []
+  const img      = curated.length ? { src: curated[0], alt: hit.title } : hit.images?.[0]
   const variant  = hit.variants?.[0]
   const price    = hit.sale_price ?? 0
   const location = getCF(hit.custom_fields, 'location')

@@ -11,6 +11,8 @@ import { CONTACT_NUMBER } from '@/lib/helpers'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { displayRating } from '@/lib/ratings'
 import { formatMoney } from '@/lib/formatters'
+import { getContainerImages } from '@/lib/containerImages'
+import { isContainerHit } from '@/lib/pricing'
 import { ROUTES } from '@/config/routes'
 import type { HitData } from './hitData'
 
@@ -32,7 +34,14 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
   // A location conflict is shown by the global prompt — see CartLocationConflictHost.
   const { addContainerToCart } = useAddContainerToCart()
 
-  const images     = hit.images?.length ? hit.images.map((img) => img.src) : []
+  // Curated photographs where the spec has them, the record's otherwise — the
+  // same override the product page and the listing tile apply, so all three
+  // show the same container. Guarded because the spec resolvers fall back to
+  // 20ft / Used / AS IS for anything carrying none of those fields.
+  const curated    = isContainerHit(hit) ? getContainerImages(hit) : []
+  const images     = curated.length
+    ? curated
+    : hit.images?.length ? hit.images.map((img) => img.src) : []
   const sku        = hit.variants?.[0]?.sku ?? ''
   const { value: rating } = displayRating(hit.ratings)
   const price      = hit.sale_price ?? 0
