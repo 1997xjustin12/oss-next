@@ -283,6 +283,9 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
               // Under reduced motion it does not start itself, so it needs the
               // controls back to be playable at all.
               controls={reduceMotion}
+              // And when they do appear, without the overflow menu behind them
+              // — download, playback rate and casting are not what this is for.
+              controlsList="nodownload noplaybackrate noremoteplayback"
               // Deliberately no `autoPlay` attribute. During hydration
               // `reduceMotion` has to be the server's answer — false — so the
               // attribute rendered as true for one commit, and Chrome began
@@ -473,8 +476,24 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
                 key={`lb-${current.src}`}
                 src={current.src}
                 poster={current.poster || undefined}
-                controls
+                // Fullscreen, but still a moving photograph rather than
+                // something to operate: silent, looping, no control bar. The
+                // files carry no audio track at all, so `muted` is belt and
+                // braces — it is also what lets autoplay start.
+                loop
+                muted
                 playsInline
+                disablePictureInPicture
+                // Unlike the inline player this is only mounted once someone
+                // has clicked (see the `lightbox &&` guard above), so it never
+                // renders during hydration and `reduceMotion` is the real
+                // answer by the time this is evaluated. The inline player
+                // cannot do this — see its own note.
+                autoPlay={!reduceMotion}
+                controls={reduceMotion}
+                // Keeps the overflow menu off the controls that reduced-motion
+                // visitors do get: no download, no playback-rate, no casting.
+                controlsList="nodownload noplaybackrate noremoteplayback"
                 // Opened deliberately, so this one may fetch what it needs.
                 preload="metadata"
                 aria-label={current.label}
