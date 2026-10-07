@@ -4,6 +4,7 @@ import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricin
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { normaliseRating } from '@/lib/ratings'
 import { getQuickSpecs } from '@/lib/data/pdpShippingContainers'
+import { getContainerVideo } from '@/lib/containerVideo'
 import type { ProductHit } from '@/types/product'
 import type { FaqItem } from '@/lib/data/pdpShippingContainers'
 
@@ -242,6 +243,13 @@ export function productNode(
 
   const tareWeight = isContainer ? parseTareWeight(getQuickSpecs(product).lbsTare) : undefined
 
+  // Guarded on isContainer: the spec resolvers fall back to Used / AS IS /
+  // 20ft for a product carrying none of those fields, so an accessory would
+  // otherwise resolve to the `used_20s_asis` stem and claim a shipping-
+  // container still as its own picture.
+  const poster = isContainer ? getContainerVideo(product)?.poster : null
+  const posterUrl = poster ? absoluteUrl(poster) : null
+
   // A rolling window rather than a fixed date so this never goes stale —
   // container pricing is reviewed well within a year.
   const priceValidUntil = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)
@@ -255,7 +263,28 @@ export function productNode(
     ...(sku && { sku, mpn: sku, gtin: sku }), // no real GTIN data exists — reusing the SKU, same as mpn
     description,
     url: absoluteUrl(ROUTES.PRODUCT(slug)),
-    image: product.images?.map((img) => img.src).filter(Boolean),
+    /**
+     * The walkaround's poster frame first where this spec has one, then the
+     * product record's own photographs.
+     *
+     * Google takes an array and prefers the earliest usable entry, so this
+     * puts the 1920x1080 still chosen for this exact spec ahead of whatever
+     * the catalogue carries — product rich results want at least 1200px wide,
+     * which the record images do not reliably meet. The record images stay
+     * behind it rather than being replaced: more candidates is strictly better
+     * here, and they are the only images for the ten specs with no film yet.
+     *
+     * The curated gallery photographs are deliberately absent — see the note
+     * on `ogImages` in the PDP route. At ~500px they would rank ahead of the
+     * poster while being too small to qualify.
+     *
+     * `absoluteUrl` because the poster is site-relative, where the record
+     * images are already absolute CDN URLs.
+     */
+    image: [
+      ...(posterUrl ? [posterUrl] : []),
+      ...(product.images?.map((img) => img.src).filter(Boolean) ?? []),
+    ],
     ...(conditionSchema && { itemCondition: conditionSchema }),
     brand: { '@type': 'Brand', name: SITE.name },
     ...(additionalProperty && additionalProperty.length > 0 && { additionalProperty }),

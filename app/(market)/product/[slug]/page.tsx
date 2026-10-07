@@ -6,6 +6,7 @@ import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricin
 import { formatMoney } from '@/lib/formatters'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { resolveContainerVariant } from '@/lib/containerVariant'
+import { getContainerVideo } from '@/lib/containerVideo'
 import { PDP_SHIPPING_CONTAINERS } from '@/lib/data/pdpShippingContainers'
 import { breadcrumbNode, faqNode, graph, productNode, siteNodes } from '@/lib/schema'
 import { JsonLd } from '@/components/shared/JsonLd'
@@ -71,9 +72,44 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: product.title,
       description: [grade, size, location].filter(Boolean).join(' · ') || description,
       type: 'website',
-      images: product.images?.[0]?.src ? [{ url: product.images[0].src, width: 1200, height: 630 }] : [],
+      images: ogImages(product),
     },
   }
+}
+
+/**
+ * The share image: the walkaround's poster frame when this spec has one, the
+ * product record's first photograph otherwise.
+ *
+ * The poster wins because it is a still chosen for this exact size, condition
+ * and grade, where the record image is whatever the catalogue happens to carry
+ * — and because it is the only one of the two that is reliably large enough.
+ * The posters supplied are 1920x1080; an OG card needs at least 600x315 to
+ * render as a large image rather than a thumbnail.
+ *
+ * **Not the curated gallery photographs**, deliberately. They are the better
+ * pictures of the product, but they are supplied around 500x306 — below that
+ * 600x315 floor and well below the 1200px width Google wants for a product
+ * rich result. Re-exported larger they would be the right source here; until
+ * then pointing a crawler at them would be a downgrade.
+ *
+ * Dimensions are declared only for the record image, where 1200x630 is the
+ * existing assumption. The poster's are left out rather than guessed: the
+ * folder README asks for 1280x960 while every file supplied so far is
+ * 1920x1080, so any number written here would be wrong for one of them. Every
+ * crawler fetches the image regardless.
+ *
+ * Site-relative paths are fine — `metadataBase` in app/layout.tsx resolves them.
+ */
+function ogImages(product: ProductHit): NonNullable<NonNullable<Metadata['openGraph']>['images']> {
+  // Guarded: the spec resolvers fall back to Used / AS IS / 20ft for a product
+  // with no container fields, so an accessory would otherwise resolve to the
+  // `used_20s_asis` stem and share a shipping-container walkaround.
+  const poster = isContainerHit(product) ? getContainerVideo(product)?.poster : null
+  if (poster) return [{ url: poster }]
+
+  const first = product.images?.[0]?.src
+  return first ? [{ url: first, width: 1200, height: 630 }] : []
 }
 
 /**
