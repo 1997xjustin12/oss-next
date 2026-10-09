@@ -53,30 +53,42 @@ export function Specifications({ variant }: Props) {
       */}
       <dl className="grid grid-cols-4 lg:grid-cols-8 gap-px overflow-hidden rounded-lg border border-theme-border bg-theme-border">
         {items.map((item) => (
+          // Two divisions: the icon, then everything else. Side by side from
+          // `sm` up, as in the reference artwork. Stacked below it — at four
+          // columns on a 390px screen a cell is 88px, and putting a 20px icon
+          // beside the text leaves about 60px for "EXTERIOR LENGTH".
           <div
             key={item.label}
-            className="flex flex-col items-center gap-1 bg-theme-subtle px-1.5 py-3 text-center sm:gap-1.5 sm:px-3 sm:py-4"
+            className="flex flex-col items-center gap-1 bg-theme-subtle px-1.5 py-3 text-center
+                       sm:flex-row sm:items-center sm:gap-2.5 sm:px-3 sm:py-4 sm:text-left"
           >
-            <Image
-              src={item.image}
-              alt=""
-              // Sources are ~260px square; these are the rendered sizes, so
-              // next/image serves something near them rather than the original.
-              width={28}
-              height={28}
-              className="h-5 w-5 shrink-0 object-contain sm:h-7 sm:w-7"
-            />
-            <dt className="text-[8px] leading-tight font-bold uppercase tracking-wide text-theme-muted sm:text-[10px]">
-              {item.label}
-            </dt>
-            <dd className="m-0">
-              <span className="block text-[11px] font-extrabold leading-tight sm:text-sm lg:text-base">
-                {item.value}
-              </span>
-              <span className="block text-[9px] leading-tight text-theme-muted sm:text-[11px]">
-                {item.sub_value}
-              </span>
-            </dd>
+            {/* Image division */}
+            <div className="shrink-0">
+              <Image
+                src={item.image}
+                alt=""
+                // Sources are ~260px square; these are the rendered sizes, so
+                // next/image serves something near them rather than the original.
+                width={28}
+                height={28}
+                className="h-5 w-5 object-contain sm:h-7 sm:w-7"
+              />
+            </div>
+
+            {/* Everything else */}
+            <div className="min-w-0">
+              <dt className="text-[8px] leading-tight font-bold uppercase tracking-wide text-theme-muted sm:text-[10px]">
+                {item.label}
+              </dt>
+              <dd className="m-0">
+                <span className="block text-[11px] font-extrabold leading-tight sm:text-sm lg:text-base">
+                  {item.value}
+                </span>
+                <span className="block text-[9px] leading-tight text-theme-muted sm:text-[11px]">
+                  {item.sub_value}
+                </span>
+              </dd>
+            </div>
           </div>
         ))}
       </dl>
