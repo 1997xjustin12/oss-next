@@ -1,6 +1,28 @@
 import type { ProductHit } from '@/types/product'
 import { type ContainerVariantKey, resolveContainerVariant } from '@/lib/containerVariant'
 
+/**
+ * Every piece of static, size-dependent copy the product page renders.
+ *
+ * One object, keyed by container size, holding everything that differs between
+ * a 20ft, a 40ft standard and a 40ft high cube. Adding a new kind of content
+ * means adding a property under the size that needs it — not a new top-level
+ * `faq20S` / `specs20S` / `overview20S` triple that the next person has to
+ * discover and wire up separately.
+ *
+ * The shape is:
+ *
+ *   PDP_SHIPPING_CONTAINERS[size]
+ *     .quickSpecs   the three figures in the ordering panel
+ *     .tabs[tabId]  copy for one tab of the body section
+ *     .faq          the accordion below the tabs
+ *
+ * `quickSpecs` and `faq` sit beside `tabs` rather than inside it because
+ * neither is a tab: the quick specs render in the ordering panel at the top of
+ * the page and feed the JSON-LD, and the FAQ is its own accordion underneath
+ * the tab strip.
+ */
+
 export type SpecItem = { label: string; value: string }
 export type FaqItem  = { question: string; answer: string }
 
@@ -33,17 +55,85 @@ export type ContainerResource = {
   type?: ContainerResourceType
 }
 
+/* ── Tabs ──────────────────────────────────────────────────────────────── */
+
+/**
+ * The body tabs, in render order.
+ *
+ * Lives here rather than in the component so the content below can be keyed by
+ * the same ids: `PdpBodyTabId` is derived from this list, so a tab that is
+ * renamed or removed breaks the content object at compile time instead of
+ * leaving copy addressed to a tab that no longer exists.
+ */
+export const PDP_BODY_TABS = [
+  { id: 'overview',   label: 'Overview' },
+  { id: 'specs',      label: 'Specifications' },
+  { id: 'conditions', label: 'Container Conditions' },
+  { id: 'delivery',   label: 'Delivery Info' },
+  { id: 'warranty',   label: 'Warranty' },
+] as const
+
+export type PdpBodyTabId = (typeof PDP_BODY_TABS)[number]['id']
+
+/**
+ * A run of prose — the shape most tab copy takes.
+ *
+ * Provisional: it covers a heading, paragraphs and a bullet list, which is
+ * what the existing overview components are made of. Expect it to grow an
+ * image or a table field once the real copy for the empty tabs arrives.
+ */
+export type ContentSection = {
+  heading?: string
+  /** One string per paragraph. */
+  body?:    string[]
+  bullets?: string[]
+}
+
+/**
+ * The content each tab takes.
+ *
+ * Per-tab rather than one shared shape, because they do not render alike: the
+ * specifications tab is a two-column table and the rest are prose. Keyed by
+ * `PdpBodyTabId`, so adding a tab to `PDP_BODY_TABS` and forgetting to say what
+ * it holds is a type error here.
+ */
+export type PdpTabContentMap = {
+  overview:   { sections: ContentSection[] }
+  specs:      { intro?: string; items: SpecItem[] }
+  conditions: { sections: ContentSection[] }
+  delivery:   { sections: ContentSection[] }
+  warranty:   { sections: ContentSection[] }
+}
+
+/**
+ * Tab content for one size.
+ *
+ * Every tab is optional except `specs`, which all three sizes have and which
+ * the Specifications table has no sensible empty state for. The others are
+ * absent today: `overview` is still three React components under
+ * `_components/overview/`, and `conditions`, `delivery` and `warranty` are the
+ * same copy for every size and live in `BodyTabsSection`. Any of them can move
+ * here by filling in the key.
+ */
+export type ContainerTabs =
+  { [K in PdpBodyTabId]?: PdpTabContentMap[K] } & { specs: PdpTabContentMap['specs'] }
+
+export type QuickSpecs = { cuFt: string; sqFt: string; lbsTare: string }
+
 export type PdpShippingContainerEntry = {
-  quickSpecs: { cuFt: string; sqFt: string; lbsTare: string }
-  specs:      SpecItem[]
+  quickSpecs: QuickSpecs
+  tabs:       ContainerTabs
   faq:        FaqItem[]
 }
+
+/* ── Content ───────────────────────────────────────────────────────────── */
 
 // Neither WordPress nor the new backend carries this data yet.
 // `specs` reflects real spec-sheet copy provided directly for this catalog.
 // `quickSpecs.cuFt` is still a generic published reference figure (no cu ft
 // value has been provided yet) — flag for follow-up if that matters.
 // `faq` per variant is real size-specific copy provided directly for this catalog.
+
 const faq20S: FaqItem[] = [
   { question: 'How much does a 20 foot shipping container weigh?', answer: 'A standard empty (tare) 20 foot shipping container weighs approximately 2,300 kg (5,070 lbs). Its maximum gross weight, which is the total weight of the container and its contents, is around 24,000 kg (52,910 lbs). Therefore, it can carry up to approximately 21,700 kg (47,840 lbs) of cargo.' },
   { question: 'How much does a 20 foot shipping container cost?', answer: 'The cost of a 20 foot shipping container typically ranges from $1,300 to $5,000, depending on factors such as condition, type, and location. Used standard containers usually cost between $1,300 and $3,000, while new standard containers generally range from $3,500 to $5,000.' },
@@ -95,47 +185,62 @@ function build40FtSpecs(externalHeight: string, internalHeight: string): SpecIte
   ]
 }
 
+const specs20S: SpecItem[] = [
+  { label: 'External Length', value: '20 ft' },
+  { label: 'External Width', value: '8 ft' },
+  { label: 'External Height', value: '8 ft 6 in (18 inches shorter than a basketball rim)' },
+  { label: 'Internal Length', value: '19 ft 11 in' },
+  { label: 'Internal Width', value: '7 ft 9 in' },
+  { label: 'Internal Height', value: '7 ft 10 in (8 inches shorter than external height)' },
+  { label: 'Door Width', value: '7 ft 8 in' },
+  { label: 'Door Height', value: '7 ft 5 in' },
+  { label: 'Tare Weight', value: '4,914 lbs (varies by manufacturer and specs)' },
+  { label: 'Best Use', value: 'Fits a queen-sized mattress flat or large refrigerator upright' },
+  { label: 'Space', value: 'Occupies space of a large single parking spot' },
+]
+
 export const PDP_SHIPPING_CONTAINERS: Record<ContainerVariantKey, PdpShippingContainerEntry> = {
   '20S': {
     quickSpecs: { cuFt: '1,170', sqFt: '160', lbsTare: '4,914' },
-    specs: [
-      { label: 'External Length', value: '20 ft' },
-      { label: 'External Width', value: '8 ft' },
-      { label: 'External Height', value: '8 ft 6 in (18 inches shorter than a basketball rim)' },
-      { label: 'Internal Length', value: '19 ft 11 in' },
-      { label: 'Internal Width', value: '7 ft 9 in' },
-      { label: 'Internal Height', value: '7 ft 10 in (8 inches shorter than external height)' },
-      { label: 'Door Width', value: '7 ft 8 in' },
-      { label: 'Door Height', value: '7 ft 5 in' },
-      { label: 'Tare Weight', value: '4,914 lbs (varies by manufacturer and specs)' },
-      { label: 'Best Use', value: 'Fits a queen-sized mattress flat or large refrigerator upright' },
-      { label: 'Space', value: 'Occupies space of a large single parking spot' },
-    ],
+    tabs: {
+      specs: { items: specs20S },
+    },
     faq: faq20S,
-    // TODO: placeholder links. Replace the URLs before launch — every one of
-    // these currently points at a page that does not exist.
   },
   '40S': {
     quickSpecs: { cuFt: '2,390', sqFt: '306', lbsTare: '8,000–8,400' },
-    specs: build40FtSpecs('8 ft 6 in', '7 ft 10 in'),
+    tabs: {
+      specs: { items: build40FtSpecs('8 ft 6 in', '7 ft 10 in') },
+    },
     faq: faq40S,
-    // TODO: placeholder links. Replace the URLs before launch — every one of
-    // these currently points at a page that does not exist.
   },
   '40H': {
     quickSpecs: { cuFt: '2,700', sqFt: '306', lbsTare: '8,000–8,400' },
-    specs: build40FtSpecs('9 ft 6 in', '8 ft 10 in'),
+    tabs: {
+      specs: { items: build40FtSpecs('9 ft 6 in', '8 ft 10 in') },
+    },
     faq: faq40H,
-    // TODO: placeholder links. Replace the URLs before launch — every one of
-    // these currently points at a page that does not exist.
   },
 }
 
-/** The resources offered for whichever size is on screen. */
-// Resources are no longer listed per size: they are derived from the active
-// product's size, condition and grade against the files actually present under
-// public/resources/pdp/. See `getContainerResources` in ./pdpResources.
+/* ── Lookups ───────────────────────────────────────────────────────────── */
 
-export function getQuickSpecs(product: ProductHit) {
-  return PDP_SHIPPING_CONTAINERS[resolveContainerVariant(product)].quickSpecs
+/**
+ * Everything static for the size this product is.
+ *
+ * The one entry point callers should use. Reaching for
+ * `PDP_SHIPPING_CONTAINERS[resolveContainerVariant(product)]` works and is what
+ * this does, but repeating it at each call site is how one of them ends up
+ * resolving the size differently from the rest.
+ */
+export function getContainerContent(product: ProductHit): PdpShippingContainerEntry {
+  return PDP_SHIPPING_CONTAINERS[resolveContainerVariant(product)]
 }
+
+export function getQuickSpecs(product: ProductHit): QuickSpecs {
+  return getContainerContent(product).quickSpecs
+}
+
+// Resources are not listed per size: they are derived from the active product's
+// size, condition and grade against the files actually present under
+// public/resources/pdp/. See `getContainerResources` in ./pdpResources.

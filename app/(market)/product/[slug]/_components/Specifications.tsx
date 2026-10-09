@@ -15,13 +15,17 @@ type Props = { variant: ContainerVariantKey }
  * scope a two-column table is still ambiguous about which axis is the header.
  */
 export function Specifications({ variant }: Props) {
-  const specs = PDP_SHIPPING_CONTAINERS[variant].specs
+  const { items: specs, intro } = PDP_SHIPPING_CONTAINERS[variant].tabs.specs
 
   return (
     <section aria-labelledby="specs-heading">
       <h3 id="specs-heading" className="text-xl sm:text-2xl font-extrabold tracking-tight mb-4">
         Full Technical Specifications
       </h3>
+
+      {/* Optional lead paragraph. No size has one yet; the slot is here so copy
+          can be added to the data rather than to this component. */}
+      {intro && <p className="mb-4 text-sm sm:text-base text-theme-mid">{intro}</p>}
 
       {/* Own scroll container so a long value can never push the page into
           horizontal scroll on a narrow viewport. */}

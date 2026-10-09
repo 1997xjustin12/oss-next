@@ -5,9 +5,8 @@ import { getProductByHandle } from '@/services/search.service'
 import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
 import { formatMoney } from '@/lib/formatters'
 import { DEFAULT_LOCATION } from '@/lib/constants'
-import { resolveContainerVariant } from '@/lib/containerVariant'
 import { getContainerVideo } from '@/lib/containerVideo'
-import { PDP_SHIPPING_CONTAINERS } from '@/lib/data/pdpShippingContainers'
+import { getContainerContent } from '@/lib/data/pdpShippingContainers'
 import { breadcrumbNode, faqNode, graph, productNode, siteNodes } from '@/lib/schema'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
@@ -116,10 +115,11 @@ function ogImages(product: ProductHit): NonNullable<NonNullable<Metadata['openGr
  * The page's whole graph: the shared site entities, the product itself, the
  * breadcrumb trail, and — for containers — the FAQ.
  *
- * The FAQ array is the very same one FaqAccordion renders from, keyed off the
- * same resolveContainerVariant() call, so the structured data can never claim a
- * question the page doesn't show. Google treats FAQ markup with no visible
- * counterpart as a policy violation, so that isn't just tidiness.
+ * The FAQ array is the very same one FaqAccordion renders from — both read it
+ * out of PDP_SHIPPING_CONTAINERS for the size this product resolves to, so the
+ * structured data can never claim a question the page doesn't show. Google
+ * treats FAQ markup with no visible counterpart as a policy violation, so that
+ * isn't just tidiness.
  */
 function buildJsonLd(product: ProductHit, slug: string) {
   const location = getCustomFieldValue(product, 'location')
@@ -127,7 +127,7 @@ function buildJsonLd(product: ProductHit, slug: string) {
   const description = buildProductDescription(product, realLocation ?? '')
   const isContainer = isContainerHit(product)
 
-  const faqs = isContainer ? PDP_SHIPPING_CONTAINERS[resolveContainerVariant(product)].faq : []
+  const faqs = isContainer ? getContainerContent(product).faq : []
 
   return graph([
     ...siteNodes(),

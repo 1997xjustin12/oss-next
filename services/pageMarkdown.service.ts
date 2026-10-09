@@ -7,8 +7,7 @@ import { SITE, absoluteUrl } from '@/config/site'
 import { isDisallowedPath } from '@/config/crawlers'
 import { htmlToMarkdown, htmlToPlainText } from '@/lib/markdown'
 import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
-import { resolveContainerVariant } from '@/lib/containerVariant'
-import { PDP_SHIPPING_CONTAINERS, getQuickSpecs } from '@/lib/data/pdpShippingContainers'
+import { getContainerContent, getQuickSpecs } from '@/lib/data/pdpShippingContainers'
 import { normaliseRating } from '@/lib/ratings'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { fetchWpPageMarkdown } from '@/services/wp-pages.service'
@@ -107,17 +106,17 @@ function productMarkdown(product: ProductHit, handle: string): string {
 
   if (isContainer) {
     const specs = getQuickSpecs(product)
-    const variant = resolveContainerVariant(product)
-    const entry = PDP_SHIPPING_CONTAINERS[variant]
+    const entry = getContainerContent(product)
+    const specRows = entry.tabs.specs.items
 
-    if (entry.specs?.length) {
+    if (specRows?.length) {
       sections.push(
         '',
         '## Specifications',
         '',
         '| Specification | Value |',
         '| --- | --- |',
-        ...entry.specs.map((s) => `| ${s.label} | ${s.value} |`),
+        ...specRows.map((s) => `| ${s.label} | ${s.value} |`),
       )
     }
 

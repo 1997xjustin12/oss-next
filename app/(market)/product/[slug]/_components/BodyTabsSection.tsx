@@ -10,6 +10,7 @@ import { Overview40S } from './overview/Overview40S'
 import { Overview40H } from './overview/Overview40H'
 import { Specifications } from './Specifications'
 import { DeliveryInfo } from './DeliveryInfo'
+import { PDP_BODY_TABS, type PdpBodyTabId } from '@/lib/data/pdpShippingContainers'
 
 // The 5 condition/grade combinations actually offered — New is only sold at
 // IICL grade, Used spans all four grades. Confirmed by the user; marketing/
@@ -29,15 +30,12 @@ const warrantySteps = [
   { Icon: RotateCcw, title: 'Get A Full Refund', desc: "We'll refund your purchase in full, minus the shipping fee — no hassle, no stress." },
 ]
 
-const bodyTabs = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'specs', label: 'Specifications' },
-  { id: 'conditions', label: 'Container Conditions' },
-  { id: 'delivery', label: 'Delivery Info' },
-  { id: 'warranty', label: 'Warranty' },
-] as const
+// The tab list lives in lib/data/pdpShippingContainers.ts, beside the content
+// keyed by it: a tab renamed in one place and not the other is then a type
+// error rather than a panel that silently loses its copy.
+const bodyTabs = PDP_BODY_TABS
 
-type BodyTab = typeof bodyTabs[number]['id']
+type BodyTab = PdpBodyTabId
 
 type Props = {
   variant: ContainerVariantKey

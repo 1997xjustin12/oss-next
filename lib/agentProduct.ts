@@ -3,8 +3,7 @@ import { ROUTES } from '@/config/routes'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
 import { normaliseRating } from '@/lib/ratings'
-import { resolveContainerVariant } from '@/lib/containerVariant'
-import { PDP_SHIPPING_CONTAINERS } from '@/lib/data/pdpShippingContainers'
+import { getContainerContent } from '@/lib/data/pdpShippingContainers'
 import type { ProductHit } from '@/types/product'
 
 /**
@@ -161,11 +160,12 @@ export function toAgentProductDetail(product: ProductHit, now: Date = new Date()
   const base = toAgentProduct(product, now)
   if (!isContainerHit(product)) return base
 
-  const entry = PDP_SHIPPING_CONTAINERS[resolveContainerVariant(product)]
+  const entry = getContainerContent(product)
+  const specs = entry.tabs.specs.items
 
   return {
     ...base,
-    ...(entry.specs?.length ? { specifications: entry.specs } : {}),
+    ...(specs?.length ? { specifications: specs } : {}),
     ...(entry.faq?.length ? { faq: entry.faq } : {}),
     delivery: {
       handlingTimeDays: [1, 2],
