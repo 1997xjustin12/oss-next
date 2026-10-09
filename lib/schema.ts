@@ -3,7 +3,7 @@ import { ROUTES } from '@/config/routes'
 import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { normaliseRating } from '@/lib/ratings'
-import { getQuickSpecs } from '@/lib/data/pdpShippingContainers'
+import { getTareWeightLbs } from '@/lib/data/pdpShippingContainers'
 import { getContainerVideo } from '@/lib/containerVideo'
 import type { ProductHit } from '@/types/product'
 import type { FaqItem } from '@/lib/data/pdpShippingContainers'
@@ -193,17 +193,6 @@ const PAYMENT_TYPE_LABEL: Record<string, string> = {
   rto: 'Rent-to-Own',
 }
 
-// lib/data/pdpShippingContainers.ts's lbsTare is a reference figure, either a
-// single value ("4,914") or a manufacturer-variance range ("8,000–8,400") —
-// schema.org's weight.value wants one number, so a range is averaged rather
-// than guessed at or dropped.
-function parseTareWeight(lbsTare: string): number | undefined {
-  const nums = lbsTare.replace(/,/g, '').match(/\d+(\.\d+)?/g)
-  if (!nums || nums.length === 0) return undefined
-  const values = nums.map(Number)
-  return Math.round(values.reduce((a, b) => a + b, 0) / values.length)
-}
-
 /**
  * Full Product node for a PDP.
  *
@@ -241,7 +230,7 @@ export function productNode(
       ].filter((p) => p.value)
     : undefined
 
-  const tareWeight = isContainer ? parseTareWeight(getQuickSpecs(product).lbsTare) : undefined
+  const tareWeight = isContainer ? getTareWeightLbs(product) : undefined
 
   // Guarded on isContainer: the spec resolvers fall back to Used / AS IS /
   // 20ft for a product carrying none of those fields, so an accessory would

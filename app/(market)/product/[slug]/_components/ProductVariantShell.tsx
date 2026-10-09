@@ -185,20 +185,6 @@ export function ProductVariantShell({
               tag={promoTag}
               inStock={isInStockHit(activeProduct)}
             />
-            {/* <div className="grid grid-cols-3 gap-3 mt-5 bg-theme-dark rounded-lg p-4 sm:p-5 text-center">
-            {quickSpecs.map((s, index) => (
-              <div key={`quick-specs-${s.label}-${index}`}>
-                <div
-                  className={`text-lg sm:text-2xl font-extrabold tracking-tight ${s.accent ? "text-theme-primary" : "text-white"}`}
-                >
-                  {s.value}
-                </div>
-                <div className="text-[10px] sm:text-[11px] text-white/45 uppercase tracking-wide mt-0.5">
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div> */}
             <div className="hidden lg:block">
               {/* Videos for the size currently selected. Re-derived from
               activeProduct, so switching size in the picker swaps the

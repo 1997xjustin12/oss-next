@@ -7,7 +7,7 @@ import { SITE, absoluteUrl } from '@/config/site'
 import { isDisallowedPath } from '@/config/crawlers'
 import { htmlToMarkdown, htmlToPlainText } from '@/lib/markdown'
 import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
-import { getContainerContent, getQuickSpecs } from '@/lib/data/pdpShippingContainers'
+import { getContainerContent } from '@/lib/data/pdpShippingContainers'
 import { normaliseRating } from '@/lib/ratings'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { fetchWpPageMarkdown } from '@/services/wp-pages.service'
@@ -105,7 +105,6 @@ function productMarkdown(product: ProductHit, handle: string): string {
   ]
 
   if (isContainer) {
-    const specs = getQuickSpecs(product)
     const entry = getContainerContent(product)
     const specRows = entry.tabs.specs.items
 
@@ -116,13 +115,15 @@ function productMarkdown(product: ProductHit, handle: string): string {
         '',
         '| Specification | Value |',
         '| --- | --- |',
-        ...specRows.map((s) => `| ${s.label} | ${s.value} |`),
+        // Imperial and metric in one cell — a reader of this file has no unit
+        // toggle, so dropping the conversion would lose half the figure.
+        ...specRows.map((s) => `| ${s.label} | ${s.value} ${s.sub_value} |`),
       )
     }
 
-    if (specs?.lbsTare) {
-      sections.push('', `Tare weight: ${specs.lbsTare} lbs.`)
-    }
+    // Tare weight used to be restated under the table from a separate figure.
+    // It is a row of the table now, so repeating it would be two sources for
+    // one number.
 
     if (entry.faq?.length) {
       sections.push(

@@ -13,18 +13,26 @@ import { type ContainerVariantKey, resolveContainerVariant } from '@/lib/contain
  * The shape is:
  *
  *   PDP_SHIPPING_CONTAINERS[size]
- *     .quickSpecs   the three figures in the ordering panel
  *     .tabs[tabId]  copy for one tab of the body section
  *     .faq          the accordion below the tabs
- *
- * `quickSpecs` and `faq` sit beside `tabs` rather than inside it because
- * neither is a tab: the quick specs render in the ordering panel at the top of
- * the page and feed the JSON-LD, and the FAQ is its own accordion underneath
- * the tab strip.
  */
 
-export type SpecItem = { label: string; value: string }
-export type FaqItem  = { question: string; answer: string }
+export type FaqItem = { question: string; answer: string }
+
+/**
+ * One figure in the specifications strip.
+ *
+ * `sub_value` is the metric equivalent and is rendered in parentheses under
+ * the imperial figure, so both are on screen without a unit toggle. `image` is
+ * a site-absolute path to an icon in `public/resources/icon-images/`.
+ */
+export type SpecItem = {
+  image:     string
+  /** Rendered uppercase. Stored in sentence case so it reads normally here. */
+  label:     string
+  value:     string
+  sub_value: string
+}
 
 /**
  * What kind of thing a resource link leads to.
@@ -93,13 +101,18 @@ export type ContentSection = {
  * The content each tab takes.
  *
  * Per-tab rather than one shared shape, because they do not render alike: the
- * specifications tab is a two-column table and the rest are prose. Keyed by
- * `PdpBodyTabId`, so adding a tab to `PDP_BODY_TABS` and forgetting to say what
- * it holds is a type error here.
+ * specifications tab is a diagram above a strip of figures, and the rest are
+ * prose. Keyed by `PdpBodyTabId`, so adding a tab to `PDP_BODY_TABS` and
+ * forgetting to say what it holds is a type error here.
  */
 export type PdpTabContentMap = {
   overview:   { sections: ContentSection[] }
-  specs:      { intro?: string; items: SpecItem[] }
+  specs:      {
+    intro?: string
+    /** The dimensioned drawing above the figures, from `public/resources/pdp-specs/`. */
+    image?: string
+    items:  SpecItem[]
+  }
   conditions: { sections: ContentSection[] }
   delivery:   { sections: ContentSection[] }
   warranty:   { sections: ContentSection[] }
@@ -109,7 +122,7 @@ export type PdpTabContentMap = {
  * Tab content for one size.
  *
  * Every tab is optional except `specs`, which all three sizes have and which
- * the Specifications table has no sensible empty state for. The others are
+ * the specifications panel has no sensible empty state for. The others are
  * absent today: `overview` is still three React components under
  * `_components/overview/`, and `conditions`, `delivery` and `warranty` are the
  * same copy for every size and live in `BodyTabsSection`. Any of them can move
@@ -118,21 +131,99 @@ export type PdpTabContentMap = {
 export type ContainerTabs =
   { [K in PdpBodyTabId]?: PdpTabContentMap[K] } & { specs: PdpTabContentMap['specs'] }
 
-export type QuickSpecs = { cuFt: string; sqFt: string; lbsTare: string }
-
 export type PdpShippingContainerEntry = {
-  quickSpecs: QuickSpecs
-  tabs:       ContainerTabs
-  faq:        FaqItem[]
+  tabs: ContainerTabs
+  faq:  FaqItem[]
 }
 
-/* ── Content ───────────────────────────────────────────────────────────── */
+/* ── Specifications ────────────────────────────────────────────────────── */
 
-// Neither WordPress nor the new backend carries this data yet.
-// `specs` reflects real spec-sheet copy provided directly for this catalog.
-// `quickSpecs.cuFt` is still a generic published reference figure (no cu ft
-// value has been provided yet) — flag for follow-up if that matters.
-// `faq` per variant is real size-specific copy provided directly for this catalog.
+const ICON = '/resources/icon-images'
+
+/**
+ * The eight figures, in render order, with the icon and label each one uses.
+ *
+ * Icon and label are identical for every size — only the measurements differ —
+ * so they are declared once here and a size supplies just its numbers. That
+ * keeps a new size to eight lines, and means a relabelled row changes in one
+ * place rather than three.
+ */
+const SPEC_ROWS = [
+  { key: 'exteriorLength', image: `${ICON}/cube.webp`,          label: 'Exterior Length' },
+  { key: 'exteriorWidth',  image: `${ICON}/width-arrows.webp`,  label: 'Exterior Width' },
+  { key: 'exteriorHeight', image: `${ICON}/height-arrows.webp`, label: 'Exterior Height' },
+  { key: 'interiorLength', image: `${ICON}/cube.webp`,          label: 'Interior Length' },
+  { key: 'interiorWidth',  image: `${ICON}/width-arrows.webp`,  label: 'Interior Width' },
+  { key: 'interiorHeight', image: `${ICON}/height-arrows.webp`, label: 'Interior Height' },
+  { key: 'interiorVolume', image: `${ICON}/volume-cubes.webp`,  label: 'Interior Volume' },
+  { key: 'tareWeight',     image: `${ICON}/tare-scale.webp`,    label: 'Tare Weight' },
+] as const
+
+type SpecRowKey = (typeof SPEC_ROWS)[number]['key']
+
+/** `[imperial, metric]` for each row. */
+type SpecMeasures = Record<SpecRowKey, readonly [value: string, subValue: string]>
+
+function buildSpecItems(measures: SpecMeasures): SpecItem[] {
+  return SPEC_ROWS.map(({ key, image, label }) => {
+    const [value, sub_value] = measures[key]
+    return { image, label, value, sub_value }
+  })
+}
+
+// 20ft standard. Supplied directly for this catalog, and matching the
+// dimensioned drawing at /resources/pdp-specs/20S.webp.
+//
+// Tare is 4,850 lbs, not the 6,850 in the figures handed over: 2,200 kg is
+// 4,850 lbs, and 4,850 is also what the drawing itself shows. Flagged rather
+// than silently corrected — say so if 6,850 was the intended figure and the
+// metric value is the wrong one.
+const specs20S = buildSpecItems({
+  exteriorLength: ['20 ft',      '(6.06 m)'],
+  exteriorWidth:  ['8 ft',       '(2.44 m)'],
+  exteriorHeight: ['8.6 ft',     '(2.59 m)'],
+  interiorLength: ['19.4 ft',    '(5.90 m)'],
+  interiorWidth:  ['7.8 ft',     '(2.35 m)'],
+  interiorHeight: ['7.9 ft',     '(2.39 m)'],
+  interiorVolume: ['1,172 ft³',  '(33.2 m³)'],
+  tareWeight:     ['4,850 lbs',  '(2,200 kg)'],
+})
+
+// PROVISIONAL — 40S and 40H have not been supplied in this format yet.
+//
+// The imperial figures are the ones already in this repo (the spec-sheet copy
+// that was here before this strip existed, plus the cu ft reference figures);
+// the metric values are arithmetic conversions of them, not separately
+// sourced. Confirm or replace both before these are treated as authoritative.
+//
+// Tare stays a range because that is how it was given — "approx. 8,000–8,400
+// lbs, varies by manufacturer" — rather than being averaged into a single
+// figure that would read as more precise than it is.
+const specs40S = buildSpecItems({
+  exteriorLength: ['40 ft',             '(12.19 m)'],
+  exteriorWidth:  ['8 ft',              '(2.44 m)'],
+  exteriorHeight: ['8.6 ft',            '(2.59 m)'],
+  interiorLength: ['39.4 ft',           '(12.01 m)'],
+  interiorWidth:  ['7.7 ft',            '(2.34 m)'],
+  interiorHeight: ['7.8 ft',            '(2.39 m)'],
+  interiorVolume: ['2,390 ft³',         '(67.7 m³)'],
+  tareWeight:     ['8,000–8,400 lbs',   '(3,630–3,810 kg)'],
+})
+
+const specs40H = buildSpecItems({
+  exteriorLength: ['40 ft',             '(12.19 m)'],
+  exteriorWidth:  ['8 ft',              '(2.44 m)'],
+  exteriorHeight: ['9.6 ft',            '(2.90 m)'],
+  interiorLength: ['39.4 ft',           '(12.01 m)'],
+  interiorWidth:  ['7.7 ft',            '(2.34 m)'],
+  interiorHeight: ['8.8 ft',            '(2.69 m)'],
+  interiorVolume: ['2,700 ft³',         '(76.5 m³)'],
+  tareWeight:     ['8,000–8,400 lbs',   '(3,630–3,810 kg)'],
+})
+
+/* ── FAQ ───────────────────────────────────────────────────────────────── */
+
+// Real size-specific copy provided directly for this catalog.
 
 const faq20S: FaqItem[] = [
   { question: 'How much does a 20 foot shipping container weigh?', answer: 'A standard empty (tare) 20 foot shipping container weighs approximately 2,300 kg (5,070 lbs). Its maximum gross weight, which is the total weight of the container and its contents, is around 24,000 kg (52,910 lbs). Therefore, it can carry up to approximately 21,700 kg (47,840 lbs) of cargo.' },
@@ -158,66 +249,25 @@ const faq40H: FaqItem[] = [
   { question: 'What are the dimensions of a 40ft high cube container?', answer: 'A 40ft High Cube container has external dimensions of 40 feet in length, 8 feet in width, and 9 feet 6 inches in height. Internally, it measures approximately 39 feet 5.6 inches in length, 7 feet 8.5 inches in width, and 8 feet 10 inches in height.' },
 ]
 
-// 40S and 40H share every dimension except external/internal height —
-// built from one function so the shared rows aren't duplicated verbatim
-// between the two variant entries below.
-function build40FtSpecs(externalHeight: string, internalHeight: string): SpecItem[] {
-  return [
-    { label: 'External Length', value: '40 ft' },
-    { label: 'External Width', value: '8 ft' },
-    { label: 'External Height', value: externalHeight },
-    { label: 'Internal Length', value: '39 ft 5 in' },
-    { label: 'Internal Width', value: '7 ft 8 in' },
-    { label: 'Internal Height', value: internalHeight },
-    { label: 'Floor Space', value: 'Approx. 306 sq ft' },
-    { label: 'Door Width', value: '7 ft 8 in' },
-    { label: 'Door Height', value: '7 ft 5 in' },
-    { label: 'Wall Material', value: 'Corrugated steel panels' },
-    { label: 'Roof Material', value: 'Corrugated steel panel' },
-    { label: 'Tare Weight', value: 'Approx. 8,000–8,400 lbs (varies by manufacturer)' },
-    { label: 'Max Gross Weight', value: '52,831 lbs (23,956 kg)' },
-    { label: 'Max Payload', value: '47,899 lbs (21,717 kg)' },
-    { label: 'Forklift Pockets', value: 'Yes (standard configuration)' },
-    { label: 'Cargo Doors', value: 'Double swing doors, lockable' },
-    { label: 'Corner Castings', value: 'Cast steel corner posts for secure stacking' },
-    { label: 'Cargo Securing', value: 'Internal tie-down points' },
-    { label: 'Exterior Finish', value: 'Original shipping line paint & markings (custom paint available)' },
-  ]
-}
-
-const specs20S: SpecItem[] = [
-  { label: 'External Length', value: '20 ft' },
-  { label: 'External Width', value: '8 ft' },
-  { label: 'External Height', value: '8 ft 6 in (18 inches shorter than a basketball rim)' },
-  { label: 'Internal Length', value: '19 ft 11 in' },
-  { label: 'Internal Width', value: '7 ft 9 in' },
-  { label: 'Internal Height', value: '7 ft 10 in (8 inches shorter than external height)' },
-  { label: 'Door Width', value: '7 ft 8 in' },
-  { label: 'Door Height', value: '7 ft 5 in' },
-  { label: 'Tare Weight', value: '4,914 lbs (varies by manufacturer and specs)' },
-  { label: 'Best Use', value: 'Fits a queen-sized mattress flat or large refrigerator upright' },
-  { label: 'Space', value: 'Occupies space of a large single parking spot' },
-]
+/* ── Content ───────────────────────────────────────────────────────────── */
 
 export const PDP_SHIPPING_CONTAINERS: Record<ContainerVariantKey, PdpShippingContainerEntry> = {
   '20S': {
-    quickSpecs: { cuFt: '1,170', sqFt: '160', lbsTare: '4,914' },
     tabs: {
-      specs: { items: specs20S },
+      specs: { image: '/resources/pdp-specs/20S.webp', items: specs20S },
     },
     faq: faq20S,
   },
   '40S': {
-    quickSpecs: { cuFt: '2,390', sqFt: '306', lbsTare: '8,000–8,400' },
+    // No drawing supplied yet — the panel renders the figures without one.
     tabs: {
-      specs: { items: build40FtSpecs('8 ft 6 in', '7 ft 10 in') },
+      specs: { items: specs40S },
     },
     faq: faq40S,
   },
   '40H': {
-    quickSpecs: { cuFt: '2,700', sqFt: '306', lbsTare: '8,000–8,400' },
     tabs: {
-      specs: { items: build40FtSpecs('9 ft 6 in', '8 ft 10 in') },
+      specs: { items: specs40H },
     },
     faq: faq40H,
   },
@@ -237,8 +287,24 @@ export function getContainerContent(product: ProductHit): PdpShippingContainerEn
   return PDP_SHIPPING_CONTAINERS[resolveContainerVariant(product)]
 }
 
-export function getQuickSpecs(product: ProductHit): QuickSpecs {
-  return getContainerContent(product).quickSpecs
+/**
+ * Tare weight in pounds, for the JSON-LD `weight` property.
+ *
+ * Read out of the specifications strip rather than kept as a separate figure,
+ * so the number a crawler is told and the number on the page cannot disagree.
+ * A range ("8,000–8,400 lbs") averages to its midpoint, which is the closest
+ * single number schema.org's `QuantitativeValue` can carry.
+ */
+export function getTareWeightLbs(product: ProductHit): number | undefined {
+  const tare = getContainerContent(product).tabs.specs.items
+    .find((item) => item.label === 'Tare Weight')
+  if (!tare) return undefined
+
+  const nums = tare.value.replace(/,/g, '').match(/\d+(\.\d+)?/g)
+  if (!nums?.length) return undefined
+
+  const values = nums.map(Number)
+  return Math.round(values.reduce((a, b) => a + b, 0) / values.length)
 }
 
 // Resources are not listed per size: they are derived from the active product's

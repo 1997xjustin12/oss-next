@@ -161,11 +161,18 @@ export function toAgentProductDetail(product: ProductHit, now: Date = new Date()
   if (!isContainerHit(product)) return base
 
   const entry = getContainerContent(product)
-  const specs = entry.tabs.specs.items
+  // Flattened to label/value for the wire: the icon path is a detail of how
+  // the page draws the strip and means nothing to a consumer of this API, and
+  // the metric figure belongs with the imperial one rather than in a field of
+  // its own that a caller has to know to join back up.
+  const specs = entry.tabs.specs.items.map((s) => ({
+    label: s.label,
+    value: `${s.value} ${s.sub_value}`.trim(),
+  }))
 
   return {
     ...base,
-    ...(specs?.length ? { specifications: specs } : {}),
+    ...(specs.length ? { specifications: specs } : {}),
     ...(entry.faq?.length ? { faq: entry.faq } : {}),
     delivery: {
       handlingTimeDays: [1, 2],
