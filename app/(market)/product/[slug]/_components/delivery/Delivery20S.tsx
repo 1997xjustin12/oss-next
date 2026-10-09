@@ -8,13 +8,16 @@ import type { ProductVideo } from '@/config/productVideos'
 /**
  * The delivery guide video.
  *
- * Deliberately empty rather than filled with an invented id — the same rule
- * `config/productVideos.ts` follows, and for the same reason: a wrong id
- * renders as "Video unavailable" on a live product page. With no id the right
- * column is the download button alone.
+ * Only the id is stored. The `si=` parameter on a YouTube share link is a
+ * share-tracking token, and `youTubeEmbedUrl` builds its own URL against
+ * youtube-nocookie.com with `rel=0` — so carrying the share link verbatim
+ * would add tracking and lose the privacy domain.
+ *
+ * An empty id here skips the embed rather than rendering "Video unavailable",
+ * which is the rule `config/productVideos.ts` sets for the same reason.
  */
 const DELIVERY_VIDEO: ProductVideo = {
-  id: '',
+  id: 'z41xA0E3C9k',
   title: 'A Quick Guide to Shipping Container Delivery: What You Need to Know',
 }
 
