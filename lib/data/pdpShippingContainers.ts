@@ -74,11 +74,11 @@ export type ContainerResource = {
  * leaving copy addressed to a tab that no longer exists.
  */
 export const PDP_BODY_TABS = [
-  { id: 'overview',   label: 'Overview' },
-  { id: 'specs',      label: 'Specifications' },
-  { id: 'conditions', label: 'Container Conditions' },
-  { id: 'delivery',   label: 'Delivery Info' },
-  { id: 'warranty',   label: 'Warranty' },
+  { id: 'overview', label: 'Overview' },
+  { id: 'specs',    label: 'Specifications' },
+  { id: 'upgrades', label: 'Upgrade & Customizations' },
+  { id: 'delivery', label: 'Delivery Info' },
+  { id: 'warranty', label: 'Warranty' },
 ] as const
 
 export type PdpBodyTabId = (typeof PDP_BODY_TABS)[number]['id']
@@ -113,7 +113,7 @@ export type PdpTabContentMap = {
     image?: string
     items:  SpecItem[]
   }
-  conditions: { sections: ContentSection[] }
+  upgrades:   { sections: ContentSection[] }
   delivery:   { sections: ContentSection[] }
   warranty:   { sections: ContentSection[] }
 }
@@ -124,9 +124,13 @@ export type PdpTabContentMap = {
  * Every tab is optional except `specs`, which all three sizes have and which
  * the specifications panel has no sensible empty state for. The others are
  * absent today: `overview` is still three React components under
- * `_components/overview/`, and `conditions`, `delivery` and `warranty` are the
- * same copy for every size and live in `BodyTabsSection`. Any of them can move
- * here by filling in the key.
+ * `_components/overview/`, and `delivery` and `warranty` are the same copy for
+ * every size and live in `BodyTabsSection`. Any of them can move here by
+ * filling in the key.
+ *
+ * `upgrades` has neither data nor a built-in panel yet, so its tab does not
+ * render at all — see the note on visible tabs in `BodyTabsSection`. Give a
+ * size some `sections` and the tab appears for that size.
  */
 export type ContainerTabs =
   { [K in PdpBodyTabId]?: PdpTabContentMap[K] } & { specs: PdpTabContentMap['specs'] }

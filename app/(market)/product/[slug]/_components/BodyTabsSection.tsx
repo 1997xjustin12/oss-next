@@ -10,18 +10,8 @@ import { Overview40S } from './overview/Overview40S'
 import { Overview40H } from './overview/Overview40H'
 import { Specifications } from './Specifications'
 import { DeliveryInfo } from './DeliveryInfo'
-import { PDP_BODY_TABS, type PdpBodyTabId } from '@/lib/data/pdpShippingContainers'
-
-// The 5 condition/grade combinations actually offered — New is only sold at
-// IICL grade, Used spans all four grades. Confirmed by the user; marketing/
-// sales should still review this copy.
-const conditionTable = [
-  { grade: 'Used – As Is', badge: 'bg-neutral-500', desc: 'Sold as-is with no certification — may show dents, rust, or holes. Not guaranteed weather-tight.', wear: 'Heavy', wwt: false, best: 'Budget storage, modification projects, non-weather-critical use' },
-  { grade: 'Used – Wind & Watertight', badge: 'bg-amber-500', desc: 'Structurally sound and inspected for leaks — fully weather-sealed with some cosmetic wear.', wear: 'Moderate', wwt: true, best: 'General storage, construction sites, farms' },
-  { grade: 'Used – Cargo Worthy', badge: 'bg-blue-500', desc: 'IICL-inspected and certified to meet international shipping standards, with only minor cosmetic wear.', wear: 'Minor', wwt: true, best: 'Shipping, international transport, resale' },
-  { grade: 'Used – IICL', badge: 'bg-indigo-600', desc: 'Highest used-grade standard — thoroughly inspected and certified, minimal wear throughout.', wear: 'Minimal', wwt: true, best: 'Premium storage, retail conversions, resale' },
-  { grade: 'New – IICL (One-Trip)', badge: 'bg-emerald-600', desc: 'Used once overseas to ship cargo — essentially new condition with factory paint and no structural wear.', wear: 'None', wwt: true, best: 'Modifications, retail builds, premium or long-term use' },
-]
+import { PDP_BODY_TABS, PDP_SHIPPING_CONTAINERS, type PdpBodyTabId } from '@/lib/data/pdpShippingContainers'
+import { TabSections } from './TabSections'
 
 // Warranty terms don't vary by container size — same copy for all variants.
 const warrantySteps = [
@@ -33,9 +23,16 @@ const warrantySteps = [
 // The tab list lives in lib/data/pdpShippingContainers.ts, beside the content
 // keyed by it: a tab renamed in one place and not the other is then a type
 // error rather than a panel that silently loses its copy.
-const bodyTabs = PDP_BODY_TABS
-
 type BodyTab = PdpBodyTabId
+
+/**
+ * Tabs with a panel built into this component, whatever the data says.
+ *
+ * Everything else only appears once its size has copy — which today means
+ * `upgrades`, whose tab stays hidden rather than opening onto an empty panel.
+ * Drop `sections` into a size's `tabs.upgrades` and the tab appears for it.
+ */
+const ALWAYS_RENDERED: readonly BodyTab[] = ['overview', 'specs', 'delivery', 'warranty']
 
 type Props = {
   variant: ContainerVariantKey
@@ -50,6 +47,12 @@ type Props = {
 export function BodyTabsSection({ variant, product }: Props) {
   const [bodyTab, setBodyTab] = useState<BodyTab>('overview')
   const { condition, grade } = resolveCombination(product)
+
+  const tabContent = PDP_SHIPPING_CONTAINERS[variant].tabs
+  const upgrades = tabContent.upgrades
+  const bodyTabs = PDP_BODY_TABS.filter(
+    (t) => ALWAYS_RENDERED.includes(t.id) || tabContent[t.id],
+  )
 
   // Every panel is rendered; only the active one is shown.
   //
@@ -107,42 +110,11 @@ export function BodyTabsSection({ variant, product }: Props) {
         <Specifications variant={variant} />
       </div>
 
-      <div {...panelProps('conditions')}>
-        <div>
-          <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2">Understanding Container Conditions</h3>
-          <p className="text-sm sm:text-base text-theme-muted mb-6 leading-relaxed">
-            We offer five condition and grade combinations. Choose the one that matches your use case and budget.
-          </p>
-          <div className="overflow-x-auto rounded-lg border border-theme-border">
-            <table className="w-full text-sm min-w-[640px]">
-              <thead>
-                <tr className="bg-theme-dark text-white text-left">
-                  <th className="px-4 py-3 font-extrabold text-sm">Condition &amp; Grade</th>
-                  <th className="px-4 py-3 font-extrabold text-sm">Description</th>
-                  <th className="px-4 py-3 font-extrabold text-sm">Wear</th>
-                  <th className="px-4 py-3 font-extrabold text-sm">W&amp;T</th>
-                  <th className="px-4 py-3 font-extrabold text-sm">Best For</th>
-                </tr>
-              </thead>
-              <tbody>
-                {conditionTable.map((c, i) => (
-                  <tr key={`condition-table-${c.grade}-${i}`} className={`${i % 2 === 1 ? 'bg-theme-subtle' : 'bg-theme-bg'} hover:bg-theme-primary-light transition-colors`}>
-                    <td className="px-4 py-3 border-t border-theme-border">
-                      <span className={`text-white text-[11px] font-bold uppercase px-2 py-1 rounded ${c.badge}`}>{c.grade}</span>
-                    </td>
-                    <td className="px-4 py-3 border-t border-theme-border text-theme-mid">{c.desc}</td>
-                    <td className="px-4 py-3 border-t border-theme-border text-theme-mid">{c.wear}</td>
-                    <td className="px-4 py-3 border-t border-theme-border">
-                      <span className={c.wwt ? 'text-emerald-600 font-bold' : 'text-theme-muted'}>{c.wwt ? '✓ Yes' : '✗ No'}</span>
-                    </td>
-                    <td className="px-4 py-3 border-t border-theme-border text-theme-mid">{c.best}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {upgrades && (
+        <div {...panelProps('upgrades')}>
+          <TabSections heading="Upgrade & Customizations" sections={upgrades.sections} />
         </div>
-      </div>
+      )}
 
       <div {...panelProps('delivery')}>
         <DeliveryInfo variant={variant} />
