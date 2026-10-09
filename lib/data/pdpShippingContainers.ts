@@ -1,5 +1,6 @@
 import type { ProductHit } from '@/types/product'
 import { type ContainerVariantKey, resolveContainerVariant } from '@/lib/containerVariant'
+import { BASE_URL } from '@/lib/helpers'
 
 /**
  * Every piece of static, size-dependent copy the product page renders.
@@ -76,10 +77,32 @@ export type ContainerResource = {
 export const PDP_BODY_TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'specs',    label: 'Specifications' },
-  { id: 'upgrades', label: 'Upgrade & Customizations' },
+  /**
+   * A link, not a panel — `href` is what makes it one.
+   *
+   * ASSUMED DESTINATION. The brief said "redirected to a certain page" without
+   * naming it, and this is the only page on the site about modified containers.
+   * Change this one line if it should point somewhere else.
+   */
+  { id: 'upgrades', label: 'Upgrade & Customizations', href: `${BASE_URL}/shipping-container-modified-containers-gallery/` },
   { id: 'delivery', label: 'Delivery Info' },
   { id: 'warranty', label: 'Warranty' },
 ] as const
+
+export type PdpBodyTab = (typeof PDP_BODY_TABS)[number]
+
+/** The members that carry an `href` — the ones that navigate. */
+export type PdpLinkTab = Extract<PdpBodyTab, { href: string }>
+
+/**
+ * Does this tab navigate instead of opening a panel?
+ *
+ * Narrowed through the union rather than widened to `{ href: string }`, so the
+ * caller gets the literal type back and `tab.href` is known to exist.
+ */
+export function isLinkTab(tab: PdpBodyTab): tab is PdpLinkTab {
+  return 'href' in tab && typeof tab.href === 'string' && tab.href.length > 0
+}
 
 export type PdpBodyTabId = (typeof PDP_BODY_TABS)[number]['id']
 

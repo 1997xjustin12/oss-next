@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ShieldCheck, Truck, Eye, RotateCcw } from 'lucide-react'
+import Link from 'next/link'
+import { ShieldCheck, Truck, Eye, RotateCcw, ArrowUpRight } from 'lucide-react'
 import type { ContainerVariantKey } from '@/lib/containerVariant'
 import { resolveCombination } from '@/lib/containerOverview'
 import type { ProductHit } from '@/types/product'
@@ -10,8 +11,7 @@ import { Overview40S } from './overview/Overview40S'
 import { Overview40H } from './overview/Overview40H'
 import { Specifications } from './Specifications'
 import { DeliveryInfo } from './DeliveryInfo'
-import { PDP_BODY_TABS, PDP_SHIPPING_CONTAINERS, type PdpBodyTabId } from '@/lib/data/pdpShippingContainers'
-import { TabSections } from './TabSections'
+import { PDP_BODY_TABS, PDP_SHIPPING_CONTAINERS, isLinkTab, type PdpBodyTabId } from '@/lib/data/pdpShippingContainers'
 
 // Warranty terms don't vary by container size — same copy for all variants.
 const warrantySteps = [
@@ -28,9 +28,8 @@ type BodyTab = PdpBodyTabId
 /**
  * Tabs with a panel built into this component, whatever the data says.
  *
- * Everything else only appears once its size has copy — which today means
- * `upgrades`, whose tab stays hidden rather than opening onto an empty panel.
- * Drop `sections` into a size's `tabs.upgrades` and the tab appears for it.
+ * A link tab needs no panel and always shows. Anything else appears only once
+ * its size has copy, so a tab can never open onto nothing.
  */
 const ALWAYS_RENDERED: readonly BodyTab[] = ['overview', 'specs', 'delivery', 'warranty']
 
@@ -49,9 +48,8 @@ export function BodyTabsSection({ variant, product }: Props) {
   const { condition, grade } = resolveCombination(product)
 
   const tabContent = PDP_SHIPPING_CONTAINERS[variant].tabs
-  const upgrades = tabContent.upgrades
   const bodyTabs = PDP_BODY_TABS.filter(
-    (t) => ALWAYS_RENDERED.includes(t.id) || tabContent[t.id],
+    (t) => isLinkTab(t) || ALWAYS_RENDERED.includes(t.id) || tabContent[t.id],
   )
 
   // Every panel is rendered; only the active one is shown.
@@ -69,36 +67,63 @@ export function BodyTabsSection({ variant, product }: Props) {
   // <noscript> copy is gone, so that failure has nowhere left to happen. `hidden`
   // keeps inactive panels out of layout and out of the accessibility tree.
   const panelProps = (id: BodyTab) => ({
-    role: 'tabpanel' as const,
     id: `body-panel-${id}`,
     'aria-labelledby': `body-tab-${id}`,
     hidden: bodyTab !== id,
   })
 
+  // Shared so a link and a button are indistinguishable in the strip.
+  const itemClass = (active: boolean) =>
+    `relative font-bold text-sm sm:text-base px-3 sm:px-5 py-1 whitespace-nowrap transition-colors
+     ${active ? 'text-white bg-theme-primary rounded-tr-[15px]' : 'text-theme-muted hover:text-theme-dark'}`
+
   return (
     <section className="px-4 sm:px-[5%]">
-      <div
-        role="tablist"
+      {/*
+        Not a `role="tablist"` any more.
+
+        One of these items navigates to another page rather than revealing a
+        panel, and ARIA has no such thing as a tab that is a link — a tablist
+        promises every child switches a panel in place, which would now be a
+        lie to anyone relying on it. The buttons keep `aria-controls` and
+        `aria-expanded`, which is the honest description of what they do, and
+        the link is announced as a link.
+
+        Nothing is lost by dropping the role: the arrow-key navigation a
+        tablist implies was never implemented here, so the pattern was only
+        ever nominal.
+      */}
+      <nav
         aria-label="Product details"
         className="flex gap-1 overflow-x-auto border-b-2 border-theme-border mb-8 -mx-1 px-1 scrollbar-none"
       >
-        {bodyTabs.map((t, index) => (
-          <button
-            key={`body-tabs-${t.id}-${index}`}
-            type="button"
-            role="tab"
-            id={`body-tab-${t.id}`}
-            aria-selected={bodyTab === t.id}
-            aria-controls={`body-panel-${t.id}`}
-            onClick={() => setBodyTab(t.id)}
-            className={`relative font-bold text-sm sm:text-base px-3 sm:px-5 py-1 whitespace-nowrap transition-colors
-              ${bodyTab === t.id ? 'text-white bg-theme-primary rounded-tr-[15px]' : 'text-theme-muted hover:text-theme-dark'}`}
-          >
-            {t.label}
-            {bodyTab === t.id && <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-theme-primary rounded-t" />}
-          </button>
-        ))}
-      </div>
+        {bodyTabs.map((t, index) =>
+          isLinkTab(t) ? (
+            <Link
+              key={`body-tabs-${t.id}-${index}`}
+              id={`body-tab-${t.id}`}
+              href={t.href}
+              className={`${itemClass(false)} inline-flex items-center gap-1`}
+            >
+              {t.label}
+              <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
+            </Link>
+          ) : (
+            <button
+              key={`body-tabs-${t.id}-${index}`}
+              type="button"
+              id={`body-tab-${t.id}`}
+              aria-expanded={bodyTab === t.id}
+              aria-controls={`body-panel-${t.id}`}
+              onClick={() => setBodyTab(t.id)}
+              className={itemClass(bodyTab === t.id)}
+            >
+              {t.label}
+              {bodyTab === t.id && <span className="absolute bottom-[-2px] left-0 right-0 h-[2.5px] bg-theme-primary rounded-t" />}
+            </button>
+          ),
+        )}
+      </nav>
 
       <div {...panelProps('overview')}>
         {variant === '40S' ? <Overview40S condition={condition} grade={grade} /> :
@@ -110,11 +135,7 @@ export function BodyTabsSection({ variant, product }: Props) {
         <Specifications variant={variant} />
       </div>
 
-      {upgrades && (
-        <div {...panelProps('upgrades')}>
-          <TabSections heading="Upgrade & Customizations" sections={upgrades.sections} />
-        </div>
-      )}
+      {/* No panel for `upgrades` — it is a link, and leaves the page. */}
 
       <div {...panelProps('delivery')}>
         <DeliveryInfo variant={variant} />
