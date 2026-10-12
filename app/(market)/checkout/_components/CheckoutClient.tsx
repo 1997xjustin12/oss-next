@@ -894,18 +894,31 @@ export function CheckoutClient() {
         throw new Error(result?.error ?? 'Could not complete checkout. Please try again.');
       }
 
-      // The order exists from here on, whichever branch runs. Clearing the
-      // cart is what stops a second attempt becoming a second order.
-      clearCart();
-
       if (result.paymentUrl) {
-        // Hand off to the backend's payment page. Deliberately not inside
-        // `finally` territory: `submitting` stays true so the button keeps
-        // spinning through the navigation instead of flicking back to "Place
-        // Order" and inviting a second click while the browser is leaving.
-        // `assign` rather than setting `location.href`: same navigation, but
-        // it is a call rather than a write to a global, which is what
-        // react-hooks/immutability objects to.
+        /**
+         * The cart is deliberately NOT cleared here.
+         *
+         * It was, briefly. The order exists by this point, so clearing looked
+         * like the way to stop a second attempt becoming a second order — but
+         * the customer has not paid yet, and emptying their cart on the way
+         * to the payment page strands anyone who abandons it, loses their
+         * connection, or simply wants to check something first. They come back
+         * to an empty cart and no obvious way to resume.
+         *
+         * The order is `pending`, so an unpaid one is recoverable; an emptied
+         * cart in the customer's browser is not. The cart should be cleared
+         * when payment is confirmed, which happens on the backend's page — see
+         * the note in the route handler.
+         *
+         * Hand off to the payment page. Deliberately not inside `finally`
+         * territory: `submitting` stays true so the button keeps spinning
+         * through the navigation instead of flicking back to "Place Order"
+         * and inviting a second click while the browser is leaving.
+         *
+         * `assign` rather than setting `location.href`: same navigation, but
+         * it is a call rather than a write to a global, which is what
+         * react-hooks/immutability objects to.
+         */
         window.location.assign(result.paymentUrl);
         return;
       }
@@ -913,6 +926,12 @@ export function CheckoutClient() {
       // Recorded, but the backend sent no link. The order is real, so confirm
       // it rather than failing — the server has already logged the missing
       // field loudly.
+      //
+      // This branch DOES clear the cart, unlike the redirect above. Nobody is
+      // being sent anywhere to pay: the confirmation screen is the end of the
+      // journey, and leaving a full cart behind a "your order is placed"
+      // message is how the same order gets placed twice.
+      clearCart();
       setConfirmation({ orderNumber: result.orderNumber, email: shipping.email, signedIn: !!authToken });
       setOrderComplete(true);
       setSubmitting(false);

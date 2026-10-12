@@ -28,8 +28,21 @@ import type { PlaceOrderRequest, PlaceOrderResponse } from '@/types/order'
  * No money moves here any more, which removes the failure this route was
  * built around: there is no charge left to strand when recording fails, and
  * nothing to void. It introduces the opposite one — an order can now exist
- * that was never paid for — which is what `status: 'pending'` is for, and why
- * the cart is only cleared once a link comes back.
+ * that was never paid for — which is what `status: 'pending'` is for.
+ *
+ * ## The cart is not cleared when we redirect
+ *
+ * Checkout keeps the cart on the way to the payment page. An order exists by
+ * then, so clearing it would stop a second attempt becoming a second order —
+ * but the customer has not paid, and a visitor who abandons payment or loses
+ * their connection would come back to an empty cart with no way to resume. A
+ * pending order is recoverable; their cart is not.
+ *
+ * **Nothing clears the cart after a successful payment yet.** There is no
+ * return route in this app — no /checkout/success, no callback handler — so
+ * if the backend's payment page sends the customer back here, it currently
+ * lands on an ordinary page with their cart still full. Closing that needs the
+ * return URL the payment page uses, which has not been supplied.
  *
  * Guests and signed-in customers use the same path. The Authorization header
  * is forwarded only when the browser sent one: the backend accepts an order
