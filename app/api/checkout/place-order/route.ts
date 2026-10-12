@@ -2,25 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isRecaptchaConfigured, verifyRecaptcha } from '@/lib/recaptcha'
 import { ShippingRefusedError } from '@/lib/shippingQuote'
 import { checkoutOrder, getOrderTotal } from '@/services/order.service'
-import { chargeBraintreeCheckout, voidBraintreeTransaction } from '@/services/payment.service'
+// Payment moved to the backend's own page on 2026-10-12; the charge and
+// void helpers are still in services/payment.service.ts for /api/braintree_token
+// and for refunds, they are simply not used from here any more.
+// import { chargeBraintreeCheckout, voidBraintreeTransaction } from '@/services/payment.service'
 import type { PlaceOrderRequest, PlaceOrderResponse } from '@/types/order'
 
 /**
- * Places an order in one server step: price, charge, record — and void the
- * charge if the order cannot be recorded.
+ * Records an order as pending and hands back the backend's payment link.
  *
- * Replaces two browser calls (/api/braintree_checkout, then /api/orders/checkout).
- * With those, the browser told the backend an order was paid and handed it a
- * transaction id, so anyone could post a "paid" order without paying; and a
- * charge whose order then failed stayed charged. Here the browser only supplies
- * the card nonce, the cart and the customer's details:
+ * ## The flow changed on 2026-10-12
+ *
+ * This route used to price, charge the card through Braintree, record the
+ * order as paid with the transaction id, and void the charge if recording
+ * failed. Payment now happens after the order exists, on a page the backend
+ * owns:
  *
  *   1. the total is recomputed from the cart (never taken from the request),
- *      and the charge is refused if it is higher than the page showed;
- *   2. the card is charged;
- *   3. the order is recorded as paid, carrying the verified transaction id in
- *      the backend's own `payment_details` / `payment_status` fields;
- *   4. if recording fails, the charge is voided.
+ *      and the order is refused if it comes out higher than the page showed;
+ *   2. the order is recorded with `status: 'pending'` and
+ *      `payment_method: 'card'`, carrying no payment details, because none
+ *      have been taken;
+ *   3. the backend returns a payment link, which the browser redirects to.
+ *
+ * No money moves here any more, which removes the failure this route was
+ * built around: there is no charge left to strand when recording fails, and
+ * nothing to void. It introduces the opposite one — an order can now exist
+ * that was never paid for — which is what `status: 'pending'` is for, and why
+ * the cart is only cleared once a link comes back.
  *
  * Guests and signed-in customers use the same path. The Authorization header
  * is forwarded only when the browser sent one: the backend accepts an order
@@ -33,7 +42,7 @@ const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
 /** Cents of slack, to absorb rounding rather than real disagreement. */
 const AMOUNT_TOLERANCE = 0.01
 
-type Payer = Parameters<typeof chargeBraintreeCheckout>[2]
+// type Payer = Parameters<typeof chargeBraintreeCheckout>[2]
 
 function reply(status: number, body: PlaceOrderResponse) {
   return NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } })
@@ -50,15 +59,47 @@ function orderNumberFrom(created: unknown): string | undefined {
   return typeof n === 'string' || typeof n === 'number' ? String(n) : undefined
 }
 
+/**
+ * The payment link, wherever the backend puts it.
+ *
+ * Read across the plausible names rather than one, for the same reason
+ * `orderNumberFrom` does: the create response's shape has never been pinned
+ * down, and this one was described in a sentence rather than a schema. The
+ * first match wins, and the key that matched is logged once so the real field
+ * name can be confirmed from a live order and this list narrowed.
+ *
+ * Only absolute http(s) URLs are accepted. A relative path would resolve
+ * against this storefront's origin, sending the customer to a page here that
+ * does not exist instead of to the payment page.
+ */
+function paymentUrlFrom(created: unknown): string | undefined {
+  const root = (created ?? {}) as Record<string, unknown>
+  const nested = [root, root.order, root.data].filter(
+    (v): v is Record<string, unknown> => !!v && typeof v === 'object',
+  )
+
+  const KEYS = ['payment_link', 'payment_url', 'paymentUrl', 'paymentLink', 'checkout_url', 'invoice_url', 'redirect_url']
+
+  for (const obj of nested) {
+    for (const key of KEYS) {
+      const value = obj[key]
+      if (typeof value === 'string' && /^https?:\/\//i.test(value.trim())) {
+        console.info('[/api/checkout/place-order] payment link read from key:', key)
+        return value.trim()
+      }
+    }
+  }
+  return undefined
+}
+
 export async function POST(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || undefined
   const body = (await request.json().catch(() => null)) as PlaceOrderRequest | null
 
   // ── Validate ──────────────────────────────────────────────────────────────
-  if (!body?.nonce) {
-    return reply(400, { ok: false, stage: 'validation', error: 'Payment details are missing. Please re-enter your card.' })
-  }
-  if (!Array.isArray(body.items) || body.items.length === 0) {
+  // No card check here any more: nothing is collected on this site, so there
+  // is nothing to validate until the backend's payment page.
+  if (!Array.isArray(body?.items) || body.items.length === 0) {
     return reply(400, { ok: false, stage: 'validation', error: 'Your cart is empty.' })
   }
   const order = body.order
@@ -73,7 +114,6 @@ export async function POST(request: NextRequest) {
   }
 
   // ── 1. Price ──────────────────────────────────────────────────────────────
-  let amount: string
   try {
     const total = await getOrderTotal({
       items: body.items,
@@ -90,12 +130,13 @@ export async function POST(request: NextRequest) {
     }
     const shown = Number(body.expectedAmount)
     if (Number.isFinite(shown) && total.total_price - shown > AMOUNT_TOLERANCE) {
-      // Charging more than the customer agreed to is never acceptable, even
+      // Billing more than the customer agreed to is never acceptable, even
       // when our number is the correct one — make them review it instead.
+      // Still worth doing with payment moved off-site: this is the figure the
+      // pending order is recorded at, and the payment page bills from it.
       console.warn(`[/api/checkout/place-order] refusing to overcharge: server ${total.total_price} > shown ${shown}`)
       return reply(409, { ok: false, stage: 'total', error: 'Your order total has changed. Please review it and try again.' })
     }
-    amount = total.total_price.toFixed(2)
   } catch (err) {
     const message =
       err instanceof ShippingRefusedError ? err.message : 'We could not calculate your order total. Please try again.'
@@ -103,50 +144,42 @@ export async function POST(request: NextRequest) {
     return reply(400, { ok: false, stage: 'total', error: message })
   }
 
-  // ── 2. Charge ─────────────────────────────────────────────────────────────
-  let transactionId: string
-  try {
-    const transaction = await chargeBraintreeCheckout(body.nonce, amount, body.payer as Payer)
-    transactionId = transaction.id
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Payment could not be processed.'
-    console.error('[/api/checkout/place-order] charge', err)
-    return reply(400, { ok: false, stage: 'charge', error: message })
-  }
-
-  // ── 3. Record ─────────────────────────────────────────────────────────────
+  // ── 2. Record as pending ──────────────────────────────────────────────────
   try {
     const created = await checkoutOrder(
       {
         ...order,
         items: body.items,
         shipping_method: body.shipping_method,
-        payment_method: 'braintree',
-        status: 'paid',
-        payment_status: true,
-        payment_details: transactionId,
+        payment_method: 'card',
+        status: 'pending',
+        // No payment has been taken, so there is nothing truthful to put in
+        // `payment_status` or `payment_details`. The backend's payment page
+        // owns both from here.
+        payment_status: false,
         store_domain: STORE_DOMAIN,
       },
       token,
     )
-    return reply(200, { ok: true, orderNumber: orderNumberFrom(created), transactionId })
-  } catch (err) {
-    console.error('[/api/checkout/place-order] order not recorded after charge', transactionId, err)
 
-    // ── 4. Undo the charge ──────────────────────────────────────────────────
-    if (await voidBraintreeTransaction(transactionId)) {
-      return reply(502, {
-        ok: false,
-        stage: 'order',
-        voided: true,
-        error: 'We could not record your order, so your card was not charged. Please try again, or call us at (888) 977-9085.',
-      })
+    const paymentUrl = paymentUrlFrom(created)
+    if (!paymentUrl) {
+      // The order exists — saying otherwise would invite a duplicate — but
+      // nobody can pay for it from here. Reported as a success with no link so
+      // the browser shows the confirmation rather than an error, and logged
+      // loudly because it means the backend contract is not what was expected.
+      console.error(
+        '[/api/checkout/place-order] order recorded but no payment link in the response; keys:',
+        created && typeof created === 'object' ? Object.keys(created).join(',') : typeof created,
+      )
     }
+
+    return reply(200, { ok: true, orderNumber: orderNumberFrom(created), paymentUrl })
+  } catch (err) {
+    console.error('[/api/checkout/place-order] order not recorded', err)
     return reply(502, {
       ok: false,
       stage: 'order',
-      voided: false,
-      transactionId,
       error: err instanceof Error ? err.message : 'Could not record the order.',
     })
   }

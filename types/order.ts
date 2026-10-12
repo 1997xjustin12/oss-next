@@ -52,7 +52,15 @@ export interface CheckoutPayload {
  * lets it refuse to charge more than the page showed.
  */
 export interface PlaceOrderRequest {
-  nonce: string
+  /**
+   * Braintree card nonce.
+   *
+   * Unused since payment moved to the backend's own page on 2026-10-12 — the
+   * route ignores it and no caller sends one. Kept optional rather than
+   * deleted so restoring the on-site card form is a revert rather than a
+   * re-derivation of the whole request shape.
+   */
+  nonce?: string
   recaptchaToken?: string | null
   items: CartLineItem[]
   /** ISO country code and ZIP used to price delivery (the order keeps the form's own values). */
@@ -70,8 +78,8 @@ export interface PlaceOrderRequest {
   shipping_city?: string
   shipping_state?: string
   expectedAmount?: string
-  /** Braintree's copy of the payer, for the transaction record. */
-  payer: {
+  /** Braintree's copy of the payer. Unused alongside `nonce` — see above. */
+  payer?: {
     customer?: Record<string, string | undefined>
     billing?: Record<string, string | undefined>
     shipping?: Record<string, string | undefined>
@@ -84,14 +92,21 @@ export interface PlaceOrderRequest {
 }
 
 /**
- * The outcome of placing an order. Only `stage: 'order'` with `voided: false`
- * means money moved without an order — the one case the customer must not retry.
+ * The outcome of placing an order.
+ *
+ * Every failure is now safe to retry: no money moves on this site, so there is
+ * no longer a case where a customer has been charged for an order that does
+ * not exist. The `voided` and `transactionId` variants went with it.
+ *
+ * `paymentUrl` is optional on success and the distinction matters. With one,
+ * the browser redirects to the backend's payment page. Without one the order
+ * still exists — it was recorded before the link was looked for — so the
+ * browser confirms it rather than failing, and the customer is told someone
+ * will be in touch about payment.
  */
 export type PlaceOrderResponse =
-  | { ok: true; orderNumber?: string; transactionId: string }
-  | { ok: false; stage: 'validation' | 'total' | 'charge'; error: string }
-  | { ok: false; stage: 'order'; voided: true; error: string }
-  | { ok: false; stage: 'order'; voided: false; transactionId: string; error: string }
+  | { ok: true; orderNumber?: string; paymentUrl?: string }
+  | { ok: false; stage: 'validation' | 'total' | 'order'; error: string }
 
 // Confirmed field names via docs/reference/ORDER_HISTORY_ANSWER.md (extracted from a working
 // reference implementation's OrdersPage.jsx, 2026-07-14) — not yet verified

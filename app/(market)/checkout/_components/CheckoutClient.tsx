@@ -38,9 +38,9 @@ import {
   isDeliveryBilledLater,
   selectedShippingOption,
 } from '@/lib/shippingQuote';
-import { BraintreeDropIn } from './BraintreeDropIn';
+// import { BraintreeDropIn } from './BraintreeDropIn';   // card form — see note at the Payment section
 import { Recaptcha } from '@/components/ui/Recaptcha';
-import type { BraintreeDropInHandle } from './BraintreeDropIn';
+// import type { BraintreeDropInHandle } from './BraintreeDropIn';
 import type { CartItem } from '@/types/cart';
 import { toAlpha2 } from '@/lib/country';
 import type { GetOrderTotalPayload, OrderTotal, PlaceOrderRequest, PlaceOrderResponse } from '@/types/order';
@@ -111,22 +111,21 @@ const emptyAddress: AddressForm = {
   email: '',
 };
 
-// Maps the on-page address form to Braintree's address shape, so transactions
-// carry the payer's identity in the control panel instead of just an amount.
-// Unlike the backend mapping below, Braintree has a dedicated second address
-// line (extendedAddress), so address1/address2 stay separate here.
-function addressToBraintree(form: AddressForm) {
-  return {
-    firstName: form.firstName,
-    lastName: form.lastName,
-    streetAddress: form.address1,
-    extendedAddress: form.address2,
-    locality: form.city,
-    region: form.state,
-    postalCode: form.zip,
-    countryCodeAlpha2: toAlpha2(form.country),
-  };
-}
+// Commented out with the card form on 2026-10-12 — it described the payer on
+// a Braintree transaction this page no longer creates.
+//
+// function addressToBraintree(form: AddressForm) {
+//   return {
+//     firstName: form.firstName,
+//     lastName: form.lastName,
+//     streetAddress: form.address1,
+//     extendedAddress: form.address2,
+//     locality: form.city,
+//     region: form.state,
+//     postalCode: form.zip,
+//     countryCodeAlpha2: toAlpha2(form.country),
+//   };
+// }
 
 // Maps the on-page address form to the backend's flat billing_*/shipping_*
 // field names (same contract as CreateCartPayload) — address1/address2 fold
@@ -399,6 +398,9 @@ function OrderComplete({
  * surfaced because it is the one reference support can trace the payment by,
  * and it is the value orders carry as `payment_details`.
  */
+// Left defined, unused: the screen it renders is unreachable while payment
+// happens off-site. Deleting it would make restoring the card form a rewrite.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function PaymentTakenNoOrder({ transactionId, detail }: { transactionId?: string; detail?: string }) {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
@@ -448,7 +450,7 @@ export function CheckoutClient() {
   const { items, totalPrice: clientSubtotal } = cart;
   const hasContainer = items.some((item) => item.isContainer);
   const { token: authToken, user: authUser } = useAuth();
-  const dropinRef = useRef<BraintreeDropInHandle>(null);
+  // const dropinRef = useRef<BraintreeDropInHandle>(null);
 
   const [shipping, setShipping] = useState<AddressForm>(emptyAddress);
   const [billing, setBilling] = useState<AddressForm>(emptyAddress);
@@ -459,7 +461,7 @@ export function CheckoutClient() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showIntlNote, setShowIntlNote] = useState(false);
   const [attempted, setAttempted] = useState(false);
-  const [paymentReady, setPaymentReady] = useState(false);
+  // const [paymentReady, setPaymentReady] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -471,12 +473,14 @@ export function CheckoutClient() {
     email: string;
     signedIn: boolean;
   } | null>(null);
-  // Set only in the narrow window where the charge succeeded but the order
-  // failed to record — a state the customer must never be able to "retry".
-  const [paymentTaken, setPaymentTaken] = useState<{
-    transactionId?: string;
-    detail?: string;
-  } | null>(null);
+  // Was set only where a charge succeeded but the order failed to record.
+  // Unreachable since payment moved off this site: nothing here can take
+  // money, so that window no longer exists. Commented out with the card form.
+  //
+  // const [paymentTaken, setPaymentTaken] = useState<{
+  //   transactionId?: string;
+  //   detail?: string;
+  // } | null>(null);
   // The latest answer from /api/orders/get-total, stamped with exactly what it
   // was asked about. A refusal for one ZIP must never block another — that is
   // how changing the ZIP left "we cannot deliver" standing (seen 2026-09-15).
@@ -809,10 +813,8 @@ export function CheckoutClient() {
       setSubmitError('Please enter a complete ZIP or postal code so we can price delivery.');
       return;
     }
-    if (!paymentReady || !dropinRef.current) {
-      setSubmitError('Card payment is not available yet — please check back once it has been set up.');
-      return;
-    }
+    // No card gate: nothing is collected here. Payment happens on the
+    // backend's page, which this redirects to once the order exists.
     if (!recaptchaSatisfied) {
       setSubmitError('Please complete the reCAPTCHA check.');
       return;
@@ -820,8 +822,6 @@ export function CheckoutClient() {
 
     setSubmitting(true);
     try {
-      const { nonce } = await dropinRef.current.requestPaymentMethod();
-
       // Billing follows the "same as shipping" toggle, matching what the
       // customer actually agreed to on the page.
       const billingForm = sameBilling ? shipping : billing;
@@ -834,11 +834,10 @@ export function CheckoutClient() {
         .filter(Boolean)
         .join('\n');
 
-      // One request. The server re-prices the cart, charges the card, records
-      // the order with the verified transaction, and voids the charge if the
-      // order can't be recorded — nothing about payment is decided here.
+      // One request. The server re-prices the cart and records the order as
+      // pending, then returns the backend's payment link — nothing about
+      // payment is decided here, and no card details pass through this page.
       const request: PlaceOrderRequest = {
-        nonce,
         recaptchaToken,
         items: cartItemsToLineItems(items),
         shipping_zip_code: pricedZip,
@@ -847,18 +846,11 @@ export function CheckoutClient() {
         // The server re-prices before charging; give it the address the page
         // was quoted for, not a ZIP it would price something else from.
         ...pricedAddress,
-        // Only what the page showed: the server refuses to charge more than this.
+        // Only what the page showed: the server refuses to record a higher one.
         expectedAmount: total.toFixed(2),
-        payer: {
-          customer: {
-            firstName: billingForm.firstName,
-            lastName: billingForm.lastName,
-            email: billingForm.email,
-            phone: billingForm.phone,
-          },
-          billing: addressToBraintree(billingForm),
-          shipping: addressToBraintree(shipping),
-        },
+        // No `payer` block: it existed to describe the Braintree transaction
+        // this page no longer creates. The same names and addresses are in
+        // `order` below, which is what the backend records.
         order: {
           cart_id: cart.cartId,
           billing_address: billTo.address,
@@ -896,40 +888,45 @@ export function CheckoutClient() {
       const result = (await res.json().catch(() => null)) as PlaceOrderResponse | null;
 
       if (!result?.ok) {
-        if (result?.stage === 'order' && !result.voided) {
-          // Charged, not recorded, and the charge could not be voided: the money
-          // has moved, so this screen offers no retry. The cart is left intact —
-          // it is still the only record of what they bought.
-          console.error('[checkout] charged but order not recorded', result);
-          setPaymentTaken({ transactionId: result.transactionId, detail: result.error });
-          return;
-        }
-        // Nothing was charged, or the charge was voided: safe to correct and retry.
+        // Every failure is safe to retry now: no money moves on this site, so
+        // there is no longer a case where the customer has paid for an order
+        // that was not recorded.
         throw new Error(result?.error ?? 'Could not complete checkout. Please try again.');
       }
 
-      setConfirmation({ orderNumber: result.orderNumber, email: shipping.email, signedIn: !!authToken });
+      // The order exists from here on, whichever branch runs. Clearing the
+      // cart is what stops a second attempt becoming a second order.
       clearCart();
+
+      if (result.paymentUrl) {
+        // Hand off to the backend's payment page. Deliberately not inside
+        // `finally` territory: `submitting` stays true so the button keeps
+        // spinning through the navigation instead of flicking back to "Place
+        // Order" and inviting a second click while the browser is leaving.
+        // `assign` rather than setting `location.href`: same navigation, but
+        // it is a call rather than a write to a global, which is what
+        // react-hooks/immutability objects to.
+        window.location.assign(result.paymentUrl);
+        return;
+      }
+
+      // Recorded, but the backend sent no link. The order is real, so confirm
+      // it rather than failing — the server has already logged the missing
+      // field loudly.
+      setConfirmation({ orderNumber: result.orderNumber, email: shipping.email, signedIn: !!authToken });
       setOrderComplete(true);
+      setSubmitting(false);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Could not complete checkout. Please try again.');
-    } finally {
       setSubmitting(false);
     }
   }
 
-  // Checked before everything else: the customer has been charged, so this
-  // screen must win over the cart/checkout views regardless of cart state.
-  if (paymentTaken) {
-    return (
-      <div className="min-h-screen bg-theme-subtle dark:bg-neutral-950">
-        <PaymentTakenNoOrder
-          transactionId={paymentTaken.transactionId}
-          detail={paymentTaken.detail}
-        />
-      </div>
-    );
-  }
+  // The charged-but-not-recorded screen went with the card form — see the
+  // commented state above. PaymentTakenNoOrder is left defined for the same
+  // reason: restoring on-site payment should be a revert, not a rewrite.
+  //
+  // if (paymentTaken) { ... <PaymentTakenNoOrder /> ... }
 
   if (orderComplete) {
     return (
@@ -1407,9 +1404,29 @@ export function CheckoutClient() {
               </p>
             </div>
 
-            {/* Card payment (Braintree Drop-in) */}
+            {/*
+              Card form commented out on 2026-10-12, not deleted.
+
+              Payment moved to a page the backend owns: Place Order records a
+              pending order and the browser is redirected to the link that
+              comes back. Nothing is collected here any more, so an empty card
+              form would only be something to fill in twice.
+
+              Restoring it means uncommenting this, the import, the ref and
+              the `paymentReady` state above, and the nonce/payer half of
+              `handlePlaceOrder` — all four are commented rather than removed
+              so that is one revert rather than a rebuild.
+
+              <div className="p-6">
+                <BraintreeDropIn ref={dropinRef} onStatusChange={(s) => setPaymentReady(s === 'ready')} />
+              </div>
+            */}
+
             <div className="p-6">
-              <BraintreeDropIn ref={dropinRef} onStatusChange={(s) => setPaymentReady(s === 'ready')} />
+              <p className="text-sm text-theme-mid dark:text-neutral-300">
+                You will be taken to our secure payment page to complete your
+                purchase once your order is placed.
+              </p>
             </div>
 
             {/* reCAPTCHA — only rendered when a site key is configured */}
