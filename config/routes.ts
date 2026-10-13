@@ -14,6 +14,12 @@ export const ROUTES = {
   BLOG: (slug: string) => `/blogs/${slug}`,
   CART: '/cart',
   CHECKOUT: '/checkout',
+  /**
+   * The depot index. This app's page as of 2026-10-13 — the cities beneath it
+   * are still WordPress's, which is why it is in NATIVE_EXACT_PATHS below and
+   * not in NATIVE_ROUTE_SEGMENTS.
+   */
+  WHERE_TO_BUY: '/where-to-buy-shipping-containers',
   WISHLIST: '/wishlist',
   /** Quotes this browser has saved from a product page. */
   SAVED_QUOTES: '/saved-quotes',
@@ -106,7 +112,25 @@ export const NATIVE_ROUTE_SEGMENTS = [
  * The bare root (`/`) counts as native — the homepage is `(home)/page.tsx`, and
  * the catch-all is a REQUIRED `[...slug]` precisely so it never matches it.
  */
+/**
+ * Native routes whose path is native but whose CHILDREN are not.
+ *
+ * `/where-to-buy-shipping-containers` is this app's page; every city under it
+ * — `/where-to-buy-shipping-containers/atlanta-ga` and 57 others — is still
+ * WordPress's. Putting the segment in the list above would make the whole
+ * subtree native, which costs the real 404 those city pages get today when one
+ * is missing: the proxy would stop checking them against the backend's page
+ * list and a dead city URL would soft-404 instead.
+ *
+ * Matched on the exact path so the parent is served by us and the children
+ * keep falling through to the catch-all, and their 404s keep working.
+ */
+const NATIVE_EXACT_PATHS: readonly string[] = [ROUTES.WHERE_TO_BUY]
+
 export function isNativePath(path: string): boolean {
+  const clean = path.replace(/[?#].*$/, '').replace(/\/+$/, '') || '/'
+  if (NATIVE_EXACT_PATHS.includes(clean)) return true
+
   const first = path.replace(/^\/+/, '').split(/[/?#]/)[0]
   if (first === '') return true
   if ((NATIVE_ROUTE_SEGMENTS as readonly string[]).includes(first)) return true

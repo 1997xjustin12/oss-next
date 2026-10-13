@@ -51,6 +51,14 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     openGraph: { images: ['/images/og-containers.jpg'] },
   },
 
+  [ROUTES.WHERE_TO_BUY]: {
+    title: 'Where to Buy Shipping Containers Near You | 130+ US & Canada Depots',
+    description:
+      'Find shipping containers for sale near you. On-Site Storage Solutions delivers new and used 20ft, 40ft and high cube containers from 130+ depots across the USA and Canada.',
+    canonical: ROUTES.WHERE_TO_BUY,
+    openGraph: { type: 'website', images: ['/images/og-containers.jpg'] },
+  },
+
   [ROUTES.BLOGS]: {
     title: 'Blog',
     description:

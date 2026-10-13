@@ -27,6 +27,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}/sale-shipping-containers`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${origin}/sale-shipping-containers?ptype=accessories`, changeFrequency: 'daily', priority: 0.7 },
     { url: `${origin}/blogs`, changeFrequency: 'daily', priority: 0.7 },
+    // Listed here because it stopped being listed below: this app owns the
+    // depot index as of 2026-10-13, so `isNativePath` now drops WordPress's
+    // copy of it from `pageRoutes`. Without this line the page would be in
+    // neither list. The cities beneath it are not exact-matched, so they stay
+    // in `pageRoutes` where they belong.
+    { url: `${origin}${ROUTES.WHERE_TO_BUY}`, changeFrequency: 'weekly', priority: 0.8 },
   ]
 
   // The backend's product pattern is multi-brand ({brand_slug}/product/{handle});

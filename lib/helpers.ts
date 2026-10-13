@@ -16,3 +16,22 @@ export const BASE_URL = (process.env.NEXT_PUBLIC_BASE_URL ?? 'https://oss-next.v
   '',
 );
 export const CONTACT_NUMBER = "(888) 977-9085";
+
+/**
+ * A dialable `tel:` target for a display number.
+ *
+ * `tel:` takes digits, not punctuation — "(888) 977-9085" pasted straight into
+ * an href is not a valid dial string. The site already carries two
+ * hand-written spellings of this number, `tel:18889779085` and
+ * `tel:8889779085`, which is how a third gets written; derive it instead.
+ *
+ * Emits E.164 (`+1…`) for a 10-digit North American number, which is the form
+ * that dials correctly from abroad and from a phone roaming outside its home
+ * country. Anything else is passed through with its punctuation stripped.
+ */
+export function telHref(display: string): string {
+  const digits = display.replace(/\D/g, "");
+  if (digits.length === 10) return `tel:+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `tel:+${digits}`;
+  return `tel:${digits}`;
+}
