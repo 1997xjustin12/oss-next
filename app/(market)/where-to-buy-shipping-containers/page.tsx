@@ -1,13 +1,14 @@
-import Image from 'next/image'
-import { Phone } from 'lucide-react'
-import { ROUTES } from '@/config/routes'
-import { CONTACT_NUMBER, telHref } from '@/lib/helpers'
-import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
-import { resolvePageMetadata } from '@/lib/seo'
-import { LocationSearch } from './_components/LocationSearch'
+import Image from "next/image";
+import { Phone } from "lucide-react";
+import { ROUTES } from "@/config/routes";
+import { CONTACT_NUMBER, telHref } from "@/lib/helpers";
+import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
+import { resolvePageMetadata } from "@/lib/seo";
+import { LocationSearch } from "./_components/LocationSearch";
+import { SectionTagline2 } from "./_components/SectionTagline2";
 
 export function generateMetadata() {
-  return resolvePageMetadata(ROUTES.WHERE_TO_BUY)
+  return resolvePageMetadata(ROUTES.WHERE_TO_BUY);
 }
 
 /**
@@ -76,14 +77,14 @@ function Hero() {
         so the column itself still sits in the middle of a wide viewport —
         without it the content would pin to the far edge of a 2560px screen.
       */}
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-start gap-5 px-4 py-14 text-left sm:gap-6 sm:px-6 sm:py-20">
+      <div className="relative z-10 mx-auto flex w-full container flex-col items-start gap-5 text-left sm:gap-6 px-4 py-14 sm:px-6 sm:py-20">
         {/*
           Typography is the supplied spec, one class per declared rule:
           48px / 400 / uppercase / white text-shadow / black. No responsive
           ramp, because none was given — see the note in the commit about how
           48px behaves at 390px.
         */}
-        <h1 className="text-[48px] font-normal uppercase text-[#000000] [text-shadow:0px_3px_3px_rgba(255,255,255,0.75)]">
+        <h1 className="text-[90px] leading-none m-0 p-0 font-normal uppercase text-[#000000] [text-shadow:0px_3px_3px_rgba(255,255,255,0.75)]">
           Where to Buy Shipping Containers
         </h1>
 
@@ -118,7 +119,7 @@ function Hero() {
         <LocationSearch />
       </div>
     </section>
-  )
+  );
 }
 
 export default function WhereToBuyPage() {
@@ -127,7 +128,8 @@ export default function WhereToBuyPage() {
       <PageHeadScripts path={ROUTES.WHERE_TO_BUY} />
       <main>
         <Hero />
+        <SectionTagline2 text="On-Site Storage Solutions have a shipping container near you" />
       </main>
     </>
-  )
+  );
 }
