@@ -4,6 +4,7 @@ import { ROUTES } from '@/config/routes'
 import { CONTACT_NUMBER, telHref } from '@/lib/helpers'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { resolvePageMetadata } from '@/lib/seo'
+import { LocationSearch } from './_components/LocationSearch'
 
 export function generateMetadata() {
   return resolvePageMetadata(ROUTES.WHERE_TO_BUY)
@@ -40,8 +41,8 @@ function Hero() {
         source to a phone.
       */}
       <Image
-        src="/images/home-banners/hero-image.webp"
-        alt=""
+        src="/images/page-hero/locations-banner.webp"
+        alt="Where To Buy Shipping Containers"
         fill
         priority
         sizes="100vw"
@@ -56,7 +57,12 @@ function Hero() {
       */}
       <div className="absolute inset-0 -z-10 bg-black/55 dark:bg-black/70" />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-5 px-4 py-14 text-center sm:gap-6 sm:px-6 sm:py-20">
+      {/*
+        Left-aligned, not centred: `items-start` + `text-left`. `mx-auto` stays
+        so the column itself still sits in the middle of a wide viewport —
+        without it the content would pin to the far edge of a 2560px screen.
+      */}
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-start gap-5 px-4 py-14 text-left sm:gap-6 sm:px-6 sm:py-20">
         <h1 className="text-3xl font-extrabold uppercase leading-tight tracking-tight text-white drop-shadow-sm sm:text-4xl lg:text-5xl">
           Where to Buy Shipping Containers
         </h1>
@@ -87,6 +93,9 @@ function Hero() {
             {CONTACT_NUMBER}
           </span>
         </a>
+
+        {/* Layout only so far — see the note in the component. */}
+        <LocationSearch />
       </div>
     </section>
   )
