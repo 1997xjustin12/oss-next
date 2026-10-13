@@ -7,6 +7,7 @@ import { resolvePageMetadata } from "@/lib/seo";
 import { LocationSearch } from "./_components/LocationSearch";
 import { SectionTagline2 } from "./_components/SectionTagline2";
 import { SelectContainerType } from "./_components/SelectContainerType";
+import { LocationFeaturedContainers } from "./_components/LocationFeaturedContainers";
 import type { ContainerType } from "./_components/ContainerTypeCardLink";
 
 export function generateMetadata() {
@@ -27,19 +28,19 @@ export function generateMetadata() {
 const CONTAINER_TYPES: ContainerType[] = [
   {
     item: "Buy",
-    image: "",
+    image: "/images/buy-container-image.webp",
     url: `${ROUTES.PLP}?ptype=buy`,
     perks: ["Guaranteed Lowest Price", "Huge Selection", "Location Near You"],
   },
   {
     item: "Rent",
-    image: "",
+    image: "/images/rent-container-image.webp",
     url: `${ROUTES.PLP}?ptype=rental`,
     perks: ["Lowest Price Rate", "Free Rent", "Fast Delivery"],
   },
   {
     item: "Rent-To-Own",
-    image: "",
+    image: "/images/rto-container-image.webp",
     url: `${ROUTES.PLP}?ptype=rto`,
     perks: ["Affordable Monthly Payment", "Huge Selection", "Everyone Qualifies"],
   },
@@ -165,6 +166,7 @@ export default function WhereToBuyPage() {
         <Hero />
         <SectionTagline2 text="On-Site Storage Solutions have a shipping container near you" />
         <SelectContainerType types={CONTAINER_TYPES} />
+        <LocationFeaturedContainers />
         <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT TYPES OF SHIPPING CONTAINER" />
         <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT CONDITIONS OF SHIPPING CONTAINER" />
       </main>

@@ -212,6 +212,102 @@ export async function getShippingContainersByLocation(location: string) {
   return result.hits
 }
 
+/**
+ * The four containers a depot page leads with.
+ *
+ * One each of: 20ft standard used WWT, 40ft standard used WWT, 40ft high cube
+ * used WWT, and 20ft standard new IICL — all for sale rather than rent. Fewer
+ * than four come back when a depot does not stock one; the caller gets what
+ * exists rather than a padded list or an error.
+ *
+ * ## Why the matching happens here and not in Elasticsearch
+ *
+ * `custom_fields` is an array of `{ name, value }` objects mapped as a plain
+ * object, **not** as `nested`. Elasticsearch therefore flattens it: a document
+ * holds a bag of names and a bag of values with no link between them. So
+ * `cfFilter`'s `must: [name = height, value = "9’ 6” High Cube (HC)"]` asks
+ * "does this document have *a* field called height, and *a* field whose value
+ * is high cube" — two independent questions, which any container answers yes
+ * to as soon as it has both a height field and that string anywhere.
+ *
+ * Measured against the live index: aggregating `custom_fields.value.keyword`
+ * under a `name = payment_type` filter returns the same value list as under
+ * `name = grade` — heights, grades, conditions and all. The pairing simply is
+ * not available to a query.
+ *
+ * Two of the six conditions could not be expressed as terms anyway: height and
+ * grade are substring tests (`"Standard"` inside `8' 6" Standard`, `"WWT"`
+ * inside `Wind and Water tight (WWT)`), and `.keyword` is exact.
+ *
+ * So Elasticsearch narrows — published containers at this depot, a few hundred
+ * documents — and the pairing is decided here with `getCustomFieldValue`,
+ * which reads the real `{ name, value }` pair. Correct whatever the mapping
+ * does, and cheap at this size.
+ */
+export type DepotFeaturedSpec = {
+  /** Stable key for the slot, so a caller can tell which one is missing. */
+  key: 'used-20-standard-wwt' | 'used-40-standard-wwt' | 'used-40-high-cube-wwt' | 'new-20-standard-iicl'
+  label: string
+  size: '20' | '40'
+  /** Matched as a substring of `height`, which reads `8' 6" Standard`. */
+  height: 'Standard' | 'High Cube'
+  condition: 'Used' | 'New'
+  /** Matched as a substring of `grade`, which reads `Wind and Water tight (WWT)`. */
+  grade: 'WWT' | 'IICL'
+}
+
+export const DEPOT_FEATURED_SPECS: readonly DepotFeaturedSpec[] = [
+  { key: 'used-20-standard-wwt',  label: '20ft Standard — Used WWT',   size: '20', height: 'Standard',  condition: 'Used', grade: 'WWT' },
+  { key: 'used-40-standard-wwt',  label: '40ft Standard — Used WWT',   size: '40', height: 'Standard',  condition: 'Used', grade: 'WWT' },
+  { key: 'used-40-high-cube-wwt', label: '40ft High Cube — Used WWT',  size: '40', height: 'High Cube', condition: 'Used', grade: 'WWT' },
+  { key: 'new-20-standard-iicl',  label: '20ft Standard — New IICL',   size: '20', height: 'Standard',  condition: 'New',  grade: 'IICL' },
+]
+
+/** Case-insensitive "contains", for the fields whose values carry punctuation. */
+function has(value: string, needle: string): boolean {
+  return value.toLowerCase().includes(needle.toLowerCase())
+}
+
+function matchesSpec(product: FormattedContainerHit, spec: DepotFeaturedSpec): boolean {
+  const field = (name: string) => getCustomFieldValue(product, name)
+
+  return (
+    field('payment_type').toLowerCase() === 'buy' &&
+    // `length_width` reads `20'` / `40'`, so a substring test rather than
+    // equality — and "20" cannot be confused with "40" or "10".
+    has(field('length_width'), spec.size) &&
+    has(field('height'), spec.height) &&
+    field('condition').toLowerCase() === spec.condition.toLowerCase() &&
+    has(field('grade'), spec.grade)
+  )
+}
+
+export type DepotFeaturedContainer = {
+  spec: DepotFeaturedSpec
+  product: FormattedContainerHit
+}
+
+export async function getDepotFeaturedContainers(
+  depot: string,
+): Promise<DepotFeaturedContainer[]> {
+  const trimmed = depot.trim()
+  if (!trimmed) return []
+
+  // Published containers at this depot. Already cached and capped.
+  const pool = await getShippingContainersByLocation(trimmed)
+
+  // The depot itself is paired here too: the location filter above has the
+  // same flattening problem, so it narrows rather than decides.
+  const atDepot = pool.filter(
+    (product) => getCustomFieldValue(product, 'location').trim().toLowerCase() === trimmed.toLowerCase(),
+  )
+
+  return DEPOT_FEATURED_SPECS.map((spec) => {
+    const product = atDepot.find((candidate) => matchesSpec(candidate, spec))
+    return product ? { spec, product } : null
+  }).filter((entry): entry is DepotFeaturedContainer => entry !== null)
+}
+
 // Single product lookup for the PDP (/product/[slug]). Accessories are
 // standalone — returned with no siblings. Shipping containers are one of a
 // family of documents (same physical container, different size/condition/
