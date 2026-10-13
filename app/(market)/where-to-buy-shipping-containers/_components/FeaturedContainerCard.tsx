@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { Stars } from '@/components/product/Stars'
 import { ROUTES } from '@/config/routes'
 import { formatPrice } from '@/lib/formatters'
-import { getCustomFieldValue } from '@/lib/pricing'
 import { displayRating } from '@/lib/ratings'
 import type { ProductHit } from '@/types/product'
 
@@ -46,7 +45,6 @@ export function FeaturedContainerCard({ product }: Props) {
   const monthly = price > 0 ? price / PURCHASE_FINANCING_MONTHS : 0
 
   const { value: rating, count: reviews } = displayRating(product.ratings)
-  const isBestseller = getCustomFieldValue(product, 'sales_tags').toLowerCase().includes('bestseller')
 
   return (
     <Link
@@ -57,20 +55,22 @@ export function FeaturedContainerCard({ product }: Props) {
                  dark:border-neutral-800 dark:bg-neutral-900"
     >
       {/*
-        The badge is real data — `sales_tags` on the product, which three of
-        the four featured containers carry and the fourth does not. Rendering
-        it unconditionally would be decoration pretending to be information.
-        The slot is reserved either way so the titles below still line up.
+        Shown on every card, which is a deliberate change from reading
+        `sales_tags`.
+
+        That field is real but uneven: three of Atlanta's four featured
+        containers carry `bestseller` and the fourth does not, so a data-driven
+        badge left one card without its red bar while its neighbours had one —
+        the same size, but visibly the odd one out. The four here are a curated
+        set rather than a search result, so the band reads as one unit and the
+        badge is part of the frame rather than a claim about each product.
+
+        If it should go back to being per-product, the field is
+        `sales_tags` and the test was `.includes('bestseller')`.
       */}
-      {isBestseller ? (
-        <p className="bg-theme-primary py-2 text-center text-xs font-extrabold uppercase tracking-wider text-white">
-          Bestseller
-        </p>
-      ) : (
-        <p className="py-2 text-center text-xs font-extrabold uppercase tracking-wider" aria-hidden>
-          &nbsp;
-        </p>
-      )}
+      <p className="bg-theme-primary py-2 text-center text-xs font-extrabold uppercase tracking-wider text-white">
+        Bestseller
+      </p>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         {/*
