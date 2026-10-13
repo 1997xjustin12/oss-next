@@ -1,29 +1,41 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { FeaturedContainerCard, FeaturedContainerCardSkeleton } from './FeaturedContainerCard'
+import type { ProductHit } from '@/types/product'
 
 /** Where the ZIP lookup stores the depot it resolved to. */
 const DEPOT_KEY = 'zipcode_depot'
+
+/** How many the lookup asks for, and so how many skeletons to show. */
+const SLOTS = 4
 
 type FeaturedResponse = {
   depot: string
   requested: number
   found: number
-  containers: { spec: { key: string; label: string }; product: Record<string, unknown> }[]
+  containers: { spec: { key: string; label: string }; product: ProductHit }[]
 }
+
+type State =
+  | { status: 'loading' }
+  | { status: 'ready'; containers: FeaturedResponse['containers'] }
+  | { status: 'empty' }
 
 /**
  * The four containers for whichever depot this visitor resolved to.
  *
  * A Client Component because the depot lives in their browser's storage, which
- * no server render can see — so the fetch has to happen after mount, through
+ * no server render can see — so the fetch happens after mount, through
  * `/api/shipping-containers/featured`.
  *
- * **Renders nothing yet.** The response is logged while the markup is agreed;
- * the data path is what is being built here.
+ * Renders nothing at all when the lookup finds none or fails: a heading over an
+ * empty row says less than no row.
  */
 export function LocationFeaturedContainers() {
+  const [state, setState] = useState<State>({ status: 'loading' })
+
   useEffect(() => {
     let stored = ''
     try {
@@ -44,9 +56,6 @@ export function LocationFeaturedContainers() {
      * keep right.
      */
     const depot = stored || DEFAULT_LOCATION
-    if (!stored) {
-      console.log('[LocationFeaturedContainers] no %s in storage — falling back to %s', DEPOT_KEY, DEFAULT_LOCATION)
-    }
 
     // Abort on unmount: without it a slow lookup resolves against a component
     // that is gone, and in StrictMode's double-mount the first request is left
@@ -61,31 +70,57 @@ export function LocationFeaturedContainers() {
         )
         if (!res.ok) {
           console.error('[LocationFeaturedContainers] request failed — depot, status:', depot, res.status)
+          setState({ status: 'empty' })
           return
         }
 
         const data = (await res.json()) as FeaturedResponse
-        console.log('[LocationFeaturedContainers] depot:', data.depot)
-        console.log(
-          '[LocationFeaturedContainers] found %d of %d:',
-          data.found,
-          data.requested,
-          data.containers.map((c) => c.spec.key),
+        setState(
+          data.containers.length > 0
+            ? { status: 'ready', containers: data.containers }
+            : { status: 'empty' },
         )
-        console.log('[LocationFeaturedContainers] response:', data)
       } catch (err) {
         if ((err as Error)?.name === 'AbortError') return
         console.error('[LocationFeaturedContainers] lookup threw — depot:', depot, err)
+        setState({ status: 'empty' })
       }
     })()
 
     return () => abort.abort()
   }, [])
 
-  // Nothing on screen yet, deliberately. The depot is not held in state
-  // either: it would only have fed a debug attribute, and setting state inside
-  // this effect is the cascading-render pattern the lint rule forbids. The
-  // console and the network tab are where this is checked until there is
-  // markup to show.
-  return null
+  if (state.status === 'empty') return null
+
+  return (
+    <section aria-labelledby="featured-containers" className="w-full px-4 pb-12 sm:px-6">
+      <h2 id="featured-containers" className="sr-only">
+        Shipping containers available near you
+      </h2>
+
+      {/*
+        `auto-rows-fr` for the same reason as the option cards: stacked in one
+        column each card is its own row, and rows size to their own content, so
+        the longest title would otherwise make one card taller than the rest.
+      */}
+      <ul
+        className="container mx-auto grid auto-rows-fr grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4"
+        // So a screen reader waits for the real cards rather than announcing
+        // four placeholder rows as they appear.
+        aria-busy={state.status === 'loading'}
+      >
+        {state.status === 'loading'
+          ? Array.from({ length: SLOTS }).map((_, i) => (
+              <li key={`skeleton-${i}`} className="flex">
+                <FeaturedContainerCardSkeleton />
+              </li>
+            ))
+          : state.containers.map(({ spec, product }) => (
+              <li key={spec.key} className="flex">
+                <FeaturedContainerCard product={product} />
+              </li>
+            ))}
+      </ul>
+    </section>
+  )
 }
