@@ -28,7 +28,14 @@ export function SelectContainerType({ types, heading = 'Select An Option Below' 
         {heading}
       </h2>
 
-      <ul className="container mx-auto grid grid-cols-1 items-stretch gap-5 sm:grid-cols-3 sm:gap-6">
+      {/*
+        `auto-rows-fr` is what makes the cards the same height on a phone too.
+        Across three columns `items-stretch` is enough, because they share one
+        row. Stacked in a single column each card is its own row, and rows size
+        to their own content — so the one with the longest perk came out taller
+        until the rows were made equal.
+      */}
+      <ul className="container mx-auto grid auto-rows-fr grid-cols-1 items-stretch gap-5 sm:grid-cols-3 sm:gap-6">
         {types.map((type) => (
           <li key={type.item} className="flex">
             <ContainerTypeCardLink type={type} />

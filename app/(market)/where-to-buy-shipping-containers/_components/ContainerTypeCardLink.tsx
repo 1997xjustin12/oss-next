@@ -38,28 +38,38 @@ export function ContainerTypeCardLink({ type }: Props) {
       href={url}
       // `group` so the button can react to a hover anywhere on the card, which
       // is what makes the whole surface read as one control.
-      className="group flex h-full flex-col gap-4 rounded-lg border-2 border-theme-primary/70 bg-white p-4
+      className="group flex h-full w-full flex-col gap-4 rounded-lg border-2 border-theme-primary/70 bg-white p-4
                  transition-shadow hover:shadow-lg
                  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-primary
                  dark:bg-neutral-900 sm:p-5"
     >
       {/*
-        Rendered only when there is one. An empty `src` would make next/image
-        request the page's own URL and draw a broken frame — absence should
-        cost nothing, the same rule the PDP's curated media follows.
+        A fixed 16:9 box, whatever the file is.
+
+        The three sources are 330x171, 1224x637 and 342x180 — different sizes
+        and slightly different shapes. Sized to their own dimensions they came
+        out at three different heights, which pushed each card's perks and
+        button to a different line. The wrapper owns the shape, `fill` makes
+        the image obey it, and `object-contain` fits the whole picture inside
+        without cropping or stretching it.
+
+        Reserved even when there is no image, so a card with artwork and a card
+        without are the same height. An empty `src` is still skipped: next/image
+        would request the page's own URL and draw a broken frame.
       */}
-      {image ? (
-        <Image
-          src={image}
-          // The heading below says "Buy"; repeating it here would make a
-          // screen reader announce the same word twice for one card.
-          alt=""
-          width={400}
-          height={260}
-          sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
-          className="h-auto w-full rounded-md object-contain"
-        />
-      ) : null}
+      <div className="relative w-full overflow-hidden rounded-md aspect-video">
+        {image ? (
+          <Image
+            src={image}
+            // The sr-only heading below says "Buy"; repeating it here would
+            // make a screen reader announce the same word twice for one card.
+            alt=""
+            fill
+            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
+            className="object-contain"
+          />
+        ) : null}
+      </div>
 
       {/* The card's accessible name, and what the alt text above defers to. */}
       <h3 className="sr-only">{item}</h3>

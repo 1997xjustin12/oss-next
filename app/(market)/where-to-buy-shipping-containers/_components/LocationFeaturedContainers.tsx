@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { DEFAULT_LOCATION } from '@/lib/constants'
 
 /** Where the ZIP lookup stores the depot it resolved to. */
 const DEPOT_KEY = 'zipcode_depot'
@@ -31,9 +32,20 @@ export function LocationFeaturedContainers() {
       // Private mode or storage blocked — treated as "no depot yet".
     }
 
+    /**
+     * No stored depot means a visitor who has not given a ZIP yet, which is
+     * most first visits. `DEFAULT_LOCATION` is the catalogue's own name for
+     * the national pool, so they see real containers rather than an empty
+     * band — and the moment they use the search above, storage fills in and
+     * the next render is their depot.
+     *
+     * The constant rather than the string: it is the same value the listing
+     * and the PDP already fall back to, and a second copy is a second thing to
+     * keep right.
+     */
+    const depot = stored || DEFAULT_LOCATION
     if (!stored) {
-      console.log('[LocationFeaturedContainers] no depot in localStorage yet (key: %s)', DEPOT_KEY)
-      return
+      console.log('[LocationFeaturedContainers] no %s in storage — falling back to %s', DEPOT_KEY, DEFAULT_LOCATION)
     }
 
     // Abort on unmount: without it a slow lookup resolves against a component
@@ -44,11 +56,11 @@ export function LocationFeaturedContainers() {
     void (async () => {
       try {
         const res = await fetch(
-          `/api/shipping-containers/featured?depot=${encodeURIComponent(stored)}`,
+          `/api/shipping-containers/featured?depot=${encodeURIComponent(depot)}`,
           { signal: abort.signal },
         )
         if (!res.ok) {
-          console.error('[LocationFeaturedContainers] request failed — depot, status:', stored, res.status)
+          console.error('[LocationFeaturedContainers] request failed — depot, status:', depot, res.status)
           return
         }
 
@@ -63,7 +75,7 @@ export function LocationFeaturedContainers() {
         console.log('[LocationFeaturedContainers] response:', data)
       } catch (err) {
         if ((err as Error)?.name === 'AbortError') return
-        console.error('[LocationFeaturedContainers] lookup threw — depot:', stored, err)
+        console.error('[LocationFeaturedContainers] lookup threw — depot:', depot, err)
       }
     })()
 
