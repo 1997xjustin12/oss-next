@@ -6,10 +6,44 @@ import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
 import { resolvePageMetadata } from "@/lib/seo";
 import { LocationSearch } from "./_components/LocationSearch";
 import { SectionTagline2 } from "./_components/SectionTagline2";
+import { SelectContainerType } from "./_components/SelectContainerType";
+import type { ContainerType } from "./_components/ContainerTypeCardLink";
 
 export function generateMetadata() {
   return resolvePageMetadata(ROUTES.WHERE_TO_BUY);
 }
+
+/**
+ * The three ways to get a container.
+ *
+ * `image` is empty on all three: no Buy / Rent / Rent-To-Own artwork exists
+ * under public/ yet. The card renders without a picture rather than a broken
+ * frame, so dropping the files in and filling these paths is the only step
+ * left.
+ *
+ * The URLs are the listing's own product-type filters, using the same `ptype`
+ * values the navbar and footer already link to.
+ */
+const CONTAINER_TYPES: ContainerType[] = [
+  {
+    item: "Buy",
+    image: "",
+    url: `${ROUTES.PLP}?ptype=buy`,
+    perks: ["Guaranteed Lowest Price", "Huge Selection", "Location Near You"],
+  },
+  {
+    item: "Rent",
+    image: "",
+    url: `${ROUTES.PLP}?ptype=rental`,
+    perks: ["Lowest Price Rate", "Free Rent", "Fast Delivery"],
+  },
+  {
+    item: "Rent-To-Own",
+    image: "",
+    url: `${ROUTES.PLP}?ptype=rto`,
+    perks: ["Affordable Monthly Payment", "Huge Selection", "Everyone Qualifies"],
+  },
+];
 
 /**
  * The depot index — this app's page since 2026-10-13, where WordPress served
@@ -122,6 +156,7 @@ function Hero() {
   );
 }
 
+
 export default function WhereToBuyPage() {
   return (
     <>
@@ -129,6 +164,7 @@ export default function WhereToBuyPage() {
       <main>
         <Hero />
         <SectionTagline2 text="On-Site Storage Solutions have a shipping container near you" />
+        <SelectContainerType types={CONTAINER_TYPES} />
         <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT TYPES OF SHIPPING CONTAINER" />
         <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT CONDITIONS OF SHIPPING CONTAINER" />
       </main>
