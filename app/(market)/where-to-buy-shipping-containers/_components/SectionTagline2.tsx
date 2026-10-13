@@ -13,10 +13,11 @@ type Props = {
 /**
  * A full-width band carrying one heading.
  *
- * Both fills come from the theme tokens rather than hex, so the band follows a
- * brand change instead of having to be found and edited. Red is
- * `--color-theme-primary`; blue is `--color-theme-accent`, the navy already
- * defined beside it.
+ * Red is the theme token `--color-theme-primary`, so it follows a brand change
+ * on its own. Blue is a literal: #0F3A59 is the supplied colour and is not
+ * `--color-theme-accent` (#003087), the navy already in the palette. It is the
+ * same blue the hero's h2 uses, so it now appears twice in this route — worth
+ * promoting to a token if a third use turns up.
  *
  * Kept as a lookup rather than a ternary in the class string: a template
  * literal that interpolates a variant name produces a class Tailwind never
@@ -24,7 +25,7 @@ type Props = {
  */
 const BACKGROUNDS: Record<SectionTaglineBg, string> = {
   red: 'bg-theme-primary',
-  blue: 'bg-theme-accent',
+  blue: 'bg-[#0F3A59]',
 }
 
 /**

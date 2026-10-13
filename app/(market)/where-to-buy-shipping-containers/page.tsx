@@ -129,6 +129,8 @@ export default function WhereToBuyPage() {
       <main>
         <Hero />
         <SectionTagline2 text="On-Site Storage Solutions have a shipping container near you" />
+        <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT TYPES OF SHIPPING CONTAINER" />
+        <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT CONDITIONS OF SHIPPING CONTAINER" />
       </main>
     </>
   );
