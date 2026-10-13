@@ -57,12 +57,19 @@ function Hero() {
       />
 
       {/*
-        The scrim, not a decorative flourish: white text over a photograph is
-        unreadable wherever the photograph happens to be light. Deeper in dark
-        mode, matching the homepage hero, so the page does not glare at someone
-        who asked for a dark theme.
+        No scrim.
+
+        There was one — `absolute inset-0 -z-10 bg-black/55` — and it never
+        did anything: `-z-10` against the image's `z-index: auto` painted it
+        *behind* the photograph it was meant to darken. It was written for
+        white text, and the text is now black, so the right fix is to delete it
+        rather than correct the stacking. Doing the latter would dim the
+        photograph under black text and make the headline harder to read, not
+        easier.
+
+        Legibility now rests on the supplied `text-shadow` — a white glow
+        under black type, which is what the spec uses in place of a scrim.
       */}
-      <div className="absolute inset-0 -z-10 bg-black/55 dark:bg-black/70" />
 
       {/*
         Left-aligned, not centred: `items-start` + `text-left`. `mx-auto` stays
@@ -70,11 +77,17 @@ function Hero() {
         without it the content would pin to the far edge of a 2560px screen.
       */}
       <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-start gap-5 px-4 py-14 text-left sm:gap-6 sm:px-6 sm:py-20">
-        <h1 className="text-3xl font-extrabold uppercase leading-tight tracking-tight text-white drop-shadow-sm sm:text-4xl lg:text-5xl">
+        {/*
+          Typography is the supplied spec, one class per declared rule:
+          48px / 400 / uppercase / white text-shadow / black. No responsive
+          ramp, because none was given — see the note in the commit about how
+          48px behaves at 390px.
+        */}
+        <h1 className="text-[48px] font-normal uppercase text-[#000000] [text-shadow:0px_3px_3px_rgba(255,255,255,0.75)]">
           Where to Buy Shipping Containers
         </h1>
 
-        <h2 className="max-w-3xl text-lg font-semibold leading-snug text-white/90 sm:text-xl lg:text-2xl">
+        <h2 className="max-w-3xl text-[24px] leading-[1.3em] text-[#0F3A59]">
           Looking For &ldquo;Shipping Containers Near Me&rdquo;?
         </h2>
 
