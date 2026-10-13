@@ -113,7 +113,20 @@ export type PlaceOrderResponse =
 // against a real populated order on this app's own backend (this test
 // account has zero orders). `price` arrives as a string; parseFloat before
 // doing math with it.
-export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
+/**
+ * `unpaid` is what checkout now creates: the order exists, nothing has been
+ * taken for it, and the backend's payment page is where that changes. It is
+ * deliberately distinct from `pending`, which reads as "received, being worked
+ * on" — the wrong thing to tell someone who still owes money.
+ */
+export type OrderStatus =
+  | 'unpaid'
+  | 'pending'
+  | 'paid'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'refunded'
 
 export interface OrderListItem {
   product_id: string | number

@@ -22,6 +22,10 @@ import type { Review } from '@/types/review'
 const REVIEWABLE: OrderStatus[] = ['delivered']
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
+  // Orange rather than Pending's amber: these are adjacent states and a
+  // customer scanning the list should be able to tell "we owe you nothing yet"
+  // from "we have it in hand" without reading the word.
+  unpaid:    { label: 'Unpaid',    className: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-400 dark:border-orange-900/50' },
   pending:   { label: 'Pending',   className: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50' },
   paid:      { label: 'Paid',      className: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/50' },
   shipped:   { label: 'Shipped',   className: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-900/50' },

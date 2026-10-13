@@ -20,7 +20,7 @@ import type { PlaceOrderRequest, PlaceOrderResponse } from '@/types/order'
  *
  *   1. the total is recomputed from the cart (never taken from the request),
  *      and the order is refused if it comes out higher than the page showed;
- *   2. the order is recorded with `status: 'pending'` and
+ *   2. the order is recorded with `status: 'unpaid'` and
  *      `payment_method: 'card'`, carrying no payment details, because none
  *      have been taken;
  *   3. the backend returns a payment link, which the browser redirects to.
@@ -28,7 +28,7 @@ import type { PlaceOrderRequest, PlaceOrderResponse } from '@/types/order'
  * No money moves here any more, which removes the failure this route was
  * built around: there is no charge left to strand when recording fails, and
  * nothing to void. It introduces the opposite one — an order can now exist
- * that was never paid for — which is what `status: 'pending'` is for.
+ * that was never paid for — which is what `status: 'unpaid'` is for.
  *
  * ## The cart is not cleared when we redirect
  *
@@ -165,7 +165,10 @@ export async function POST(request: NextRequest) {
         items: body.items,
         shipping_method: body.shipping_method,
         payment_method: 'card',
-        status: 'pending',
+        // Not 'pending': that reads as "we have it, we are working on it",
+        // which is exactly wrong for an order nobody has paid for yet. The
+        // backend's payment page moves it on from here.
+        status: 'unpaid',
         // No payment has been taken, so there is nothing truthful to put in
         // `payment_status` or `payment_details`. The backend's payment page
         // owns both from here.
