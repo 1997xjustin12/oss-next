@@ -32,8 +32,15 @@ export function generateMetadata() {
  * with their route. It moves out the moment a second page wants it.
  */
 function Hero() {
+  // No `overflow-hidden` on the section, deliberately. It was clipping the
+  // location search's suggestion list by 140px — the third suggestion onward
+  // sat below the hero's bottom edge and could not be read or clicked. Nothing
+  // needs the clip: the background image is `fill`, so it is
+  // `position: absolute; inset: 0` and cannot overflow the section it is
+  // measured against, and the scrim is the same. The clip was defending
+  // against an overflow that does not exist, at the cost of one that does.
   return (
-    <section className="relative isolate flex min-h-[20rem] items-center justify-center overflow-hidden sm:min-h-[26rem] lg:min-h-[32rem]">
+    <section className="relative isolate flex min-h-[20rem] items-center justify-center sm:min-h-[26rem] lg:min-h-[32rem]">
       {/*
         `fill` + `priority`: this is the LCP element, so it must not wait for
         layout to discover it. `sizes="100vw"` because it spans the viewport at
