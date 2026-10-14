@@ -25,9 +25,10 @@ const CHANGE_PASSWORD_URL = `${BACKEND_URL}api/auth/change-password`
 // auto-login the new user by returning an AuthSession.
 const REGISTER_URL = `${BACKEND_URL}api/auth/register`
 
-// TODO: confirm the real password-reset endpoint + request/response contract
-// against the OSS backend — placeholder assumed to mirror LOGIN_URL.
-const LOST_PASSWORD_URL = `${BACKEND_URL}api/auth/lost-password/`
+// Confirmed 2026-10-14 against the backend's own schema: POST {email}. The
+// `lost-password/` this used to point at does not exist there — it 404'd, so
+// no reset email was ever sent from this app.
+const FORGOT_PASSWORD_URL = `${BACKEND_URL}api/auth/forgot-password`
 
 
 // The OSS backend's exact auth response shape isn't documented. Different
@@ -164,16 +165,24 @@ export async function loginUser(identifier: string, password: string): Promise<A
   )
 }
 
-export async function requestPasswordReset(usernameOrEmail: string): Promise<void> {
-  const res = await fetch(LOST_PASSWORD_URL, {
+/**
+ * Ask the backend to email a reset link.
+ *
+ * It takes `{email}` only, and answers 200 "If the email exists, a reset link
+ * has been sent." for every address — so this cannot be used to discover which
+ * emails have accounts, and neither should anything built on it.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const res = await fetch(FORGOT_PASSWORD_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: usernameOrEmail }),
+    body: JSON.stringify({ email }),
   })
 
   if (!res.ok) {
     const data = await res.json().catch(() => null)
-    throw new Error(data?.error ?? data?.detail ?? 'Could not send reset link. Please try again.')
+    logBackendRejection('user.service forgot-password', res.status, data)
+    throw new Error(data?.error ?? data?.detail ?? fieldErrorMessage(data) ?? 'Could not send reset link. Please try again.')
   }
 }
 

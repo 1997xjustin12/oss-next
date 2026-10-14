@@ -31,6 +31,29 @@ const nextConfig: NextConfig = {
    */
   async headers() {
     return [
+      /**
+       * Baseline hardening, on every response.
+       *
+       * - frame-ancestors: no other site can frame these pages, so the login
+       *   and register forms cannot be overlaid for clickjacking. Our own
+       *   domains stay allowed. This CSP sets nothing else — a script-src
+       *   policy would need every third-party script (GTM, reCAPTCHA,
+       *   Braintree, the admin's per-page scripts) audited first.
+       * - nosniff: a response is only ever run as the type it was served as.
+       * - Referrer-Policy: other sites get our origin, never full URLs, which
+       *   can carry a password-reset token.
+       */
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self' https://onsitestorage.com https://*.onsitestorage.com",
+          },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
       {
         source: "/resources/pdp-videos/:file*",
         headers: [

@@ -16,7 +16,7 @@ export function LostPasswordForm() {
     setError(null)
 
     if (!value) {
-      setError('Please enter your username or email address.')
+      setError('Please enter your email address.')
       return
     }
 
@@ -25,7 +25,7 @@ export function LostPasswordForm() {
       const res = await fetch('/api/auth/lost-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: value }),
+        body: JSON.stringify({ email: value.trim() }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error ?? 'Could not send reset link. Please try again.')
@@ -57,7 +57,7 @@ export function LostPasswordForm() {
     <div>
       <h2 className="text-lg font-bold text-theme-dark mb-2 dark:text-white">Lost your password?</h2>
       <p className="text-sm text-theme-muted mb-6 dark:text-gray-400">
-        Please enter your username or email address. You will receive a link to create a new password via email.
+        Please enter the email address on your account. You will receive a link to create a new password via email.
       </p>
 
       {error && (
@@ -70,13 +70,13 @@ export function LostPasswordForm() {
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <div>
           <label htmlFor="lost-password-identifier" className="block text-sm font-semibold text-theme-dark-2 mb-1.5 dark:text-gray-300">
-            Username Or Email <span className="text-theme-primary dark:text-red-400">*</span>
+            Email Address <span className="text-theme-primary dark:text-red-400">*</span>
           </label>
           <input
             id="lost-password-identifier"
-            type="text"
+            type="email"
             required
-            autoComplete="username"
+            autoComplete="email"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             className="w-full rounded-md border border-theme-border bg-theme-subtle px-3.5 py-2.5 text-sm text-theme-dark
