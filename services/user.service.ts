@@ -1,3 +1,4 @@
+import { logBackendRejection } from '@/lib/backendError'
 import type { AccountDetailsPayload, AuthSession, ProfileUpdatePayload, RegisterPayload, User, UserProfile } from '@/types/user'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
@@ -22,7 +23,7 @@ const CHANGE_PASSWORD_URL = `${BACKEND_URL}api/auth/change-password`
 // TODO: confirm the real registration endpoint + request/response contract
 // against the OSS backend — placeholder assumed to mirror LOGIN_URL and to
 // auto-login the new user by returning an AuthSession.
-const REGISTER_URL = `${BACKEND_URL}api/auth/register/`
+const REGISTER_URL = `${BACKEND_URL}api/auth/register`
 
 // TODO: confirm the real password-reset endpoint + request/response contract
 // against the OSS backend — placeholder assumed to mirror LOGIN_URL.
@@ -149,20 +150,116 @@ export async function requestPasswordReset(usernameOrEmail: string): Promise<voi
   }
 }
 
+/**
+ * The body the backend's register endpoint actually wants.
+ *
+ * It was being sent the form's own field names — `firstName`, `lastName`,
+ * `contactNumber` — and none of them exist there. Asked directly, it answers:
+ *
+ *   {"username": ["This field is required."],
+ *    "first_name": ["This field is required."],
+ *    "last_name": ["This field is required."],
+ *    "password2": ["This field is required."]}
+ *
+ * So: snake_case, a `username`, and the password twice.
+ *
+ * `username` is derived from the email, not the email itself. The backend
+ * refuses an address outright — "Username must contain only letters, numbers,
+ * and underscores" — so `@` and `.` become `_`. The mapping is one-to-one, so
+ * two customers cannot collide the way `john.doe@a.com` and `johndoe@b.com`
+ * would if only the local part were used.
+ *
+ * **This is the one link not proven end to end.** The login form sends the raw
+ * email as `username`, so whether a customer can sign in after registering
+ * depends on the backend resolving login by email as well as by username —
+ * and it answers "No active account found with the given credentials" for both
+ * shapes, so it cannot be told from outside. One real registration followed by
+ * one login settles it. If login fails, the fix is to apply this same
+ * transform in LoginForm.
+ *
+ * `password2` is the confirmation. The form already makes the customer type
+ * it twice and checks they match before submitting, so sending the same value
+ * is the truthful thing to send rather than a second prompt.
+ */
+export function usernameFromEmail(email: string): string {
+  return email.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')
+}
+
+function toBackendRegisterBody(payload: RegisterPayload) {
+  return {
+    username: usernameFromEmail(payload.email),
+    email: payload.email,
+    first_name: payload.firstName,
+    last_name: payload.lastName,
+    password: payload.password,
+    password2: payload.password,
+    contact_number: payload.contactNumber,
+    ...(payload.companyName ? { company_name: payload.companyName } : {}),
+  }
+}
+
 export async function registerUser(payload: RegisterPayload): Promise<AuthSession> {
   const res = await fetch(REGISTER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(toBackendRegisterBody(payload)),
   })
 
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
-    throw new Error(data?.error ?? data?.detail ?? 'Registration failed. Please try again.')
+    /**
+     * Log the backend's own words before they are thrown away.
+     *
+     * This function used to fall straight to "Registration failed. Please try
+     * again." whenever the body carried neither `error` nor `detail` — and a
+     * Django REST field error carries neither. It is
+     * `{"email": ["user with this email already exists."]}`, so every
+     * duplicate address, weak password and malformed phone number arrived as
+     * the same unactionable sentence, with nothing in the logs either. That is
+     * the same hole `logBackendRejection` was added for in the order service
+     * on 2026-09-15; registration never got it.
+     */
+    logBackendRejection('user.service register', res.status, data)
+
+    throw new Error(
+      data?.error ?? data?.detail ?? fieldErrorMessage(data) ?? 'Registration failed. Please try again.',
+    )
   }
 
   return await normalizeSession(data ?? {}, payload.email)
+}
+
+/**
+ * A readable sentence from a Django REST field-error body.
+ *
+ * `{"email": ["user with this email already exists."]}` becomes
+ * "Email: user with this email already exists." — which tells the customer
+ * what to change, where the generic fallback did not.
+ *
+ * Returns undefined for anything that is not that shape, so the caller's
+ * fallback still applies rather than this inventing a message.
+ */
+function fieldErrorMessage(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return undefined
+
+  const parts = Object.entries(data as Record<string, unknown>)
+    .map(([field, value]) => {
+      const text = Array.isArray(value)
+        ? value.filter((v) => typeof v === 'string').join(' ')
+        : typeof value === 'string'
+          ? value
+          : ''
+      if (!text) return ''
+      // `non_field_errors` is DRF's name for "this is about the record, not a
+      // field" — prefixing it with a label would read as nonsense.
+      if (field === 'non_field_errors') return text
+      const label = field.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
+      return `${label}: ${text}`
+    })
+    .filter(Boolean)
+
+  return parts.length ? parts.join(' ') : undefined
 }
 
 // TODO: confirm the real field name for the rotated access token — assumed

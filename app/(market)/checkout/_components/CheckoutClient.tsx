@@ -896,22 +896,22 @@ export function CheckoutClient() {
 
       if (result.paymentUrl) {
         /**
-         * The cart is deliberately NOT cleared here.
+         * Cleared on the way to the payment page.
          *
-         * It was, briefly. The order exists by this point, so clearing looked
-         * like the way to stop a second attempt becoming a second order — but
-         * the customer has not paid yet, and emptying their cart on the way
-         * to the payment page strands anyone who abandons it, loses their
-         * connection, or simply wants to check something first. They come back
-         * to an empty cart and no obvious way to resume.
+         * The order exists by this point, so the cart has done its job and
+         * keeping it is what lets a second attempt become a second order.
          *
-         * The order is `pending`, so an unpaid one is recoverable; an emptied
-         * cart in the customer's browser is not. The cart should be cleared
-         * when payment is confirmed, which happens on the backend's page — see
-         * the note in the route handler.
+         * Cleared *before* `assign` rather than after: the navigation ends
+         * this page, so anything queued behind it may never run. This is the
+         * last moment we control.
          *
-         * Hand off to the payment page. Deliberately not inside `finally`
-         * territory: `submitting` stays true so the button keeps spinning
+         * The cost is the abandoned-payment case — someone who leaves the
+         * payment page comes back to an empty cart. Their order is `unpaid`
+         * rather than lost, so it is recoverable, but recovering it is not
+         * something this storefront offers yet. See the note in the route
+         * handler about the missing return route.
+         *
+         * `submitting` deliberately stays true: the button keeps spinning
          * through the navigation instead of flicking back to "Place Order"
          * and inviting a second click while the browser is leaving.
          *
@@ -919,6 +919,7 @@ export function CheckoutClient() {
          * it is a call rather than a write to a global, which is what
          * react-hooks/immutability objects to.
          */
+        clearCart();
         window.location.assign(result.paymentUrl);
         return;
       }
