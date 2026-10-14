@@ -2,7 +2,8 @@
 
 import { useEffect, useState, FormEvent } from 'react'
 import Link from 'next/link'
-import { Eye, EyeOff, Info } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
+import { SITE } from '@/config/site'
 import { useAuth } from '@/hooks/useAuth'
 import { getRecaptchaToken, preloadRecaptcha } from '@/lib/recaptchaClient'
 import type { AuthSession, RegisterPayload } from '@/types/user'
@@ -24,8 +25,21 @@ const BENEFITS = [
   'Dedicated Account Representative',
 ]
 
-// The backend's own rule, checked here so the customer hears it before submitting.
-const USERNAME_PATTERN = /^[A-Za-z0-9_]+$/
+/**
+ * The backend allows letters, numbers and underscores at any length, and
+ * refuses a dot. On top of that this app asks for 3-20 characters and a letter
+ * or number first, which is what USERNAME_RULES tells the customer. Consecutive
+ * underscores are only discouraged, so they are not checked.
+ */
+const USERNAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_]{2,19}$/
+
+const USERNAME_RULES = [
+  'Must be 3-20 characters long.',
+  'Can contain letters, numbers, or underscores (_).',
+  'Must start with a letter or number.',
+  'No spaces or special characters (like -, @, #, !, ., etc.).',
+  'Avoid consecutive underscores for best readability (e.g., prefer john_doe over john__doe).',
+]
 
 const INITIAL_STATE: RegisterFormState = {
   username: '',
@@ -66,7 +80,7 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
       return
     }
     if (!USERNAME_PATTERN.test(username.trim())) {
-      setError('Username can only contain letters, numbers, and underscores.')
+      setError('Please choose a username that follows the rules below the username field.')
       return
     }
     if (password !== confirmPassword) {
@@ -148,69 +162,41 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label htmlFor="reg-first-name" className={labelClass}>
-              First Name <span className="text-theme-primary dark:text-red-400">*</span>
-            </label>
-            <input
-              id="reg-first-name"
-              type="text"
-              required
-              autoComplete="given-name"
-              value={form.firstName}
-              onChange={(e) => update('firstName', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label htmlFor="reg-last-name" className={labelClass}>
-              Last Name <span className="text-theme-primary dark:text-red-400">*</span>
-            </label>
-            <input
-              id="reg-last-name"
-              type="text"
-              required
-              autoComplete="family-name"
-              value={form.lastName}
-              onChange={(e) => update('lastName', e.target.value)}
-              className={inputClass}
-            />
-          </div>
+        <div>
+          <label htmlFor="reg-first-name" className={labelClass}>
+            First Name <span className="text-theme-primary dark:text-red-400">*</span>
+          </label>
+          <input
+            id="reg-first-name"
+            type="text"
+            required
+            autoComplete="given-name"
+            value={form.firstName}
+            onChange={(e) => update('firstName', e.target.value)}
+            className={inputClass}
+            placeholder="First name"
+          />
         </div>
 
         <div>
-          <label htmlFor="reg-username" className="flex items-center gap-1.5 text-sm font-semibold text-theme-dark-2 mb-1.5 dark:text-gray-300">
-            Username <span className="text-theme-primary dark:text-red-400">*</span>
-            <span className="group relative inline-flex">
-              <Info size={13} className="text-theme-muted cursor-help dark:text-gray-400" />
-              <span
-                role="tooltip"
-                className="pointer-events-none absolute left-1/2 top-full z-10 mt-1.5 w-48 -translate-x-1/2 rounded-md
-                           bg-theme-dark px-2.5 py-1.5 text-xs text-white opacity-0 shadow-lg transition-opacity
-                           group-hover:opacity-100 dark:bg-gray-700"
-              >
-                Letters, numbers, and underscores only. You&apos;ll use this to log in.
-              </span>
-            </span>
+          <label htmlFor="reg-last-name" className={labelClass}>
+            Last Name <span className="text-theme-primary dark:text-red-400">*</span>
           </label>
           <input
-            id="reg-username"
+            id="reg-last-name"
             type="text"
             required
-            autoComplete="username"
-            autoCapitalize="none"
-            spellCheck={false}
-            value={form.username}
-            onChange={(e) => update('username', e.target.value)}
+            autoComplete="family-name"
+            value={form.lastName}
+            onChange={(e) => update('lastName', e.target.value)}
             className={inputClass}
-            placeholder="your_username"
+            placeholder="Last name"
           />
         </div>
 
         <div>
           <label htmlFor="reg-email" className={labelClass}>
-            Email Address <span className="text-theme-primary dark:text-red-400">*</span>
+            Email <span className="text-theme-primary dark:text-red-400">*</span>
           </label>
           <input
             id="reg-email"
@@ -220,7 +206,35 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
             value={form.email}
             onChange={(e) => update('email', e.target.value)}
             className={inputClass}
+            placeholder="Email"
           />
+        </div>
+
+        <div>
+          <label htmlFor="reg-username" className={labelClass}>
+            Username <span className="text-theme-primary dark:text-red-400">*</span>
+          </label>
+          <input
+            id="reg-username"
+            type="text"
+            required
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            aria-describedby="reg-username-rules"
+            value={form.username}
+            onChange={(e) => update('username', e.target.value)}
+            className={inputClass}
+            placeholder="Username"
+          />
+          <div id="reg-username-rules" className="mt-3 text-sm text-theme-dark-2 dark:text-gray-300">
+            <p className="mb-2">Follow these rules when choosing a username.</p>
+            <ul className="space-y-1 pl-4 list-disc marker:text-theme-primary dark:marker:text-red-400">
+              {USERNAME_RULES.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div>
@@ -236,6 +250,7 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
               value={form.password}
               onChange={(e) => update('password', e.target.value)}
               className={`${inputClass} pr-11`}
+              placeholder="Password"
             />
             <button
               type="button"
@@ -261,6 +276,7 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
               value={form.confirmPassword}
               onChange={(e) => update('confirmPassword', e.target.value)}
               className={`${inputClass} pr-11`}
+              placeholder="Confirm password"
             />
             <button
               type="button"
@@ -273,7 +289,6 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
           </div>
         </div>
 
-        {/* Only rendered when NEXT_PUBLIC_RECAPTCHA_SITE_KEY is configured — see lib/recaptcha.ts */}
         {/*
           Nothing rendered for reCAPTCHA: v3 is invisible and shows its
           own floating badge. The token is fetched in handleSubmit.
@@ -284,28 +299,30 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
             type="checkbox"
             checked={form.acceptedTerms}
             onChange={(e) => update('acceptedTerms', e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-theme-border text-theme-primary focus:ring-theme-primary dark:border-gray-600 dark:bg-gray-800"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-theme-border text-theme-primary focus:ring-theme-primary dark:border-gray-600 dark:bg-gray-800"
           />
           <span>
-            I&apos;ve read and accept the{' '}
+            <span className="text-theme-primary dark:text-red-400">*</span> By checking this box, I agree to{' '}
+            {SITE.name}&apos;s{' '}
             <Link href="/terms-and-conditions" className="text-theme-primary hover:underline dark:text-red-400">
-              terms &amp; conditions
-            </Link>{' '}
-            <span className="text-theme-primary dark:text-red-400">*</span>
+              Terms and conditions
+            </Link>
+            , and{' '}
+            <Link href="/privacy-policy" className="text-theme-primary hover:underline dark:text-red-400">
+              Privacy policy
+            </Link>
           </span>
         </label>
 
-        <div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded-md bg-theme-primary hover:bg-theme-primary-dark text-white font-semibold px-6 py-2.5 text-sm
-                       transition-colors disabled:cursor-not-allowed disabled:opacity-60
-                       focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-          >
-            {isSubmitting ? 'Creating Account…' : 'Register'}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full rounded-md bg-theme-primary hover:bg-theme-primary-dark text-white font-semibold px-6 py-2.5 text-sm
+                     transition-colors disabled:cursor-not-allowed disabled:opacity-60
+                     focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+        >
+          {isSubmitting ? 'Creating Account…' : 'Create account'}
+        </button>
       </form>
     </div>
   )
