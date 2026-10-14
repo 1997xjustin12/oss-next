@@ -118,7 +118,7 @@ async function normalizeSession(data: Record<string, unknown>, fallbackUsername:
   return { user, token, refreshToken }
 }
 
-export async function loginUser(username: string, password: string): Promise<AuthSession> {
+async function postLogin(username: string, password: string) {
   const res = await fetch(LOGIN_URL, {
     method: 'POST',
     headers: {
@@ -128,13 +128,40 @@ export async function loginUser(username: string, password: string): Promise<Aut
     body: JSON.stringify({ username, password }),
   })
 
-  const data = await res.json().catch(() => null)
+  return { ok: res.ok, data: (await res.json().catch(() => null)) as Record<string, unknown> | null }
+}
 
-  if (!res.ok) {
-    throw new Error(data?.error ?? data?.detail ?? 'Invalid username or password.')
+/**
+ * Sign in by username or by email address.
+ *
+ * The login form asks for an email, but the backend authenticates on
+ * `username` only — proven 2026-10-14: an account registered through this app
+ * answers 200 for its stored username and 401 for the email address it was
+ * registered with. Since `usernameFromEmail` derives that username from the
+ * email, every customer who signed up here could never sign in again.
+ *
+ * So: try what they typed, and only if that is refused, try the username their
+ * email derives to. That order matters. Transforming first would break the
+ * accounts that predate this app, whose usernames are not derived from
+ * anything — and the extra request only ever happens on a failed attempt.
+ *
+ * The refusal reported is the first one, about what they actually typed.
+ */
+export async function loginUser(identifier: string, password: string): Promise<AuthSession> {
+  const typed = await postLogin(identifier, password)
+  if (typed.ok) return await normalizeSession(typed.data ?? {}, identifier)
+
+  const derived = usernameFromEmail(identifier)
+  if (derived !== identifier) {
+    const asUsername = await postLogin(derived, password)
+    if (asUsername.ok) return await normalizeSession(asUsername.data ?? {}, derived)
   }
 
-  return await normalizeSession(data ?? {}, username)
+  throw new Error(
+    (typed.data?.error as string | undefined) ??
+      (typed.data?.detail as string | undefined) ??
+      'Invalid username or password.',
+  )
 }
 
 export async function requestPasswordReset(usernameOrEmail: string): Promise<void> {
@@ -169,13 +196,12 @@ export async function requestPasswordReset(usernameOrEmail: string): Promise<voi
  * two customers cannot collide the way `john.doe@a.com` and `johndoe@b.com`
  * would if only the local part were used.
  *
- * **This is the one link not proven end to end.** The login form sends the raw
- * email as `username`, so whether a customer can sign in after registering
- * depends on the backend resolving login by email as well as by username —
- * and it answers "No active account found with the given credentials" for both
- * shapes, so it cannot be told from outside. One real registration followed by
- * one login settles it. If login fails, the fix is to apply this same
- * transform in LoginForm.
+ * **Proven end to end 2026-10-14, and it needed the fix.** One real
+ * registration followed by one login settled it: the backend answers 200 for
+ * the derived username and 401 for the email address the account was
+ * registered with. It does not resolve a login by email. `loginUser` now
+ * falls back to this transform when what the customer typed is refused, which
+ * is what makes an account registered here usable afterwards.
  *
  * `password2` is the confirmation. The form already makes the customer type
  * it twice and checks they match before submitting, so sending the same value
@@ -199,6 +225,9 @@ function toBackendRegisterBody(payload: RegisterPayload) {
 }
 
 export async function registerUser(payload: RegisterPayload): Promise<AuthSession> {
+  // The same username toBackendRegisterBody sends, for the sign-in below.
+  const username = usernameFromEmail(payload.email)
+
   const res = await fetch(REGISTER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -227,7 +256,25 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
     )
   }
 
-  return await normalizeSession(data ?? {}, payload.email)
+  /**
+   * Registration does not sign anyone in, so this does.
+   *
+   * The endpoint answers 201 with the created user's fields and nothing else
+   * — `{username, email, first_name, last_name}`, no `access`, no `refresh`
+   * (proven 2026-10-14). This used to hand that straight to
+   * `normalizeSession`, which found no token and threw "Unexpected response
+   * from server: missing auth token." *after* the account had been created:
+   * the customer saw a server error, and a second attempt then told them the
+   * email was already taken.
+   *
+   * The account exists by this point, so a failure here is no longer about
+   * registration. Say so plainly and send them to the login form rather than
+   * letting them try to register again.
+   */
+  return await loginUser(username, payload.password).catch((err) => {
+    console.error('[user.service register] account created but sign-in failed', err)
+    throw new Error('Your account was created, but we could not sign you in. Please log in.')
+  })
 }
 
 /**

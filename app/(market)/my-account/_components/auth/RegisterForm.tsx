@@ -43,7 +43,7 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-// Load the script while the form is being filled, not at submit: v3 scores
+  // Load the script while the form is being filled, not at submit: v3 scores
   // on observed behaviour, and a script that arrives at the click has seen
   // nothing. The token itself is still minted at submit.
   useEffect(() => {
