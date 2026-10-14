@@ -37,11 +37,12 @@ export interface AuthSession {
   refreshToken?: string
 }
 
+// Mirrors POST {backend}/api/auth/register exactly — it accepts nothing else
+// (no phone, no company), so the form collects nothing else.
 export interface RegisterPayload {
+  username: string
   firstName: string
   lastName: string
-  contactNumber: string
-  companyName?: string
   email: string
   password: string
 }

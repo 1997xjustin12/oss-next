@@ -24,11 +24,13 @@ const BENEFITS = [
   'Dedicated Account Representative',
 ]
 
+// The backend's own rule, checked here so the customer hears it before submitting.
+const USERNAME_PATTERN = /^[A-Za-z0-9_]+$/
+
 const INITIAL_STATE: RegisterFormState = {
+  username: '',
   firstName: '',
   lastName: '',
-  contactNumber: '',
-  companyName: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -57,10 +59,14 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
     e.preventDefault()
     setError(null)
 
-    const { firstName, lastName, contactNumber, email, password, confirmPassword, acceptedTerms } = form
+    const { username, firstName, lastName, email, password, confirmPassword, acceptedTerms } = form
 
-    if (!firstName || !lastName || !contactNumber || !email || !password || !confirmPassword) {
+    if (!username || !firstName || !lastName || !email || !password || !confirmPassword) {
       setError('Please fill in all required fields.')
+      return
+    }
+    if (!USERNAME_PATTERN.test(username.trim())) {
+      setError('Username can only contain letters, numbers, and underscores.')
       return
     }
     if (password !== confirmPassword) {
@@ -86,10 +92,9 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
         : null
 
       const payload: RegisterPayload & { recaptchaToken?: string | null } = {
+        username: form.username,
         firstName: form.firstName,
         lastName: form.lastName,
-        contactNumber: form.contactNumber,
-        companyName: form.companyName,
         email: form.email,
         password: form.password,
         recaptchaToken,
@@ -175,8 +180,8 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
         </div>
 
         <div>
-          <label htmlFor="reg-contact" className="flex items-center gap-1.5 text-sm font-semibold text-theme-dark-2 mb-1.5 dark:text-gray-300">
-            Contact Number <span className="text-theme-primary dark:text-red-400">*</span>
+          <label htmlFor="reg-username" className="flex items-center gap-1.5 text-sm font-semibold text-theme-dark-2 mb-1.5 dark:text-gray-300">
+            Username <span className="text-theme-primary dark:text-red-400">*</span>
             <span className="group relative inline-flex">
               <Info size={13} className="text-theme-muted cursor-help dark:text-gray-400" />
               <span
@@ -185,33 +190,21 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
                            bg-theme-dark px-2.5 py-1.5 text-xs text-white opacity-0 shadow-lg transition-opacity
                            group-hover:opacity-100 dark:bg-gray-700"
               >
-                Include country code, e.g. +1 555 123 4567
+                Letters, numbers, and underscores only. You&apos;ll use this to log in.
               </span>
             </span>
           </label>
           <input
-            id="reg-contact"
-            type="tel"
-            required
-            autoComplete="tel"
-            value={form.contactNumber}
-            onChange={(e) => update('contactNumber', e.target.value)}
-            className={inputClass}
-            placeholder="+1 (555) 123-4567"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="reg-company" className={labelClass}>
-            Company Name
-          </label>
-          <input
-            id="reg-company"
+            id="reg-username"
             type="text"
-            autoComplete="organization"
-            value={form.companyName}
-            onChange={(e) => update('companyName', e.target.value)}
+            required
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={form.username}
+            onChange={(e) => update('username', e.target.value)}
             className={inputClass}
+            placeholder="your_username"
           />
         </div>
 

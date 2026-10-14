@@ -7,9 +7,9 @@ export async function POST(request: NextRequest) {
   const { recaptchaToken, ...payload } = (await request.json()) as Partial<RegisterPayload> & {
     recaptchaToken?: string
   }
-  const { firstName, lastName, contactNumber, email, password } = payload
+  const { username, firstName, lastName, email, password } = payload
 
-  if (!firstName || !lastName || !contactNumber || !email || !password) {
+  if (!username || !firstName || !lastName || !email || !password) {
     return NextResponse.json({ error: 'Please fill in all required fields.' }, { status: 400 })
   }
 

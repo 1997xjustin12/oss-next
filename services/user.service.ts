@@ -134,16 +134,16 @@ async function postLogin(username: string, password: string) {
 /**
  * Sign in by username or by email address.
  *
- * The login form asks for an email, but the backend authenticates on
- * `username` only — proven 2026-10-14: an account registered through this app
- * answers 200 for its stored username and 401 for the email address it was
- * registered with. Since `usernameFromEmail` derives that username from the
- * email, every customer who signed up here could never sign in again.
+ * The backend authenticates on `username` only — proven 2026-10-14: an
+ * account answers 200 for its username and 401 for its email address. So
+ * customers who chose a username at registration sign in with that.
  *
+ * Accounts registered here before the form asked for a username got one
+ * derived from their email (`usernameFromEmail`), and only know their email.
  * So: try what they typed, and only if that is refused, try the username their
- * email derives to. That order matters. Transforming first would break the
- * accounts that predate this app, whose usernames are not derived from
- * anything — and the extra request only ever happens on a failed attempt.
+ * email derives to. That order matters. Transforming first would break every
+ * account whose username is not derived from anything — and the extra request
+ * only ever happens on a failed attempt.
  *
  * The refusal reported is the first one, about what they actually typed.
  */
@@ -188,50 +188,47 @@ export async function requestPasswordReset(usernameOrEmail: string): Promise<voi
  *    "last_name": ["This field is required."],
  *    "password2": ["This field is required."]}
  *
- * So: snake_case, a `username`, and the password twice.
+ * So: snake_case, a `username`, and the password twice. Those six fields are
+ * the whole contract — its OPTIONS schema lists nothing else, and a
+ * `contact_number` or `company_name` sent alongside is silently dropped
+ * (checked 2026-10-14: the profile's `phone` came back empty).
  *
- * `username` is derived from the email, not the email itself. The backend
- * refuses an address outright — "Username must contain only letters, numbers,
- * and underscores" — so `@` and `.` become `_`. The mapping is one-to-one, so
- * two customers cannot collide the way `john.doe@a.com` and `johndoe@b.com`
- * would if only the local part were used.
- *
- * **Proven end to end 2026-10-14, and it needed the fix.** One real
- * registration followed by one login settled it: the backend answers 200 for
- * the derived username and 401 for the email address the account was
- * registered with. It does not resolve a login by email. `loginUser` now
- * falls back to this transform when what the customer typed is refused, which
- * is what makes an account registered here usable afterwards.
+ * `username` is chosen by the customer on the form. The backend allows only
+ * letters, numbers and underscores, and logs in by username alone — a login by
+ * email address is refused (proven 2026-10-14).
  *
  * `password2` is the confirmation. The form already makes the customer type
  * it twice and checks they match before submitting, so sending the same value
  * is the truthful thing to send rather than a second prompt.
  */
-export function usernameFromEmail(email: string): string {
-  return email.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')
-}
-
 function toBackendRegisterBody(payload: RegisterPayload) {
   return {
-    username: usernameFromEmail(payload.email),
-    email: payload.email,
+    username: payload.username.trim(),
+    email: payload.email.trim(),
     first_name: payload.firstName,
     last_name: payload.lastName,
     password: payload.password,
     password2: payload.password,
-    contact_number: payload.contactNumber,
-    ...(payload.companyName ? { company_name: payload.companyName } : {}),
   }
 }
 
+/**
+ * How this app used to make a username, before the register form asked for
+ * one: the email with every character the backend refuses turned into `_`.
+ * Kept only so accounts created that way can still sign in with their email —
+ * see `loginUser`.
+ */
+function usernameFromEmail(email: string): string {
+  return email.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')
+}
+
 export async function registerUser(payload: RegisterPayload): Promise<AuthSession> {
-  // The same username toBackendRegisterBody sends, for the sign-in below.
-  const username = usernameFromEmail(payload.email)
+  const body = toBackendRegisterBody(payload)
 
   const res = await fetch(REGISTER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(toBackendRegisterBody(payload)),
+    body: JSON.stringify(body),
   })
 
   const data = await res.json().catch(() => null)
@@ -271,7 +268,7 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
    * registration. Say so plainly and send them to the login form rather than
    * letting them try to register again.
    */
-  return await loginUser(username, payload.password).catch((err) => {
+  return await loginUser(body.username, payload.password).catch((err) => {
     console.error('[user.service register] account created but sign-in failed', err)
     throw new Error('Your account was created, but we could not sign you in. Please log in.')
   })
