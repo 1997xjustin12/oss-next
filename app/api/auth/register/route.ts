@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (isRecaptchaConfigured()) {
-    const recaptchaOk = await verifyRecaptcha(recaptchaToken ?? '')
+    const recaptchaOk = await verifyRecaptcha(recaptchaToken ?? '', 'register')
     if (!recaptchaOk) {
       return NextResponse.json({ error: 'reCAPTCHA verification failed.' }, { status: 400 })
     }

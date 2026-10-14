@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     return reply(400, { ok: false, stage: 'validation', error: 'Please complete your email and phone number.' })
   }
 
-  if (isRecaptchaConfigured() && !(await verifyRecaptcha(body.recaptchaToken ?? ''))) {
+  if (isRecaptchaConfigured() && !(await verifyRecaptcha(body.recaptchaToken ?? '', 'checkout'))) {
     return reply(400, { ok: false, stage: 'validation', error: 'reCAPTCHA verification failed. Please try again.' })
   }
 

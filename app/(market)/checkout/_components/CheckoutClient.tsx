@@ -39,7 +39,7 @@ import {
   selectedShippingOption,
 } from '@/lib/shippingQuote';
 // import { BraintreeDropIn } from './BraintreeDropIn';   // card form — see note at the Payment section
-import { Recaptcha } from '@/components/ui/Recaptcha';
+import { getRecaptchaToken, preloadRecaptcha } from '@/lib/recaptchaClient';
 // import type { BraintreeDropInHandle } from './BraintreeDropIn';
 import type { CartItem } from '@/types/cart';
 import { toAlpha2 } from '@/lib/country';
@@ -462,9 +462,15 @@ export function CheckoutClient() {
   const [showIntlNote, setShowIntlNote] = useState(false);
   const [attempted, setAttempted] = useState(false);
   // const [paymentReady, setPaymentReady] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Load the script while the form is being filled, not at submit: v3 scores
+  // on observed behaviour, and checkout is a long form — there is plenty to
+  // observe. The token itself is still minted at submit.
+  useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) preloadRecaptcha(RECAPTCHA_SITE_KEY);
+  }, []);
   const [orderComplete, setOrderComplete] = useState(false);
   // What the confirmation screen shows; kept apart from the cart, which is
   // cleared the moment the order is recorded.
@@ -788,7 +794,9 @@ export function CheckoutClient() {
       billing.phone &&
       billing.email);
 
-  const recaptchaSatisfied = !RECAPTCHA_SITE_KEY || !!recaptchaToken;
+  // v3 has nothing for the customer to do, so there is no "have they
+  // ticked it" state to gate on. The token is fetched at submit and the
+  // server decides.
 
   const detailsComplete =
     !!requiredShippingFilled &&
@@ -815,13 +823,18 @@ export function CheckoutClient() {
     }
     // No card gate: nothing is collected here. Payment happens on the
     // backend's page, which this redirects to once the order exists.
-    if (!recaptchaSatisfied) {
-      setSubmitError('Please complete the reCAPTCHA check.');
-      return;
-    }
 
     setSubmitting(true);
     try {
+      /**
+       * Fetched here rather than held in state: a v3 token lasts about
+       * two minutes, and checkout is a long form. One taken when the
+       * page loaded would have expired for most people by the time they
+       * press the button.
+       */
+      const recaptchaToken = RECAPTCHA_SITE_KEY
+        ? await getRecaptchaToken(RECAPTCHA_SITE_KEY, 'checkout')
+        : null;
       // Billing follows the "same as shipping" toggle, matching what the
       // customer actually agreed to on the page.
       const billingForm = sameBilling ? shipping : billing;
@@ -1449,12 +1462,11 @@ export function CheckoutClient() {
               </p>
             </div>
 
-            {/* reCAPTCHA — only rendered when a site key is configured */}
-            {RECAPTCHA_SITE_KEY && (
-              <div className="px-6 pb-6">
-                <Recaptcha siteKey={RECAPTCHA_SITE_KEY} onChange={setRecaptchaToken} />
-              </div>
-            )}
+            {/*
+              Nothing rendered for reCAPTCHA: v3 is invisible and shows
+              its own floating badge. The token is fetched in
+              handlePlaceOrder.
+            */}
 
             {/* Privacy note */}
             <div className="flex items-start gap-2.5 bg-theme-subtle p-6 dark:bg-neutral-800/50">

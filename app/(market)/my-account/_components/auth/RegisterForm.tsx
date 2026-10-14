@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useEffect, useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Info } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { Recaptcha } from '@/components/ui/Recaptcha'
+import { getRecaptchaToken, preloadRecaptcha } from '@/lib/recaptchaClient'
 import type { AuthSession, RegisterPayload } from '@/types/user'
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
@@ -40,9 +40,15 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
   const [form, setForm] = useState<RegisterFormState>(INITIAL_STATE)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+// Load the script while the form is being filled, not at submit: v3 scores
+  // on observed behaviour, and a script that arrives at the click has seen
+  // nothing. The token itself is still minted at submit.
+  useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) preloadRecaptcha(RECAPTCHA_SITE_KEY)
+  }, [])
 
   const update = <K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
@@ -61,10 +67,6 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
       setError('Passwords do not match.')
       return
     }
-    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
-      setError('Please complete the reCAPTCHA check.')
-      return
-    }
     if (!acceptedTerms) {
       setError('You must accept the terms & conditions to continue.')
       return
@@ -72,6 +74,17 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
 
     try {
       setIsSubmitting(true)
+
+      /**
+       * Fetched here, not held in state: a v3 token lasts about two
+       * minutes, so one taken when the form appeared would already have
+       * expired for anyone who typed slowly. Nothing is shown for this —
+       * v3 scores the visitor invisibly.
+       */
+      const recaptchaToken = RECAPTCHA_SITE_KEY
+        ? await getRecaptchaToken(RECAPTCHA_SITE_KEY, 'register')
+        : null
+
       const payload: RegisterPayload & { recaptchaToken?: string | null } = {
         firstName: form.firstName,
         lastName: form.lastName,
@@ -268,7 +281,10 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
         </div>
 
         {/* Only rendered when NEXT_PUBLIC_RECAPTCHA_SITE_KEY is configured — see lib/recaptcha.ts */}
-        {RECAPTCHA_SITE_KEY && <Recaptcha siteKey={RECAPTCHA_SITE_KEY} onChange={setRecaptchaToken} />}
+        {/*
+          Nothing rendered for reCAPTCHA: v3 is invisible and shows its
+          own floating badge. The token is fetched in handleSubmit.
+        */}
 
         <label className="flex items-start gap-2 text-sm text-theme-muted cursor-pointer select-none dark:text-gray-400">
           <input
