@@ -108,13 +108,9 @@ export async function submitDeliveryQuote(formData: FormData) {
   // no delivery charge to show, which is the one thing the review page exists to
   // show, so the submission is refused rather than quoting nothing.
   if (!zip) fail('zip')
-  // Both are `required` on the checkbox, so the browser stops an honest submit
-  // first. Re-checked here because browser validation is a convenience, not a
-  // guarantee — a posted form can simply omit them, and a lead recorded without
-  // the visitor agreeing to the terms is a record of something that did not
-  // happen.
-  if (formData.get('confirmDelivery') !== 'yes' || formData.get('agreeTerms') !== 'yes')
-    fail('consent')
+  // No delivery-requirement or terms check here any more (removed 2026-10-15):
+  // checkout asks for both before an order can be placed, and asking twice on
+  // the way there only added friction to the quote.
 
   await deliverQuoteRequest(
     {

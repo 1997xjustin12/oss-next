@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 import { readQuoteDraft } from '@/lib/quoteDraft'
 import { submitDeliveryQuote } from '@/actions/deliveryQuote'
 import { ContactFields } from './ContactFields'
@@ -37,7 +35,6 @@ const ERRORS: Record<string, string> = {
   address: 'Please give the full delivery address — street, city and state.',
   phone: 'Please add a phone number we can reach you on.',
   zip: 'Please set the delivery ZIP code — we cannot quote delivery without it.',
-  consent: 'Please confirm the delivery requirement and agree to the terms.',
 }
 
 const SELECT_LIKE =
@@ -146,39 +143,9 @@ export async function QuoteForm({ searchParams }: { searchParams: SearchParams }
         />
       </div>
 
-      {/* Both required, and neither ticked to begin with. The design draws them
-          ticked, but a pre-ticked consent is not consent — the visitor has to
-          be the one who agrees. Enforced by the browser and re-checked in the
-          action, the same pair checkout already gates Place Order on. */}
-      <label className={`mt-6 ${CHECKBOX_ROW}`}>
-        <input type="checkbox" name="confirmDelivery" value="yes" required className={CHECKBOX} />
-        I confirm I&rsquo;ve read the delivery requirement and my site is suitable for delivery.
-      </label>
-
-      <label className={`mt-3 ${CHECKBOX_ROW}`}>
-        <input type="checkbox" name="agreeTerms" value="yes" required className={CHECKBOX} />
-        <span>
-          I agree to the{' '}
-          <Link
-            href="/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-theme-primary hover:underline"
-          >
-            terms &amp; conditions
-          </Link>{' '}
-          and{' '}
-          <Link
-            href="/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-theme-primary hover:underline"
-          >
-            privacy policy
-          </Link>
-        </span>
-      </label>
-
+      {/* The delivery-requirement and terms checkboxes were removed on
+          2026-10-15: checkout asks for both before Place Order, so asking
+          here as well only made the quote harder to get. */}
     </form>
   )
 }
