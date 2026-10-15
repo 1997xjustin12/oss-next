@@ -1,7 +1,7 @@
 import { DEMO_GUEST_ORDERS, GUEST_ORDER_DEMO_TOKEN } from '@/lib/data/guestOrderDemo'
 import { getGuestOrders } from '@/services/order.service'
 import { getProductsByIds } from '@/services/search.service'
-import { GuestOrderCard } from './GuestOrderCard'
+import { OrderCard } from '@/components/order/OrderCard'
 import { GuestOrdersNotice } from './GuestOrdersNotice'
 import type { GuestOrder, GuestOrdersResult } from '@/types/order'
 
@@ -66,7 +66,7 @@ export async function GuestOrders({ params }: Props) {
         </p>
       )}
       {orders.map((order) => (
-        <GuestOrderCard key={order.order_number} order={order} isDemo={isDemo} />
+        <OrderCard key={order.order_number} order={order} isDemo={isDemo} />
       ))}
     </section>
   )

@@ -1,14 +1,17 @@
+import type { ReactNode } from 'react'
 import { MapPin, Truck } from 'lucide-react'
 import { OrderStatusBadge } from '@/components/order/OrderStatusBadge'
-import { GuestOrderItems } from './GuestOrderItems'
-import { GuestOrderProgress } from './GuestOrderProgress'
-import { formatOrderDate, formatOrderMoney, safeHttpsUrl } from './guestOrderFormat'
-import type { GuestOrder } from '@/types/order'
+import { OrderItems } from './OrderItems'
+import { OrderProgress } from './OrderProgress'
+import { formatOrderDate, formatOrderMoney, safeHttpsUrl } from '@/lib/orderFormat'
+import type { GuestOrder, GuestOrderItem } from '@/types/order'
 
 type Props = {
   order: GuestOrder
   /** Demo orders show the payment button without letting it go anywhere. */
   isDemo?: boolean
+  /** Per-line buttons, passed through to OrderItems. The guest page has none. */
+  itemActions?: (item: GuestOrderItem) => ReactNode
 }
 
 /** One sentence on where the order stands, from whatever dates it carries. */
@@ -40,7 +43,7 @@ const SUMMARY_ROW = 'flex justify-between gap-4 text-sm'
 const SUMMARY_LABEL = 'text-theme-muted dark:text-gray-400'
 const SUMMARY_VALUE = 'text-theme-dark dark:text-white'
 
-export function GuestOrderCard({ order, isDemo = false }: Props) {
+export function OrderCard({ order, isDemo = false, itemActions }: Props) {
   const placed = formatOrderDate(order.created_at)
   const destination = [order.shipping_city, [order.shipping_province, order.shipping_zip_code].filter(Boolean).join(' ')]
     .filter(Boolean)
@@ -62,10 +65,10 @@ export function GuestOrderCard({ order, isDemo = false }: Props) {
       <div className="flex flex-col gap-5 p-4 sm:p-5">
         <div className="flex flex-col gap-4">
           <p className="text-sm font-semibold text-theme-dark-2 dark:text-gray-200">{statusLine(order)}</p>
-          <GuestOrderProgress status={order.status} />
+          <OrderProgress status={order.status} />
         </div>
 
-        <GuestOrderItems items={order.items} />
+        <OrderItems items={order.items} itemActions={itemActions} />
 
         <div className="grid gap-5 border-t border-theme-border pt-5 sm:grid-cols-2 dark:border-gray-700">
           <div className="flex flex-col gap-3 text-sm">

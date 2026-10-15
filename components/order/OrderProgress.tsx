@@ -20,7 +20,7 @@ const STEP_REACHED: Partial<Record<OrderStatus, number>> = {
  * Four-step progress line. Not rendered for cancelled or refunded orders —
  * those left the line, and showing where they stopped would read as progress.
  */
-export function GuestOrderProgress({ status }: Props) {
+export function OrderProgress({ status }: Props) {
   const reached = STEP_REACHED[status]
   if (reached === undefined) return null
 
