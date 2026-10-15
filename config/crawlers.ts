@@ -41,6 +41,8 @@ export const DISALLOWED_PATHS: readonly string[] = [
   '/cart',
   '/checkout',
   '/wishlist',
+  // Every URL under here is one guest's private link.
+  '/order-status',
 ] as const;
 
 /**

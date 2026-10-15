@@ -7,6 +7,7 @@ import { blogSlugMayExist } from '@/lib/blogSlugs'
 import { ROUTES } from '@/config/routes'
 import { recordAgentHit } from '@/lib/agentLog'
 import { isNativePath } from '@/config/routes'
+import { GUEST_ORDER_DEMO_TOKEN } from '@/lib/data/guestOrderDemo'
 
 // ── Maintenance wall ────────────────────────────────────────────────────────
 // When the wall is up, every request is served the /maintenance page with a
@@ -262,6 +263,9 @@ export async function proxy(request: NextRequest) {
     // bypass holder — fall through to normal handling below
   }
 
+  const toAccountOrders = handleOrderStatusWhileLoggedIn(request)
+  if (toAccountOrders) return toAccountOrders
+
   // Real 404s for missing WordPress paths. Must happen here, before anything
   // streams: once the catch-all's Suspense boundary flushes, the status line is
   // already sent and notFound() can only change the body. See lib/wpPaths.ts.
@@ -313,7 +317,40 @@ async function hasAdminSession(request: NextRequest): Promise<boolean> {
 async function logAgent(request: NextRequest, status: number): Promise<void> {
   const userAgent = request.headers.get('user-agent')
   if (!userAgent) return
-  await recordAgentHit(userAgent, request.nextUrl.pathname, status)
+  await recordAgentHit(userAgent, redactSecretPath(request.nextUrl.pathname), status)
+}
+
+/**
+ * The path as it may be stored. Order-status links carry a secret token, and a
+ * link-preview bot opening a shared link would otherwise write it into the
+ * agent log, where anyone with admin access can read it.
+ */
+function redactSecretPath(pathname: string): string {
+  return pathname.startsWith(`${ROUTES.ORDER_STATUS}/`) ? `${ROUTES.ORDER_STATUS}/[token]` : pathname
+}
+
+/**
+ * Customers who are logged in see their orders in their account, not on a
+ * guest link.
+ *
+ * Reads the `isLoggedIn` cookie, which anyone can set — fine here, because
+ * this grants nothing: it only sends the visitor to a page that does its own
+ * authentication. Faking the cookie just moves you away from the guest page.
+ * Done here rather than in the page so the token is never looked up, and the
+ * redirect is a real 307 rather than one issued mid-stream.
+ *
+ * The demo link is exempt, so it can be shown from a logged-in browser.
+ */
+function handleOrderStatusWhileLoggedIn(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl
+  if (!pathname.startsWith(`${ROUTES.ORDER_STATUS}/`)) return null
+  if (pathname === `${ROUTES.ORDER_STATUS}/${GUEST_ORDER_DEMO_TOKEN}`) return null
+  if (request.cookies.get('isLoggedIn')?.value !== 'true') return null
+
+  const response = NextResponse.redirect(new URL(ROUTES.ACCOUNT.ORDERS, request.url))
+  response.headers.set('Referrer-Policy', 'no-referrer')
+  response.headers.set('Cache-Control', 'no-store')
+  return response
 }
 
 // Broadened from just '/' so the maintenance wall can gate every route. Excludes

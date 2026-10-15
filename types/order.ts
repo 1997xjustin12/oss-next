@@ -249,21 +249,54 @@ export type OrderTracking =
   | { state: 'error' }
 
 /**
+ * One line of a guest order. The backend's order items carry only
+ * `product_id`, `quantity` and `price`; `title`, `image` and `handle` are
+ * filled from the product index when the backend leaves them out.
+ */
+export interface GuestOrderItem extends OrderListItem {
+  title?: string
+  image?: string
+  handle?: string
+}
+
+/**
  * One order as the guest order-status page shows it.
  *
- * PROVISIONAL — no backend endpoint exists yet (2026-10-15). These are the
- * fields the page needs, named the way the backend names them elsewhere
- * (`Order` above). Confirm against the real response before relying on any
- * field beyond `order_number` and `status`. See
- * docs/reference/guest-order-page.md.
+ * PROVISIONAL — no backend endpoint exists yet (2026-10-15). Field names follow
+ * the ones the backend already uses: `order_number`/`status`/`total_price`
+ * from orders, `sub_total`/`total_shipping`/`total_tax` from get-total,
+ * `shipping_*` from checkout. Only `order_number`, `status`, `total_price` and
+ * `items` are required; every other field is shown when present and skipped
+ * when not. Proposed in docs/reference/guest-order-page.md §4.
+ *
+ * Deliberately no street address, phone, email or payment details: whoever
+ * holds the link sees everything here.
  */
 export interface GuestOrder {
   order_number: string
   status: OrderStatus
-  total_price: string | number
   /** ISO 8601. */
   created_at?: string
-  items: OrderListItem[]
+  items: GuestOrderItem[]
+  sub_total?: string | number
+  total_shipping?: string | number
+  total_tax?: string | number
+  total_price: string | number
+  /** e.g. "Tilt-bed delivery". */
+  shipping_method?: string
+  shipping_city?: string
+  shipping_province?: string
+  shipping_zip_code?: string
+  /** ISO 8601 date. */
+  estimated_delivery?: string
+  /** ISO 8601. */
+  delivered_at?: string
+  tracking_carrier?: string
+  tracking_number?: string
+  /** Shown as a link only when it is https. */
+  tracking_url?: string
+  /** The backend's payment page for an `unpaid` order. Shown only when https. */
+  payment_url?: string
 }
 
 /**
