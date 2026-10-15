@@ -2,7 +2,8 @@ import type {
   CheckoutPayload,
   GetOrderTotalPayload,
   GuestOrder,
-  GuestOrdersResult,
+  GuestOrderItem,
+  OrderStatusResult,
   Order,
   OrderTotal,
   OrderTracking,
@@ -17,9 +18,10 @@ const CHECKOUT_URL = `${BACKEND_URL}api/orders/checkout`
 const GET_TOTAL_URL = `${BACKEND_URL}api/orders/get-total`
 const LIST_ORDERS_URL = `${BACKEND_URL}api/auth/orders`
 const ABANDONED_CART_URL = `${BACKEND_URL}api/abandoned-carts/create/`
-// PROVISIONAL — the backend has no guest-orders endpoint yet (2026-10-15).
-// See docs/reference/guest-order-page.md for the contract this assumes.
-const GUEST_ORDERS_URL = `${BACKEND_URL}api/orders/guest-orders`
+// One order's status page data, by uuid. Needs the storefront's API key, so
+// server-side only. See docs/reference/guest-order-page.md.
+const ORDER_STATUS_URL = (orderUuid: string) => `${BACKEND_URL}api/orders/status/${encodeURIComponent(orderUuid)}`
+const BACKEND_KEY = process.env.NEXT_OSS_BACKEND_KEY
 
 const TRACKING_URL = (orderNumber: string) =>
   `${BACKEND_URL}orders/tracking/track/${encodeURIComponent(orderNumber)}/`
@@ -142,69 +144,144 @@ export async function getOrderTracking(orderNumber: string, token: string): Prom
 }
 
 /**
- * Shape a link token must have before it is sent anywhere.
- *
- * URL-safe base64 or hex, 32-256 characters. Anything else is refused here,
- * without a backend round trip, so the page cannot be used to fire arbitrary
- * strings at the backend. The lower bound is a floor, not the security: a
- * token is only safe if the backend makes it long and random enough (at least
- * 128 bits) that guessing one is hopeless.
+ * An order uuid as the backend issues them (8-4-4-4-12 hex). Anything else is
+ * refused here, without a backend round trip, so the page cannot be used to
+ * fire arbitrary strings at the backend.
  */
-const GUEST_ORDER_TOKEN = /^[A-Za-z0-9_-]{32,256}$/
+const ORDER_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export function isWellFormedGuestOrderToken(token: string): boolean {
-  return GUEST_ORDER_TOKEN.test(token)
+export function isOrderUuid(value: string): boolean {
+  return ORDER_UUID.test(value)
 }
 
+type Raw = Record<string, unknown>
+
+const asRecord = (value: unknown): Raw => (value && typeof value === 'object' && !Array.isArray(value) ? (value as Raw) : {})
+const firstString = (...values: unknown[]) =>
+  values.find((v): v is string => typeof v === 'string' && v.trim() !== '')?.trim()
+const firstAmount = (...values: unknown[]) =>
+  values.find((v): v is string | number => (typeof v === 'string' && v.trim() !== '') || typeof v === 'number')
+
 /**
- * The orders a guest's emailed link grants access to.
+ * The status response, in the shape the order card reads.
  *
- * **Never cache this.** It is one person's private data keyed by a secret; a
- * `'use cache'` here would store it in a cache shared across visitors, and a
- * cache key is not a security boundary. Every call goes to the backend.
- *
- * The token travels in the request body, not the backend URL, so it stays out
- * of the backend's access logs and any proxy in between.
- *
- * 400/401/403/404/410 all mean "this link does not grant anything" and are
- * reported as `invalid` without distinction. Anything else is logged and
- * returned as `error`, which the page shows as "try again later" rather than
- * "your link is bad".
+ * The endpoint is documented in prose (status and progress, items, totals,
+ * payment link while unpaid, tracking, estimated delivery) but its field names
+ * were not available when this was written, so each field is read from the
+ * names this backend already uses elsewhere, then the obvious alternatives,
+ * nested or flat. Anything not found is left out and the card skips it.
+ * Narrow this once a real response has been seen — the keys are logged below.
  */
-export async function getGuestOrders(token: string): Promise<GuestOrdersResult> {
-  if (!isWellFormedGuestOrderToken(token)) return { state: 'invalid' }
+function toOrder(data: unknown): GuestOrder | null {
+  // This endpoint wraps its replies — a miss is `{"success": false, "message":
+  // "Order not found"}` — so the order may sit under `data` or `order`.
+  const root = asRecord(data)
+  const o = [root.data, root.order].map(asRecord).find((r) => Object.keys(r).length > 0) ?? root
+  const totals = asRecord(o.totals)
+  const payment = asRecord(o.payment)
+  const tracking = asRecord(o.tracking)
+  const shipping = asRecord(o.shipping)
+
+  const orderNumber = firstString(o.order_number, o.number, o.reference_number)
+  const status = firstString(o.status, o.order_status)?.toLowerCase()
+  const rawItems = Array.isArray(o.items) ? o.items : Array.isArray(o.line_items) ? o.line_items : null
+  const total = firstAmount(o.total_price, totals.total_price, totals.total, o.total)
+  if (!orderNumber || !status || !rawItems || total === undefined) return null
+
+  const items: GuestOrderItem[] = rawItems.map((raw) => {
+    const item = asRecord(raw)
+    const product = asRecord(item.product)
+    const images = Array.isArray(item.images) ? item.images : Array.isArray(product.images) ? product.images : []
+    return {
+      product_id: (firstString(item.product_id, product.product_id) ?? (item.product_id as number) ?? '') as string | number,
+      quantity: Number(item.quantity) || 0,
+      price: String(firstAmount(item.price, item.unit_price, product.sale_price) ?? ''),
+      title: firstString(item.title, item.product_title, item.name, product.title),
+      image: firstString(item.image, item.image_url, asRecord(images[0]).src),
+      handle: firstString(item.handle, product.handle),
+    }
+  })
+
+  return {
+    order_number: orderNumber,
+    status: status as GuestOrder['status'],
+    created_at: firstString(o.created_at, o.date_created, o.placed_at),
+    items,
+    sub_total: firstAmount(o.sub_total, totals.sub_total, totals.subtotal),
+    total_shipping: firstAmount(o.total_shipping, totals.total_shipping, totals.shipping),
+    total_tax: firstAmount(o.total_tax, totals.total_tax, totals.tax),
+    total_price: total,
+    shipping_method: firstString(o.shipping_method, shipping.method),
+    shipping_city: firstString(o.shipping_city, shipping.city),
+    shipping_province: firstString(o.shipping_province, o.shipping_state, shipping.province, shipping.state),
+    shipping_zip_code: firstString(o.shipping_zip_code, shipping.zip_code, shipping.zip),
+    estimated_delivery: firstString(o.estimated_delivery, o.estimated_delivery_date, tracking.estimated_delivery),
+    delivered_at: firstString(o.delivered_at, tracking.delivered_at),
+    tracking_carrier: firstString(o.tracking_carrier, o.carrier, tracking.carrier),
+    tracking_number: firstString(o.tracking_number, tracking.tracking_number, tracking.number),
+    tracking_url: firstString(o.tracking_url, tracking.tracking_url, tracking.url),
+    payment_url: firstString(o.payment_url, o.payment_link, payment.url, payment.link, payment.payment_url, payment.payment_link),
+  }
+}
+
+/** Logged once per server instance, so the real field names can be read off a live order. */
+let loggedShape = false
+
+/**
+ * One order's status page data, from GET api/orders/status/{order_uuid}.
+ *
+ * Authenticated with the storefront's API key, which never leaves the server;
+ * the uuid is the customer's half, and cannot be guessed.
+ *
+ * **Never cache this.** It is one customer's order, and the backend refreshes
+ * an expired payment link on read (an unpaid card or bank order gets a new one
+ * when this is called), so a cached copy could hand out a dead link.
+ *
+ * 404 and 400 mean "no such order" → `not_found`. 401/403 mean our key is
+ * missing or refused, which is a configuration problem, not the customer's —
+ * logged loudly and shown as `error`.
+ */
+export async function getOrderStatus(orderUuid: string): Promise<OrderStatusResult> {
+  if (!isOrderUuid(orderUuid)) return { state: 'not_found' }
+  if (!BACKEND_KEY) {
+    console.error('[order.service order-status] NEXT_OSS_BACKEND_KEY is not set; cannot load order status')
+    return { state: 'error' }
+  }
 
   let res: Response
   try {
-    res = await fetch(GUEST_ORDERS_URL, {
-      method: 'POST',
+    res = await fetch(ORDER_STATUS_URL(orderUuid.toLowerCase()), {
       headers: {
-        'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Api-Key ${BACKEND_KEY}`,
         'X-Store-Domain': STORE_DOMAIN ?? '',
       },
-      body: JSON.stringify({ token }),
       cache: 'no-store',
     })
   } catch (err) {
-    console.error('[order.service guest-orders] request failed:', err)
+    console.error('[order.service order-status] request failed:', err)
     return { state: 'error' }
   }
 
   const data = await res.json().catch(() => null)
 
   if (res.ok) {
-    // Same tolerance as listUserOrders: a bare array or `{ orders: [...] }`.
-    const orders = Array.isArray(data) ? data : data?.orders
-    if (Array.isArray(orders)) return { state: 'ok', orders: orders as GuestOrder[] }
-    // Keys only: the body is a customer's order data and does not belong in logs.
-    console.error('[order.service guest-orders] unexpected response shape, keys:', Object.keys(data ?? {}))
+    if (!loggedShape) {
+      loggedShape = true
+      // Keys only: the body is a customer's order and does not belong in logs.
+      console.info('[order.service order-status] response keys:', Object.keys(asRecord(data)).join(','))
+    }
+    const order = toOrder(data)
+    if (order) return { state: 'ok', order }
+    console.error('[order.service order-status] unexpected response shape, keys:', Object.keys(asRecord(data)).join(','))
     return { state: 'error' }
   }
 
-  if ([400, 401, 403, 404, 410].includes(res.status)) return { state: 'invalid' }
+  if (res.status === 404 || res.status === 400) return { state: 'not_found' }
 
-  logBackendRejection('order.service guest-orders', res.status, data)
+  // Not logBackendRejection: a refusal body could echo order data. Status and
+  // the backend's `detail` only.
+  console.error('[order.service order-status] backend refused:', res.status, asRecord(data).detail ?? asRecord(data).message ?? '')
   return { state: 'error' }
 }
 

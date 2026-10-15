@@ -4,29 +4,25 @@ import { ROUTES } from '@/config/routes'
 import { SITE } from '@/config/site'
 
 type Props = {
-  kind: 'invalid' | 'error' | 'empty'
+  kind: 'not_found' | 'error'
 }
 
 /**
- * `invalid` deliberately covers malformed, unknown, expired and revoked links
- * with one message, so the page never confirms that a token was once real.
+ * `not_found` covers a malformed link and an unknown order alike, with one
+ * message, so the page never confirms which uuids belong to real orders.
  */
 const COPY: Record<Props['kind'], { title: string; body: string }> = {
-  invalid: {
-    title: 'This link is no longer valid',
-    body: 'Order links expire after a while. Use the most recent link we emailed you, or contact us and we will send a new one.',
+  not_found: {
+    title: 'We couldn’t find this order',
+    body: 'Please open the full link from your order email. If it still doesn’t work, contact us and we’ll look it up for you.',
   },
   error: {
-    title: 'We could not load your orders',
+    title: 'We couldn’t load your order',
     body: 'Something went wrong on our side. Please try again in a few minutes.',
-  },
-  empty: {
-    title: 'No orders yet',
-    body: 'There are no orders on this link yet.',
   },
 }
 
-export function GuestOrdersNotice({ kind }: Props) {
+export function OrderStatusNotice({ kind }: Props) {
   const { title, body } = COPY[kind]
 
   return (

@@ -7,7 +7,7 @@ import { blogSlugMayExist } from '@/lib/blogSlugs'
 import { ROUTES } from '@/config/routes'
 import { recordAgentHit } from '@/lib/agentLog'
 import { isNativePath } from '@/config/routes'
-import { GUEST_ORDER_DEMO_TOKEN } from '@/lib/data/guestOrderDemo'
+import { ORDER_STATUS_DEMO_ID } from '@/lib/data/orderStatusDemo'
 
 // ── Maintenance wall ────────────────────────────────────────────────────────
 // When the wall is up, every request is served the /maintenance page with a
@@ -321,22 +321,22 @@ async function logAgent(request: NextRequest, status: number): Promise<void> {
 }
 
 /**
- * The path as it may be stored. Order-status links carry a secret token, and a
+ * The path as it may be stored. Order-status links carry the order's uuid, and a
  * link-preview bot opening a shared link would otherwise write it into the
  * agent log, where anyone with admin access can read it.
  */
 function redactSecretPath(pathname: string): string {
-  return pathname.startsWith(`${ROUTES.ORDER_STATUS}/`) ? `${ROUTES.ORDER_STATUS}/[token]` : pathname
+  return pathname.startsWith(`${ROUTES.ORDER_STATUS}/`) ? `${ROUTES.ORDER_STATUS}/[order_uuid]` : pathname
 }
 
 /**
  * Customers who are logged in see their orders in their account, not on a
- * guest link.
+ * guest order link.
  *
  * Reads the `isLoggedIn` cookie, which anyone can set — fine here, because
  * this grants nothing: it only sends the visitor to a page that does its own
  * authentication. Faking the cookie just moves you away from the guest page.
- * Done here rather than in the page so the token is never looked up, and the
+ * Done here rather than in the page so the order is never looked up, and the
  * redirect is a real 307 rather than one issued mid-stream.
  *
  * The demo link is exempt, so it can be shown from a logged-in browser.
@@ -344,7 +344,7 @@ function redactSecretPath(pathname: string): string {
 function handleOrderStatusWhileLoggedIn(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl
   if (!pathname.startsWith(`${ROUTES.ORDER_STATUS}/`)) return null
-  if (pathname === `${ROUTES.ORDER_STATUS}/${GUEST_ORDER_DEMO_TOKEN}`) return null
+  if (pathname === `${ROUTES.ORDER_STATUS}/${ORDER_STATUS_DEMO_ID}`) return null
   if (request.cookies.get('isLoggedIn')?.value !== 'true') return null
 
   const response = NextResponse.redirect(new URL(ROUTES.ACCOUNT.ORDERS, request.url))

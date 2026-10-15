@@ -260,14 +260,13 @@ export interface GuestOrderItem extends OrderListItem {
 }
 
 /**
- * One order as the guest order-status page shows it.
+ * One order as the order card shows it — on the order-status page and in the
+ * account's order history.
  *
- * PROVISIONAL — no backend endpoint exists yet (2026-10-15). Field names follow
- * the ones the backend already uses: `order_number`/`status`/`total_price`
- * from orders, `sub_total`/`total_shipping`/`total_tax` from get-total,
- * `shipping_*` from checkout. Only `order_number`, `status`, `total_price` and
- * `items` are required; every other field is shown when present and skipped
- * when not. Proposed in docs/reference/guest-order-page.md §4.
+ * The order-status page fills it from GET api/orders/status/{order_uuid} via
+ * `toOrder` in services/order.service.ts, which reads the backend's field
+ * names. Only `order_number`, `status`, `total_price` and `items` are
+ * required; every other field is shown when present and skipped when not.
  *
  * Deliberately no street address, phone, email or payment details: whoever
  * holds the link sees everything here.
@@ -300,13 +299,15 @@ export interface GuestOrder {
 }
 
 /**
- * Every outcome of looking up a guest's orders by link token.
+ * Every outcome of looking up one order by its uuid
+ * (GET api/orders/status/{order_uuid}).
  *
- * `invalid` covers malformed, unknown, expired and revoked tokens alike, on
- * purpose: telling them apart would tell someone guessing tokens which ones
- * were once real.
+ * `not_found` covers a malformed uuid and an unknown one alike. `error` is
+ * everything that is our fault or the backend's — including a missing or
+ * refused API key — so the page says "try again later" rather than blaming
+ * the customer's link.
  */
-export type GuestOrdersResult =
-  | { state: 'ok'; orders: GuestOrder[] }
-  | { state: 'invalid' }
+export type OrderStatusResult =
+  | { state: 'ok'; order: GuestOrder }
+  | { state: 'not_found' }
   | { state: 'error' }

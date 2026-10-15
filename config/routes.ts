@@ -48,10 +48,9 @@ export const ROUTES = {
   },
   SITEMAP: '/sitemap.xml',
   /**
-   * The guest order-status page. Only ever reached through a link the backend
-   * emails, `/order-status/<token>` — this app never builds one, because only
-   * the backend holds the tokens. The bare path is the canonical URL, so the
-   * token never lands in metadata.
+   * One order's status page, `/order-status/<order_uuid>`. Reached through the
+   * links in the order emails; the uuid comes from the backend with the order.
+   * The bare path is the canonical URL, so the uuid never lands in metadata.
    */
   ORDER_STATUS: '/order-status',
   ACCOUNT: {

@@ -55,7 +55,8 @@ const nextConfig: NextConfig = {
         ],
       },
       /**
-       * The guest order-status page. Its URL carries a secret token, so it is
+       * The order-status page. Its URL carries the order's uuid, which is the
+       * only thing standing between a stranger and the order, so it is
        * sent nowhere as a referrer — not even to our own pages — and kept out
        * of search indexes even if a link to it leaks somewhere crawlable.
        * Listed after the block above so these values win.

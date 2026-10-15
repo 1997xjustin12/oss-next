@@ -1,12 +1,12 @@
 const BAR = 'rounded bg-theme-border dark:bg-gray-700'
 
-/** Two cards laid out like GuestOrderCard, so the list lands without a shift. */
-export function GuestOrdersSkeleton() {
+/** One card laid out like OrderCard, so the order lands without a shift. */
+export function OrderStatusSkeleton() {
   return (
     <div className="flex flex-col gap-5 animate-pulse" aria-hidden="true">
-      {[0, 1].map((i) => (
+      {[0].map((i) => (
         <div
-          key={`guest-order-skeleton-${i}`}
+          key={`order-status-skeleton-${i}`}
           className="rounded-lg border border-theme-border bg-theme-subtle dark:border-gray-700 dark:bg-gray-800"
         >
           <div className="flex items-start justify-between gap-3 border-b border-theme-border p-4 sm:p-5 dark:border-gray-700">
