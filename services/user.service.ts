@@ -1,4 +1,4 @@
-import { logBackendRejection } from '@/lib/backendError'
+import { fieldErrorMessage, logBackendRejection } from '@/lib/backendError'
 import type { AccountDetailsPayload, AuthSession, ProfileUpdatePayload, RegisterPayload, User, UserProfile } from '@/types/user'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
@@ -281,38 +281,6 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
     console.error('[user.service register] account created but sign-in failed', err)
     throw new Error('Your account was created, but we could not sign you in. Please log in.')
   })
-}
-
-/**
- * A readable sentence from a Django REST field-error body.
- *
- * `{"email": ["user with this email already exists."]}` becomes
- * "Email: user with this email already exists." — which tells the customer
- * what to change, where the generic fallback did not.
- *
- * Returns undefined for anything that is not that shape, so the caller's
- * fallback still applies rather than this inventing a message.
- */
-function fieldErrorMessage(data: unknown): string | undefined {
-  if (!data || typeof data !== 'object' || Array.isArray(data)) return undefined
-
-  const parts = Object.entries(data as Record<string, unknown>)
-    .map(([field, value]) => {
-      const text = Array.isArray(value)
-        ? value.filter((v) => typeof v === 'string').join(' ')
-        : typeof value === 'string'
-          ? value
-          : ''
-      if (!text) return ''
-      // `non_field_errors` is DRF's name for "this is about the record, not a
-      // field" — prefixing it with a label would read as nonsense.
-      if (field === 'non_field_errors') return text
-      const label = field.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
-      return `${label}: ${text}`
-    })
-    .filter(Boolean)
-
-  return parts.length ? parts.join(' ') : undefined
 }
 
 // TODO: confirm the real field name for the rotated access token — assumed

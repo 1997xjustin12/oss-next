@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { BackendRefusedError } from '@/lib/backendError'
 import { isRecaptchaConfigured, verifyRecaptcha } from '@/lib/recaptcha'
 import { ShippingRefusedError } from '@/lib/shippingQuote'
 import { checkoutOrder, getOrderTotal } from '@/services/order.service'
@@ -30,19 +31,21 @@ import type { PlaceOrderRequest, PlaceOrderResponse } from '@/types/order'
  * nothing to void. It introduces the opposite one — an order can now exist
  * that was never paid for — which is what `status: 'unpaid'` is for.
  *
- * ## The cart is not cleared when we redirect
+ * ## The cart is cleared only once the order exists
  *
- * Checkout keeps the cart on the way to the payment page. An order exists by
- * then, so clearing it would stop a second attempt becoming a second order —
- * but the customer has not paid, and a visitor who abandons payment or loses
- * their connection would come back to an empty cart with no way to resume. A
- * pending order is recoverable; their cart is not.
+ * Checkout clears the cart when this route answers `ok: true`, then redirects
+ * to the payment link (see handlePlaceOrder in CheckoutClient). Any failure
+ * leaves the cart untouched, so the customer can fix the problem and retry.
+ * The cost: someone who abandons the payment page comes back to an empty
+ * cart. Their order is `unpaid` rather than lost, but resuming it is not
+ * something this storefront offers yet.
  *
- * **Nothing clears the cart after a successful payment yet.** There is no
- * return route in this app — no /checkout/success, no callback handler — so
- * if the backend's payment page sends the customer back here, it currently
- * lands on an ordinary page with their cart still full. Closing that needs the
- * return URL the payment page uses, which has not been supplied.
+ * ## What the customer is told on failure
+ *
+ * When the backend gave a reason (`BackendRefusedError`, `ShippingRefusedError`)
+ * that reason is passed through, so a refused order says why. Anything else —
+ * the backend unreachable, a non-JSON reply, a bug here — gets a fixed
+ * sentence, never the raw error.
  *
  * Guests and signed-in customers use the same path. The Authorization header
  * is forwarded only when the browser sent one: the backend accepts an order
@@ -56,6 +59,11 @@ const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
 const AMOUNT_TOLERANCE = 0.01
 
 // type Payer = Parameters<typeof chargeBraintreeCheckout>[2]
+
+/** The backend's own reason when it gave one; otherwise the fallback, never a raw error. */
+function customerMessage(err: unknown, fallback: string): string {
+  return err instanceof BackendRefusedError || err instanceof ShippingRefusedError ? err.message : fallback
+}
 
 function reply(status: number, body: PlaceOrderResponse) {
   return NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } })
@@ -151,10 +159,12 @@ export async function POST(request: NextRequest) {
       return reply(409, { ok: false, stage: 'total', error: 'Your order total has changed. Please review it and try again.' })
     }
   } catch (err) {
-    const message =
-      err instanceof ShippingRefusedError ? err.message : 'We could not calculate your order total. Please try again.'
     console.error('[/api/checkout/place-order] total', err)
-    return reply(400, { ok: false, stage: 'total', error: message })
+    return reply(400, {
+      ok: false,
+      stage: 'total',
+      error: customerMessage(err, 'We could not calculate your order total. Please try again.'),
+    })
   }
 
   // ── 2. Record as pending ──────────────────────────────────────────────────
@@ -196,7 +206,7 @@ export async function POST(request: NextRequest) {
     return reply(502, {
       ok: false,
       stage: 'order',
-      error: err instanceof Error ? err.message : 'Could not record the order.',
+      error: customerMessage(err, 'We could not place your order. Please try again.'),
     })
   }
 }

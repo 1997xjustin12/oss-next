@@ -7,7 +7,7 @@ import type {
   OrderTotal,
   OrderTracking,
 } from '@/types/order'
-import { logBackendRejection } from '@/lib/backendError'
+import { BackendRefusedError, backendErrorMessage, logBackendRejection } from '@/lib/backendError'
 import { ShippingRefusedError, shippingRefusal } from '@/lib/shippingQuote'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
@@ -44,7 +44,7 @@ export async function checkoutOrder(payload: CheckoutPayload, token?: string): P
     // without this the only record of a refused order — after the card has been
     // charged — was "Could not complete checkout." (seen 2026-09-15).
     logBackendRejection('order.service checkout', res.status, data)
-    throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not complete checkout.')
+    throw new BackendRefusedError(res.status, backendErrorMessage(data) ?? 'We could not place your order. Please try again.')
   }
 
   return data as Order
@@ -69,7 +69,7 @@ export async function getOrderTotal(payload: GetOrderTotalPayload): Promise<Orde
     // decide what checkout can offer, so they travel with their own message.
     const refusal = shippingRefusal(data)
     if (refusal) throw new ShippingRefusedError(refusal.code, refusal.message)
-    throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not calculate order total.')
+    throw new BackendRefusedError(res.status, backendErrorMessage(data) ?? 'We could not calculate your order total. Please try again.')
   }
 
   return data as OrderTotal

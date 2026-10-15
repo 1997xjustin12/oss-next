@@ -323,15 +323,35 @@ export function CartProvider({
     updateQty:  (id, qty) => dispatch({ type: 'UPDATE_QTY', id, qty, guest: !isAuthenticated }),
     clearCart: () => {
       clearVersionRef.current += 1
+
+      /**
+       * Applied synchronously, not left to the next render.
+       *
+       * Checkout calls this and then immediately leaves for the payment page.
+       * The effects that would normally follow the dispatch — saving to
+       * localStorage, updating cartRef — run after React's next commit, which
+       * a navigation can beat. When it did, the customer came back to a full
+       * cart, and the unload beacon (which reads cartRef) reported the cart
+       * they had just ordered as abandoned. Doing both here closes that race;
+       * the dispatch below still drives the render.
+       */
+      const cleared = reducer(cartRef.current, { type: 'CLEAR_CART' })
+      cartRef.current = cleared
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleared))
+      } catch {
+        // Storage full or blocked — the effect will try again on render.
+      }
       dispatch({ type: 'CLEAR_CART' })
 
       // Signed in: close the saved cart now, not after the sync's debounce, so
       // a reload or navigation in between cannot bring the cleared items back.
       // If this fails, the debounced sync still closes it (CLEAR_CART keeps the
-      // cart id for exactly that).
+      // cart id for exactly that). `keepalive` so the request survives the
+      // redirect to the payment page that usually follows straight after.
       const authToken = tokenRef.current
       if (!isAuthenticated || !authToken) return
-      fetch('/api/cart/close', { method: 'POST', headers: { Authorization: `Bearer ${authToken}` } })
+      fetch('/api/cart/close', { method: 'POST', keepalive: true, headers: { Authorization: `Bearer ${authToken}` } })
         .then((res) => {
           if (!res.ok) return
           dispatch({ type: 'RESET_SERVER_CART' })

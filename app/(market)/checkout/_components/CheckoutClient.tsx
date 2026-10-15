@@ -464,6 +464,8 @@ export function CheckoutClient() {
   // const [paymentReady, setPaymentReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Set once the order exists and the browser is leaving for the payment page.
+  const [redirecting, setRedirecting] = useState(false);
 
   // Load the script while the form is being filled, not at submit: v3 scores
   // on observed behaviour, and checkout is a long form — there is plenty to
@@ -888,23 +890,41 @@ export function CheckoutClient() {
         },
       };
 
-      const res = await fetch('/api/checkout/place-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Signed in: the order is attached to the account. A guest sends no
-          // token, which the backend records as a guest order.
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        },
-        body: JSON.stringify(request),
-      });
-      const result = (await res.json().catch(() => null)) as PlaceOrderResponse | null;
+      /**
+       * No answer, or one we cannot read, is not the same as a refusal: the
+       * request may have reached the backend and created the order before the
+       * connection dropped or timed out. Saying "try again" there invites a
+       * duplicate order, so the customer is told to check first instead. The
+       * cart is kept either way — nothing confirmed the order exists.
+       */
+      const unconfirmed =
+        `We couldn't confirm whether your order went through. Please check your email for an order ` +
+        `confirmation before trying again, or call us at ${SITE.telephoneDisplay}.`;
 
-      if (!result?.ok) {
-        // Every failure is safe to retry now: no money moves on this site, so
-        // there is no longer a case where the customer has paid for an order
-        // that was not recorded.
-        throw new Error(result?.error ?? 'Could not complete checkout. Please try again.');
+      let result: PlaceOrderResponse | null;
+      try {
+        const res = await fetch('/api/checkout/place-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // Signed in: the order is attached to the account. A guest sends no
+            // token, which the backend records as a guest order.
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          },
+          body: JSON.stringify(request),
+        });
+        result = (await res.json().catch(() => null)) as PlaceOrderResponse | null;
+      } catch {
+        throw new Error(unconfirmed);
+      }
+
+      if (!result) throw new Error(unconfirmed);
+
+      if (!result.ok) {
+        // A definite refusal: the order was not created, so retrying is safe
+        // and the cart stays as it is. The message is the backend's own reason
+        // when it gave one — see customerMessage in the route.
+        throw new Error(result.error || 'We could not place your order. Please try again.');
       }
 
       if (result.paymentUrl) {
@@ -933,6 +953,7 @@ export function CheckoutClient() {
          * react-hooks/immutability objects to.
          */
         clearCart();
+        setRedirecting(true);
         window.location.assign(result.paymentUrl);
         return;
       }
@@ -1455,13 +1476,6 @@ export function CheckoutClient() {
               </div>
             */}
 
-            <div className="p-6">
-              <p className="text-sm text-theme-mid dark:text-neutral-300">
-                You will be taken to our secure payment page to complete your
-                purchase once your order is placed.
-              </p>
-            </div>
-
             {/*
               Nothing rendered for reCAPTCHA: v3 is invisible and shows
               its own floating badge. The token is fetched in
@@ -1482,9 +1496,9 @@ export function CheckoutClient() {
             </div>
 
             {/* Submit — last element on the page, after every prerequisite it
-                validates (card form, delivery confirmation, terms). The error
+                validates (delivery confirmation, terms). The error
                 blocks travel with it so failures surface next to the action. */}
-            <div className="p-6 pt-0">
+            <div className="p-6">
               {attempted && !detailsComplete && !orderComplete && (
                 <div className="mb-4 flex items-center gap-2 rounded-md bg-amber-50 p-3 text-xs font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -1523,6 +1537,10 @@ export function CheckoutClient() {
                   <span className="flex items-center justify-center gap-2">
                     <CheckCircle2 className="h-5 w-5" /> Order Placed — Confirmation Sent!
                   </span>
+                ) : redirecting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" /> Redirecting to Secure Payment…
+                  </span>
                 ) : submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="h-5 w-5 animate-spin" /> Placing Order…
@@ -1535,6 +1553,15 @@ export function CheckoutClient() {
                   'Place Order'
                 )}
               </button>
+
+              {!orderComplete && (
+                <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-xs text-theme-muted dark:text-neutral-400">
+                  <Lock className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>
+                    Once your order is placed, you will be redirected to our secure payment page to complete your purchase.
+                  </span>
+                </p>
+              )}
             </div>
           </section>
         </div>
