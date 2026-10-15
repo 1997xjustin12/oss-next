@@ -47,6 +47,13 @@ export const ROUTES = {
     return search ? `/get-exact-delivery-quote?${search}` : '/get-exact-delivery-quote'
   },
   SITEMAP: '/sitemap.xml',
+  /**
+   * The guest order-status page. Only ever reached through a link the backend
+   * emails, `/order-status/<token>` — this app never builds one, because only
+   * the backend holds the tokens. The bare path is the canonical URL, so the
+   * token never lands in metadata.
+   */
+  ORDER_STATUS: '/order-status',
   ACCOUNT: {
     ROOT: '/my-account',
     ORDERS: '/my-account/orders',
@@ -89,6 +96,7 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'my-account',
   'sale-shipping-containers',
   'agents',
+  'order-status',
   // Operational and internal routes. Not reachable as WordPress content, but
   // listed so a stray backend row can never claim one of them.
   'maintenance',

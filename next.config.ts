@@ -54,6 +54,19 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         ],
       },
+      /**
+       * The guest order-status page. Its URL carries a secret token, so it is
+       * sent nowhere as a referrer — not even to our own pages — and kept out
+       * of search indexes even if a link to it leaks somewhere crawlable.
+       * Listed after the block above so these values win.
+       */
+      {
+        source: "/order-status/:path*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+        ],
+      },
       {
         source: "/resources/pdp-videos/:file*",
         headers: [

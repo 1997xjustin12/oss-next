@@ -247,3 +247,33 @@ export type OrderTracking =
   | { state: 'none'; orderStatus?: string }
   | { state: 'not_found' }
   | { state: 'error' }
+
+/**
+ * One order as the guest order-status page shows it.
+ *
+ * PROVISIONAL — no backend endpoint exists yet (2026-10-15). These are the
+ * fields the page needs, named the way the backend names them elsewhere
+ * (`Order` above). Confirm against the real response before relying on any
+ * field beyond `order_number` and `status`. See
+ * docs/reference/guest-order-page.md.
+ */
+export interface GuestOrder {
+  order_number: string
+  status: OrderStatus
+  total_price: string | number
+  /** ISO 8601. */
+  created_at?: string
+  items: OrderListItem[]
+}
+
+/**
+ * Every outcome of looking up a guest's orders by link token.
+ *
+ * `invalid` covers malformed, unknown, expired and revoked tokens alike, on
+ * purpose: telling them apart would tell someone guessing tokens which ones
+ * were once real.
+ */
+export type GuestOrdersResult =
+  | { state: 'ok'; orders: GuestOrder[] }
+  | { state: 'invalid' }
+  | { state: 'error' }

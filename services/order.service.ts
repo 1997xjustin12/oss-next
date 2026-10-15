@@ -1,4 +1,12 @@
-import type { CheckoutPayload, GetOrderTotalPayload, Order, OrderTotal, OrderTracking } from '@/types/order'
+import type {
+  CheckoutPayload,
+  GetOrderTotalPayload,
+  GuestOrder,
+  GuestOrdersResult,
+  Order,
+  OrderTotal,
+  OrderTracking,
+} from '@/types/order'
 import { logBackendRejection } from '@/lib/backendError'
 import { ShippingRefusedError, shippingRefusal } from '@/lib/shippingQuote'
 
@@ -9,6 +17,10 @@ const CHECKOUT_URL = `${BACKEND_URL}api/orders/checkout`
 const GET_TOTAL_URL = `${BACKEND_URL}api/orders/get-total`
 const LIST_ORDERS_URL = `${BACKEND_URL}api/auth/orders`
 const ABANDONED_CART_URL = `${BACKEND_URL}api/abandoned-carts/create/`
+// PROVISIONAL — the backend has no guest-orders endpoint yet (2026-10-15).
+// See docs/reference/guest-order-page.md for the contract this assumes.
+const GUEST_ORDERS_URL = `${BACKEND_URL}api/orders/guest-orders`
+
 const TRACKING_URL = (orderNumber: string) =>
   `${BACKEND_URL}orders/tracking/track/${encodeURIComponent(orderNumber)}/`
 
@@ -126,6 +138,73 @@ export async function getOrderTracking(orderNumber: string, token: string): Prom
   }
 
   logBackendRejection('order.service tracking', res.status, data)
+  return { state: 'error' }
+}
+
+/**
+ * Shape a link token must have before it is sent anywhere.
+ *
+ * URL-safe base64 or hex, 32-256 characters. Anything else is refused here,
+ * without a backend round trip, so the page cannot be used to fire arbitrary
+ * strings at the backend. The lower bound is a floor, not the security: a
+ * token is only safe if the backend makes it long and random enough (at least
+ * 128 bits) that guessing one is hopeless.
+ */
+const GUEST_ORDER_TOKEN = /^[A-Za-z0-9_-]{32,256}$/
+
+export function isWellFormedGuestOrderToken(token: string): boolean {
+  return GUEST_ORDER_TOKEN.test(token)
+}
+
+/**
+ * The orders a guest's emailed link grants access to.
+ *
+ * **Never cache this.** It is one person's private data keyed by a secret; a
+ * `'use cache'` here would store it in a cache shared across visitors, and a
+ * cache key is not a security boundary. Every call goes to the backend.
+ *
+ * The token travels in the request body, not the backend URL, so it stays out
+ * of the backend's access logs and any proxy in between.
+ *
+ * 400/401/403/404/410 all mean "this link does not grant anything" and are
+ * reported as `invalid` without distinction. Anything else is logged and
+ * returned as `error`, which the page shows as "try again later" rather than
+ * "your link is bad".
+ */
+export async function getGuestOrders(token: string): Promise<GuestOrdersResult> {
+  if (!isWellFormedGuestOrderToken(token)) return { state: 'invalid' }
+
+  let res: Response
+  try {
+    res = await fetch(GUEST_ORDERS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'X-Store-Domain': STORE_DOMAIN ?? '',
+      },
+      body: JSON.stringify({ token }),
+      cache: 'no-store',
+    })
+  } catch (err) {
+    console.error('[order.service guest-orders] request failed:', err)
+    return { state: 'error' }
+  }
+
+  const data = await res.json().catch(() => null)
+
+  if (res.ok) {
+    // Same tolerance as listUserOrders: a bare array or `{ orders: [...] }`.
+    const orders = Array.isArray(data) ? data : data?.orders
+    if (Array.isArray(orders)) return { state: 'ok', orders: orders as GuestOrder[] }
+    // Keys only: the body is a customer's order data and does not belong in logs.
+    console.error('[order.service guest-orders] unexpected response shape, keys:', Object.keys(data ?? {}))
+    return { state: 'error' }
+  }
+
+  if ([400, 401, 403, 404, 410].includes(res.status)) return { state: 'invalid' }
+
+  logBackendRejection('order.service guest-orders', res.status, data)
   return { state: 'error' }
 }
 
