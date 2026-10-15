@@ -1,19 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { formatMoney } from '@/lib/formatters'
-import Image from 'next/image'
-import Link from 'next/link'
 import { PlpLink } from '@/components/shared/PlpLink'
-import { PackageSearch, Package, RotateCcw, Star } from 'lucide-react'
+import { PackageSearch, RotateCcw, Star } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
 import { getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import { ROUTES } from '@/config/routes'
-import { OrderStatusBadge } from '@/components/order/OrderStatusBadge'
+import { OrderCard } from '@/components/order/OrderCard'
 import { ReviewFormModal } from './ReviewFormModal'
-import type { Order, OrderStatus } from '@/types/order'
+import type { GuestOrder, GuestOrderItem, Order, OrderStatus } from '@/types/order'
 import type { ProductHit } from '@/types/product'
 import type { Review } from '@/types/review'
 
@@ -24,9 +21,17 @@ const REVIEWABLE: OrderStatus[] = ['delivered']
 
 const REORDERABLE: OrderStatus[] = ['delivered', 'cancelled', 'refunded']
 
-/** Order totals arrive as strings; an unparseable one shows an em dash, not `$NaN`. */
-function formatOrderMoney(n: string | number): string {
-  return formatMoney(n) || '—'
+const ACTION =
+  'flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors disabled:opacity-50 dark:text-red-400'
+
+/**
+ * Newest first when the backend dates its orders; otherwise its own order is
+ * kept, since there is nothing better to sort by.
+ */
+function newestFirst(orders: Order[]): Order[] {
+  const dated = (o: Order) => Date.parse((o as { created_at?: string }).created_at ?? '')
+  if (!orders.every((o) => Number.isFinite(dated(o)))) return orders
+  return [...orders].sort((a, b) => dated(b) - dated(a))
 }
 
 function OrdersSkeleton() {
@@ -178,100 +183,75 @@ export function OrdersList() {
   if (orders === null) return <OrdersSkeleton />
   if (orders.length === 0) return <EmptyOrders />
 
+  // Held until the catalogue lookup settles, so a line never flashes "No longer
+  // available" on its way to its real name.
+  if (productLookup === 'loading') return <OrdersSkeleton />
+
+  /**
+   * Only what the backend sends — number, status, total and items — joined
+   * with each item's catalogue product for its name, picture and link. The
+   * card leaves out every section it has no data for.
+   */
+  const display: GuestOrder[] = newestFirst(orders).map((order) => ({
+    ...order,
+    items: order.items.map((item) => {
+      const product = products[String(item.product_id)]
+      if (product) return { ...item, title: product.title, image: product.images?.[0]?.src, handle: product.handle }
+      // A failed lookup says nothing about whether the product still exists,
+      // so the line is named by its id rather than called unavailable.
+      return productLookup === 'failed' ? { ...item, title: `Item #${item.product_id}` } : item
+    }),
+  }))
+
+  function actionsFor(order: GuestOrder) {
+    const canReorder = REORDERABLE.includes(order.status)
+    const canReview = REVIEWABLE.includes(order.status)
+    if (!canReorder && !canReview) return undefined
+
+    return function ItemActions(item: GuestOrderItem) {
+      const product = products[String(item.product_id)]
+      if (!product) return null
+      return (
+        <>
+          {canReorder && (
+            <button
+              type="button"
+              aria-label={`Buy Again: ${product.title}`}
+              onClick={() => handleBuyAgain(item.product_id)}
+              className={ACTION}
+            >
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+              Buy Again
+            </button>
+          )}
+          {canReview && (
+            <button
+              type="button"
+              aria-label={`Write / Edit Review: ${product.title}`}
+              disabled={reviewLoadingFor === item.product_id}
+              onClick={() => openReviewForm(item.product_id, product.title)}
+              className={ACTION}
+            >
+              <Star className="w-3.5 h-3.5" aria-hidden="true" />
+              {reviewLoadingFor === item.product_id ? 'Loading…' : 'Write / Edit Review'}
+            </button>
+          )}
+        </>
+      )
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      {orders.map((order, orderIndex) => (
-        <div
+      {/* Only the newest starts open; the rest fold to their header and total. */}
+      {display.map((order, orderIndex) => (
+        <OrderCard
           key={`orders-list-${order.order_number}-${orderIndex}`}
-          className="rounded-lg border border-theme-border bg-white dark:border-gray-700 dark:bg-gray-900 p-4 sm:p-5"
-        >
-          <div className="flex items-center justify-between gap-3 flex-wrap mb-3 pb-3 border-b border-theme-border dark:border-gray-700">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-theme-muted dark:text-gray-400">Order</p>
-              <p className="text-base font-extrabold text-theme-dark dark:text-white">#{order.order_number}</p>
-            </div>
-            <OrderStatusBadge status={order.status} />
-          </div>
-
-          <div className="flex flex-col gap-3 mb-3">
-            {order.items.map((item, itemIndex) => {
-              const product = products[String(item.product_id)]
-              const canReorder = REORDERABLE.includes(order.status)
-              const canReview = REVIEWABLE.includes(order.status)
-              return (
-                <div
-                  key={`order-item-${order.order_number}-${item.product_id}-${itemIndex}`}
-                  data-order-item
-                  className="flex flex-wrap items-center gap-x-3 gap-y-2"
-                >
-                  <div className="w-12 h-12 rounded-md bg-theme-subtle dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden">
-                    {product?.images?.[0]?.src ? (
-                      <Image src={product.images[0].src} alt={product.title} width={48} height={48} className="object-cover w-full h-full" />
-                    ) : (
-                      <Package className="w-5 h-5 text-theme-muted dark:text-gray-500" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {product?.handle ? (
-                      <Link href={ROUTES.PRODUCT(product.handle)} className="text-sm font-semibold truncate hover:text-theme-primary dark:text-white block">
-                        {product.title}
-                      </Link>
-                    ) : (
-                      <p className="text-sm font-semibold truncate dark:text-white">Item #{item.product_id}</p>
-                    )}
-                    <p className="text-xs text-theme-muted dark:text-gray-400">
-                      Qty {item.quantity} · {formatOrderMoney(item.price)} each
-                    </p>
-                  </div>
-
-                  {/* Each item's actions sit on its own line — with them all in
-                      one row under the order, an order of several items showed
-                      identical "Buy Again" buttons with no way to tell which
-                      product each one re-added. Right of the item on wider
-                      screens; under its text (past the thumbnail) on a phone. */}
-                  {(canReorder || canReview) && (
-                    <div className="flex w-full items-center gap-4 pl-15 sm:w-auto sm:pl-0">
-                      {product ? (
-                        <>
-                          {canReorder && (
-                            <button
-                              type="button"
-                              aria-label={`Buy Again: ${product.title}`}
-                              onClick={() => handleBuyAgain(item.product_id)}
-                              className="flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                              Buy Again
-                            </button>
-                          )}
-                          {canReview && (
-                            <button
-                              type="button"
-                              aria-label={`Write / Edit Review: ${product.title}`}
-                              disabled={reviewLoadingFor === item.product_id}
-                              onClick={() => openReviewForm(item.product_id, product.title)}
-                              className="flex items-center gap-1.5 text-xs font-semibold text-theme-primary hover:text-theme-primary-dark transition-colors disabled:opacity-50"
-                            >
-                              <Star className="w-3.5 h-3.5" />
-                              {reviewLoadingFor === item.product_id ? 'Loading…' : 'Write / Edit Review'}
-                            </button>
-                          )}
-                        </>
-                      ) : productLookup === 'done' ? (
-                        <span className="text-xs text-theme-muted dark:text-gray-400">No longer available</span>
-                      ) : null}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-
-          <div className="flex items-center justify-between pt-3 border-t border-theme-border dark:border-gray-700">
-            <span className="text-sm font-semibold text-theme-muted dark:text-gray-400">Total</span>
-            <span className="text-lg font-extrabold dark:text-white">{formatOrderMoney(order.total_price)}</span>
-          </div>
-        </div>
+          order={order}
+          collapsible
+          defaultOpen={orderIndex === 0}
+          itemActions={actionsFor(order)}
+        />
       ))}
 
       {reviewTarget && (
