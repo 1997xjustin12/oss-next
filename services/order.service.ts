@@ -165,12 +165,12 @@ const firstAmount = (...values: unknown[]) =>
 /**
  * The status response, in the shape the order card reads.
  *
- * The endpoint is documented in prose (status and progress, items, totals,
- * payment link while unpaid, tracking, estimated delivery) but its field names
- * were not available when this was written, so each field is read from the
- * names this backend already uses elsewhere, then the obvious alternatives,
- * nested or flat. Anything not found is left out and the card skips it.
- * Narrow this once a real response has been seen — the keys are logged below.
+ * Field names checked against a live reply on 2026-10-16: the order sits under
+ * `data`, with `order_date`, `ship_to`, `shipping_carrier_display`,
+ * `estimated_delivery_start`/`_end` and `payment_link`, and items carrying
+ * their own `title`, `handle` and `image`. The real name is tried first in
+ * each list; the alternatives after it are kept in case the reply changes.
+ * Anything not found is left out and the card skips it.
  */
 function toOrder(data: unknown): GuestOrder | null {
   // This endpoint wraps its replies — a miss is `{"success": false, "message":
@@ -180,7 +180,8 @@ function toOrder(data: unknown): GuestOrder | null {
   const totals = asRecord(o.totals)
   const payment = asRecord(o.payment)
   const tracking = asRecord(o.tracking)
-  const shipping = asRecord(o.shipping)
+  // The live reply calls this `ship_to` (city, province, country — no street).
+  const shipping = Object.keys(asRecord(o.ship_to)).length ? asRecord(o.ship_to) : asRecord(o.shipping)
 
   const orderNumber = firstString(o.order_number, o.number, o.reference_number)
   const status = firstString(o.status, o.order_status)?.toLowerCase()
@@ -205,19 +206,28 @@ function toOrder(data: unknown): GuestOrder | null {
   return {
     order_number: orderNumber,
     status: status as GuestOrder['status'],
-    created_at: firstString(o.created_at, o.date_created, o.placed_at),
+    created_at: firstString(o.order_date, o.created_at, o.date_created, o.placed_at),
     items,
     sub_total: firstAmount(o.sub_total, totals.sub_total, totals.subtotal),
     total_shipping: firstAmount(o.total_shipping, totals.total_shipping, totals.shipping),
     total_tax: firstAmount(o.total_tax, totals.total_tax, totals.tax),
     total_price: total,
-    shipping_method: firstString(o.shipping_method, shipping.method),
+    // Not `shipping_method`: the live reply sends an internal code there
+    // ("additional"), not something to show a customer.
     shipping_city: firstString(o.shipping_city, shipping.city),
     shipping_province: firstString(o.shipping_province, o.shipping_state, shipping.province, shipping.state),
     shipping_zip_code: firstString(o.shipping_zip_code, shipping.zip_code, shipping.zip),
-    estimated_delivery: firstString(o.estimated_delivery, o.estimated_delivery_date, tracking.estimated_delivery),
+    // The live reply gives a window; the card shows one date, so the later end
+    // of it — the promise, rather than the hope.
+    estimated_delivery: firstString(
+      o.estimated_delivery_end,
+      o.estimated_delivery_start,
+      o.estimated_delivery,
+      o.estimated_delivery_date,
+      tracking.estimated_delivery,
+    ),
     delivered_at: firstString(o.delivered_at, tracking.delivered_at),
-    tracking_carrier: firstString(o.tracking_carrier, o.carrier, tracking.carrier),
+    tracking_carrier: firstString(o.shipping_carrier_display, o.shipping_carrier, o.tracking_carrier, o.carrier, tracking.carrier),
     tracking_number: firstString(o.tracking_number, tracking.tracking_number, tracking.number),
     tracking_url: firstString(o.tracking_url, tracking.tracking_url, tracking.url),
     payment_url: firstString(o.payment_url, o.payment_link, payment.url, payment.link, payment.payment_url, payment.payment_link),
