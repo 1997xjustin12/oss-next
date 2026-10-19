@@ -246,6 +246,8 @@ export type OrderTracking =
   | { state: 'available'; tracking: unknown }
   | { state: 'none'; orderStatus?: string }
   | { state: 'not_found' }
+  /** The backend's per-customer limit: wait `retryAfter` seconds, do not retry at once. */
+  | { state: 'rate_limited'; retryAfter: number | null; message: string }
   | { state: 'error' }
 
 /**

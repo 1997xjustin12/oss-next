@@ -5,19 +5,44 @@ import { ADMIN_COOKIE, adminCookieOptions, signAdminToken } from '@/lib/adminSes
 import { loginUser } from '@/services/user.service'
 import { authRateLimited } from '@/lib/authRateLimit'
 import { rateLimitedReply } from '@/lib/backendError'
+import { clientIdentity } from '@/lib/clientIp'
+import {
+  LOGIN_FAILURES_BEFORE_RECAPTCHA,
+  clearLoginFailures,
+  recentLoginFailures,
+  recordLoginFailure,
+} from '@/lib/loginGuard'
+import { isRecaptchaConfigured, verifyRecaptcha } from '@/lib/recaptcha'
 
 export async function POST(request: NextRequest) {
   const limited = await authRateLimited(request)
   if (limited) return limited
 
-  const { username, password } = await request.json()
+  const { username, password, recaptchaToken } = await request.json()
 
   if (!username || !password) {
     return NextResponse.json({ error: 'Username and password are required.' }, { status: 400 })
   }
 
+  /**
+   * reCAPTCHA after repeated failures (see lib/loginGuard.ts). The form always
+   * sends a v3 token; it only has to pass once this visitor has failed a couple
+   * of times. A low score is not "wrong password" — it says nothing about the
+   * account, and is not counted as a failure.
+   */
+  const ip = clientIdentity(request)
+  if (isRecaptchaConfigured() && (await recentLoginFailures(ip)) >= LOGIN_FAILURES_BEFORE_RECAPTCHA) {
+    if (!(await verifyRecaptcha(recaptchaToken ?? '', 'login'))) {
+      return NextResponse.json(
+        { error: 'We couldn’t verify this sign-in. Please wait a moment and try again.' },
+        { status: 400 },
+      )
+    }
+  }
+
   try {
     const session = await loginUser(username, password)
+    await clearLoginFailures(ip)
     const response = NextResponse.json(session)
 
     // Non-httpOnly flag cookie so middleware can gate protected routes
@@ -52,6 +77,7 @@ export async function POST(request: NextRequest) {
     // The backend's 429 travels as itself, with its message and Retry-After.
     const limited = rateLimitedReply(err)
     if (limited) return limited
+    await recordLoginFailure(ip)
     const message = err instanceof Error ? err.message : 'Login failed. Please try again.'
     console.error('[/api/auth/login]', err)
     return NextResponse.json({ error: message }, { status: 401 })

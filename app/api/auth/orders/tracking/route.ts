@@ -83,5 +83,20 @@ export async function GET(request: NextRequest) {
     ]),
   )
 
+  // The backend throttled at least one lookup. Say so as a 429 with its wait,
+  // rather than as "tracking unavailable" — the customer should come back in
+  // a moment, not conclude there is no tracking. The orders that did answer
+  // are still in the body.
+  const limited = entries.find(([, tracking]) => tracking.state === 'rate_limited')?.[1]
+  if (limited?.state === 'rate_limited') {
+    return NextResponse.json(
+      { error: limited.message, tracking: Object.fromEntries(entries) },
+      {
+        status: 429,
+        headers: { ...NO_STORE, ...(limited.retryAfter ? { 'Retry-After': String(limited.retryAfter) } : {}) },
+      },
+    )
+  }
+
   return NextResponse.json({ tracking: Object.fromEntries(entries) }, { headers: NO_STORE })
 }

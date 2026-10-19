@@ -194,6 +194,8 @@ export async function getOrderTracking(orderNumber: string, token: string): Prom
   const data = await res.json().catch(() => null)
 
   if (res.ok) return { state: 'available', tracking: data }
+  const limited = rateLimitedFrom(res, data)
+  if (limited) return { state: 'rate_limited', retryAfter: limited.retryAfter, message: limited.message }
   if (res.status === 404 && data && typeof data === 'object' && 'order_status' in data) {
     return { state: 'none', orderStatus: String((data as { order_status: unknown }).order_status) }
   }

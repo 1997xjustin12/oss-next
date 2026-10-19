@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useEffect, useState, FormEvent } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROUTES } from '@/config/routes'
+import { getRecaptchaToken, preloadRecaptcha } from '@/lib/recaptchaClient'
 import type { AuthSession } from '@/types/user'
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
 
 type Props = {
   showTitle?: boolean
@@ -21,6 +24,12 @@ export function LoginForm({ showTitle = true, className = '' }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Loaded while the form is being filled, as on registration: v3 scores what
+  // it observes, and a script that arrives at the click has observed nothing.
+  useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) preloadRecaptcha(RECAPTCHA_SITE_KEY)
+  }, [])
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -32,10 +41,22 @@ export function LoginForm({ showTitle = true, className = '' }: Props) {
 
     try {
       setIsSubmitting(true)
+
+      /**
+       * Sent with every attempt, invisibly. The server only insists on it after
+       * a couple of failed sign-ins from this visitor (lib/loginGuard.ts), so a
+       * customer who types their password right first time is never held up.
+       * Fetched at submit because a v3 token lasts about two minutes. A script
+       * that fails to load must not block sign-in, so its failure is swallowed.
+       */
+      const recaptchaToken = RECAPTCHA_SITE_KEY
+        ? await getRecaptchaToken(RECAPTCHA_SITE_KEY, 'login').catch(() => null)
+        : null
+
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: email, password }),
+        body: JSON.stringify({ username: email, password, recaptchaToken }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? 'Login failed.')
