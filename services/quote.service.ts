@@ -1,3 +1,5 @@
+import { cacheLife, cacheTag, revalidateTag } from 'next/cache'
+import { CACHE_TAGS } from '@/config/cache'
 import { getRedisClient } from '@/lib/redis'
 import { STORE_KEY } from '@/config/store'
 
@@ -99,11 +101,18 @@ export async function deliverQuoteRequest(
   await redis.lpush(quotesKey(), JSON.stringify(stored))
   // Best-effort trimming and counting — the lead itself is already safe, so a
   // failure here must not surface as a failed submission.
-  await Promise.all([
-    redis.ltrim(quotesKey(), 0, MAX_STORED - 1).catch(() => {}),
-    redis.incr(countKey(day)).catch(() => {}),
-    redis.expire(countKey(day), RETENTION_SECONDS).catch(() => {}),
-  ])
+  await redis
+    .pipeline()
+    .ltrim(quotesKey(), 0, MAX_STORED - 1)
+    .incr(countKey(day))
+    .expire(countKey(day), RETENTION_SECONDS, 'NX')
+    .exec()
+    .catch(() => {})
+
+  // The admin list is cached (readQuoteRequests); a new lead must show at once.
+  // { expire: 0 } rather than updateTag: this also runs from the agent API's
+  // route handler, where updateTag is not available.
+  revalidateTag(CACHE_TAGS.QUOTES, { expire: 0 })
 
   return stored
 }
@@ -111,22 +120,34 @@ export async function deliverQuoteRequest(
 /** Newest-first, for the admin. Empty on any failure. */
 export async function readQuoteRequests(limit = 50): Promise<StoredQuoteRequest[]> {
   try {
-    const redis = getRedisClient()
-    const rows = await redis.lrange<string | StoredQuoteRequest>(quotesKey(), 0, limit - 1)
-    return rows
-      .map((row) => {
-        // Upstash deserialises JSON strings automatically in some SDK versions
-        // and returns the raw string in others — handle both rather than
-        // depending on which one is installed.
-        if (typeof row !== 'string') return row
-        try {
-          return JSON.parse(row) as StoredQuoteRequest
-        } catch {
-          return null
-        }
-      })
-      .filter((row): row is StoredQuoteRequest => Boolean(row))
+    return await cachedQuoteRequests(limit)
   } catch {
     return []
   }
+}
+
+/**
+ * The list, in the platform's shared cache. Busted by every new lead (see
+ * deliverQuoteRequest), so the hour is only how long an unchanged list is kept.
+ * Throws on a Redis failure so an outage is never cached.
+ */
+async function cachedQuoteRequests(limit: number): Promise<StoredQuoteRequest[]> {
+  'use cache: remote'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.QUOTES)
+
+  const rows = await getRedisClient().lrange<string | StoredQuoteRequest>(quotesKey(), 0, limit - 1)
+  return rows
+    .map((row) => {
+      // Upstash deserialises JSON strings automatically in some SDK versions
+      // and returns the raw string in others — handle both rather than
+      // depending on which one is installed.
+      if (typeof row !== 'string') return row
+      try {
+        return JSON.parse(row) as StoredQuoteRequest
+      } catch {
+        return null
+      }
+    })
+    .filter((row): row is StoredQuoteRequest => Boolean(row))
 }

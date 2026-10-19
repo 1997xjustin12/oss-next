@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache';
-import { CACHE_TAGS } from '@/config/cache';
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache';
 import { STORE_KEY } from '@/config/store';
 import { NATIVE_PAGES } from '@/config/pages';
 import { getRedisClient } from '@/lib/redis';
@@ -94,19 +94,26 @@ function normalize(raw: unknown): PageSeo | null {
 /**
  * The overrides for one page, or null when none have been saved.
  *
+ * Cached with `use cache: remote` — the platform's shared cache — so every
+ * server instance shares one entry. Plain `use cache` keeps entries in one
+ * instance's memory, which on serverless meant most renders read Redis anyway.
+ *
  * Never throws: an unreachable or unconfigured Redis must not take the
- * storefront down, it must just mean "no overrides".
+ * storefront down, it must just mean "no overrides" — and that fallback is
+ * cached only briefly (OUTAGE_CACHE_LIFE), so the overrides return within a
+ * minute of Redis recovering.
  */
 export async function getPageSeo(path: string): Promise<PageSeo | null> {
-  'use cache';
-  cacheLife('hours');
+  'use cache: remote';
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.SEO);
 
   try {
-    const raw = await getRedisClient().get<unknown>(seoKey(path));
-    return normalize(raw);
+    const seo = normalize(await getRedisClient().get<unknown>(seoKey(path)));
+    cacheLife('hours');
+    return seo;
   } catch (error) {
     console.error('[seo] failed reading overrides for path:', path, error);
+    cacheLife(OUTAGE_CACHE_LIFE);
     return null;
   }
 }
@@ -114,21 +121,21 @@ export async function getPageSeo(path: string): Promise<PageSeo | null> {
 /**
  * Every native page's overrides in one round-trip, keyed by path. Used by the
  * admin list so it can show which pages are customised without N reads.
+ * Cached the same way as getPageSeo.
  */
 export async function getAllPageSeo(): Promise<Record<string, PageSeo | null>> {
-  'use cache';
-  cacheLife('hours');
+  'use cache: remote';
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.SEO);
 
   const paths = NATIVE_PAGES.map((page) => page.path);
-  const empty = Object.fromEntries(paths.map((path) => [path, null]));
-
   try {
     const values = await getRedisClient().mget<unknown[]>(...paths.map(seoKey));
+    cacheLife('hours');
     return Object.fromEntries(paths.map((path, i) => [path, normalize(values?.[i])]));
   } catch (error) {
     console.error('[seo] failed reading overrides:', error);
-    return empty;
+    cacheLife(OUTAGE_CACHE_LIFE);
+    return Object.fromEntries(paths.map((path) => [path, null]));
   }
 }
 

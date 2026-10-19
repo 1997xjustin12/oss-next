@@ -1,3 +1,5 @@
+import { cacheLife, cacheTag } from 'next/cache'
+import { CACHE_TAGS } from '@/config/cache'
 import { getRedisClient } from '@/lib/redis'
 import { STORE_KEY } from '@/config/store'
 import { identifyCrawler, type Crawler } from '@/config/crawlers'
@@ -71,15 +73,18 @@ export async function recordAgentHit(
   const cleanPath = path.split('?')[0].slice(0, 200)
 
   try {
-    const redis = getRedisClient()
-    await Promise.all([
-      redis.hincrby(k.agents, crawler.userAgent, 1),
-      redis.hincrby(k.paths, `${crawler.userAgent}${SEP}${cleanPath}`, 1),
-      redis.hincrby(k.statuses, `${crawler.userAgent}${SEP}${status}`, 1),
-      redis.expire(k.agents, RETENTION_SECONDS),
-      redis.expire(k.paths, RETENTION_SECONDS),
-      redis.expire(k.statuses, RETENTION_SECONDS),
-    ])
+    // One pipelined request, not six: this runs on every crawler hit, and
+    // Upstash charges per request. EXPIRE NX sets each key's TTL once, on the
+    // day's first hit, instead of resending it every time.
+    await getRedisClient()
+      .pipeline()
+      .hincrby(k.agents, crawler.userAgent, 1)
+      .hincrby(k.paths, `${crawler.userAgent}${SEP}${cleanPath}`, 1)
+      .hincrby(k.statuses, `${crawler.userAgent}${SEP}${status}`, 1)
+      .expire(k.agents, RETENTION_SECONDS, 'NX')
+      .expire(k.paths, RETENTION_SECONDS, 'NX')
+      .expire(k.statuses, RETENTION_SECONDS, 'NX')
+      .exec()
   } catch {
     // Redis unreachable, unconfigured, or rate-limited. A missing analytics
     // datapoint is not worth failing a request over.
@@ -111,20 +116,50 @@ export async function recordMcpToolCall(
   const errors = `${KEY_PREFIX}:${STORE_KEY}:mcperr:${day}`
 
   try {
-    const redis = getRedisClient()
-    await Promise.all([
-      redis.hincrby(calls, toolName, 1),
-      redis.expire(calls, RETENTION_SECONDS),
-      ...(errored
-        ? [redis.hincrby(errors, toolName, 1), redis.expire(errors, RETENTION_SECONDS)]
-        : []),
-    ])
+    // One pipelined request — see recordAgentHit.
+    const pipeline = getRedisClient().pipeline().hincrby(calls, toolName, 1).expire(calls, RETENTION_SECONDS, 'NX')
+    if (errored) pipeline.hincrby(errors, toolName, 1).expire(errors, RETENTION_SECONDS, 'NX')
+    await pipeline.exec()
   } catch {
     // Same rule as the crawler counters: never fail a request over analytics.
   }
 }
 
-/** MCP tool-call counters for the last `days` days, aggregated. */
+/**
+ * How long one day's counters stay cached. A finished day never changes, so it
+ * is kept for a week; today is still counting, so it is refreshed every few
+ * minutes. Both are tagged so the admin Cache screen can drop them.
+ */
+function cacheDay(final: boolean) {
+  cacheLife(final ? { stale: 3600, revalidate: 7 * 86400, expire: 7 * 86400 } : { stale: 60, revalidate: 300, expire: 300 })
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.AGENT_TRAFFIC)
+}
+
+/**
+ * One day's MCP counters. Throws on a Redis failure so an outage is never
+ * cached; readMcpToolStats skips that day instead.
+ */
+async function readMcpDay(
+  day: string,
+  final: boolean,
+): Promise<{ calls: Record<string, unknown> | null; errors: Record<string, unknown> | null }> {
+  'use cache: remote'
+  cacheDay(final)
+
+  const [calls, errors] = await getRedisClient()
+    .pipeline()
+    .hgetall<Record<string, unknown>>(`${KEY_PREFIX}:${STORE_KEY}:mcp:${day}`)
+    .hgetall<Record<string, unknown>>(`${KEY_PREFIX}:${STORE_KEY}:mcperr:${day}`)
+    .exec<[Record<string, unknown> | null, Record<string, unknown> | null]>()
+  return { calls, errors }
+}
+
+/**
+ * MCP tool-call counters for the last `days` days, aggregated.
+ *
+ * Each day is read through its own cache entry: the report used to re-read
+ * every day from Redis on every view.
+ */
 export async function readMcpToolStats(
   days: number,
   now: Date = new Date(),
@@ -132,19 +167,16 @@ export async function readMcpToolStats(
   const calls: Record<string, number> = {}
   const errors: Record<string, number> = {}
 
-  try {
-    const redis = getRedisClient()
-    for (let i = 0; i < days; i++) {
-      const day = dayKey(new Date(now.getTime() - i * 24 * 60 * 60 * 1000))
-      const [c, e] = await Promise.all([
-        redis.hgetall<Record<string, unknown>>(`${KEY_PREFIX}:${STORE_KEY}:mcp:${day}`),
-        redis.hgetall<Record<string, unknown>>(`${KEY_PREFIX}:${STORE_KEY}:mcperr:${day}`),
-      ])
+  for (let i = 0; i < days; i++) {
+    const day = dayKey(new Date(now.getTime() - i * 24 * 60 * 60 * 1000))
+    try {
+      const { calls: c, errors: e } = await readMcpDay(day, i > 0)
       for (const [tool, n] of Object.entries(c ?? {})) calls[tool] = (calls[tool] ?? 0) + (Number(n) || 0)
       for (const [tool, n] of Object.entries(e ?? {})) errors[tool] = (errors[tool] ?? 0) + (Number(n) || 0)
+    } catch {
+      // Redis unreachable: report what was read.
+      break
     }
-  } catch {
-    return { calls, errors }
   }
 
   return { calls, errors }
@@ -173,38 +205,45 @@ function splitHash(raw: Record<string, unknown> | null): Record<string, Record<s
   return out
 }
 
-/** The last `days` days of counters, newest first. Empty on any failure. */
+/**
+ * One day's crawler counters, cached — see cacheDay.
+ *
+ * The paths hash holds one field per agent × page, so on a crawled day it is
+ * by far the largest thing this app reads from Redis. The report used to fetch
+ * fourteen of them on every view; now a finished day is fetched once a week.
+ * Throws on a Redis failure so an outage is never cached.
+ */
+async function readAgentDay(day: string, final: boolean): Promise<AgentDayStats> {
+  'use cache: remote'
+  cacheDay(final)
+
+  const k = keys(day)
+  const [totalsRaw, pathsRaw, statusesRaw] = await getRedisClient()
+    .pipeline()
+    .hgetall<Record<string, unknown>>(k.agents)
+    .hgetall<Record<string, unknown>>(k.paths)
+    .hgetall<Record<string, unknown>>(k.statuses)
+    .exec<[Record<string, unknown> | null, Record<string, unknown> | null, Record<string, unknown> | null]>()
+
+  const totals: Record<string, number> = {}
+  for (const [agent, value] of Object.entries(totalsRaw ?? {})) {
+    totals[agent] = Number(value) || 0
+  }
+
+  return { day, totals, paths: splitHash(pathsRaw), statuses: splitHash(statusesRaw) }
+}
+
+/** The last `days` days of counters, newest first. Stops at the first failure. */
 export async function readAgentStats(days: number, now: Date = new Date()): Promise<AgentDayStats[]> {
   const out: AgentDayStats[] = []
 
-  try {
-    const redis = getRedisClient()
-
-    for (let i = 0; i < days; i++) {
-      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-      const day = dayKey(date)
-      const k = keys(day)
-
-      const [totalsRaw, pathsRaw, statusesRaw] = await Promise.all([
-        redis.hgetall<Record<string, unknown>>(k.agents),
-        redis.hgetall<Record<string, unknown>>(k.paths),
-        redis.hgetall<Record<string, unknown>>(k.statuses),
-      ])
-
-      const totals: Record<string, number> = {}
-      for (const [agent, value] of Object.entries(totalsRaw ?? {})) {
-        totals[agent] = Number(value) || 0
-      }
-
-      out.push({
-        day,
-        totals,
-        paths: splitHash(pathsRaw),
-        statuses: splitHash(statusesRaw),
-      })
+  for (let i = 0; i < days; i++) {
+    const day = dayKey(new Date(now.getTime() - i * 24 * 60 * 60 * 1000))
+    try {
+      out.push(await readAgentDay(day, i > 0))
+    } catch {
+      break
     }
-  } catch {
-    return out
   }
 
   return out

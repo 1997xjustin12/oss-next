@@ -1,3 +1,5 @@
+import { cacheLife, cacheTag } from 'next/cache'
+import { CACHE_TAGS } from '@/config/cache'
 import type {
   CheckoutPayload,
   GetOrderTotalPayload,
@@ -75,6 +77,39 @@ export async function getOrderTotal(payload: GetOrderTotalPayload): Promise<Orde
   }
 
   return data as OrderTotal
+}
+
+/** A priced answer the cart and checkout can be shown again: a total, or a "we can't deliver there". */
+export type CachedOrderTotal = { status: 200; body: OrderTotal } | { status: 400; body: { error: string; code: string } }
+
+/**
+ * `getOrderTotal`, cached for 20 minutes in the platform's shared cache.
+ *
+ * Each backend pricing call can cost a paid Google Distance Matrix lookup, and
+ * one checkout asks the same question many times. This used to be cached in
+ * Upstash, which made every re-price one to two Redis round trips carrying the
+ * whole quote (depot, five delivery options with their tooltips). `use cache:
+ * remote` keeps the same sharing across visitors and instances without
+ * touching Redis — the in-memory `use cache` would not, on serverless.
+ *
+ * A "can't deliver there" refusal is cached too: it holds for the same products
+ * and address. Anything else throws, and a thrown error is never cached, so a
+ * backend hiccup is retried rather than remembered.
+ *
+ * Tagged `store` and `pricing`, so the admin Cache screen can drop it. Never
+ * used for the charge: /api/checkout/place-order re-prices fresh.
+ */
+export async function getCachedOrderTotal(payload: GetOrderTotalPayload): Promise<CachedOrderTotal> {
+  'use cache: remote'
+  cacheLife({ stale: 60, revalidate: 20 * 60, expire: 20 * 60 })
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRICING)
+
+  try {
+    return { status: 200, body: await getOrderTotal(payload) }
+  } catch (err) {
+    if (err instanceof ShippingRefusedError) return { status: 400, body: { error: err.message, code: err.code } }
+    throw err
+  }
 }
 
 // No pagination — confirmed via docs/reference/ORDER_HISTORY_ANSWER.md that the reference

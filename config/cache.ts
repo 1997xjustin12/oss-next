@@ -13,6 +13,9 @@ export const CACHE_TAGS = {
   USERS:      'users',
   REVIEWS:    'reviews',
   SETTINGS:   'settings', // Runtime switches flipped from the admin screens
+  PRICING:    'pricing',  // Order totals (delivery quotes) for cart and checkout
+  AGENT_TRAFFIC: 'agent-traffic', // Admin crawler / MCP traffic report
+  QUOTES:     'quotes',   // Admin list of quote requests (leads)
 } as const;
 
 export type CacheTag = (typeof CACHE_TAGS)[keyof typeof CACHE_TAGS];
@@ -83,9 +86,45 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
     lifetime: 'hours — refreshed hourly, kept a day',
   },
   {
+    tag: CACHE_TAGS.SETTINGS,
+    label: 'Store Settings',
+    description:
+      'The switches set from the admin screens: cart notice, product panel and chat regions. Saving a switch already refreshes it.',
+    lifetime: 'hours — refreshed hourly, kept a day',
+  },
+  {
+    tag: CACHE_TAGS.PRICING,
+    label: 'Order Totals',
+    description:
+      'Delivery quotes and totals shown in the cart and checkout. Purge after changing prices or delivery rates. Place Order always re-prices fresh.',
+    lifetime: '20 minutes',
+  },
+  {
+    tag: CACHE_TAGS.AGENT_TRAFFIC,
+    label: 'Agent Traffic Report',
+    description: 'The crawler and MCP counts on the Agent Traffic screen. Past days are kept; today refreshes every few minutes.',
+    lifetime: 'today: 5 minutes — past days: kept a week',
+  },
+  {
     tag: CACHE_TAGS.REVIEWS,
     label: 'Reviews',
     description: 'Product review lists and rating summaries.',
     lifetime: 'hours — refreshed hourly, kept a day',
   },
 ];
+
+/**
+ * The cache lifetime for a Redis-backed read that failed and fell back.
+ *
+ * Every cached Redis reader catches its own errors and returns a safe default
+ * (no SEO override, the modal, strict chat regions). Caching that default for
+ * the normal "hours" would keep serving it long after Redis came back, so a
+ * failed read is cached only briefly instead: retried after a minute.
+ *
+ * Why not throw so the error is never cached: a cached function that throws
+ * during a build fails that page's prerender even when the caller catches it,
+ * so an outage would block every deploy. And `expire` stays at five minutes
+ * because anything shorter turns the read into a dynamic hole, which would
+ * change how the page prerenders.
+ */
+export const OUTAGE_CACHE_LIFE = { stale: 60, revalidate: 60, expire: 300 } as const;

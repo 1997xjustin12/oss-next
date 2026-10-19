@@ -1,4 +1,4 @@
-import { getRedisClient } from '@/lib/redis'
+import { incrementWindow } from '@/lib/redis'
 import { STORE_KEY } from '@/config/store'
 import {
   DEFAULT_RATE_LIMIT_BUCKET,
@@ -112,11 +112,9 @@ export async function checkRateLimit(
   const key = `oss-next:${STORE_KEY}:ratelimit:${bucket}:${clientId(request)}:${windowStart}`
 
   try {
-    const redis = getRedisClient()
-    const count = await redis.incr(key)
-    // Only the first request in a window needs the TTL; setting it every time
-    // would keep pushing the expiry out and turn the window into a rolling one.
-    if (count === 1) await redis.expire(key, 120)
+    // One round trip; EXPIRE NX leaves an existing TTL alone, so the window
+    // stays fixed rather than rolling — see incrementWindow.
+    const count = await incrementWindow(key, 120)
 
     return {
       allowed: count <= limit,

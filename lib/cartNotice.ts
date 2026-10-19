@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS } from '@/config/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { getRedisClient } from '@/lib/redis'
 
 /**
@@ -24,6 +24,13 @@ import { getRedisClient } from '@/lib/redis'
  * Read through `'use cache'` rather than per request: this is read in the root
  * layout, so an uncached Redis round trip would put one on every page of the
  * site. The Server Action busts the tag, so a flip still applies immediately.
+ *
+ * `use cache: remote`, not plain `use cache`: the plain one keeps its entry in
+ * one serverless instance's memory, so on Vercel most requests missed it and
+ * read Redis anyway. Hours rather than minutes because the admin action busts
+ * the tag on save — and the shortest lifetime in the root layout sets how often
+ * every page on the site is re-rendered, so `minutes` was re-rendering (and
+ * re-reading Redis for) every page about once a minute.
  */
 
 const REDIS_KEY = 'oss-next:cart-added-notice'
@@ -37,13 +44,26 @@ export type CartNoticeMode = 'modal' | 'toast'
  */
 const TOAST_VALUE = 'toast'
 
-/** Which confirmation the storefront is showing. */
+/**
+ * Which confirmation the storefront is showing.
+ *
+ * A Redis failure falls back to the modal and is cached only briefly
+ * (OUTAGE_CACHE_LIFE), so the real setting returns within a minute.
+ */
 export async function cartNoticeMode(): Promise<CartNoticeMode> {
-  'use cache'
-  cacheLife('minutes')
+  'use cache: remote'
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.SETTINGS)
 
-  return readCartNoticeFlag()
+  try {
+    const mode = (await getRedisClient().get(REDIS_KEY)) === TOAST_VALUE ? 'toast' : 'modal'
+    cacheLife('hours')
+    return mode
+  } catch (err) {
+    // Fail to the modal — see the module comment.
+    console.error('[cart-notice] switch read failed, using the modal:', err)
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return 'modal'
+  }
 }
 
 /**

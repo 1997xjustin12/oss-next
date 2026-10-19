@@ -21,9 +21,9 @@ const REDIS_KEY = 'oss-next:maintenance'
 const ENV_FORCED_ON = /^(1|true|on)$/i.test(process.env.MAINTENANCE_MODE ?? '')
 
 // The proxy runs this on matched requests, so the Redis read is cached in
-// module scope with a short TTL: at most one read per TTL per proxy instance,
+// module scope with a short TTL: at most one read per minute per proxy instance,
 // not one per request. Turning the wall on/off takes effect within the TTL.
-const TTL_MS = 20_000
+const TTL_MS = 60_000
 let cache: { on: boolean; at: number } | null = null
 
 /** Redis value that counts as "on". */

@@ -16,3 +16,23 @@ export function getRedisClient(): Redis {
   client ??= new Redis({ url, token })
   return client
 }
+
+/**
+ * Count one event in a window that expires on its own, in ONE request.
+ *
+ * Every rate limiter here used to send `INCR`, then — on the first hit of a
+ * window — a second request for `EXPIRE`. Pipelined with `EXPIRE … NX` (set the
+ * TTL only if none is set), it is a single HTTP round trip every time, and the
+ * window still never slides: NX leaves an existing expiry alone.
+ *
+ * Upstash bills bandwidth per request and response, so halving the requests on
+ * the busiest keys is the point.
+ */
+export async function incrementWindow(key: string, ttlSeconds: number): Promise<number> {
+  const [count] = await getRedisClient()
+    .pipeline()
+    .incr(key)
+    .expire(key, ttlSeconds, 'NX')
+    .exec<[number, number]>()
+  return count
+}

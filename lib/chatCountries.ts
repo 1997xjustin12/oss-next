@@ -1,3 +1,5 @@
+import { cacheLife, cacheTag } from 'next/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { getRedisClient } from '@/lib/redis'
 import { CHAT_COUNTRIES_RELAXED, CHAT_COUNTRIES_STRICT } from '@/config/chat'
 
@@ -33,30 +35,29 @@ const REDIS_KEY = 'oss-next:chat-strict-countries'
  */
 const RELAXED_VALUE = 'relaxed'
 
-// Read at most once per TTL per instance rather than once per chat request.
-// A flip takes effect within the TTL on instances that did not serve it.
-const TTL_MS = 20_000
-let cache: { strict: boolean; at: number } | null = null
-
 /**
  * Is the assistant restricted to the sales markets?
  *
- * True is the default and the production setting.
+ * True is the default and the production setting. Read through the platform's
+ * shared cache (it used to be held 20 seconds in one instance's memory, which
+ * on serverless meant a Redis read on most chat requests); the admin action
+ * busts the tag, so a flip still applies at once. A Redis failure falls back to
+ * strict and is cached only briefly (OUTAGE_CACHE_LIFE).
  */
-export async function isChatStrict(now: number = Date.now()): Promise<boolean> {
-  if (cache && now - cache.at < TTL_MS) return cache.strict
+export async function isChatStrict(): Promise<boolean> {
+  'use cache: remote'
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.SETTINGS)
 
-  let strict = true
   try {
-    strict = (await getRedisClient().get(REDIS_KEY)) !== RELAXED_VALUE
+    const strict = (await getRedisClient().get(REDIS_KEY)) !== RELAXED_VALUE
+    cacheLife('hours')
+    return strict
   } catch (err) {
     // Fail strict — see the module comment.
     console.error('[chat] country switch read failed, treating as strict:', err)
-    strict = true
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return true
   }
-
-  cache = { strict, at: now }
-  return strict
 }
 
 /** Flip the switch. Called by the admin Server Action. */
@@ -64,18 +65,15 @@ export async function setChatStrict(strict: boolean): Promise<void> {
   const redis = getRedisClient()
   if (strict) await redis.del(REDIS_KEY)
   else await redis.set(REDIS_KEY, RELAXED_VALUE)
-
-  // Drop this instance's cache so the admin who just clicked sees the new state
-  // on the redirect rather than up to TTL_MS of the old one.
-  cache = null
+  // The caller (setChatCountriesAction) busts CACHE_TAGS.SETTINGS.
 }
 
 /**
- * The stored value, bypassing the 20-second cache. For the admin screen.
+ * The stored value, bypassing the cache. For the admin screen.
  *
  * The screen has to show what is actually stored: reading through the cache
- * could render "Sales markets only" for up to 20 seconds after someone else
- * switched it, which on a settings page reads as the save having failed.
+ * could render a stale state after someone else switched it, which on a
+ * settings page reads as the save having failed.
  *
  * Skipping the cache also keeps `Date.now()` out of the render path — under
  * `cacheComponents` an unstable value there fails the build outright, which is

@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  clientIp,
-  isOverPricingRateLimit,
-  orderTotalCacheKey,
-  readCachedTotal,
-  writeCachedTotal,
-} from '@/lib/pricingGuard'
-import { ShippingRefusedError } from '@/lib/shippingQuote'
-import { getOrderTotal } from '@/services/order.service'
+import { clientIp, isOverPricingRateLimit } from '@/lib/pricingGuard'
+import { getCachedOrderTotal } from '@/services/order.service'
 import type { GetOrderTotalPayload } from '@/types/order'
 
 /**
  * Order totals for the cart and checkout pages.
  *
  * Each backend call can cost a paid Google lookup, so answers are cached for a
- * short while and requests are rate-limited per visitor — see lib/pricingGuard.
- * The charge itself does not come through here: /api/checkout/place-order
- * re-prices fresh before taking money.
+ * short while (getCachedOrderTotal, in the platform's shared cache) and
+ * requests are rate-limited per visitor (lib/pricingGuard, the one Redis call
+ * left on this route). The charge itself does not come through here:
+ * /api/checkout/place-order re-prices fresh before taking money.
  */
 export async function POST(request: NextRequest) {
   const payload = (await request.json().catch(() => null)) as GetOrderTotalPayload | null
@@ -32,26 +26,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const key = orderTotalCacheKey(payload)
-  const cached = await readCachedTotal(key)
-  if (cached) {
-    return NextResponse.json(cached.body, { status: cached.status, headers: { 'X-Pricing-Cache': 'hit' } })
-  }
-
   try {
-    const total = await getOrderTotal(payload)
-    await writeCachedTotal(key, { status: 200, body: total })
-    return NextResponse.json(total, { headers: { 'X-Pricing-Cache': 'miss' } })
+    // An expected refusal ("can't deliver there", with a `code` the page reads)
+    // comes back as a 400 reply rather than a throw, and is cached with the
+    // rest — see getCachedOrderTotal.
+    const reply = await getCachedOrderTotal(payload)
+    return NextResponse.json(reply.body, { status: reply.status })
   } catch (err) {
-    // An expected answer, not a fault: `code` lets the page tell "we can't
-    // deliver there" apart from a failed request. It holds for the same ZIP and
-    // products, so it is cached too; other failures are not, so a backend
-    // hiccup is retried rather than remembered.
-    if (err instanceof ShippingRefusedError) {
-      const body = { error: err.message, code: err.code }
-      await writeCachedTotal(key, { status: 400, body })
-      return NextResponse.json(body, { status: 400, headers: { 'X-Pricing-Cache': 'miss' } })
-    }
     const message = err instanceof Error ? err.message : 'Could not calculate order total.'
     console.error('[/api/orders/get-total]', err)
     return NextResponse.json({ error: message }, { status: 400 })

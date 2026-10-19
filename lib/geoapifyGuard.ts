@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { getRedisClient } from '@/lib/redis'
+import { getRedisClient, incrementWindow } from '@/lib/redis'
 
 /**
  * Keeps address autocomplete inside Geoapify's daily allowance.
@@ -78,9 +78,7 @@ export async function isOverGeoapifyRateLimit(visitor: string): Promise<boolean>
   const window = Math.floor(Date.now() / 1000 / RATE_WINDOW_SECONDS)
   const key = `${KEY_PREFIX}rl:geoapify:${visitor}:${window}`
   try {
-    const count = await redis.incr(key)
-    if (count === 1) await redis.expire(key, RATE_WINDOW_SECONDS)
-    return count > RATE_LIMIT
+    return (await incrementWindow(key, RATE_WINDOW_SECONDS)) > RATE_LIMIT
   } catch (err) {
     console.error('[geoapifyGuard] rate limit check failed:', err)
     return false
@@ -114,8 +112,7 @@ export async function countGeoapifyCall(now: Date = new Date()): Promise<void> {
 
   const key = dayKey(now)
   try {
-    const used = await redis.incr(key)
-    if (used === 1) await redis.expire(key, DAY_TTL_SECONDS)
+    const used = await incrementWindow(key, DAY_TTL_SECONDS)
     // One line a day, at the point it matters, rather than a counter nobody
     // reads: this is the warning that tomorrow's suggestions may not run.
     if (used === Math.floor(DAILY_BUDGET * 0.8)) {

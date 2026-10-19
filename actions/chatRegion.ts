@@ -1,7 +1,9 @@
 'use server';
 
+import { updateTag } from 'next/cache';
 import { notFound, redirect } from 'next/navigation';
 import { ADMIN_ROUTES } from '@/config/admin';
+import { CACHE_TAGS } from '@/config/cache';
 import { hasAdminAccess } from '@/lib/adminGuard';
 import { setChatStrict } from '@/lib/chatCountries';
 
@@ -17,15 +19,16 @@ import { setChatStrict } from '@/lib/chatCountries';
  * empty one is truthy: a form that posted `"off"` would silently turn the
  * restriction *on*.
  *
- * No cache tag is busted. The switch is read through its own short-TTL cache in
- * `lib/chatCountries.ts`, not through `'use cache'`, and nothing rendered is
- * derived from it — the widget asks `/api/chat/availability` at runtime.
+ * Busts CACHE_TAGS.SETTINGS: the switch is read through `'use cache: remote'`
+ * in `lib/chatCountries.ts`, so without this the old value would hold until
+ * its cache lifetime ran out.
  */
 export async function setChatCountriesAction(formData: FormData): Promise<void> {
   if (!(await hasAdminAccess())) notFound();
 
   const strict = String(formData.get('mode') ?? '') === 'strict';
   await setChatStrict(strict);
+  updateTag(CACHE_TAGS.SETTINGS);
 
   redirect(`${ADMIN_ROUTES.CHAT}?saved=${strict ? 'strict' : 'relaxed'}`);
 }

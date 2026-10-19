@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS } from '@/config/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { getRedisClient } from '@/lib/redis'
 
 /**
@@ -21,6 +21,13 @@ import { getRedisClient } from '@/lib/redis'
  * `Date.now()` TTL check in a render path fails the build outright under
  * `cacheComponents`. The action below busts the tag, so a flip still applies
  * immediately rather than after the cache profile expires.
+ *
+ * `use cache: remote`, not plain `use cache`: the plain one keeps its entry in
+ * one serverless instance's memory, so on Vercel most requests missed it and
+ * read Redis anyway. Hours rather than minutes because the admin action busts
+ * the tag on save — and the shortest lifetime in a page sets how often it is
+ * re-rendered, so `minutes` was re-rendering (and re-reading Redis for) every
+ * product page about once a minute.
  */
 
 const REDIS_KEY = 'oss-next:product-panel-v2'
@@ -32,13 +39,26 @@ const REDIS_KEY = 'oss-next:product-panel-v2'
  */
 const ON_VALUE = 'on'
 
-/** Is the product page rendering the V2 info panel? */
+/**
+ * Is the product page rendering the V2 info panel?
+ *
+ * A Redis failure falls back to the default panel and is cached only briefly
+ * (OUTAGE_CACHE_LIFE), so the real setting returns within a minute.
+ */
 export async function isProductPanelV2(): Promise<boolean> {
-  'use cache'
-  cacheLife('minutes')
+  'use cache: remote'
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.SETTINGS)
 
-  return readProductPanelV2Flag()
+  try {
+    const on = (await getRedisClient().get(REDIS_KEY)) === ON_VALUE
+    cacheLife('hours')
+    return on
+  } catch (err) {
+    // Fail to the default panel — see the module comment.
+    console.error('[product-panel] switch read failed, using the default panel:', err)
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return false
+  }
 }
 
 /**
