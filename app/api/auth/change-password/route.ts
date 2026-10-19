@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { changePassword } from '@/services/user.service'
+import { rateLimitedReply } from '@/lib/backendError'
 
 export async function PUT(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
@@ -17,6 +18,9 @@ export async function PUT(request: NextRequest) {
     await changePassword(token, oldPassword, newPassword)
     return NextResponse.json({ ok: true })
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Could not change password. Please try again.'
     console.error('[/api/auth/change-password]', err)
     return NextResponse.json({ error: message }, { status: 400 })

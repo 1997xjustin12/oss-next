@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getActiveCart } from '@/services/cart.service'
 import { getAbandonedCartFlag } from '@/services/abandonedCart.service'
+import { rateLimitedReply } from '@/lib/backendError'
 
 export async function GET(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
@@ -19,6 +20,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ...cartData, is_abandoned: isAbandoned })
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Could not load cart.'
     console.error('[/api/cart/active]', err)
     return NextResponse.json({ error: message }, { status: 400 })

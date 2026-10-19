@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAbandonedCart } from '@/services/order.service'
 import { setAbandonedCartFlag } from '@/services/abandonedCart.service'
+import { rateLimitedReply } from '@/lib/backendError'
 
 // Consolidates what the reference app does as two separate client calls
 // (notify backend, then write the Redis flag via a generic KV proxy) into
@@ -13,7 +14,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await createAbandonedCart(payload)
+    // Signed in: forwarded so the backend counts the customer (lib/backendAuth).
+    // A guest's sendBeacon carries no header and is counted by visitor address.
+    const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || undefined
+    await createAbandonedCart(payload, token)
 
     // Only logged-in carts have a real cart_id to key the flag on — guest
     // carts in this app never get one (see docs/audits/API_INTEGRATION_STATUS.md),
@@ -23,6 +27,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, abandonedAt })
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Could not record abandoned cart.'
     console.error('[/api/abandoned-carts/create]', err)
     return NextResponse.json({ error: message }, { status: 400 })

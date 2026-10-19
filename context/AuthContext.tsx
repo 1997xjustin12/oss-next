@@ -86,9 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken: current.refreshToken }),
       })
-        .then((res) => (res.ok ? res.json() : Promise.reject(new Error('refresh failed'))))
-        .then((data: { access: string }) => {
-          persistSession({ ...current, token: data.access })
+        .then((res) => {
+          // Rate-limited is not signed out: keep the session and try again at
+          // the next tick, rather than logging the customer out (or retrying
+          // in a loop) because the backend asked us to slow down.
+          if (res.status === 429) return null
+          return res.ok ? res.json() : Promise.reject(new Error('refresh failed'))
+        })
+        .then((data: { access: string } | null) => {
+          if (data) persistSession({ ...current, token: data.access })
         })
         .catch(() => {
           // Refresh token itself is expired/invalid — nothing left to do but

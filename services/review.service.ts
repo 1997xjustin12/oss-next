@@ -1,4 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
+import { visitorAuthHeaders } from '@/lib/backendAuth'
+import { rateLimitedFrom } from '@/lib/backendError'
 import { CACHE_TAGS } from '@/config/cache'
 import type { ContainerVariantKey } from '@/lib/containerVariant'
 import type { ReviewListResponse } from '@/types/review'
@@ -121,12 +123,15 @@ export async function listProductReviews(productId?: string | number, page = 1):
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
+      ...(await visitorAuthHeaders()),
     },
   })
 
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? 'Could not load reviews.')
   }
 
@@ -149,7 +154,8 @@ export async function createProductReview(payload: CreateReviewPayload, token?: 
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Bearer when signed in, otherwise key + visitor address (lib/backendAuth).
+      ...(await visitorAuthHeaders({ token })),
     },
     body: JSON.stringify(payload),
   })
@@ -157,6 +163,8 @@ export async function createProductReview(payload: CreateReviewPayload, token?: 
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(extractReviewError(data) ?? 'Could not submit review.')
   }
 
@@ -173,7 +181,8 @@ export async function updateProductReview(
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Bearer when signed in, otherwise key + visitor address (lib/backendAuth).
+      ...(await visitorAuthHeaders({ token })),
     },
     body: JSON.stringify(payload),
   })
@@ -181,6 +190,8 @@ export async function updateProductReview(
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(extractReviewError(data) ?? 'Could not update review.')
   }
 

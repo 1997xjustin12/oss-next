@@ -15,12 +15,18 @@
 //             message costs a backend model call. A real conversation is a
 //             handful of messages a minute; past 20 it is a script.
 //   quote   — each submission reaches a person.
+//   auth    — sign-in, lost-password and reset-password on this site. A person
+//             signs in once or twice; past 10 a minute it is a script trying
+//             passwords or flooding someone's inbox. The backend also locks an
+//             account after 5 wrong passwords — this stops the attempts before
+//             they reach it.
 
 export const RATE_LIMIT_BUCKETS = {
   light: 300,
   agent: 60,
   chat: 20,
   quote: 5,
+  auth: 10,
 } as const;
 
 export type RateLimitBucket = keyof typeof RATE_LIMIT_BUCKETS;

@@ -1,3 +1,6 @@
+import { visitorAuthHeaders } from '@/lib/backendAuth'
+import { rateLimitedFrom } from '@/lib/backendError'
+
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
 const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
 
@@ -11,12 +14,16 @@ export async function subscribeToNewsletter(email: string): Promise<void> {
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
+      // Signed out: the storefront key and the visitor's address (lib/backendAuth).
+      ...(await visitorAuthHeaders()),
     },
     body: JSON.stringify({ email }),
   })
 
   if (!res.ok) {
     const data = await res.json().catch(() => null)
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? 'Could not subscribe. Please try again.')
   }
 }
@@ -27,12 +34,16 @@ export async function unsubscribeFromNewsletter(email: string): Promise<void> {
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
+      // Signed out: the storefront key and the visitor's address (lib/backendAuth).
+      ...(await visitorAuthHeaders()),
     },
     body: JSON.stringify({ email }),
   })
 
   if (!res.ok) {
     const data = await res.json().catch(() => null)
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? 'Could not unsubscribe. Please try again.')
   }
 }

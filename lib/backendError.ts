@@ -95,3 +95,66 @@ export function backendErrorMessage(data: unknown): string | undefined {
   if (!message) return undefined
   return message.length > MAX_MESSAGE_LENGTH ? `${message.slice(0, MAX_MESSAGE_LENGTH - 1)}…` : message
 }
+
+/**
+ * The backend said 429: a per-visitor or per-customer limit, or the sign-in
+ * lockout (5 wrong passwords for one username from one visitor in 15 minutes,
+ * or 20 from anywhere in an hour — refused even with the right password until
+ * the window passes).
+ *
+ * Its own class so it is never mistaken for a wrong password or a failure:
+ * routes pass it through as a 429 with Retry-After (see rateLimitedReply), and
+ * the customer is told to wait rather than to check their details. Never retry
+ * on it.
+ */
+export class RateLimitedError extends BackendRefusedError {
+  /** Seconds to wait, from the backend's Retry-After; null when it sent none. */
+  retryAfter: number | null
+
+  constructor(message: string, retryAfter: number | null) {
+    super(429, message)
+    this.name = 'RateLimitedError'
+    this.retryAfter = retryAfter
+  }
+}
+
+/** "about 12 minutes" / "about 40 seconds" — the lockout windows run from seconds to 15 minutes. */
+function waitPhrase(seconds: number): string {
+  if (seconds >= 90) return `about ${Math.ceil(seconds / 60)} minutes`
+  if (seconds > 60) return 'about a minute'
+  return `${Math.max(1, Math.round(seconds))} seconds`
+}
+
+/**
+ * A RateLimitedError for a 429 reply, or null for anything else. Uses the
+ * backend's own wording (its `detail`) and adds the wait from Retry-After.
+ */
+export function rateLimitedFrom(res: Response, data: unknown): RateLimitedError | null {
+  if (res.status !== 429) return null
+
+  const header = Number(res.headers.get('retry-after'))
+  const retryAfter = Number.isFinite(header) && header > 0 ? Math.ceil(header) : null
+  const base = backendErrorMessage(data) ?? 'Too many requests. Please wait a moment and try again.'
+  const message = retryAfter ? `${base.replace(/\.?\s*$/, '.')} Please try again in ${waitPhrase(retryAfter)}.` : base
+
+  return new RateLimitedError(message, retryAfter)
+}
+
+/**
+ * The route-handler reply for a RateLimitedError — a 429 carrying the message
+ * and Retry-After — or null for any other error, so a catch block can try this
+ * first and fall through to its usual handling.
+ */
+export function rateLimitedReply(err: unknown): Response | null {
+  if (!(err instanceof RateLimitedError)) return null
+  return Response.json(
+    { error: err.message },
+    {
+      status: 429,
+      headers: {
+        'Cache-Control': 'no-store',
+        ...(err.retryAfter ? { 'Retry-After': String(err.retryAfter) } : {}),
+      },
+    },
+  )
+}

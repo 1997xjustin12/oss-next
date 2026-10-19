@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { listProductReviews } from '@/services/review.service'
+import { rateLimitedReply } from '@/lib/backendError'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -12,6 +13,9 @@ export async function GET(request: NextRequest) {
     const data = await listProductReviews(productId, page)
     return NextResponse.json(data)
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Could not load reviews.'
     console.error('[/api/reviews/list]', err)
     return NextResponse.json({ error: message }, { status: 400 })

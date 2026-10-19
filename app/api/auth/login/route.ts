@@ -3,8 +3,13 @@ import { ADMIN_SESSION_TTL_SECONDS } from '@/config/admin'
 import { isAdminIdentity } from '@/lib/admin'
 import { ADMIN_COOKIE, adminCookieOptions, signAdminToken } from '@/lib/adminSession'
 import { loginUser } from '@/services/user.service'
+import { authRateLimited } from '@/lib/authRateLimit'
+import { rateLimitedReply } from '@/lib/backendError'
 
 export async function POST(request: NextRequest) {
+  const limited = await authRateLimited(request)
+  if (limited) return limited
+
   const { username, password } = await request.json()
 
   if (!username || !password) {
@@ -44,6 +49,9 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Login failed. Please try again.'
     console.error('[/api/auth/login]', err)
     return NextResponse.json({ error: message }, { status: 401 })

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateProductReview } from '@/services/review.service'
+import { rateLimitedReply } from '@/lib/backendError'
 import type { CreateReviewPayload } from '@/services/review.service'
 
 // The upstream contract is PUT /api/reviews/{id}/update — this local route
@@ -18,6 +19,9 @@ export async function PUT(request: NextRequest) {
     const review = await updateProductReview(id, payload, token)
     return NextResponse.json(review)
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Could not update review.'
     console.error('[/api/reviews/update]', err)
     return NextResponse.json({ error: message }, { status: 400 })

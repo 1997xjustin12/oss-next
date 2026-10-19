@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateAccountDetails } from '@/services/user.service'
+import { rateLimitedReply } from '@/lib/backendError'
 import type { AccountDetailsPayload } from '@/types/user'
 
 export async function PATCH(request: NextRequest) {
@@ -19,6 +20,9 @@ export async function PATCH(request: NextRequest) {
     const user = await updateAccountDetails(token, { firstName, lastName, email, profile })
     return NextResponse.json({ user })
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Could not update account details. Please try again.'
     console.error('[/api/auth/account-details]', err)
     return NextResponse.json({ error: message }, { status: 400 })

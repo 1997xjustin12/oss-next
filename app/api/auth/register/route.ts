@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { registerUser } from '@/services/user.service'
 import { isRecaptchaConfigured, verifyRecaptcha } from '@/lib/recaptcha'
+import { rateLimitedReply } from '@/lib/backendError'
 import type { RegisterPayload } from '@/types/user'
 
 export async function POST(request: NextRequest) {
@@ -24,6 +25,9 @@ export async function POST(request: NextRequest) {
     const session = await registerUser(payload as RegisterPayload)
     return NextResponse.json(session)
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
     console.error('[/api/auth/register]', err)
     return NextResponse.json({ error: message }, { status: 400 })

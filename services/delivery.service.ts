@@ -223,11 +223,17 @@ export async function fetchDeliveryRates(
   } as unknown as CartLineItem
 
   try {
-    const total = await getOrderTotal({
-      items: [item],
-      shipping_zip_code: zipcode,
-      shipping_country: countryForZip(zipcode),
-    })
+    // ip: null — this normally runs inside getDeliveryRates' shared cache, where
+    // there is no single visitor and headers() is unavailable, so it is counted
+    // by the storefront key. See getOrderTotal.
+    const total = await getOrderTotal(
+      {
+        items: [item],
+        shipping_zip_code: zipcode,
+        shipping_country: countryForZip(zipcode),
+      },
+      { ip: null },
+    )
 
     if (!total.shipping) {
       return { ok: false, reason: 'unavailable', message: FALLBACK_MESSAGE }

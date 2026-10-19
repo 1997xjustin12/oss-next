@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrderTracking, listUserOrders } from '@/services/order.service'
+import { rateLimitedReply } from '@/lib/backendError'
 import type { OrderTracking } from '@/types/order'
 
 /**
@@ -66,6 +67,9 @@ export async function GET(request: NextRequest) {
   try {
     owned = new Set((await listUserOrders(token)).map((order) => String(order.order_number)))
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     // Same answer the orders list route gives when it can't load — an expired
     // token lands here too, and the page already handles that.
     console.error('[/api/auth/orders/tracking] could not load the customer order list:', err)

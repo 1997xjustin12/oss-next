@@ -13,7 +13,10 @@
 
 /** The left-most `x-forwarded-for` entry is the client; the rest is proxy chain. */
 export function clientIdentity(request: Request): string | null {
-  const headers = request.headers
+  return identityFromHeaders(request.headers)
+}
+
+function identityFromHeaders(headers: Headers): string | null {
   const forwarded = headers.get('x-forwarded-for')?.split(',')[0]?.trim()
   const raw = forwarded || headers.get('x-real-ip')?.trim()
 
@@ -81,7 +84,15 @@ async function resolveDevPublicIp(): Promise<string | null> {
  * Null means **omit the header**. A blank value is not a fallback.
  */
 export async function clientIp(request: Request): Promise<string | null> {
-  const identity = clientIdentity(request)
+  return clientIpFromHeaders(request.headers)
+}
+
+/**
+ * The same, from a request's headers — for code that has `headers()` from
+ * next/headers rather than the Request itself (services; see lib/backendAuth.ts).
+ */
+export async function clientIpFromHeaders(headers: Headers): Promise<string | null> {
+  const identity = identityFromHeaders(headers)
   if (identity && !isLoopback(identity)) return identity
 
   return resolveDevPublicIp()

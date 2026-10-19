@@ -1,5 +1,6 @@
 import type { CreateCartPayload } from '@/types/cart'
-import { logBackendRejection } from '@/lib/backendError'
+import { visitorAuthHeaders } from '@/lib/backendAuth'
+import { logBackendRejection, rateLimitedFrom } from '@/lib/backendError'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
 const STORE_DOMAIN = process.env.NEXT_PUBLIC_STORE_DOMAIN
@@ -22,7 +23,8 @@ export async function getActiveCart(token?: string): Promise<unknown> {
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Bearer when signed in, otherwise key + visitor address (lib/backendAuth).
+      ...(await visitorAuthHeaders({ token })),
     },
   })
 
@@ -37,6 +39,8 @@ export async function getActiveCart(token?: string): Promise<unknown> {
   }
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     logBackendRejection('cart.service load', res.status, data)
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not load cart.')
   }
@@ -51,7 +55,8 @@ export async function createCart(payload: CreateCartPayload, token?: string): Pr
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Bearer when signed in, otherwise key + visitor address (lib/backendAuth).
+      ...(await visitorAuthHeaders({ token })),
     },
     body: JSON.stringify(payload),
   })
@@ -59,6 +64,8 @@ export async function createCart(payload: CreateCartPayload, token?: string): Pr
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     logBackendRejection('cart.service create', res.status, data)
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not create cart.')
   }
@@ -75,7 +82,8 @@ export async function closeCart(token?: string): Promise<unknown> {
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Bearer when signed in, otherwise key + visitor address (lib/backendAuth).
+      ...(await visitorAuthHeaders({ token })),
     },
   })
 
@@ -85,6 +93,8 @@ export async function closeCart(token?: string): Promise<unknown> {
   if (res.status === 404) return null
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     logBackendRejection('cart.service close', res.status, data)
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not close cart.')
   }
@@ -100,7 +110,8 @@ export async function updateCart(payload: unknown, token?: string): Promise<unkn
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Bearer when signed in, otherwise key + visitor address (lib/backendAuth).
+      ...(await visitorAuthHeaders({ token })),
     },
     body: JSON.stringify(payload),
   })
@@ -108,6 +119,8 @@ export async function updateCart(payload: unknown, token?: string): Promise<unkn
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     logBackendRejection('cart.service update', res.status, data)
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not update cart.')
   }

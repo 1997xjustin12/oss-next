@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { BackendRefusedError } from '@/lib/backendError'
+import { BackendRefusedError, RateLimitedError } from '@/lib/backendError'
 import { isRecaptchaConfigured, verifyRecaptcha } from '@/lib/recaptcha'
 import { ShippingRefusedError } from '@/lib/shippingQuote'
 import { checkoutOrder, getOrderTotal } from '@/services/order.service'
@@ -65,8 +65,18 @@ function customerMessage(err: unknown, fallback: string): string {
   return err instanceof BackendRefusedError || err instanceof ShippingRefusedError ? err.message : fallback
 }
 
-function reply(status: number, body: PlaceOrderResponse) {
-  return NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } })
+function reply(status: number, body: PlaceOrderResponse, headers: Record<string, string> = {}) {
+  return NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store', ...headers } })
+}
+
+/**
+ * The backend's 429 (a per-visitor or per-customer limit) as this route's
+ * reply: still a 429, with the backend's message and Retry-After, so checkout
+ * shows "please wait" rather than "your order failed". Null for anything else.
+ */
+function rateLimited(err: unknown, stage: 'total' | 'order') {
+  if (!(err instanceof RateLimitedError)) return null
+  return reply(429, { ok: false, stage, error: err.message }, err.retryAfter ? { 'Retry-After': String(err.retryAfter) } : {})
 }
 
 /** The create response's shape was never pinned down; read the number defensively. */
@@ -136,6 +146,7 @@ export async function POST(request: NextRequest) {
 
   // ── 1. Price ──────────────────────────────────────────────────────────────
   try {
+    // Fresh, not the cached total, and counted against this visitor or customer.
     const total = await getOrderTotal({
       items: body.items,
       shipping_zip_code: body.shipping_zip_code,
@@ -145,7 +156,7 @@ export async function POST(request: NextRequest) {
       shipping_address_2: body.shipping_address_2,
       shipping_city: body.shipping_city,
       shipping_state: body.shipping_state,
-    })
+    }, { token })
     if (!Number.isFinite(total?.total_price) || total.total_price <= 0) {
       throw new Error('Order total came back invalid.')
     }
@@ -159,6 +170,8 @@ export async function POST(request: NextRequest) {
       return reply(409, { ok: false, stage: 'total', error: 'Your order total has changed. Please review it and try again.' })
     }
   } catch (err) {
+    const limited = rateLimited(err, 'total')
+    if (limited) return limited
     console.error('[/api/checkout/place-order] total', err)
     return reply(400, {
       ok: false,
@@ -202,6 +215,8 @@ export async function POST(request: NextRequest) {
 
     return reply(200, { ok: true, orderNumber: orderNumberFrom(created), paymentUrl })
   } catch (err) {
+    const limited = rateLimited(err, 'order')
+    if (limited) return limited
     console.error('[/api/checkout/place-order] order not recorded', err)
     return reply(502, {
       ok: false,

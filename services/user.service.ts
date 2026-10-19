@@ -1,4 +1,5 @@
-import { fieldErrorMessage, logBackendRejection } from '@/lib/backendError'
+import { visitorAuthHeaders } from '@/lib/backendAuth'
+import { fieldErrorMessage, logBackendRejection, rateLimitedFrom } from '@/lib/backendError'
 import type { AccountDetailsPayload, AuthSession, ProfileUpdatePayload, RegisterPayload, User, UserProfile } from '@/types/user'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
@@ -84,6 +85,8 @@ export async function getUserProfile(token: string): Promise<User> {
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? 'Could not load account details.')
   }
 
@@ -125,11 +128,18 @@ async function postLogin(username: string, password: string) {
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
+      // Not signed in yet: the storefront key and the visitor's address, so the
+      // backend's wrong-password lockout counts this visitor, not every shopper.
+      ...(await visitorAuthHeaders()),
     },
     body: JSON.stringify({ username, password }),
   })
 
-  return { ok: res.ok, data: (await res.json().catch(() => null)) as Record<string, unknown> | null }
+  const data = (await res.json().catch(() => null)) as Record<string, unknown> | null
+  // A lockout is not a wrong password: surface it as itself (see loginUser).
+  const limited = rateLimitedFrom(res, data)
+  if (limited) throw limited
+  return { ok: res.ok, data }
 }
 
 /**
@@ -147,6 +157,11 @@ async function postLogin(username: string, password: string) {
  * only ever happens on a failed attempt.
  *
  * The refusal reported is the first one, about what they actually typed.
+ *
+ * A 429 (the backend's wrong-password lockout, or a request limit) throws a
+ * RateLimitedError out of postLogin at once — before the second attempt, which
+ * would only add to the count — and the route returns it as a 429 with the
+ * backend's message and Retry-After, never as "wrong password".
  */
 export async function loginUser(identifier: string, password: string): Promise<AuthSession> {
   const typed = await postLogin(identifier, password)
@@ -175,12 +190,14 @@ export async function loginUser(identifier: string, password: string): Promise<A
 export async function requestPasswordReset(email: string): Promise<void> {
   const res = await fetch(FORGOT_PASSWORD_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await visitorAuthHeaders()) },
     body: JSON.stringify({ email }),
   })
 
   if (!res.ok) {
     const data = await res.json().catch(() => null)
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     logBackendRejection('user.service forgot-password', res.status, data)
     throw new Error(data?.error ?? data?.detail ?? fieldErrorMessage(data) ?? 'Could not send reset link. Please try again.')
   }
@@ -236,13 +253,16 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
 
   const res = await fetch(REGISTER_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await visitorAuthHeaders()) },
     body: JSON.stringify(body),
   })
 
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
+
     /**
      * Log the backend's own words before they are thrown away.
      *
@@ -288,9 +308,12 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
 export async function refreshAccessToken(refreshToken: string): Promise<string> {
   const res = await fetch(REFRESH_URL, {
     method: 'POST',
+    // The refresh token is in the body, not a Bearer header, so this call is
+    // counted like any signed-out one: key and visitor address.
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
+      ...(await visitorAuthHeaders()),
     },
     body: JSON.stringify({ refresh: refreshToken }),
   })
@@ -298,6 +321,9 @@ export async function refreshAccessToken(refreshToken: string): Promise<string> 
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    // A 429 is not an expired session: the caller keeps the customer signed in.
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? 'Could not refresh session. Please log in again.')
   }
 
@@ -315,12 +341,15 @@ export async function resetPassword(token: string, uidb64: string, newPassword: 
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
+      ...(await visitorAuthHeaders()),
     },
     body: JSON.stringify({ token, uidb64, new_password: newPassword }),
   })
 
   if (!res.ok) {
     const data = await res.json().catch(() => null)
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? 'Could not reset password. The link may have expired.')
   }
 }
@@ -338,6 +367,8 @@ export async function changePassword(token: string, oldPassword: string, newPass
 
   if (!res.ok) {
     const data = await res.json().catch(() => null)
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? 'Could not change password. Please try again.')
   }
 }
@@ -380,6 +411,8 @@ export async function updateAccountDetails(token: string, payload: AccountDetail
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? 'Could not update account details. Please try again.')
   }
 

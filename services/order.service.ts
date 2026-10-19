@@ -10,7 +10,8 @@ import type {
   OrderTotal,
   OrderTracking,
 } from '@/types/order'
-import { BackendRefusedError, backendErrorMessage, logBackendRejection } from '@/lib/backendError'
+import { visitorAuthHeaders } from '@/lib/backendAuth'
+import { BackendRefusedError, backendErrorMessage, logBackendRejection, rateLimitedFrom } from '@/lib/backendError'
 import { ShippingRefusedError, shippingRefusal } from '@/lib/shippingQuote'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
@@ -36,7 +37,9 @@ export async function checkoutOrder(payload: CheckoutPayload, token?: string): P
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // Bearer when signed in, otherwise the storefront key and the visitor's
+      // address — see lib/backendAuth.ts.
+      ...(await visitorAuthHeaders({ token })),
     },
     body: JSON.stringify(payload),
   })
@@ -44,6 +47,8 @@ export async function checkoutOrder(payload: CheckoutPayload, token?: string): P
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     // Field-level refusals (`{ items: ["…"] }`) carry none of the keys below, so
     // without this the only record of a refused order — after the card has been
     // charged — was "Could not complete checkout." (seen 2026-09-15).
@@ -54,13 +59,27 @@ export async function checkoutOrder(payload: CheckoutPayload, token?: string): P
   return data as Order
 }
 
+/**
+ * Price an order.
+ *
+ * `token` and `ip` decide who the backend counts the call against — see
+ * lib/backendAuth.ts. Callers inside a shared cache (getCachedOrderTotal,
+ * getDeliveryRates) pass `ip: null`: one cached answer serves every visitor,
+ * so there is no one visitor to name, and `headers()` is not available there.
+ * Those calls are counted by the storefront key, with this site's own
+ * per-visitor limit (lib/pricingGuard) in front of them.
+ */
 // TODO: confirm the real response shape (tax/shipping breakdown field names).
-export async function getOrderTotal(payload: GetOrderTotalPayload): Promise<OrderTotal> {
+export async function getOrderTotal(
+  payload: GetOrderTotalPayload,
+  { token, ip }: { token?: string; ip?: string | null } = {},
+): Promise<OrderTotal> {
   const res = await fetch(GET_TOTAL_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
+      ...(await visitorAuthHeaders({ token, ip })),
     },
     body: JSON.stringify(payload),
   })
@@ -68,6 +87,8 @@ export async function getOrderTotal(payload: GetOrderTotalPayload): Promise<Orde
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     logBackendRejection('order.service get-total', res.status, data)
     // "Too far to deliver" and "needs an address" are written for customers and
     // decide what checkout can offer, so they travel with their own message.
@@ -105,7 +126,8 @@ export async function getCachedOrderTotal(payload: GetOrderTotalPayload): Promis
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRICING)
 
   try {
-    return { status: 200, body: await getOrderTotal(payload) }
+    // ip: null — a shared answer has no single visitor; see getOrderTotal.
+    return { status: 200, body: await getOrderTotal(payload, { ip: null }) }
   } catch (err) {
     if (err instanceof ShippingRefusedError) return { status: 400, body: { error: err.message, code: err.code } }
     throw err
@@ -130,6 +152,8 @@ export async function listUserOrders(token: string): Promise<Order[]> {
   const data = await res.json().catch(() => null)
 
   if (!res.ok) {
+    const limited = rateLimitedFrom(res, data)
+    if (limited) throw limited
     throw new Error(data?.error ?? data?.detail ?? data?.message ?? 'Could not load orders.')
   }
 
@@ -298,8 +322,10 @@ export async function getOrderStatus(orderUuid: string): Promise<OrderStatusResu
     res = await fetch(ORDER_STATUS_URL(orderUuid.toLowerCase()), {
       headers: {
         Accept: 'application/json',
-        Authorization: `Api-Key ${BACKEND_KEY}`,
         'X-Store-Domain': STORE_DOMAIN ?? '',
+        // The storefront key plus the visitor's address, so lookups are counted
+        // per visitor — see lib/backendAuth.ts.
+        ...(await visitorAuthHeaders()),
       },
       cache: 'no-store',
     })
@@ -337,17 +363,20 @@ export async function getOrderStatus(orderUuid: string): Promise<OrderStatusResu
 // Mirrors the reference app's dedupe behavior: a `DUPLICATE_CART_ID` response
 // means the backend already knows about this cart — not a failure, just a
 // no-op notify. Callers still proceed to sync the Redis flag either way.
-export async function createAbandonedCart(payload: unknown): Promise<{ notified: boolean }> {
+export async function createAbandonedCart(payload: unknown, token?: string): Promise<{ notified: boolean }> {
   const res = await fetch(ABANDONED_CART_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-Store-Domain': STORE_DOMAIN ?? '',
+      ...(await visitorAuthHeaders({ token })),
     },
     body: JSON.stringify(payload),
   })
 
   const data = await res.json().catch(() => null)
+  const limited = rateLimitedFrom(res, data)
+  if (limited) throw limited
 
   if (!res.ok && data?.code !== 'DUPLICATE_CART_ID') {
     throw new Error(data?.error ?? data?.detail ?? 'Could not record abandoned cart.')

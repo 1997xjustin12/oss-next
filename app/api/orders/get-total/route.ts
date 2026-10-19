@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { clientIp, isOverPricingRateLimit } from '@/lib/pricingGuard'
 import { getCachedOrderTotal } from '@/services/order.service'
+import { rateLimitedReply } from '@/lib/backendError'
 import type { GetOrderTotalPayload } from '@/types/order'
 
 /**
@@ -33,6 +34,9 @@ export async function POST(request: NextRequest) {
     const reply = await getCachedOrderTotal(payload)
     return NextResponse.json(reply.body, { status: reply.status })
   } catch (err) {
+    // The backend's 429 travels as itself, with its message and Retry-After.
+    const limited = rateLimitedReply(err)
+    if (limited) return limited
     const message = err instanceof Error ? err.message : 'Could not calculate order total.'
     console.error('[/api/orders/get-total]', err)
     return NextResponse.json({ error: message }, { status: 400 })
