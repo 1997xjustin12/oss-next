@@ -50,7 +50,7 @@ export const FEATURED_CONTAINERS: FeaturedContainer[] = [
     image: '/images/containers/new-40ft-hc.webp',
     type: 'New 40ft High Cube',
     desc: 'Brand-new one-trip containers for maximum longevity, custom builds, and premium storage.',
-    ctaLabel: 'Inquire',
+    ctaLabel: 'Get Free Quote',
     spec: { paymentType: 'buy', size: "40'", height: 'high-cube', condition: 'New' },
   },
 ]
