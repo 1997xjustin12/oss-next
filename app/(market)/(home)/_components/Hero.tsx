@@ -6,8 +6,8 @@ import { AccentText } from "@/components/shared/AccentText";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 import { GoogleReviewsBadge } from "@/components/shared/GoogleReviewsBadge";
 import { ZipLookup1 } from "@/app/(market)/(home)/_components/ZipLookup1";
+import { BANNER_IMAGE } from "./heroBanner";
 
-const BANNER_IMAGE = "/images/home-banners/hero-image.webp";
 const BANNER_MAP_IMAGE = "/images/home-banners/home-hero-map.webp";
 
 

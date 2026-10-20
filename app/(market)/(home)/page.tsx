@@ -15,6 +15,7 @@ import { StatesSection } from "./_components/StatesSection";
 
 import { Hero } from "./_components/Hero";
 import { HeroSkeleton } from "./_components/HeroSkeleton";
+import { HeroBannerPreload } from "./_components/HeroBannerPreload";
 import { RightContainer } from "./_components/RightContainer";
 import { OnsiteDifference } from "./_components/OnsiteDifference";
 import { TrustedBySection } from "@/components/shared/TrustedBySection";
@@ -83,6 +84,9 @@ export default async function Home() {
       {/* <WhyUs /> */}
       {/* <Reviews /> */}
 
+      {/* Outside the Suspense below on purpose: puts the phone banner's
+          preload in <head> instead of at the end of the stream. */}
+      <HeroBannerPreload />
       <Suspense fallback={<HeroSkeleton />}>
         <VariantHero h1={copy["hero.h1"]} h2={copy["hero.h2"]} />
       </Suspense>
