@@ -51,7 +51,8 @@ const RESOURCES_LINKS = [
     href: `${BASE_URL}/complete-shipping-container-delivery-guide/`,
     label: "Delivery Guide",
   },
-  { href: `${BASE_URL}/shipping-containers-blogs/`, label: "Blogs" },
+  // This app's own blog, not the old WordPress listing at /shipping-containers-blogs/.
+  { href: ROUTES.BLOGS, label: "Blogs" },
 ];
 
 const COMPANY_LINKS = [
