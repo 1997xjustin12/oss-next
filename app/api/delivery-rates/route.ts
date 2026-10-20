@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { visitorIp } from '@/lib/backendAuth'
 import { getDeliveryRates, fetchDeliveryRates } from '@/services/delivery.service'
 
 // GET /api/delivery-rates?zipcode=95814&slug=<product-slug>
@@ -6,8 +7,8 @@ import { getDeliveryRates, fetchDeliveryRates } from '@/services/delivery.servic
 //
 // Client-side wrapper around the delivery-rate service, for the PDP's ZIP and
 // option controls. Proxied rather than called directly from the browser so the
-// WordPress origin stays server-side and the response can be cached once for
-// every visitor asking the same ZIP/product pair.
+// backend stays server-side; the answer is cached per visitor and ZIP/product
+// pair (see getDeliveryRates).
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams
 
@@ -29,7 +30,9 @@ export async function GET(req: NextRequest) {
   // `refresh` means "recalculate", so it has to skip our cache as well as
   // WordPress's transient — reading it back through getDeliveryRates would
   // serve the very entry the caller asked us to bypass.
-  const result = refresh ? await fetchDeliveryRates(query) : await getDeliveryRates(query)
+  // The visitor, so the backend counts the quote against them (lib/backendAuth).
+  const ip = await visitorIp()
+  const result = refresh ? await fetchDeliveryRates(query, ip) : await getDeliveryRates(query, ip)
 
   if (!result.ok) {
     // 'unavailable' is ours (the backend is down); the rest describe what was

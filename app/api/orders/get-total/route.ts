@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { clientIp, isOverPricingRateLimit } from '@/lib/pricingGuard'
 import { getCachedOrderTotal } from '@/services/order.service'
+import { visitorIp } from '@/lib/backendAuth'
 import { rateLimitedReply } from '@/lib/backendError'
 import type { GetOrderTotalPayload } from '@/types/order'
 
@@ -31,7 +32,18 @@ export async function POST(request: NextRequest) {
     // An expected refusal ("can't deliver there", with a `code` the page reads)
     // comes back as a 400 reply rather than a throw, and is cached with the
     // rest — see getCachedOrderTotal.
-    const reply = await getCachedOrderTotal(payload)
+    //
+    // Priced for this visitor: the signed-in customer's token, otherwise their
+    // address — the cache is per visitor so the backend can count them (see
+    // getCachedOrderTotal). No address is needed once there is a token.
+    const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || undefined
+    const reply = await getCachedOrderTotal(payload, { token, ip: token ? null : await visitorIp() })
+    if (reply.status === 429) {
+      return NextResponse.json(reply.body, {
+        status: 429,
+        headers: reply.retryAfter ? { 'Retry-After': String(reply.retryAfter) } : {},
+      })
+    }
     return NextResponse.json(reply.body, { status: reply.status })
   } catch (err) {
     // The backend's 429 travels as itself, with its message and Retry-After.

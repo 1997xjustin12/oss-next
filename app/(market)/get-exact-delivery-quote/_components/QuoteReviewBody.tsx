@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, Clock } from 'lucide-react'
 
 import { ROUTES } from '@/config/routes'
+import { visitorIp } from '@/lib/backendAuth'
 import { resolveDeliveryQuote } from '@/lib/deliveryQuote'
 import { readQuoteDraft } from '@/lib/quoteDraft'
 import { PersistGuestLead } from '@/components/shared/PersistGuestLead'
@@ -28,11 +29,15 @@ import { one, type SearchParams } from './searchParams'
 export async function QuoteReviewBody({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
   const [quote, draft] = await Promise.all([
-    resolveDeliveryQuote({
-      handle: one(params.handle),
-      zip: one(params.zip),
-      qty: one(params.qty),
-    }),
+    resolveDeliveryQuote(
+      {
+        handle: one(params.handle),
+        zip: one(params.zip),
+        qty: one(params.qty),
+      },
+      // The visitor, so the backend counts the delivery lookup against them.
+      await visitorIp(),
+    ),
     readQuoteDraft(),
   ])
 

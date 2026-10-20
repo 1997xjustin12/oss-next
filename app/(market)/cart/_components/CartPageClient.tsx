@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ShoppingCart, RefreshCw, Truck } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { useStoredZip } from '@/hooks/useStoredZip'
 import { DEFAULT_SHIPPING_METHOD, completeZip } from '@/lib/shippingQuote'
@@ -33,6 +34,15 @@ export function CartPageClient() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
+
+  // Signed in: priced as this customer (the backend counts Bearer calls per
+  // customer — see lib/backendAuth.ts). Read through a ref so the token's
+  // ten-minute rotation does not itself trigger a re-price.
+  const { token } = useAuth()
+  const tokenRef = useRef(token)
+  useEffect(() => {
+    tokenRef.current = token
+  }, [token])
 
   // Real backend totals — same /api/orders/get-total endpoint checkout uses,
   // so the two pages never disagree. With the visitor's stored ZIP the backend
@@ -69,7 +79,10 @@ export function CartPageClient() {
       }
       const res = await fetch('/api/orders/get-total', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(tokenRef.current ? { Authorization: `Bearer ${tokenRef.current}` } : {}),
+        },
         body: JSON.stringify(payload),
       })
       const data = await res.json().catch(() => null)

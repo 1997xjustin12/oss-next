@@ -1,3 +1,4 @@
+import { visitorIp } from '@/lib/backendAuth'
 import { resolveDeliveryQuote } from '@/lib/deliveryQuote'
 import { QuoteSummaryPanel } from './QuoteSummaryPanel'
 import { one, type SearchParams } from './searchParams'
@@ -11,11 +12,15 @@ import { one, type SearchParams } from './searchParams'
  */
 export async function QuoteSummarySection({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
-  const quote = await resolveDeliveryQuote({
-    handle: one(params.handle),
-    zip: one(params.zip),
-    qty: one(params.qty),
-  })
+  const quote = await resolveDeliveryQuote(
+    {
+      handle: one(params.handle),
+      zip: one(params.zip),
+      qty: one(params.qty),
+    },
+    // The visitor, so the backend counts the delivery lookup against them.
+    await visitorIp(),
+  )
 
   return <QuoteSummaryPanel quote={quote} />
 }

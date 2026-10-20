@@ -77,11 +77,19 @@ function readQuantity(raw: string | undefined): number {
   return Math.min(n, 99)
 }
 
-export async function resolveDeliveryQuote(params: {
-  handle?: string
-  zip?: string
-  qty?: string
-}): Promise<DeliveryQuoteContext> {
+/**
+ * `ip` is the visitor's address (visitorIp in lib/backendAuth.ts), passed down
+ * to the delivery lookup so the backend counts it against them. Being cached,
+ * this function cannot read the request itself.
+ */
+export async function resolveDeliveryQuote(
+  params: {
+    handle?: string
+    zip?: string
+    qty?: string
+  },
+  ip: string | null,
+): Promise<DeliveryQuoteContext> {
   'use cache'
 
   const handle = params.handle?.trim() || null
@@ -128,7 +136,7 @@ export async function resolveDeliveryQuote(params: {
     // Both calls only need the ZIP, so they go together — the label must not
     // wait on a delivery lookup that can take seconds or time out entirely.
     const [result, geoLabel] = await Promise.all([
-      getDeliveryRates({ zipcode: zip, ...(handle ? { slug: handle } : {}) }),
+      getDeliveryRates({ zipcode: zip, ...(handle ? { slug: handle } : {}) }, ip),
       resolveZipLabel(zip),
     ])
 

@@ -9,7 +9,7 @@ import { getRedisClient, incrementWindow } from '@/lib/redis'
  * requests (2026-09-15): reloads, the cart-to-checkout hop and method switches
  * all asked again. The backend is not ours to change, so this layer:
  *
- * - caches each answer briefly, shared by every visitor, so the same question
+ * - caches each answer briefly per visitor, so a visitor's repeated question
  *   is asked once — that cache is `getCachedOrderTotal` in order.service, held
  *   in the platform's shared cache rather than Redis since 2026-10-19;
  * - rate-limits pricing per visitor, so a bot or a looping bug cannot use this

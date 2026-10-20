@@ -195,6 +195,7 @@ const FALLBACK_MESSAGE =
  */
 export async function fetchDeliveryRates(
   query: DeliveryRatesQuery,
+  ip: string | null,
 ): Promise<DeliveryRatesResult> {
   const zipcode = query.zipcode?.trim()
   if (!zipcode) {
@@ -223,16 +224,15 @@ export async function fetchDeliveryRates(
   } as unknown as CartLineItem
 
   try {
-    // ip: null — this normally runs inside getDeliveryRates' shared cache, where
-    // there is no single visitor and headers() is unavailable, so it is counted
-    // by the storefront key. See getOrderTotal.
+    // The visitor's address, passed down from the request, so the backend counts
+    // this quote against them — see getDeliveryRates and lib/backendAuth.ts.
     const total = await getOrderTotal(
       {
         items: [item],
         shipping_zip_code: zipcode,
         shipping_country: countryForZip(zipcode),
       },
-      { ip: null },
+      { ip },
     )
 
     if (!total.shipping) {
@@ -266,12 +266,21 @@ export async function fetchDeliveryRates(
   }
 }
 
-export async function getDeliveryRates(query: DeliveryRatesQuery): Promise<DeliveryRatesResult> {
+/**
+ * A delivery quote, cached.
+ *
+ * Per visitor (`ip` is part of the cache key) so every backend call carries the
+ * address of the visitor it is for, as the backend's rate-limit checklist
+ * requires — shared across visitors, misses went out with no address and were
+ * all counted in one bucket. Callers read the address from the request
+ * (visitorIp in lib/backendAuth.ts); this function cannot, being cached.
+ */
+export async function getDeliveryRates(query: DeliveryRatesQuery, ip: string | null): Promise<DeliveryRatesResult> {
   'use cache'
   cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
-  const result = await fetchDeliveryRates(query)
+  const result = await fetchDeliveryRates(query, ip)
 
   // Don't let a transient outage stick around for an hour. Returning the
   // failure uncached means the next visitor re-asks; caching it would keep

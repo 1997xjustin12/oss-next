@@ -450,6 +450,13 @@ export function CheckoutClient() {
   const { items, totalPrice: clientSubtotal } = cart;
   const hasContainer = items.some((item) => item.isContainer);
   const { token: authToken, user: authUser } = useAuth();
+  // Signed in: priced as this customer (the backend counts Bearer calls per
+  // customer — see lib/backendAuth.ts). Read through a ref so the token's
+  // ten-minute rotation does not itself trigger a re-price.
+  const authTokenRef = useRef(authToken);
+  useEffect(() => {
+    authTokenRef.current = authToken;
+  }, [authToken]);
   // const dropinRef = useRef<BraintreeDropInHandle>(null);
 
   const [shipping, setShipping] = useState<AddressForm>(emptyAddress);
@@ -719,7 +726,10 @@ export function CheckoutClient() {
         };
         const res = await fetch('/api/orders/get-total', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authTokenRef.current ? { Authorization: `Bearer ${authTokenRef.current}` } : {}),
+          },
           body: JSON.stringify(payload),
           signal: controller.signal,
         });

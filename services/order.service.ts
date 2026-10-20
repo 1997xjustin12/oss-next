@@ -11,7 +11,13 @@ import type {
   OrderTracking,
 } from '@/types/order'
 import { visitorAuthHeaders } from '@/lib/backendAuth'
-import { BackendRefusedError, backendErrorMessage, logBackendRejection, rateLimitedFrom } from '@/lib/backendError'
+import {
+  BackendRefusedError,
+  RateLimitedError,
+  backendErrorMessage,
+  logBackendRejection,
+  rateLimitedFrom,
+} from '@/lib/backendError'
 import { ShippingRefusedError, shippingRefusal } from '@/lib/shippingQuote'
 
 const BACKEND_URL = process.env.NEXT_OSS_BACKEND_URL
@@ -63,11 +69,9 @@ export async function checkoutOrder(payload: CheckoutPayload, token?: string): P
  * Price an order.
  *
  * `token` and `ip` decide who the backend counts the call against — see
- * lib/backendAuth.ts. Callers inside a shared cache (getCachedOrderTotal,
- * getDeliveryRates) pass `ip: null`: one cached answer serves every visitor,
- * so there is no one visitor to name, and `headers()` is not available there.
- * Those calls are counted by the storefront key, with this site's own
- * per-visitor limit (lib/pricingGuard) in front of them.
+ * lib/backendAuth.ts. Cached callers (getCachedOrderTotal, getDeliveryRates)
+ * cannot read `headers()`, so they take the visitor as an argument and pass it
+ * on; it is part of their cache key, which makes those caches per visitor.
  */
 // TODO: confirm the real response shape (tax/shipping breakdown field names).
 export async function getOrderTotal(
@@ -100,18 +104,38 @@ export async function getOrderTotal(
   return data as OrderTotal
 }
 
-/** A priced answer the cart and checkout can be shown again: a total, or a "we can't deliver there". */
-export type CachedOrderTotal = { status: 200; body: OrderTotal } | { status: 400; body: { error: string; code: string } }
+/**
+ * A priced answer the cart and checkout can be shown again: a total, a "we
+ * can't deliver there", or the backend's "too many requests" with its wait.
+ */
+export type CachedOrderTotal =
+  | { status: 200; body: OrderTotal }
+  | { status: 400; body: { error: string; code: string } }
+  | { status: 429; body: { error: string }; retryAfter: number | null }
+
+/** Who a pricing call is made for. Signed in: the token; otherwise the visitor's address. */
+export type PricingVisitor = { token?: string; ip: string | null }
 
 /**
  * `getOrderTotal`, cached for 20 minutes in the platform's shared cache.
  *
  * Each backend pricing call can cost a paid Google Distance Matrix lookup, and
- * one checkout asks the same question many times. This used to be cached in
- * Upstash, which made every re-price one to two Redis round trips carrying the
- * whole quote (depot, five delivery options with their tooltips). `use cache:
- * remote` keeps the same sharing across visitors and instances without
- * touching Redis — the in-memory `use cache` would not, on serverless.
+ * one checkout asks the same question many times — reloads, the cart-to-checkout
+ * hop, switching delivery method. `use cache: remote` shares the answer across
+ * server instances without touching Redis (the in-memory `use cache` would
+ * not, on serverless).
+ *
+ * **Per visitor, on purpose.** `visitor` is part of the cache key, so every
+ * backend call carries the visitor it was made for — Bearer when signed in,
+ * otherwise the key and X-Client-IP — as the backend's rate-limit checklist
+ * requires. It was shared across visitors until 2026-10-20, which sent misses
+ * with the key and no address, so the backend counted every shopper's misses
+ * in one 30-a-minute bucket. The repeats this cache exists for all come from
+ * the same visitor, so per-visitor keeps nearly all of the saving.
+ *
+ * A backend 429 is returned rather than thrown, and cached for exactly its
+ * Retry-After: this visitor waits, nobody else does, and the route can still
+ * tell it apart (an error thrown out of a cache loses its type in production).
  *
  * A "can't deliver there" refusal is cached too: it holds for the same products
  * and address. Anything else throws, and a thrown error is never cached, so a
@@ -120,19 +144,32 @@ export type CachedOrderTotal = { status: 200; body: OrderTotal } | { status: 400
  * Tagged `store` and `pricing`, so the admin Cache screen can drop it. Never
  * used for the charge: /api/checkout/place-order re-prices fresh.
  */
-export async function getCachedOrderTotal(payload: GetOrderTotalPayload): Promise<CachedOrderTotal> {
+export async function getCachedOrderTotal(
+  payload: GetOrderTotalPayload,
+  visitor: PricingVisitor,
+): Promise<CachedOrderTotal> {
   'use cache: remote'
-  cacheLife({ stale: 60, revalidate: 20 * 60, expire: 20 * 60 })
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRICING)
 
   try {
-    // ip: null — a shared answer has no single visitor; see getOrderTotal.
-    return { status: 200, body: await getOrderTotal(payload, { ip: null }) }
+    const total = await getOrderTotal(payload, visitor)
+    cacheLife(PRICING_CACHE_LIFE)
+    return { status: 200, body: total }
   } catch (err) {
-    if (err instanceof ShippingRefusedError) return { status: 400, body: { error: err.message, code: err.code } }
+    if (err instanceof ShippingRefusedError) {
+      cacheLife(PRICING_CACHE_LIFE)
+      return { status: 400, body: { error: err.message, code: err.code } }
+    }
+    if (err instanceof RateLimitedError) {
+      const wait = err.retryAfter ?? 60
+      cacheLife({ stale: wait, revalidate: wait, expire: wait })
+      return { status: 429, body: { error: err.message }, retryAfter: err.retryAfter }
+    }
     throw err
   }
 }
+
+const PRICING_CACHE_LIFE = { stale: 60, revalidate: 20 * 60, expire: 20 * 60 }
 
 // No pagination — confirmed via docs/reference/ORDER_HISTORY_ANSWER.md that the reference
 // app calls this with no page/limit params and treats the result as a
