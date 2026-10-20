@@ -13,7 +13,10 @@ export function getRedisClient(): Redis {
     throw new Error('Upstash Redis is not configured — missing NEXT_UPSTASH_REDIS_REST_URL/NEXT_UPSTASH_REDIS_REST_TOKEN.')
   }
 
-  client ??= new Redis({ url, token })
+  // The client refuses a bare host ("kv.onsitestorage.com") as an invalid URL,
+  // which silently disabled every Redis feature after the 2026-10 database
+  // switch. Accept the host alone; the REST API is only ever served over https.
+  client ??= new Redis({ url: /^https?:\/\//i.test(url) ? url : `https://${url}`, token })
   return client
 }
 
