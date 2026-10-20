@@ -79,8 +79,12 @@ function readQuantity(raw: string | undefined): number {
 
 /**
  * `ip` is the visitor's address (visitorIp in lib/backendAuth.ts), passed down
- * to the delivery lookup so the backend counts it against them. Being cached,
- * this function cannot read the request itself.
+ * so the backend counts the delivery lookup against them.
+ *
+ * Not cached itself: every part it assembles already is — the product
+ * (fetchProduct), the ZIP label (resolveZipLabel) and the delivery quote
+ * (getDeliveryRates, shared across visitors). Caching this layer with `use
+ * cache` would put `ip` in its key and make the whole quote per visitor.
  */
 export async function resolveDeliveryQuote(
   params: {
@@ -90,8 +94,6 @@ export async function resolveDeliveryQuote(
   },
   ip: string | null,
 ): Promise<DeliveryQuoteContext> {
-  'use cache'
-
   const handle = params.handle?.trim() || null
   const zip = params.zip?.trim() || null
   const quantity = readQuantity(params.qty)

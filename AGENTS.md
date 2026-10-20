@@ -244,6 +244,15 @@ These rules apply to **every query and every file** — do not wait to be asked.
 
 > **This project uses Next.js 16 Cache Components (`cacheComponents: true`).  
 > Do NOT use `unstable_cache` — it is superseded by the `'use cache'` directive.**
+>
+> **One exception, deliberate (2026-10-20):** `getCachedOrderTotal` (services/order.service.ts) and
+> `getDeliveryRates` (services/delivery.service.ts) use `unstable_cache`. Both cache backend pricing calls,
+> which can each cost a paid Google lookup, and the backend's rate-limit checklist requires every such call to
+> name the visitor it is made for (Bearer, or `Api-Key` + `X-Client-IP`). `'use cache'` puts everything the
+> function receives — closures included — into the cache key, so naming the visitor would make the cache per
+> visitor. `unstable_cache` keys on its arguments and `keyParts` only, so the question is the key while the
+> visitor rides in the closure: one shared answer, and every miss still sent as a real visitor. Do not extend
+> this to anything else without the same reason.
 
 ### Pattern for every async data function
 ```ts

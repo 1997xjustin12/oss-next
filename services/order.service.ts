@@ -1,4 +1,5 @@
-import { cacheLife, cacheTag } from 'next/cache'
+import { createHash } from 'node:crypto'
+import { unstable_cache } from 'next/cache'
 import { CACHE_TAGS } from '@/config/cache'
 import type {
   CheckoutPayload,
@@ -13,7 +14,6 @@ import type {
 import { visitorAuthHeaders } from '@/lib/backendAuth'
 import {
   BackendRefusedError,
-  RateLimitedError,
   backendErrorMessage,
   logBackendRejection,
   rateLimitedFrom,
@@ -104,42 +104,41 @@ export async function getOrderTotal(
   return data as OrderTotal
 }
 
-/**
- * A priced answer the cart and checkout can be shown again: a total, a "we
- * can't deliver there", or the backend's "too many requests" with its wait.
- */
-export type CachedOrderTotal =
-  | { status: 200; body: OrderTotal }
-  | { status: 400; body: { error: string; code: string } }
-  | { status: 429; body: { error: string }; retryAfter: number | null }
+/** A priced answer the cart and checkout can be shown again: a total, or a "we can't deliver there". */
+export type CachedOrderTotal = { status: 200; body: OrderTotal } | { status: 400; body: { error: string; code: string } }
 
 /** Who a pricing call is made for. Signed in: the token; otherwise the visitor's address. */
 export type PricingVisitor = { token?: string; ip: string | null }
 
 /**
- * `getOrderTotal`, cached for 20 minutes in the platform's shared cache.
+ * `getOrderTotal`, cached for 20 minutes and shared by every guest asking the
+ * same question.
  *
  * Each backend pricing call can cost a paid Google Distance Matrix lookup, and
  * one checkout asks the same question many times — reloads, the cart-to-checkout
- * hop, switching delivery method. `use cache: remote` shares the answer across
- * server instances without touching Redis (the in-memory `use cache` would
- * not, on serverless).
+ * hop, switching delivery method — so this cache is what keeps the bill down.
  *
- * **Per visitor, on purpose.** `visitor` is part of the cache key, so every
- * backend call carries the visitor it was made for — Bearer when signed in,
- * otherwise the key and X-Client-IP — as the backend's rate-limit checklist
- * requires. It was shared across visitors until 2026-10-20, which sent misses
- * with the key and no address, so the backend counted every shopper's misses
- * in one 30-a-minute bucket. The repeats this cache exists for all come from
- * the same visitor, so per-visitor keeps nearly all of the saving.
+ * ## Why `unstable_cache`, against the project rule
  *
- * A backend 429 is returned rather than thrown, and cached for exactly its
- * Retry-After: this visitor waits, nobody else does, and the route can still
- * tell it apart (an error thrown out of a cache loses its type in production).
+ * The backend's rate-limit checklist wants every call to name the visitor it is
+ * for (Bearer, or the key plus X-Client-IP). With `use cache` that is
+ * impossible to do on a shared entry: everything the function receives — even
+ * values it closes over — becomes part of the cache key, so passing the visitor
+ * in makes the cache per visitor. `unstable_cache` keys on its arguments and
+ * `keyParts` only; the closure is not part of the key. So the *question* is the
+ * key, and a miss calls the backend with whichever visitor asked — one shared
+ * answer, and every backend call still names a real visitor. It also persists
+ * across deploys and instances, which `use cache` does not. Documented as the
+ * exception in AGENTS.md (Caching Conventions).
  *
- * A "can't deliver there" refusal is cached too: it holds for the same products
- * and address. Anything else throws, and a thrown error is never cached, so a
- * backend hiccup is retried rather than remembered.
+ * - **Guests share** one entry per question.
+ * - **Signed-in customers get their own** (keyed by a hash of the token, never
+ *   the token itself), in case the backend prices an account differently —
+ *   tax exemption, points.
+ * - A "can't deliver there" refusal is cached: it holds for the same question.
+ * - Anything else throws, and `unstable_cache` never caches a throw — including
+ *   the backend's 429, which reaches the route as a RateLimitedError and goes
+ *   back to that visitor alone, with its Retry-After.
  *
  * Tagged `store` and `pricing`, so the admin Cache screen can drop it. Never
  * used for the charge: /api/checkout/place-order re-prices fresh.
@@ -148,28 +147,24 @@ export async function getCachedOrderTotal(
   payload: GetOrderTotalPayload,
   visitor: PricingVisitor,
 ): Promise<CachedOrderTotal> {
-  'use cache: remote'
-  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRICING)
+  const audience = visitor.token
+    ? `customer:${createHash('sha256').update(visitor.token).digest('hex').slice(0, 24)}`
+    : 'guest'
 
-  try {
-    const total = await getOrderTotal(payload, visitor)
-    cacheLife(PRICING_CACHE_LIFE)
-    return { status: 200, body: total }
-  } catch (err) {
-    if (err instanceof ShippingRefusedError) {
-      cacheLife(PRICING_CACHE_LIFE)
-      return { status: 400, body: { error: err.message, code: err.code } }
-    }
-    if (err instanceof RateLimitedError) {
-      const wait = err.retryAfter ?? 60
-      cacheLife({ stale: wait, revalidate: wait, expire: wait })
-      return { status: 429, body: { error: err.message }, retryAfter: err.retryAfter }
-    }
-    throw err
-  }
+  return unstable_cache(
+    async (question: GetOrderTotalPayload): Promise<CachedOrderTotal> => {
+      try {
+        // `visitor` is closed over, not keyed: the miss is made as this visitor.
+        return { status: 200, body: await getOrderTotal(question, visitor) }
+      } catch (err) {
+        if (err instanceof ShippingRefusedError) return { status: 400, body: { error: err.message, code: err.code } }
+        throw err
+      }
+    },
+    ['order-total', audience],
+    { revalidate: 20 * 60, tags: [CACHE_TAGS.ALL, CACHE_TAGS.PRICING] },
+  )(payload)
 }
-
-const PRICING_CACHE_LIFE = { stale: 60, revalidate: 20 * 60, expire: 20 * 60 }
 
 // No pagination — confirmed via docs/reference/ORDER_HISTORY_ANSWER.md that the reference
 // app calls this with no page/limit params and treats the result as a

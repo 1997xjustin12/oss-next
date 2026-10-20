@@ -1,4 +1,4 @@
-import { cacheLife, cacheTag } from 'next/cache'
+import { unstable_cache } from 'next/cache'
 import { CACHE_TAGS } from '@/config/cache'
 import { SITE } from '@/config/site'
 import { formatMoney } from '@/lib/formatters'
@@ -267,29 +267,53 @@ export async function fetchDeliveryRates(
 }
 
 /**
- * A delivery quote, cached.
+ * A delivery quote, cached for an hour and shared by every visitor asking about
+ * the same product and ZIP.
  *
- * Per visitor (`ip` is part of the cache key) so every backend call carries the
- * address of the visitor it is for, as the backend's rate-limit checklist
- * requires — shared across visitors, misses went out with no address and were
- * all counted in one bucket. Callers read the address from the request
- * (visitorIp in lib/backendAuth.ts); this function cannot, being cached.
+ * `unstable_cache` rather than `use cache` — the documented exception in
+ * AGENTS.md, for the same reason as getCachedOrderTotal: its key is the
+ * question alone, while `ip` rides in the closure, so one answer is shared and
+ * a miss still calls the backend as the visitor who asked (the backend's
+ * rate-limit checklist). It also survives deploys, so a quote is not re-bought
+ * from Google after every release.
+ *
+ * A transient outage (`unavailable`) is never cached: it is thrown out of the
+ * cache, so the next visitor re-asks instead of seeing "call us" for an hour. A
+ * refusal is not a fault — "658 miles, limit 250" is true until the address
+ * changes — so it keeps the full hour and costs no repeat lookups.
  */
 export async function getDeliveryRates(query: DeliveryRatesQuery, ip: string | null): Promise<DeliveryRatesResult> {
-  'use cache'
-  cacheLife('hours')
-  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
-
-  const result = await fetchDeliveryRates(query, ip)
-
-  // Don't let a transient outage stick around for an hour. Returning the
-  // failure uncached means the next visitor re-asks; caching it would keep
-  // showing "call us" long after the backend recovered. A refusal is not a
-  // fault — "658 miles, limit 250" is true until the address changes — so it
-  // keeps the full cache life and costs no repeat lookups.
-  if (!result.ok && result.reason === 'unavailable') {
-    cacheLife({ revalidate: 30, expire: 60 })
+  try {
+    return await unstable_cache(
+      async (question: DeliveryRatesQuery): Promise<DeliveryRatesResult> => {
+        const result = await fetchDeliveryRates(question, ip)
+        if (!result.ok && result.reason === 'unavailable') throw new UncachedResult(result)
+        return result
+      },
+      ['delivery-rates'],
+      { revalidate: 60 * 60, tags: [CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS] },
+    )(normalizeQuery(query))
+  } catch (err) {
+    if (err instanceof UncachedResult) return err.result
+    throw err
   }
+}
 
-  return result
+/** Carries a result out of the cache without caching it — a throw is never cached. */
+class UncachedResult extends Error {
+  constructor(readonly result: DeliveryRatesResult) {
+    super('uncached delivery result')
+  }
+}
+
+/**
+ * The question as the cache key: only what the quote depends on. `itemId` and
+ * `state` are accepted and ignored upstream (see DeliveryRatesQuery), so
+ * keeping them would only split one shared answer into several.
+ */
+function normalizeQuery(query: DeliveryRatesQuery): DeliveryRatesQuery {
+  return {
+    zipcode: query.zipcode?.trim().toUpperCase() ?? '',
+    ...(query.slug?.trim() ? { slug: query.slug.trim() } : {}),
+  }
 }
