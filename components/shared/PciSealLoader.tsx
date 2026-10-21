@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 
 type Props = {
-  /** The provider's seal script URL, already checked to be https by PciSeal. */
+  /** The seal script URL, built by PciSeal from NEXT_PUBLIC_SITESEAL_CODE. */
   src: string
 }
 
