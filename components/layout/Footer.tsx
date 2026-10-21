@@ -5,6 +5,7 @@ import { cacheLife } from "next/cache";
 import { BASE_URL } from "@/lib/helpers";
 import { DEPOT_INDEX_PATH } from "@/lib/locations";
 import { ROUTES } from "@/config/routes";
+import { PciSeal } from "@/components/shared/PciSeal";
 
 const CONTAINER_LINKS = [
   {
@@ -259,7 +260,9 @@ export async function Footer() {
             Sitemap
           </Link>
         </p>
-        <div className="flex gap-[9px] flex-wrap">
+        <div className="flex gap-[9px] flex-wrap items-center">
+          {/* Renders nothing until NEXT_PUBLIC_PCI_SEAL_SCRIPT_URL is set. */}
+          <PciSeal />
           {[
             "BBB Accredited",
             "Satisfaction Guaranteed",
