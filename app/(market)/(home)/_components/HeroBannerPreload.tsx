@@ -5,13 +5,12 @@ import { BANNER_IMAGE } from './heroBanner'
 /**
  * Starts the phone banner download with the page's first bytes.
  *
- * The hero sits behind a Suspense boundary — it reads the visitor's A/B
- * variant from a request header — so its <img>, and the preload next/image
- * emits for it, arrive in the streamed part at the very end of the HTML
- * (byte ~188,000 of ~199,000 on 2026-10-20). On a slow phone connection the
- * banner, the page's LCP, could not start downloading until nearly the whole
- * document had. This component sits in the static shell instead, so the
- * preload lands in <head>.
+ * The hero used to sit behind a Suspense boundary (it read the A/B variant
+ * from a request header), so its <img>, and the preload next/image emits for
+ * it, arrived at the very end of the HTML (byte ~188,000 of ~199,000 on
+ * 2026-10-20). Each variant is now a static page and the hero is no longer
+ * streamed, but this still earns its place: it puts a phone-only,
+ * media-scoped preload in <head>, ahead of everything in the body.
  *
  * Phones and tablets only (`max-width: 1023px`): below 1024px every variant
  * sizes the banner to 100vw, so this preload picks exactly the file the hero

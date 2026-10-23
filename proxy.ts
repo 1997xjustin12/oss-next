@@ -32,15 +32,29 @@ const RETRY_AFTER = '3600'
 // Single canonical URL (/) instead of separate /version2 /version3 routes,
 // which were live, crawlable, duplicate-content pages with their own (wrong)
 // canonical + hand-rolled JSON-LD. The proxy assigns a sticky variant per
-// visitor and forwards it as a request header; (home)/page.tsx reads that
-// header to pick which Hero variant to render.
+// visitor and rewrites `/` to that variant's prebuilt page at
+// /home-variant/<n>, keeping the URL. Each variant is a static page served from
+// the CDN; nothing on the page reads the request.
 // The three Hero designs used to be the /version2 and /version3 routes; they
 // now live as branches inside (home)/_components/Hero.tsx.
 const VARIANT_COOKIE = 'ab-home-variant'
-const VARIANT_HEADER = 'x-ab-home-variant'
 const VARIANT_PARAM = 'variant'
 const VARIANTS = ['1', '2', '3']
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
+
+// Prebuilt variants of `/`. Internal only: reached through the rewrite in
+// handleAbTest, never as a public URL.
+const HOME_VARIANT_PREFIX = '/home-variant'
+
+function isHomeVariantPath(pathname: string): boolean {
+  return pathname === HOME_VARIANT_PREFIX || pathname.startsWith(`${HOME_VARIANT_PREFIX}/`)
+}
+
+function rewriteToVariant(request: NextRequest, variant: string): NextResponse {
+  const url = request.nextUrl.clone()
+  url.pathname = `${HOME_VARIANT_PREFIX}/${variant}`
+  return NextResponse.rewrite(url)
+}
 
 // ── Markdown representation ─────────────────────────────────────────────────
 // Every page is also available as Markdown, two ways:
@@ -220,11 +234,9 @@ function handleAbTest(request: NextRequest): NextResponse {
   // a crawler a second URL for the homepage.
   const forced = request.nextUrl.searchParams.get(VARIANT_PARAM)
   if (forced && VARIANTS.includes(forced) && isPreviewOrDev()) {
-    const previewHeaders = new Headers(request.headers)
-    previewHeaders.set(VARIANT_HEADER, forced)
     // Deliberately does not touch the cookie — previewing a variant must not
     // change which one you're actually enrolled in.
-    return NextResponse.next({ request: { headers: previewHeaders } })
+    return rewriteToVariant(request, forced)
   }
 
   const existing = request.cookies.get(VARIANT_COOKIE)?.value
@@ -233,10 +245,7 @@ function handleAbTest(request: NextRequest): NextResponse {
       ? existing
       : VARIANTS[Math.floor(Math.random() * VARIANTS.length)]
 
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set(VARIANT_HEADER, variant)
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  const response = rewriteToVariant(request, variant)
 
   if (!existing) {
     response.cookies.set(VARIANT_COOKIE, variant, {
@@ -260,6 +269,9 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   if (isAdminPath(request.nextUrl.pathname) && !(await hasAdminSession(request))) {
     return new NextResponse(null, { status: 404, headers: { 'Cache-Control': 'no-store' } })
   }
+
+  // The prebuilt home variants exist only behind the rewrite of `/`.
+  if (isHomeVariantPath(request.nextUrl.pathname)) return notFoundRewrite(request)
 
   if (await isMaintenanceMode()) {
     const maintenance = handleMaintenance(request)

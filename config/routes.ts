@@ -102,6 +102,9 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'maintenance-control',
   'admin',
   'api',
+  // The prebuilt homepage A/B variants, reached only through the proxy's
+  // rewrite of `/` (and 404 when requested directly).
+  'home-variant',
   // Machine-readable file routes. These MUST be here: the proxy 404s any
   // non-native path missing from the backend's page list, and these are served
   // by route handlers that list knows nothing about. Omitting them 404'd
