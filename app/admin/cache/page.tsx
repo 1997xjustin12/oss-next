@@ -123,7 +123,8 @@ export default async function CachePage({ searchParams }: Props) {
           <code className="font-mono">POST /api/revalidate</code> with an{' '}
           <code className="font-mono">x-revalidate-token</code> header does the same thing for webhooks
           and deploy scripts — send <code className="font-mono">{'{"tag":"products"}'}</code> for one
-          area, or an empty body for everything.
+          area, <code className="font-mono">{'{"tags":["page:/some-page"]}'}</code> for single WordPress
+          pages, or <code className="font-mono">{'{"tag":"store"}'}</code> for everything. An empty body is refused.
         </p>
       </footer>
     </div>

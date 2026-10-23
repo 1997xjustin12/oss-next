@@ -299,8 +299,10 @@ await revalidateAll();
 ```
 POST /api/revalidate
 Headers: x-revalidate-token: <REVALIDATE_SECRET>
-Body: {}                        → busts all (CACHE_TAGS.ALL)
 Body: { "tag": "products" }    → busts products only
+Body: { "tags": ["page:/shipping-container-faqs"] } → refreshes just those WordPress pages
+Body: { "tag": "store" }       → busts everything (CACHE_TAGS.ALL), explicitly
+Body: {}                        → 400 (it used to purge everything)
 ```
 
 ### When to use `updateTag` vs `revalidateTag`

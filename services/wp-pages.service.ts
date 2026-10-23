@@ -280,6 +280,23 @@ function lcpCandidates($: ReturnType<typeof load>, css: string): string[] {
 }
 
 /**
+ * Per-page cache tag, so a page save can refresh that page alone instead of
+ * all ~1,700 (`pages`). See POST /api/revalidate.
+ *
+ * Contract with the backend: "page:" + the page path, lowercase, leading slash,
+ * no trailing slash, no query. Example: page:/shipping-container-faqs
+ */
+export function pageTag(segments: string[]): string {
+  return `page:/${segments.join('/').toLowerCase()}`
+}
+
+/** Next ignores tags over 256 characters; such a page still has `pages`. */
+function pageTags(segments: string[]): string[] {
+  const tag = pageTag(segments)
+  return tag.length <= 256 ? [tag] : []
+}
+
+/**
  * The raw page record from the backend, cached once per path.
  *
  * Split out so the HTML view and the Markdown view share a single network read
@@ -297,7 +314,7 @@ type DtoResult = { kind: 'ok'; page: WpPageDto } | { kind: 'missing' } | { kind:
 
 async function fetchWpPageDto(segments: string[]): Promise<DtoResult> {
   'use cache'
-  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES, ...pageTags(segments))
 
   const suffix = segments.length ? `${segments.map(encodeURIComponent).join('/')}/` : ''
 
@@ -335,7 +352,7 @@ export async function fetchWpPageMarkdown(
   segments: string[],
 ): Promise<{ title: string; description?: string; markdown: string } | null> {
   'use cache'
-  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES, ...pageTags(segments))
 
   const result = await fetchWpPageDto(segments)
   if (result.kind === 'error') cacheLife(OUTAGE_CACHE_LIFE)
@@ -359,7 +376,7 @@ export async function fetchWpPageMarkdown(
 
 export async function fetchWpPage(segments: string[]): Promise<WpPage | null> {
   'use cache'
-  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES, ...pageTags(segments))
 
   const result = await fetchWpPageDto(segments)
   // An outage is retried within minutes; a real page or a real 404 keeps days.

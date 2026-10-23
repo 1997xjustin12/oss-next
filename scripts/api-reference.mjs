@@ -171,7 +171,7 @@ const SECTIONS = [
     title: 'Operations and webhooks',
     note: 'Called by machines, not the browser. The first three share one secret.',
     endpoints: [
-      ['POST', '/api/revalidate', 'Bust the cache by tag, or everything. Header: x-revalidate-token.'],
+      ['POST', '/api/revalidate', 'Bust the cache by tag, by WordPress page ({"tags":["page:/…"]}), or everything ({"tag":"store"}); an empty body is refused. Header: x-revalidate-token.'],
       ['POST', '/api/revalidate-plp', 'Bust the listing cache only. Same header. No in-app caller — it is a webhook.'],
       ['GET/POST', '/api/maintenance', 'Read or flip the maintenance wall. Same header. No redeploy — it sets a Redis flag the proxy reads.'],
       ['GET', '/api/search-health', 'Connectivity check: counts documents in the index and reports which keys are set, as booleans. No values. No in-app caller — it is for operators.'],
