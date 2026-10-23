@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache';
-import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache';
+import { CACHE_TAGS, SHELL_OUTAGE_CACHE_LIFE } from '@/config/cache';
 import { STORE_KEY } from '@/config/store';
 import { getRedisClient } from '@/lib/redis';
 import type { PageContent } from '@/types/content';
@@ -56,7 +56,7 @@ function normalize(raw: unknown): PageContent | null {
  *
  * Never throws: an unreachable Redis must mean "no overrides", not a homepage
  * that fails to render — and that fallback is cached only briefly
- * (OUTAGE_CACHE_LIFE), so the copy returns within a minute of Redis recovering.
+ * (SHELL_OUTAGE_CACHE_LIFE), so the copy returns within 15 minutes of Redis recovering.
  */
 export async function getPageContent(path: string): Promise<PageContent | null> {
   'use cache: remote';
@@ -68,7 +68,7 @@ export async function getPageContent(path: string): Promise<PageContent | null> 
     return content;
   } catch (error) {
     console.error('[content] failed reading copy for path:', path, error);
-    cacheLife(OUTAGE_CACHE_LIFE);
+    cacheLife(SHELL_OUTAGE_CACHE_LIFE);
     return null;
   }
 }

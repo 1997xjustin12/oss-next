@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
+import { CACHE_TAGS, SHELL_OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { getRedisClient } from '@/lib/redis'
 
 /**
@@ -43,7 +43,7 @@ const ON_VALUE = 'on'
  * Is the product page rendering the V2 info panel?
  *
  * A Redis failure falls back to the default panel and is cached only briefly
- * (OUTAGE_CACHE_LIFE), so the real setting returns within a minute.
+ * (SHELL_OUTAGE_CACHE_LIFE), so the real setting returns within 15 minutes.
  */
 export async function isProductPanelV2(): Promise<boolean> {
   'use cache: remote'
@@ -56,7 +56,7 @@ export async function isProductPanelV2(): Promise<boolean> {
   } catch (err) {
     // Fail to the default panel — see the module comment.
     console.error('[product-panel] switch read failed, using the default panel:', err)
-    cacheLife(OUTAGE_CACHE_LIFE)
+    cacheLife(SHELL_OUTAGE_CACHE_LIFE)
     return false
   }
 }

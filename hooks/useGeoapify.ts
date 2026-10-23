@@ -42,6 +42,13 @@ interface UseGeoapifyOptions {
   type?: 'postcode' | 'city' | 'street' | 'amenity' | 'locality' | 'county' | 'state' | 'country'
   /** Minimum query length before fetching. Default: 2 */
   minLength?: number
+  /**
+   * Load the depot's container list on mount and after each pick. Only the
+   * homepage ZIP banner (variant 3) reads `depotContainers`; every other caller
+   * was fetching about 0.5 MB it never used, three times on a product page.
+   * Default: false
+   */
+  loadDepotContainers?: boolean
 }
 
 interface UseGeoapifyReturn {
@@ -127,6 +134,7 @@ export function useGeoapify(
     countries  = 'us,ca',
     type       = 'postcode',
     minLength  = 2,
+    loadDepotContainers = false,
   }: UseGeoapifyOptions = {},
 ): UseGeoapifyReturn {
   const [results, setResults] = useState<GeoapifyResult[]>([])
@@ -232,14 +240,17 @@ export function useGeoapify(
   // Initial load: use the previously-selected depot if one is stored, otherwise
   // fall back to the default location so there's always something to show.
   useEffect(() => {
+    if (!loadDepotContainers) return
     const storedDepot = localStorage.getItem('zipcode_depot')
     // eslint-disable-next-line react-hooks/set-state-in-effect -- starts the fetch; its loading flag is set first
     void fetchDepotContainers(storedDepot || DEFAULT_LOCATION, 'init')
-  }, [])
+  }, [loadDepotContainers])
 
   /** Exact postcode match, else the only result, else nothing. */
   function pickTyped(candidates: GeoapifyResult[], text: string): GeoapifyResult | null {
-    const norm = (value: string) => value.toUpperCase().replace(/s+/g, '')
+    // \s, not s: after toUpperCase() a bare `s` matches nothing, so "K1A0B1"
+    // never matched the suggestion "K1A 0B1".
+    const norm = (value: string) => value.toUpperCase().replace(/\s+/g, '')
     const wanted = norm(text)
     if (!wanted) return null
     return (
@@ -258,7 +269,7 @@ export function useGeoapify(
     // shows the typed one, and its lone suggestion used to win the "only
     // result" fallback and resolve to the wrong city. An exact postcode match is
     // safe from any list; the single-result fallback is not.
-    const norm = (value: string) => value.toUpperCase().replace(/s+/g, '')
+    const norm = (value: string) => value.toUpperCase().replace(/\s+/g, '')
     const exact = results.find((r) => norm(r.postcode) === norm(trimmed))
     if (exact) return exact
     if (query.trim() === trimmed && results.length === 1) return results[0]
@@ -319,7 +330,7 @@ export function useGeoapify(
     enrichSaleLinks()
     clear()
 
-    if (result.nearestLocation) {
+    if (loadDepotContainers && result.nearestLocation) {
       void fetchDepotContainers(result.nearestLocation, 'select')
     }
     return true

@@ -14,7 +14,12 @@ export async function GET(req: NextRequest) {
 
   try {
     const data = await getShippingContainersByLocation(location)
-    return NextResponse.json({ data })
+    return NextResponse.json(
+      { data },
+      // Public catalogue data: let the CDN answer repeats. Same freshness as the
+      // search cache behind it (the 'minutes' profile).
+      { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } },
+    )
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[/api/shipping-containers/by-location] error:', msg)

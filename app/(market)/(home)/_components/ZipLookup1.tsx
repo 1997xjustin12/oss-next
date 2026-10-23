@@ -161,6 +161,8 @@ export function ZipLookup1({
     countries: "us,ca",
     debounceMs: 300,
     limit: 5,
+    // Only variant 3 shows the depot's starting prices.
+    loadDepotContainers: homeVersion === 3,
   });
 
   // Sync input with URL when a zipcode param is present; otherwise fall back

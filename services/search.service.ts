@@ -201,6 +201,27 @@ export async function cachedCustomFieldsSearch(input: CustomFieldsSearchInput) {
 // from trying to dump the entire index in one response.
 export const ALL_RESULTS_CAP = 1000
 
+/**
+ * `choices` (every value a field allows — about 2.5 KB for `location` alone)
+ * and `group_name` ride on every custom field of every hit. Nothing in the
+ * storefront reads them (fields are read by name and value), and they were
+ * about half of each depot response and of the product page payload.
+ */
+function withoutFieldMetadata<T>(hit: T): T {
+  const fields = (hit as { custom_fields?: unknown }).custom_fields
+  if (!Array.isArray(fields)) return hit
+  return {
+    ...hit,
+    custom_fields: fields.map((field) => {
+      if (!field || typeof field !== 'object') return field
+      const rest = { ...(field as Record<string, unknown>) }
+      delete rest.choices
+      delete rest.group_name
+      return rest
+    }),
+  }
+}
+
 // Quick helper for the common case: every shipping container at a given location.
 export async function getShippingContainersByLocation(location: string) {
   const result = await cachedCustomFieldsSearch({
@@ -209,7 +230,7 @@ export async function getShippingContainersByLocation(location: string) {
     page:        0,
     hitsPerPage: ALL_RESULTS_CAP,
   })
-  return result.hits
+  return result.hits.map(withoutFieldMetadata)
 }
 
 /**

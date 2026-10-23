@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache';
-import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache';
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE, SHELL_OUTAGE_CACHE_LIFE } from '@/config/cache';
 import { STORE_KEY } from '@/config/store';
 import { NATIVE_PAGES } from '@/config/pages';
 import { getRedisClient } from '@/lib/redis';
@@ -100,8 +100,8 @@ function normalize(raw: unknown): PageSeo | null {
  *
  * Never throws: an unreachable or unconfigured Redis must not take the
  * storefront down, it must just mean "no overrides" — and that fallback is
- * cached only briefly (OUTAGE_CACHE_LIFE), so the overrides return within a
- * minute of Redis recovering.
+ * cached only briefly (SHELL_OUTAGE_CACHE_LIFE: it is read by every page's
+ * metadata), so the overrides return within 15 minutes of Redis recovering.
  */
 export async function getPageSeo(path: string): Promise<PageSeo | null> {
   'use cache: remote';
@@ -113,7 +113,7 @@ export async function getPageSeo(path: string): Promise<PageSeo | null> {
     return seo;
   } catch (error) {
     console.error('[seo] failed reading overrides for path:', path, error);
-    cacheLife(OUTAGE_CACHE_LIFE);
+    cacheLife(SHELL_OUTAGE_CACHE_LIFE);
     return null;
   }
 }

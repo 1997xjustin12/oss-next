@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
+import { CACHE_TAGS, SHELL_OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { getRedisClient } from '@/lib/redis'
 
 /**
@@ -48,7 +48,8 @@ const TOAST_VALUE = 'toast'
  * Which confirmation the storefront is showing.
  *
  * A Redis failure falls back to the modal and is cached only briefly
- * (OUTAGE_CACHE_LIFE), so the real setting returns within a minute.
+ * (SHELL_OUTAGE_CACHE_LIFE: this is read in the root layout, so it bounds
+ * every page shell), so the real setting returns within 15 minutes.
  */
 export async function cartNoticeMode(): Promise<CartNoticeMode> {
   'use cache: remote'
@@ -61,7 +62,7 @@ export async function cartNoticeMode(): Promise<CartNoticeMode> {
   } catch (err) {
     // Fail to the modal — see the module comment.
     console.error('[cart-notice] switch read failed, using the modal:', err)
-    cacheLife(OUTAGE_CACHE_LIFE)
+    cacheLife(SHELL_OUTAGE_CACHE_LIFE)
     return 'modal'
   }
 }

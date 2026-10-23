@@ -710,6 +710,14 @@ function parseMulti(raw: string | null): string[] {
   return raw?.split(',').filter(Boolean) ?? []
 }
 
+// Params that only change what InstantSearch shows. The server-rendered part of
+// the page (H1, breadcrumb, title) does not read them — only its JSON-LD does,
+// which matters to a crawler loading the URL, not to a visitor already here —
+// so changing one needs no server render: history.replaceState updates the URL
+// and useSearchParams, and the effect below re-runs the search. `ptype` is not
+// here: it changes the H1 and the breadcrumb.
+const CLIENT_ONLY_PARAMS = new Set(['isort', 'q', 'accat', 'size', 'condition', 'grade', 'height', 'type', 'term'])
+
 export function InstantSearchSection() {
   const searchParams = useSearchParams()
   const router       = useRouter()
@@ -813,7 +821,9 @@ export function InstantSearchSection() {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value)
     else       params.delete(key)
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+    const url = `${pathname}?${params.toString()}`
+    if (CLIENT_ONLY_PARAMS.has(key)) window.history.replaceState(null, '', url)
+    else router.replace(url, { scroll: false })
   }, [router, pathname, searchParams])
 
   const handleTypeSelect = useCallback((type: ProductType) => {
