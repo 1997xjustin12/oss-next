@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { Client } from '@elastic/elasticsearch'
-import { CACHE_TAGS } from '@/config/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { DEFAULT_LOCATION, SHIPPING_CONTAINER_CATEGORIES } from '@/lib/constants'
 import { formatProduct, getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import type { FormattedContainerHit, ProductDetailResponse, ProductHit, ShippingContainerHit } from '@/types/product'
@@ -324,9 +324,24 @@ export async function getDepotFeaturedContainers(
 // sale, so the rule lives here rather than at six call sites.
 export async function getProductByHandle(handle: string): Promise<ProductDetailResponse | null> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
+  const result = await lookUpProduct(handle)
+  // A failed search used to be cached for the hour as "no such product", which
+  // the product page turns into a 404. A failure is retried within minutes.
+  if (result === LOOKUP_FAILED) cacheLife(OUTAGE_CACHE_LIFE)
+  else cacheLife('hours')
+  return result === LOOKUP_FAILED ? null : result
+}
+
+/**
+ * What an uncached lookup returns when Elasticsearch failed, as opposed to
+ * answering "nothing matches". Only ever seen inside this module: the cached
+ * wrappers turn it into their usual empty answer with a short cache life.
+ */
+const LOOKUP_FAILED = Symbol('lookup failed')
+
+async function lookUpProduct(handle: string): Promise<ProductDetailResponse | null | typeof LOOKUP_FAILED> {
   try {
     const esResponse = await client.search({
       index: INDEX,
@@ -359,8 +374,9 @@ export async function getProductByHandle(handle: string): Promise<ProductDetailR
     const related_products = (await getShippingContainersByLocation(location)) as unknown as ProductHit[]
 
     return { product, related_products }
-  } catch {
-    return null
+  } catch (err) {
+    console.error('[search] product lookup failed for', handle, err)
+    return LOOKUP_FAILED
   }
 }
 
@@ -371,9 +387,15 @@ export async function getProductByHandle(handle: string): Promise<ProductDetailR
 // for display without threading full product data through the backend.
 export async function getProductsByIds(productIds: (string | number)[]): Promise<ProductHit[]> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
+  const result = await searchProductsByIds(productIds)
+  if (result === LOOKUP_FAILED) cacheLife(OUTAGE_CACHE_LIFE)
+  else cacheLife('hours')
+  return result === LOOKUP_FAILED ? [] : result
+}
+
+async function searchProductsByIds(productIds: (string | number)[]): Promise<ProductHit[] | typeof LOOKUP_FAILED> {
   const ids = productIds.map((id) => Number(id)).filter((id) => Number.isFinite(id))
   if (ids.length === 0) return []
 
@@ -401,8 +423,9 @@ export async function getProductsByIds(productIds: (string | number)[]): Promise
         ...(hit._source as Record<string, unknown>),
       }) as unknown as ProductHit
     )
-  } catch {
-    return []
+  } catch (err) {
+    console.error('[search] product lookup by id failed', err)
+    return LOOKUP_FAILED
   }
 }
 
@@ -421,9 +444,15 @@ export async function getProductsByIds(productIds: (string | number)[]): Promise
  */
 export async function getProductsBySkus(skus: string[]): Promise<ProductHit[]> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
+  const result = await searchProductsBySkus(skus)
+  if (result === LOOKUP_FAILED) cacheLife(OUTAGE_CACHE_LIFE)
+  else cacheLife('hours')
+  return result === LOOKUP_FAILED ? [] : result
+}
+
+async function searchProductsBySkus(skus: string[]): Promise<ProductHit[] | typeof LOOKUP_FAILED> {
   const wanted = [...new Set(skus.map((sku) => sku.trim()).filter(Boolean))]
   if (wanted.length === 0) return []
 
@@ -452,8 +481,9 @@ export async function getProductsBySkus(skus: string[]): Promise<ProductHit[]> {
     return esResponse.hits.hits
       .map((hit) => formatProduct({ objectID: hit._id ?? '', ...(hit._source as Record<string, unknown>) }) as unknown as ProductHit)
       .filter((product) => (product.variants ?? []).some((variant) => exact.has(String(variant?.sku ?? '').toLowerCase())))
-  } catch {
-    return []
+  } catch (err) {
+    console.error('[search] product lookup by sku failed', err)
+    return LOOKUP_FAILED
   }
 }
 

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { PlpLink } from "@/components/shared/PlpLink";
-import { BASE_URL } from "@/lib/helpers";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
+import { ROUTES } from "@/config/routes";
 import { FEATURED_CONTAINERS, featuredListingHref, type FeaturedContainer } from "@/config/featuredContainers";
 import { StartingPriceLabel } from "./StartingPriceLabel";
 
@@ -63,7 +63,7 @@ export function RightContainer({
           Temperature-Controlled Reefers — We Stock Every Size And
           Configuration.
         </p>
-        <div className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 -mx-5 px-5 pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:snap-none py-8 sm:py-10 w-full">
+        <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 -mx-5 px-5 scroll-px-5 pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:mx-0 sm:px-0 sm:scroll-px-0 sm:pb-0 sm:overflow-visible sm:snap-none py-8 sm:py-10 w-full">
           {FEATURED_CONTAINERS.map((item) => (
             <div
               key={item.key}
@@ -76,7 +76,7 @@ export function RightContainer({
         <div className="mt-[30px]">
           <PlpLink
             prefetch={false}
-            href={`${BASE_URL}/sale-shipping-containers/?ptype=buy`}
+            href={`${ROUTES.PLP}?ptype=buy`}
             className="font-semibold text-lg sm:text-[20px] py-2 px-8 border transition-colors bg-theme-primary text-white border-theme-primary hover:bg-[#a00f24] sm:bg-transparent sm:text-inherit sm:border-stone-700 sm:hover:bg-stone-100 sm:dark:border-gray-400 sm:dark:text-white sm:dark:hover:bg-gray-800"
           >
             View All Containers &amp; Pricing

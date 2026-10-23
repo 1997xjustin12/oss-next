@@ -1,6 +1,7 @@
 'use client'
 
-import Link from 'next/link'
+import type Link from 'next/link'
+import { HoverPrefetchLink } from '@/components/shared/HoverPrefetchLink'
 import type { ComponentProps } from 'react'
 import { useStoredZip } from '@/hooks/useStoredZip'
 import { applyEnrichParams } from '@/lib/linkEnrich'
@@ -50,5 +51,5 @@ import { applyEnrichParams } from '@/lib/linkEnrich'
 export function PlpLink({ href, ...rest }: ComponentProps<typeof Link> & { href: string }) {
   const { postcode, depot } = useStoredZip()
 
-  return <Link href={applyEnrichParams(href, postcode, depot)} {...rest} />
+  return <HoverPrefetchLink href={applyEnrichParams(href, postcode, depot)} {...rest} />
 }

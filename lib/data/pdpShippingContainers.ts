@@ -1,6 +1,5 @@
 import type { ProductHit } from '@/types/product'
 import { type ContainerVariantKey, resolveContainerVariant } from '@/lib/containerVariant'
-import { BASE_URL } from '@/lib/helpers'
 
 /**
  * Every piece of static, size-dependent copy the product page renders.
@@ -84,7 +83,7 @@ export const PDP_BODY_TABS = [
    * naming it, and this is the only page on the site about modified containers.
    * Change this one line if it should point somewhere else.
    */
-  { id: 'upgrades', label: 'Upgrade & Customizations', href: `${BASE_URL}/shipping-container-modified-containers-gallery/` },
+  { id: 'upgrades', label: 'Upgrade & Customizations', href: '/shipping-container-modified-containers-gallery' },
   { id: 'delivery', label: 'Delivery Info' },
   { id: 'warranty', label: 'Warranty' },
 ] as const

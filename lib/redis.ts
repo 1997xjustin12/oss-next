@@ -5,6 +5,9 @@ import { Redis } from '@upstash/redis'
 // so it can't collide with the reference app's own keys in that instance.
 let client: Redis | null = null
 
+/** Longest a single Redis command (retry included) may take before it fails. */
+const REDIS_TIMEOUT_MS = 3_000
+
 export function getRedisClient(): Redis {
   const url = process.env.NEXT_UPSTASH_REDIS_REST_URL
   const token = process.env.NEXT_UPSTASH_REDIS_REST_TOKEN
@@ -16,7 +19,18 @@ export function getRedisClient(): Redis {
   // The client refuses a bare host ("kv.onsitestorage.com") as an invalid URL,
   // which silently disabled every Redis feature after the 2026-10 database
   // switch. Accept the host alone; the REST API is only ever served over https.
-  client ??= new Redis({ url: /^https?:\/\//i.test(url) ? url : `https://${url}`, token })
+  client ??= new Redis({
+    url: /^https?:\/\//i.test(url) ? url : `https://${url}`,
+    token,
+    // Every caller has a fallback, so failing fast beats waiting. The default —
+    // 5 retries, exponential backoff, no timeout — kept the proxy's maintenance
+    // check and every Redis-backed cached read waiting about 4 s (or until the
+    // platform timeout) per call whenever Redis was unreachable.
+    retry: { retries: 1, backoff: () => 100 },
+    // A fresh signal per command, covering its retry too. Upstash throws when a
+    // function-supplied signal aborts, which the callers already catch.
+    signal: () => AbortSignal.timeout(REDIS_TIMEOUT_MS),
+  })
   return client
 }
 

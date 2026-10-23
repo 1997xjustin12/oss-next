@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Download } from 'lucide-react'
 import { YouTubeEmbed } from '@/components/product/YouTubeEmbed'
-import { BASE_URL } from '@/lib/helpers'
 import type { ProductVideo } from '@/config/productVideos'
 
 /**
@@ -27,7 +26,7 @@ const DELIVERY_VIDEO: ProductVideo = {
  * No PDF for this exists under `public/`, and this is the site's own delivery
  * guide page. Point it at a file here instead once one is supplied.
  */
-const DELIVERY_GUIDE_HREF = `${BASE_URL}/complete-shipping-container-delivery-guide/`
+const DELIVERY_GUIDE_HREF = '/complete-shipping-container-delivery-guide'
 
 const CONSIDERATIONS = [
   {

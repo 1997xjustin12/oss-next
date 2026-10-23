@@ -1989,7 +1989,7 @@ export function ProductInfoPanel({
         )}
         <Link
           prefetch={false}
-          href="/shipping-container-quote/"
+          href="/shipping-container-quote"
           className="w-full py-3 rounded-md text-base sm:text-lg font-bold border-2 border-theme-border hover:border-theme-primary hover:text-theme-primary transition-colors flex items-center justify-center gap-2"
         >
           <ClipboardList className="w-4.5 h-4.5" /> Request a Free Quote

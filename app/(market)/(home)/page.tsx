@@ -20,7 +20,6 @@ import { RightContainer } from "./_components/RightContainer";
 import { OnsiteDifference } from "./_components/OnsiteDifference";
 import { TrustedBySection } from "@/components/shared/TrustedBySection";
 import { ReviewsSection } from "./_components/ReviewsSection";
-import { ReviewsSectionLive } from "./_components/ReviewsSectionLive";
 
 // Copy lives in config/pageSeoDefaults.ts so the admin Page Configurator can
 // show it as the placeholder behind each field.
@@ -112,8 +111,6 @@ export default async function Home() {
       <TrustedBySection heading={copy["trustedBy.h2"]} />
       <QuoteForm heading={copy["quoteForm.h2"]} />
       <ReviewsSection heading={copy["reviews.h2"]} />
-      {/* Rendered alongside the static one above for comparison, per request — not a final placement decision. */}
-      <ReviewsSectionLive heading={copy["reviews.h2"]} />
       <StatesSection heading={copy["states.h2"]} />
     </>
   );

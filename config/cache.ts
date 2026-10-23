@@ -121,6 +121,10 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
  * the normal "hours" would keep serving it long after Redis came back, so a
  * failed read is cached only briefly instead: retried after a minute.
  *
+ * The same holds for backend and Elasticsearch reads whose failure looks like
+ * "not found" (WordPress pages, products, blog posts): cached for days or hours,
+ * one blip would 404 a real page until the entry expired.
+ *
  * Why not throw so the error is never cached: a cached function that throws
  * during a build fails that page's prerender even when the caller catches it,
  * so an outage would block every deploy. And `expire` stays at five minutes

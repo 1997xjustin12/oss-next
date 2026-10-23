@@ -1,11 +1,11 @@
 import Image from "next/image";
 import { PlpLink } from "@/components/shared/PlpLink";
-import { BASE_URL } from "@/lib/helpers";
 import { formatMoney } from "@/lib/formatters";
 import { lowestPrice } from "@/lib/pricing";
 import { FEATURED_CONTAINERS, featuredListingHref, type FeaturedContainer } from "@/config/featuredContainers";
 import type { ProductHit } from "@/types/product";
 import { CardCarousel } from "./CardCarousel";
+import { ROUTES } from "@/config/routes";
 
 // The four featured containers, priced from this page's depot; each button
 // opens the listing filtered to that container.
@@ -82,7 +82,7 @@ export function YouMayAlsoNeed({
       <div className="mt-[30px] text-center hidden md:block">
         <PlpLink
           prefetch={false}
-          href={`${BASE_URL}/sale-shipping-containers/?ptype=buy`}
+          href={`${ROUTES.PLP}?ptype=buy`}
           className="font-semibold text-lg sm:text-[20px] py-2 px-8 border transition-colors bg-theme-primary text-white border-theme-primary hover:bg-[#a00f24] sm:bg-transparent sm:text-inherit sm:border-stone-700 sm:hover:bg-stone-100 sm:dark:border-gray-400 sm:dark:text-white sm:dark:hover:bg-gray-800"
         >
           View All Containers &amp; Pricing

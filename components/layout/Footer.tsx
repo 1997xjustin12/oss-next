@@ -1,55 +1,54 @@
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { PlpLink } from "@/components/shared/PlpLink";
 import Image from "next/image";
 import { cacheLife } from "next/cache";
-import { BASE_URL } from "@/lib/helpers";
 import { DEPOT_INDEX_PATH } from "@/lib/locations";
 import { ROUTES } from "@/config/routes";
 import { PciSeal } from "@/components/shared/PciSeal";
 
 const CONTAINER_LINKS = [
   {
-    href: `${BASE_URL}/sale-shipping-containers/?ptype=buy`,
+    href: `${ROUTES.PLP}?ptype=buy`,
     label: "Buy Shipping Containers",
   },
   {
-    href: `${BASE_URL}/sale-shipping-containers/?ptype=rental`,
+    href: `${ROUTES.PLP}?ptype=rental`,
     label: "Rent Shipping Containers",
   },
   {
-    href: `${BASE_URL}/sale-shipping-containers/?ptype=rto`,
+    href: `${ROUTES.PLP}?ptype=rto`,
     label: "Rent-To-Own",
   },
   {
-    href: `${BASE_URL}/reefer-refrigerated-container/`,
+    href: "/reefer-refrigerated-container",
     label: "Refrigerated Units",
   },
   {
-    href: `${BASE_URL}/shipping-container-modified-containers-gallery/`,
+    href: "/shipping-container-modified-containers-gallery",
     label: "Modified Containers",
   },
   {
-    href: `${BASE_URL}/shipping-container-accessory-products/`,
+    href: "/shipping-container-accessory-products",
     label: "Accessories",
   },
 ];
 
 const RESOURCES_LINKS = [
-  { href: `${BASE_URL}/shipping-container-faqs/`, label: "FAQ" },
+  { href: "/shipping-container-faqs", label: "FAQ" },
   {
-    href: `${BASE_URL}/types-of-shipping-containers/`,
+    href: "/types-of-shipping-containers",
     label: "Container Types",
   },
   {
-    href: `${BASE_URL}/shipping-container-conditions/`,
+    href: "/shipping-container-conditions",
     label: "Container Conditions",
   },
   {
-    href: `${BASE_URL}/shipping-container-pictures-by-grades/`,
+    href: "/shipping-container-pictures-by-grades",
     label: "Container Grades",
   },
   {
-    href: `${BASE_URL}/complete-shipping-container-delivery-guide/`,
+    href: "/complete-shipping-container-delivery-guide",
     label: "Delivery Guide",
   },
   // This app's own blog, not the old WordPress listing at /shipping-containers-blogs/.
@@ -57,18 +56,18 @@ const RESOURCES_LINKS = [
 ];
 
 const COMPANY_LINKS = [
-  {href:`${BASE_URL}/why-onsite-storage/`, label:"Why Onsite Storage"},
-  {href:`${BASE_URL}/where-to-buy-shipping-containers/`, label:"Locations"},
-  {href:`${BASE_URL}/special-promotions/`, label:"Onsite Special"},
-  {href:`${BASE_URL}/sales-tax-exemption-request/`, label:"Tax Exemption"},
-  {href:`${BASE_URL}/my-account/`, label:"My Account"},
+  {href:"/why-onsite-storage", label:"Why Onsite Storage"},
+  {href:"/where-to-buy-shipping-containers", label:"Locations"},
+  {href:"/special-promotions", label:"Onsite Special"},
+  {href:"/sales-tax-exemption-request", label:"Tax Exemption"},
+  {href:"/my-account", label:"My Account"},
 ];
 
 const POLICY_LINKS = [
-  {href:`${BASE_URL}/privacy-policy/`, label:"Privacy Policy"},
-  {href:`${BASE_URL}/terms-and-conditions/`, label:"Terms And Conditions"},
-  {href:`${BASE_URL}/terms-and-conditions/#refund-policy`, label:"Refunds And Returns"},
-  {href:`${BASE_URL}/shipping-policy/`, label:"Shipping Policy"},
+  {href:"/privacy-policy", label:"Privacy Policy"},
+  {href:"/terms-and-conditions", label:"Terms And Conditions"},
+  {href:"/terms-and-conditions#refund-policy", label:"Refunds And Returns"},
+  {href:"/shipping-policy", label:"Shipping Policy"},
 ];
 
 // Computed per render rather than at module scope: at module scope this would
@@ -240,14 +239,14 @@ export async function Footer() {
         <p className="text-xs text-[#444]">
           © {currentYear} On-Site Storage Solutions, Inc. | All Rights Reserved ·{" "}
           <Link
-            href="/privacy"
+            href="/privacy-policy"
             className="text-[#555] transition-colors hover:text-[#888]"
           >
             Privacy Policy
           </Link>{" "}
           ·{" "}
           <Link
-            href="/terms"
+            href="/terms-and-conditions"
             className="text-[#555] transition-colors hover:text-[#888]"
           >
             Terms of Use

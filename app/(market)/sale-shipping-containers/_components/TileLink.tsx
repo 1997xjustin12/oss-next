@@ -1,6 +1,7 @@
 'use client'
 
-import Link, { useLinkStatus } from 'next/link'
+import { useLinkStatus } from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 
 type Props = {
   href:     string

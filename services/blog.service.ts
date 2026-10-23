@@ -1,6 +1,6 @@
 import { load } from 'cheerio'
 import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS } from '@/config/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { MAX_PAGE_SIZE, MAX_SITEMAP_PAGES } from '@/config/blog'
 import { STORE_KEY } from '@/config/store'
 import { blogImage, clampPage, clampPageSize, normalizeOrdering } from '@/lib/blog'
@@ -197,8 +197,16 @@ export async function getBlogs(opts: BlogQuery = {}): Promise<BlogList> {
  * reject a legitimate post.
  */
 export async function getBlog(slug: string): Promise<BlogPost | null> {
+  return (await fetchBlog(slug)).post
+}
+
+/**
+ * getBlog, plus whether a null means "no such post" (a 404) or "the backend
+ * failed" — which getCachedBlog must not keep for hours.
+ */
+async function fetchBlog(slug: string): Promise<{ post: BlogPost | null; failed: boolean }> {
   const clean = slug?.trim()
-  if (!clean) return null
+  if (!clean) return { post: null, failed: false }
 
   const { ok, status, data } = await backendFetch<BackendBlogDetail>(
     `/api/blogs/${encodeURIComponent(clean)}/?${storeParam()}`,
@@ -206,10 +214,10 @@ export async function getBlog(slug: string): Promise<BlogPost | null> {
 
   if (!ok || !data) {
     if (status !== 404) console.error(`[blog] detail "${clean}" returned ${status}`)
-    return null
+    return { post: null, failed: status !== 404 }
   }
 
-  return normalizePost(data)
+  return { post: normalizePost(data), failed: false }
 }
 
 // ── Cached variants ─────────────────────────────────────────────────────────
@@ -232,10 +240,14 @@ export async function getCachedBlogs(opts: Omit<BlogQuery, 'search'> = {}): Prom
 
 export async function getCachedBlog(slug: string): Promise<BlogPost | null> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.BLOG)
 
-  return getBlog(slug)
+  const { post, failed } = await fetchBlog(slug)
+  // A backend failure is retried within minutes rather than cached for hours
+  // as a missing post.
+  if (failed) cacheLife(OUTAGE_CACHE_LIFE)
+  else cacheLife('hours')
+  return post
 }
 
 /**

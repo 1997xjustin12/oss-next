@@ -1,13 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import Image from "next/image";
 import { Phone } from "lucide-react";
 import { CartButton } from "@/components/layout/CartButton";
 import { WishlistButton } from "@/components/layout/WishlistButton";
 import { SavedQuotesButton } from "@/components/layout/SavedQuotesButton";
-import { BASE_URL } from "@/lib/helpers";
 import { applyEnrichParams } from "@/lib/linkEnrich";
 import { useStoredZip } from "@/hooks/useStoredZip";
 import { ROUTES } from "@/config/routes";
@@ -22,59 +21,59 @@ type NavLink = {
 
 const NAV_LINKS: NavLink[] = [
   {
-    href: `${BASE_URL}/sale-shipping-containers/?ptype=buy`,
+    href: `${ROUTES.PLP}?ptype=buy`,
     label: "Buy",
     children: [
       {
-        href: `${BASE_URL}/sale-shipping-containers/?ptype=buy`,
+        href: `${ROUTES.PLP}?ptype=buy`,
         label: "Buy Shipping Containers",
       },
       {
-        href: `${BASE_URL}/reefer-refrigerated-container/`,
+        href: "/reefer-refrigerated-container",
         label: "Buy Refrigerated Shipping Containers",
       },
       {
-        href: `${BASE_URL}/shipping-container-modified-containers-gallery/`,
+        href: "/shipping-container-modified-containers-gallery",
         label: "Modifications",
       },
       {
-        href: `${BASE_URL}/sale-shipping-containers/?ptype=accessories`,
+        href: ROUTES.PLP_ACCESSORIES,
         label: "Shipping Container Accessories",
       },
     ],
   },
   {
-    href: `${BASE_URL}/sale-shipping-containers/?ptype=rental`,
+    href: `${ROUTES.PLP}?ptype=rental`,
     label: "Rent",
     children: [
       {
-        href: `${BASE_URL}/sale-shipping-containers/?ptype=rental`,
+        href: `${ROUTES.PLP}?ptype=rental`,
         label: "Shipping Container Rental",
       },
       {
-        href: `${BASE_URL}/reefer-refrigerated-container/`,
+        href: "/reefer-refrigerated-container",
         label: "Rent Refrigerated Shipping Containers",
       }
     ],
   },
-  { href: `${BASE_URL}/sale-shipping-containers/?ptype=rto`, label: "Rent-To-Own" },
-  { href: `${BASE_URL}/where-to-buy-shipping-containers/`, label: "Locations" },
+  { href: `${ROUTES.PLP}?ptype=rto`, label: "Rent-To-Own" },
+  { href: "/where-to-buy-shipping-containers", label: "Locations" },
   {
-    href: `${BASE_URL}/shipping-containers-blogs/`,
+    href: "/shipping-containers-blogs",
     label: "Resources",
     children: [
-      {href: `${BASE_URL}/shipping-container-faqs/`, label: "FAQ"},
-      {href: `${BASE_URL}/types-of-shipping-containers/`, label: "Container Types"},
-      {href: `${BASE_URL}/shipping-container-conditions/`, label: "Container Conditions"},
-      {href: `${BASE_URL}/shipping-container-pictures-by-grades/`, label: "Container Grades"},
-      {href: `${BASE_URL}/complete-shipping-container-delivery-guide/`, label: "Delivery Guide"},
-      {href: `${BASE_URL}/containers-we-delivered/`, label: "Containers We Delivered"},
-      {href: `${BASE_URL}/sales-tax-exemption-request/`, label: "Tax Exemption"},
-      {href: `${BASE_URL}/shipping-containers-blogs/`, label: "Blogs"},
+      {href: "/shipping-container-faqs", label: "FAQ"},
+      {href: "/types-of-shipping-containers", label: "Container Types"},
+      {href: "/shipping-container-conditions", label: "Container Conditions"},
+      {href: "/shipping-container-pictures-by-grades", label: "Container Grades"},
+      {href: "/complete-shipping-container-delivery-guide", label: "Delivery Guide"},
+      {href: "/containers-we-delivered", label: "Containers We Delivered"},
+      {href: "/sales-tax-exemption-request", label: "Tax Exemption"},
+      {href: "/shipping-containers-blogs", label: "Blogs"},
     ],
   },
-  { href: `${BASE_URL}/special-promotions/`, label: "Onsite Special", highlight: true },
-  { href: `${BASE_URL}/why-onsite-storage/`, label: "Why Onsite" },
+  { href: "/special-promotions", label: "Onsite Special", highlight: true },
+  { href: "/why-onsite-storage", label: "Why Onsite" },
 ];
 
 export function Navbar() {
@@ -180,7 +179,7 @@ export function Navbar() {
             (888) 977-9085
           </a>
           <Link
-            href={`${BASE_URL}/shipping-container-quote/`}
+            href="/shipping-container-quote"
             className="bg-theme-primary text-white px-3 xl:px-4.5 py-2 xl:py-2.5 text-[12.5px] xl:text-[13.5px] font-bold whitespace-nowrap transition-colors hover:bg-theme-primary-dark"
           >
             Get Free Quote

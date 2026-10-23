@@ -1,7 +1,7 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { FileText } from 'lucide-react'
 import { ROUTES } from '@/config/routes'
 import { countSavedQuotes, SAVED_QUOTES_EVENT } from '@/lib/savedQuotes'

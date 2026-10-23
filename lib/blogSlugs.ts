@@ -91,24 +91,50 @@ async function loadSlugs(): Promise<SlugCache | null> {
 }
 
 /**
+ * After a failed refresh, do not ask again for this long. A failure used to be
+ * forgotten at once, so during a backend outage every proxied request retried
+ * the fetch and waited out its timeout.
+ */
+const RETRY_AFTER_FAILURE_MS = 60 * 1000
+let lastFailureAt = 0
+
+/** One refresh at a time: a cold instance under load makes one round of requests. */
+function refresh(): Promise<SlugCache | null> {
+  inflight ??= loadSlugs()
+    .then((fresh) => {
+      if (fresh) cache = fresh
+      else lastFailureAt = Date.now()
+      return fresh
+    })
+    .finally(() => {
+      inflight = null
+    })
+  return inflight
+}
+
+/**
  * `false` only when the list is healthy AND the slug is definitively absent.
  * `true` covers both "it exists" and "we don't know", because the caller turns
  * `false` into a 404.
+ *
+ * Pass the proxy's `event.waitUntil` so a background refresh is not cut off
+ * when the response is sent.
  */
-export async function blogSlugMayExist(slug: string): Promise<boolean> {
+export async function blogSlugMayExist(
+  slug: string,
+  waitUntil?: (promise: Promise<unknown>) => void,
+): Promise<boolean> {
   const clean = slug.trim().toLowerCase()
   if (!clean) return true
 
   const now = Date.now()
 
-  if (!cache || now - cache.at > TTL_MS) {
-    // Collapse concurrent refreshes so a cold instance under load makes one
-    // round of requests, not one per in-flight request.
-    inflight ??= loadSlugs().finally(() => {
-      inflight = null
-    })
-    const fresh = await inflight
-    if (fresh) cache = fresh
+  if ((!cache || now - cache.at > TTL_MS) && now - lastFailureAt > RETRY_AFTER_FAILURE_MS) {
+    const pending = refresh()
+    // A warm instance answers from its previous list while the refresh runs;
+    // only a cold one, with nothing to answer from, waits for it.
+    if (cache) waitUntil?.(pending)
+    else await pending
   }
 
   // No healthy list: allow everything. The route still renders its own

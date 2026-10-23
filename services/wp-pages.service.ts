@@ -2,7 +2,7 @@ import { load } from 'cheerio'
 import postcss from 'postcss'
 import safeParser from 'postcss-safe-parser'
 import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS } from '@/config/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { SITE_URL } from '@/config/site'
 import { htmlToMarkdown } from '@/lib/markdown'
 
@@ -287,28 +287,40 @@ function lcpCandidates($: ReturnType<typeof load>, css: string): string[] {
  * not pay for `scopeCss()` — that is a PostCSS parse of up to ~400KB of theme
  * stylesheet whose entire purpose is to keep the rendered page pixel-identical,
  * and Markdown has no pixels.
+ *
+ * "missing" (a real 404) and "error" (timeout, network, any other status) are
+ * kept apart so an outage is never cached as a missing page: an error lives
+ * for OUTAGE_CACHE_LIFE, not days. Callers decide their own lifetime from the
+ * kind, because an outer cacheLife('days') would override this one's.
  */
-async function fetchWpPageDto(segments: string[]): Promise<WpPageDto | null> {
+type DtoResult = { kind: 'ok'; page: WpPageDto } | { kind: 'missing' } | { kind: 'error' }
+
+async function fetchWpPageDto(segments: string[]): Promise<DtoResult> {
   'use cache'
-  cacheLife('days')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
 
   const suffix = segments.length ? `${segments.map(encodeURIComponent).join('/')}/` : ''
 
-  let res: Response
   try {
-    res = await fetch(`${BACKEND}/api/pages/detail/${suffix}`, {
+    const res = await fetch(`${BACKEND}/api/pages/detail/${suffix}`, {
       headers: { Authorization: `Api-Key ${API_KEY}` },
       signal: AbortSignal.timeout(15_000),
     })
-  } catch {
-    return null
+
+    if (res.status === 404) {
+      cacheLife('days')
+      return { kind: 'missing' }
+    }
+    if (!res.ok) throw new Error(`Pages API ${res.status}: ${await res.text()}`)
+
+    const page = (await res.json()) as WpPageDto
+    cacheLife('days')
+    return { kind: 'ok', page }
+  } catch (err) {
+    console.error('[wp-pages] page fetch failed for', segments.join('/') || '/', err)
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return { kind: 'error' }
   }
-
-  if (res.status === 404) return null
-  if (!res.ok) throw new Error(`Pages API ${res.status}: ${await res.text()}`)
-
-  return (await res.json()) as WpPageDto
 }
 
 /**
@@ -323,11 +335,13 @@ export async function fetchWpPageMarkdown(
   segments: string[],
 ): Promise<{ title: string; description?: string; markdown: string } | null> {
   'use cache'
-  cacheLife('days')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
 
-  const page = await fetchWpPageDto(segments)
-  if (!page) return null
+  const result = await fetchWpPageDto(segments)
+  if (result.kind === 'error') cacheLife(OUTAGE_CACHE_LIFE)
+  else cacheLife('days')
+  if (result.kind !== 'ok') return null
+  const page = result.page
 
   const markdown = htmlToMarkdown(page.html ?? '', {
     baseUrl: SITE_URL,
@@ -345,11 +359,14 @@ export async function fetchWpPageMarkdown(
 
 export async function fetchWpPage(segments: string[]): Promise<WpPage | null> {
   'use cache'
-  cacheLife('days')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES)
 
-  const page = await fetchWpPageDto(segments)
-  if (!page) return null
+  const result = await fetchWpPageDto(segments)
+  // An outage is retried within minutes; a real page or a real 404 keeps days.
+  if (result.kind === 'error') cacheLife(OUTAGE_CACHE_LIFE)
+  else cacheLife('days')
+  if (result.kind !== 'ok') return null
+  const page = result.page
 
   const $ = load(page.html ?? '', null, false)
 

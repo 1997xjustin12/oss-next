@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, type NextFetchEvent } from 'next/server'
 import { isMaintenanceMode } from '@/lib/maintenance'
 import { isAdminOpenEnv, isAdminPath, isPreviewOrDev } from '@/lib/admin'
 import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/adminSession'
@@ -98,7 +98,10 @@ function handleMarkdown(request: NextRequest): NextResponse | null {
  * behaviour (a noindex'd Not Found page with a 200) rather than to a site that
  * 404s everything.
  */
-async function handleMissingWpPath(request: NextRequest): Promise<NextResponse | null> {
+async function handleMissingWpPath(
+  request: NextRequest,
+  event: NextFetchEvent,
+): Promise<NextResponse | null> {
   const { pathname } = request.nextUrl
 
   if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) return null
@@ -110,11 +113,11 @@ async function handleMissingWpPath(request: NextRequest): Promise<NextResponse |
 
   // /blogs/{slug} is a native route, so the WordPress list can't answer for it
   // — it has its own list and its own check.
-  const blogPath = await handleBlogPath(request, target)
+  const blogPath = await handleBlogPath(request, target, event)
   if (blogPath !== undefined) return blogPath
 
   if (isNativePath(target)) return null
-  if (await wpPathMayExist(target)) return null
+  if (await wpPathMayExist(target, (p) => event.waitUntil(p))) return null
 
   return notFoundRewrite(request)
 }
@@ -129,6 +132,7 @@ async function handleMissingWpPath(request: NextRequest): Promise<NextResponse |
 async function handleBlogPath(
   request: NextRequest,
   pathname: string,
+  event: NextFetchEvent,
 ): Promise<NextResponse | null | undefined> {
   const prefix = `${ROUTES.BLOGS}/`
   if (!pathname.startsWith(prefix)) return undefined
@@ -151,7 +155,7 @@ async function handleBlogPath(
     return null
   }
 
-  return (await blogSlugMayExist(slug)) ? null : notFoundRewrite(request)
+  return (await blogSlugMayExist(slug, (p) => event.waitUntil(p))) ? null : notFoundRewrite(request)
 }
 
 /**
@@ -245,7 +249,7 @@ function handleAbTest(request: NextRequest): NextResponse {
   return response
 }
 
-export async function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
   // ── Admin gate ────────────────────────────────────────────────────────────
   // The admin layout refuses to render on its own, and each Server Action
   // re-checks; this is the outermost of those three layers, so an admin URL
@@ -269,7 +273,7 @@ export async function proxy(request: NextRequest) {
   // Real 404s for missing WordPress paths. Must happen here, before anything
   // streams: once the catch-all's Suspense boundary flushes, the status line is
   // already sent and notFound() can only change the body. See lib/wpPaths.ts.
-  const notFoundResponse = await handleMissingWpPath(request)
+  const notFoundResponse = await handleMissingWpPath(request, event)
   if (notFoundResponse) {
     await logAgent(request, 404)
     return notFoundResponse
@@ -362,8 +366,27 @@ function handleOrderStatusWhileLoggedIn(request: NextRequest): NextResponse | nu
 // the backend has never heard of it, the proxy 404s it — which is exactly what
 // happened to the resource PDFs, and to /llms.txt before them. Add the
 // extension when a new kind of asset lands in public/.
+//
+// Router prefetches skip the proxy: they need neither the maintenance wall, the
+// WordPress 404 check nor agent logging, because the navigation that follows a
+// click still comes through here. So do the high-volume, read-only browser APIs
+// listed below; cart, checkout, auth, agent, MCP and maintenance APIs keep it.
+// Values must be literals — the matcher is read at build time.
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|pdf|mp4|webm)$).*)',
+    // `/` always runs, prefetches included: the A/B variant is decided here.
+    { source: '/' },
+    // So does the admin gate. The prefetch header is just a request header, so
+    // skipping on it would let anyone step around this layer.
+    { source: '/admin' },
+    { source: '/admin/:path*' },
+    {
+      source:
+        '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/(?:search|shipping-containers|reviews/list|chat/availability|chat/products|geoapify|products/by-skus|products/by-ids|delivery-rates)(?:/|$)|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|pdf|mp4|webm)$).*)',
+      missing: [
+        { type: 'header', key: 'next-router-prefetch' },
+        { type: 'header', key: 'purpose', value: 'prefetch' },
+      ],
+    },
   ],
 }

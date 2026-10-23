@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { saveVisitorZip } from '@/lib/visitorZip'
 import { getNearestLocation } from '@/lib/locations'
-import { BASE_URL } from '@/lib/helpers'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
 import { DEFAULT_LOCATION } from '@/lib/constants'
+import { ROUTES } from '@/config/routes'
 import { useCart } from '@/hooks/useCart'
 import { findLocationConflict, requestCartLocationConflict } from '@/lib/cart'
 import type { FormattedContainerHit } from '@/types/product'
@@ -115,7 +115,7 @@ function parseFeature(feature: unknown): GeoapifyResult {
     lat,
     lon,
     nearestLocation,
-    galleryRedirect: `${BASE_URL}/sale-shipping-containers/?${redirectParams}`,
+    galleryRedirect: `${ROUTES.PLP}?${redirectParams}`,
   }
 }
 

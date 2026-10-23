@@ -202,7 +202,7 @@ function FrequentlyBought({
   return (
     <section className="mt-6">
       <h3 className="mb-3 text-sm font-bold text-theme-dark dark:text-white">Frequently Bought Together</h3>
-      <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1">
+      <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 scroll-px-1 pb-1">
         {products === null
           ? Array.from({ length: 4 }).map((_, i) => <AccessoryCardSkeleton key={`accessory-skeleton-${i}`} />)
           : products.map((p, i) => (
