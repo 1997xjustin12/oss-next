@@ -64,7 +64,9 @@ async function loadPaths(): Promise<PathCache | null> {
         Authorization: `Api-Key ${API_KEY}`,
         'X-Store-Domain': STORE_DOMAIN ?? '',
       },
-      signal: AbortSignal.timeout(8_000),
+      // Only a cold instance ever waits for this (see wpPathMayExist), so a
+      // shorter limit costs nothing on a healthy backend.
+      signal: AbortSignal.timeout(3_000),
     })
     if (!res.ok) return null
 

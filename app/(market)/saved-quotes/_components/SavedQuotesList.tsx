@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { PlpLink } from '@/components/shared/PlpLink'
 import { ChevronDown, FileText, ImageOff, Trash2 } from 'lucide-react'
 import { ROUTES } from '@/config/routes'

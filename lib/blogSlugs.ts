@@ -61,7 +61,8 @@ async function loadSlugs(): Promise<SlugCache | null> {
 
       const res = await fetch(url, {
         headers: { Accept: 'application/json', Authorization: `Api-Key ${API_KEY}` },
-        signal: AbortSignal.timeout(8_000),
+        // Per page of the list; only a cold instance waits (see blogSlugMayExist).
+        signal: AbortSignal.timeout(3_000),
       })
       // A 404 here means "page past the end", which only happens after at least
       // one good page — so the set we have is complete, not broken.

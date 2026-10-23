@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { CONTACT_NUMBER } from "@/lib/helpers";
 
 /**

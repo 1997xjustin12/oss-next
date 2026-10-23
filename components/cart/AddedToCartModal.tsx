@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { getCustomFieldValue } from '@/lib/pricing'

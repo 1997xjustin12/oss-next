@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, X } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'

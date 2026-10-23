@@ -81,13 +81,13 @@ export function Hero({
 }) {
   if (version === 3) {
     return (
-      <section className="relative flex flex-col lg:flex-row min-h-120 sm:min-h-150">
+      <section data-home-variant="3" className="relative flex flex-col lg:flex-row min-h-120 sm:min-h-150">
         <div className="relative w-full lg:w-[60%] min-h-120 sm:min-h-150">
           <Image
             src={BANNER_IMAGE}
             alt="Hero banner — shipping containers delivered nationwide"
             fill
-            priority
+            preload
             sizes="(min-width: 1024px) 60vw, 100vw"
             className="object-cover"
           />
@@ -134,13 +134,13 @@ export function Hero({
 
   if (version === 2) {
     return (
-      <section className="relative flex flex-col lg:flex-row min-h-120 sm:min-h-150">
+      <section data-home-variant="2" className="relative flex flex-col lg:flex-row min-h-120 sm:min-h-150">
         <div className="relative w-full lg:w-[60%] min-h-120 sm:min-h-150">
           <Image
             src={BANNER_IMAGE}
             alt="Hero banner — shipping containers delivered nationwide"
             fill
-            priority
+            preload
             sizes="(min-width: 1024px) 60vw, 100vw"
             className="object-cover"
           />
@@ -198,13 +198,13 @@ export function Hero({
   }
 
   return (
-    <section className="p-5 sm:p-10 relative min-h-[480px] sm:min-h-[600px]">
+    <section data-home-variant="1" className="p-5 sm:p-10 relative min-h-[480px] sm:min-h-[600px]">
       <div className="absolute left-0 top-0 w-full h-full">
         <Image
           src={BANNER_IMAGE}
           alt="Hero banner — shipping containers delivered nationwide"
           fill
-          priority
+          preload
           sizes="100vw"
           className="object-cover"
         />

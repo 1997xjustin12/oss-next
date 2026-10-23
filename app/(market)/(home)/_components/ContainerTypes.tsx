@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { BASE_URL, CONTACT_NUMBER } from "@/lib/helpers";
 
 type BadgeVariant = "green" | "red" | "blue";

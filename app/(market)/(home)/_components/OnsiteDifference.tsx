@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { CONTACT_NUMBER } from "@/lib/helpers";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 

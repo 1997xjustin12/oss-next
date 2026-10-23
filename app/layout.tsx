@@ -92,10 +92,12 @@ export default async function RootLayout({
             Suspense boundary that useSearchParams requires, like its
             neighbours here. */}
         <Suspense><DemoResets /></Suspense>
-        {/* Real-user Core Web Vitals (LCP/CLS/INP at p75, per route) once Speed
-            Insights is enabled in the Vercel project. In Suspense because it
-            reads the route's search params. Billed per data point. */}
-        <Suspense><SpeedInsights /></Suspense>
+        {/* Real-user Core Web Vitals (LCP/CLS/INP at p75, per route) from Speed
+            Insights, billed per data point. Only on Vercel: its script is
+            served at /_vercel/speed-insights/script.js there and nowhere else,
+            so a local or CI run would log a console error on every page. In
+            Suspense because it reads the route's search params. */}
+        {process.env.VERCEL ? <Suspense><SpeedInsights /></Suspense> : null}
       </body>
     </html>
   );

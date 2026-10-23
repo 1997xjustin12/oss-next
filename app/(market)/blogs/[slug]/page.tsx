@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getAllBlogSlugs, getCachedBlog } from '@/services/blog.service'

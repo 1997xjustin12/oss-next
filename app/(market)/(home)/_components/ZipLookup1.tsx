@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useId } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { Loader2, MapPin } from "lucide-react";
 import { useGeoapify } from "@/hooks/useGeoapify";

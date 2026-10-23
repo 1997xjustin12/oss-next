@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { Stars } from '@/components/product/Stars'
 import { ROUTES } from '@/config/routes'
 import { formatPrice } from '@/lib/formatters'

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { SlidersHorizontal, X } from 'lucide-react'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import {
   SHIPPING_CONTAINER_FILTERS,
   PRODUCT_FILTERS,

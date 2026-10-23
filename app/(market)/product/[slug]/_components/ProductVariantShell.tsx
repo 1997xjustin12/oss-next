@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { ChevronRight } from "lucide-react";
 import {

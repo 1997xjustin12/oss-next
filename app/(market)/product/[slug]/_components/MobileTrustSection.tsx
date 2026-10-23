@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { Phone, ShieldCheck, Trophy, Truck } from "lucide-react";
 import { Stars } from "@/components/product/Stars";

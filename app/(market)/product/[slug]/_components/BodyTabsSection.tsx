@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { ShieldCheck, Truck, Eye, RotateCcw, ArrowUpRight } from 'lucide-react'
 import type { ContainerVariantKey } from '@/lib/containerVariant'
 import { resolveCombination } from '@/lib/containerOverview'

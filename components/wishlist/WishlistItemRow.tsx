@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { Trash2, Package } from 'lucide-react'
 import { useWishlist } from '@/hooks/useWishlist'
 import { ROUTES } from '@/config/routes'

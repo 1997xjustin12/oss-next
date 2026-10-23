@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck, BadgeCheck } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'

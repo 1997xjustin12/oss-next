@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { usePathname } from 'next/navigation'
 import { ShieldCheck } from 'lucide-react'
 import { ADMIN_ROUTES } from '@/config/admin'

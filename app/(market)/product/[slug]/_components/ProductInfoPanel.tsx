@@ -24,7 +24,7 @@ import { ZipGateModal } from "./ZipGateModal";
 import { MobileAddToCartBar } from "./MobileAddToCartBar";
 import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { CONTACT_NUMBER } from "@/lib/helpers";
-import Link from "next/link";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { formatMoney } from "@/lib/formatters";
 import { useDeliveryRates } from "@/hooks/useDeliveryRates";
 import { useStoredZip } from "@/hooks/useStoredZip";

@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { cachedEsSearch, DEFAULT_LOCATION } from '@/services/search.service'
 import { getPriceBasis } from '@/lib/pricing'
 import { formatMoney } from '@/lib/formatters'

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { Package } from 'lucide-react'
 import { ROUTES } from '@/config/routes'
 import { formatOrderMoney } from '@/lib/orderFormat'

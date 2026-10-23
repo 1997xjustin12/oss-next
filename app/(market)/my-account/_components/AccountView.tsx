@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { useAuth } from '@/hooks/useAuth'
 import { ROUTES } from '@/config/routes'
 import { AccountLayout } from './AccountLayout'

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import type { ReactNode } from 'react'
 import { SITE_URL } from '@/config/site'
 

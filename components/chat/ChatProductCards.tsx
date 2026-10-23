@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { Check, Loader2 } from 'lucide-react'
 import { useAddContainerToCart } from '@/hooks/useAddContainerToCart'
 import { useCart } from '@/hooks/useCart'

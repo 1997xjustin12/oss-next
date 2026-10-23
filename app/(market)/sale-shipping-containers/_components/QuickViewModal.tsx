@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { Phone, ShoppingCart, MapPin } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { ProductImageGallery } from '@/components/product/ProductImageGallery'

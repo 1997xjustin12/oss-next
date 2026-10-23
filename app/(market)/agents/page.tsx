@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { CRAWLERS } from '@/config/crawlers'
 import { ROUTES } from '@/config/routes'
 import { SITE, absoluteUrl } from '@/config/site'

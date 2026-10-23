@@ -12,7 +12,7 @@ import {
   useSearchBox,
 } from 'react-instantsearch'
 import Image from 'next/image'
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { AlertTriangle, ArrowUpRight, ChevronDown, Phone, Search, SlidersHorizontal, Star, X } from 'lucide-react'
 import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'

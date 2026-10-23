@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink';
 import { PlpLink } from '@/components/shared/PlpLink';
 import Image from 'next/image';
 import {

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { PackageSearch } from 'lucide-react'
 import { ROUTES } from '@/config/routes'
 import { SITE } from '@/config/site'
