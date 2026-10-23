@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS, SHELL_OUTAGE_CACHE_LIFE } from '@/config/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { getRedisClient } from '@/lib/redis'
 
 /**
@@ -21,16 +21,15 @@ import { getRedisClient } from '@/lib/redis'
  * **Fails to the modal**, the component that has been serving customers. An
  * unreachable Redis should not change what the store does.
  *
- * Read through `'use cache'` rather than per request: this is read in the root
- * layout, so an uncached Redis round trip would put one on every page of the
- * site. The Server Action busts the tag, so a flip still applies immediately.
+ * Read through `'use cache'` rather than per request, and served through a
+ * CDN-cached route (GET /api/cart-notice) that CartProvider fetches after
+ * mount. It used to be read in the root layout, which tied every page shell to
+ * Redis. The Server Action busts the tag; the CDN copy follows within a minute.
  *
  * `use cache: remote`, not plain `use cache`: the plain one keeps its entry in
  * one serverless instance's memory, so on Vercel most requests missed it and
  * read Redis anyway. Hours rather than minutes because the admin action busts
- * the tag on save — and the shortest lifetime in the root layout sets how often
- * every page on the site is re-rendered, so `minutes` was re-rendering (and
- * re-reading Redis for) every page about once a minute.
+ * the tag on save.
  */
 
 const REDIS_KEY = 'oss-next:cart-added-notice'
@@ -47,9 +46,9 @@ const TOAST_VALUE = 'toast'
 /**
  * Which confirmation the storefront is showing.
  *
- * A Redis failure falls back to the modal and is cached only briefly
- * (SHELL_OUTAGE_CACHE_LIFE: this is read in the root layout, so it bounds
- * every page shell), so the real setting returns within 15 minutes.
+ * Served to the browser by GET /api/cart-notice. A Redis failure falls back to
+ * the modal and is cached only briefly (OUTAGE_CACHE_LIFE), so the real setting
+ * returns within a few minutes.
  */
 export async function cartNoticeMode(): Promise<CartNoticeMode> {
   'use cache: remote'
@@ -62,7 +61,7 @@ export async function cartNoticeMode(): Promise<CartNoticeMode> {
   } catch (err) {
     // Fail to the modal — see the module comment.
     console.error('[cart-notice] switch read failed, using the modal:', err)
-    cacheLife(SHELL_OUTAGE_CACHE_LIFE)
+    cacheLife(OUTAGE_CACHE_LIFE)
     return 'modal'
   }
 }

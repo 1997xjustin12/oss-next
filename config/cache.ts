@@ -134,8 +134,8 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
 export const OUTAGE_CACHE_LIFE = { stale: 60, revalidate: 60, expire: 300 } as const;
 
 /**
- * Outage lifetime for Redis reads rendered into every page — the root layout's
- * cart notice switch, page metadata, page copy, the product panel switch.
+ * Outage lifetime for Redis reads rendered into pages — page metadata, page
+ * copy, the product panel switch.
  *
  * A page's shell lives only as long as the shortest cache life inside it, so
  * OUTAGE_CACHE_LIFE there would regenerate every page shell each minute while

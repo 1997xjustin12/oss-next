@@ -394,7 +394,7 @@ export const config = {
     { source: '/admin/:path*' },
     {
       source:
-        '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/(?:search|shipping-containers|reviews/list|chat/availability|chat/products|geoapify|products/by-skus|products/by-ids|delivery-rates)(?:/|$)|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|pdf|mp4|webm)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/(?:search|shipping-containers|reviews/list|chat/availability|chat/products|geoapify|products/by-skus|products/by-ids|delivery-rates|cart-notice)(?:/|$)|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|pdf|mp4|webm)$).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

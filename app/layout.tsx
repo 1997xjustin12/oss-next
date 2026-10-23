@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Anton, Roboto } from "next/font/google";
 import { Suspense } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
-import { cartNoticeMode } from "@/lib/cartNotice";
 import { AuthProvider } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { LinkEnricher } from "@/components/layout/LinkEnricher";
@@ -49,12 +49,6 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Which confirmation an add to cart shows, chosen in Admin → Cart Notice.
-  // Read here because CartProvider mounts the component and is a Client
-  // Component; it is a cached read, so the layout stays prerenderable rather
-  // than every page paying a Redis round trip. See lib/cartNotice.ts.
-  const addedNotice = await cartNoticeMode();
-
   return (
     <html lang="en" className={`${roboto.variable} ${anton.variable}`}>
       <body suppressHydrationWarning>
@@ -73,7 +67,7 @@ export default async function RootLayout({
         <link rel="service-desc" type="application/json" href="/openapi.json" title="Agent API description" />
 
         <AuthProvider>
-          <CartProvider addedNotice={addedNotice}>
+          <CartProvider>
             <WishlistProvider>
               {children}
               <Suspense><GuestCartCapture /></Suspense>
@@ -98,6 +92,10 @@ export default async function RootLayout({
             Suspense boundary that useSearchParams requires, like its
             neighbours here. */}
         <Suspense><DemoResets /></Suspense>
+        {/* Real-user Core Web Vitals (LCP/CLS/INP at p75, per route) once Speed
+            Insights is enabled in the Vercel project. In Suspense because it
+            reads the route's search params. Billed per data point. */}
+        <Suspense><SpeedInsights /></Suspense>
       </body>
     </html>
   );

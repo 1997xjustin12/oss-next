@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { MessageCircle, Plus, Send, X } from 'lucide-react'
 import {
   AVAILABILITY_KEY,
+  AVAILABILITY_TTL_MS,
   DISCLAIMER,
   GREETING,
   HISTORY_FETCH_LIMIT,
@@ -114,16 +115,23 @@ export function AiChatWidget() {
     let cancelled = false
 
     async function resolveAvailability() {
-      // Session storage, not local: someone who travels, or drops a VPN, gets a
-      // fresh answer next visit rather than being stuck with a stale one.
+      // Local storage with a lifetime (AVAILABILITY_TTL_MS) rather than session
+      // storage: asking once per browser session cost a request and a rate-limit
+      // check on nearly every visit. The server stays the authority — POST
+      // /api/chat re-checks — so a stale "yes" costs at most a polite refusal.
+      // Old session-storage entries were plain strings and are simply ignored.
       try {
-        const cached = window.sessionStorage.getItem(AVAILABILITY_KEY)
-        if (cached === 'true' || cached === 'false') {
-          if (!cancelled) setAvailable(cached === 'true')
-          return
+        const raw = window.localStorage.getItem(AVAILABILITY_KEY)
+        const cached = raw ? (JSON.parse(raw) as { value?: unknown; at?: unknown }) : null
+        if (cached && typeof cached.value === 'boolean' && typeof cached.at === 'number') {
+          const ttl = cached.value ? AVAILABILITY_TTL_MS.available : AVAILABILITY_TTL_MS.unavailable
+          if (Date.now() - cached.at < ttl) {
+            if (!cancelled) setAvailable(cached.value)
+            return
+          }
         }
       } catch {
-        // Private mode or a sandboxed iframe — fall through to the request.
+        // Private mode, a sandboxed iframe or a malformed entry — ask instead.
       }
 
       try {
@@ -137,7 +145,7 @@ export function AiChatWidget() {
 
         if (!cancelled) setAvailable(value)
         try {
-          window.sessionStorage.setItem(AVAILABILITY_KEY, String(value))
+          window.localStorage.setItem(AVAILABILITY_KEY, JSON.stringify({ value, at: Date.now() }))
         } catch {
           // Not being able to cache the answer is not worth surfacing.
         }

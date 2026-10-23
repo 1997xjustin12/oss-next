@@ -74,9 +74,9 @@ export default function CartNoticeSettingsPage({ searchParams }: Props) {
 
       <footer className="mt-8 rounded-lg border border-dashed border-theme-border p-4 text-xs leading-relaxed text-theme-muted dark:border-neutral-700 dark:text-neutral-500">
         <p>
-          <strong className="font-semibold">Applies immediately.</strong> Switching clears the
-          cached setting, so the next customer to add something sees the one you picked — no
-          deploy, no waiting.
+          <strong className="font-semibold">Applies within a minute or two.</strong> Switching
+          clears the cached setting; browsers read it through the CDN, which refreshes its copy
+          every minute. No deploy needed.
         </p>
         <p className="mt-2">
           <strong className="font-semibold">If this setting cannot be read</strong> — Redis

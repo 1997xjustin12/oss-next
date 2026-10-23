@@ -140,19 +140,25 @@ function reducer(state: Cart, action: Action): Cart {
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-export function CartProvider({
-  children,
-  addedNotice = 'modal',
-}: {
-  children: React.ReactNode
-  /**
-   * Which confirmation an add to cart shows. Decided on the server and passed
-   * down rather than read here: this is a Client Component, and fetching the
-   * setting from the browser would show one and then swap it mid-visit.
-   */
-  addedNotice?: CartNoticeMode
-}) {
+export function CartProvider({ children }: { children: React.ReactNode }) {
   const { user, token, isAuthenticated } = useAuth()
+  // Which confirmation an add to cart shows (Admin → Cart Notice). Fetched
+  // after mount from a CDN-cached route rather than read in the root layout,
+  // which tied every page shell to Redis. Until it arrives the modal, the
+  // default, is what an add would show; the switch only matters at that moment.
+  const [addedNotice, setAddedNotice] = useState<CartNoticeMode>('modal')
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/cart-notice')
+      .then((res) => (res.ok ? (res.json() as Promise<{ mode?: unknown }>) : null))
+      .then((data) => {
+        if (!cancelled && (data?.mode === 'toast' || data?.mode === 'modal')) setAddedNotice(data.mode)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const [cart, dispatch] = useReducer(reducer, EMPTY_CART)
   // Drives the global AddedToCartModal — set on every addItem() call unless
   // the caller passes showModal=false. Rendered once here so it's available

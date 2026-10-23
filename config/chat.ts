@@ -92,8 +92,15 @@ export const HISTORY_VERSION = 1
 /** Well past a real session, far short of the ~5MB the cart also draws on. */
 export const MAX_HISTORY_MESSAGES = 60
 
-/** Session-storage key for the cached availability answer. */
+/** Local-storage key for the cached availability answer ({ value, at }). */
 export const AVAILABILITY_KEY = 'oss:chat-available'
+
+/**
+ * How long a cached availability answer is trusted. A "yes" for a day, a "no"
+ * for an hour: someone who travels or drops a VPN is not locked out for long,
+ * and POST /api/chat re-checks on every message regardless.
+ */
+export const AVAILABILITY_TTL_MS = { available: 24 * 60 * 60 * 1000, unavailable: 60 * 60 * 1000 } as const
 
 // ── Server-side history ─────────────────────────────────────────────────────
 
