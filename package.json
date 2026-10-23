@@ -13,7 +13,8 @@
     "predev": "node scripts/generate-pdp-resources.mjs && node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/generate-depot-coordinates.mjs",
     "prebuild": "node scripts/generate-pdp-resources.mjs && node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/generate-depot-coordinates.mjs",
     "prepare": "node -e \"try{require('child_process').execSync('git config core.hooksPath .githooks',{stdio:'ignore'})}catch{}\"",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:unit": "node --test --experimental-strip-types --experimental-test-module-mocks --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tests/unit/register.mjs \"tests/unit/*.test.ts\""
   },
   "dependencies": {
     "@elastic/elasticsearch": "^8.19.1",
