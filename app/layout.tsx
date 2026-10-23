@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Anton, Roboto } from "next/font/google";
 import { Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/shared/GoogleTagManager";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
@@ -52,6 +53,12 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${roboto.variable} ${anton.variable}`}>
       <body suppressHydrationWarning>
+        {/* Google Tag Manager: live on onsitestorage.com, the staging environment
+            on staging.onsitestorage.com, nothing anywhere else. The noscript
+            fallback goes immediately after <body>, as GTM asks. See
+            config/googleTag.ts. */}
+        <GoogleTagManagerNoScript />
+        <GoogleTagManager />
         {/* Machine-readable representations of the site, advertised so an agent
             that doesn't guess the well-known paths can still find them. React
             hoists these into <head>. Declared here rather than via the
