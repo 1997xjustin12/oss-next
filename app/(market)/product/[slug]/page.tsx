@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
-import { getProductByHandle } from '@/services/search.service'
+import { getAllProductHandles, getProductByHandle } from '@/services/search.service'
 import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
 import { formatMoney } from '@/lib/formatters'
 import { DEFAULT_LOCATION } from '@/lib/constants'
@@ -16,6 +17,25 @@ import { PdpSkeleton } from './_components/PdpSkeleton'
 import type { ProductHit } from '@/types/product'
 
 type Props = { params: Promise<{ slug: string }> }
+
+// A link prefetch loads this route's App Shell (shared by every page of the
+// route) rather than one page's whole payload; the content follows on click.
+export const prefetch = 'partial'
+
+/**
+ * A few products are built at deploy time. Every other handle gets the App
+ * Shell on its first request, is rendered with its params in the background,
+ * and is then served whole from the cache until its tags or cache life expire —
+ * instead of being rendered by a function on every view.
+ *
+ * Cache Components requires at least one entry, hence the placeholder (which
+ * resolves to a 404) when the catalogue cannot be read during the build.
+ */
+export async function generateStaticParams() {
+  // _doc order is arbitrary; swap in the best sellers once there is a list.
+  const handles = (await getAllProductHandles()).slice(0, 24)
+  return handles.length ? handles.map(({ handle }) => ({ slug: handle })) : [{ slug: '__placeholder__' }]
+}
 
 // Shared by generateMetadata's <meta name="description"> and the JSON-LD
 // below, so the two can never drift apart and describe the same product
@@ -121,7 +141,7 @@ function ogImages(product: ProductHit): NonNullable<NonNullable<Metadata['openGr
  * treats FAQ markup with no visible counterpart as a policy violation, so that
  * isn't just tidiness.
  */
-function buildJsonLd(product: ProductHit, slug: string) {
+function buildJsonLd(product: ProductHit, slug: string, now: Date) {
   const location = getCustomFieldValue(product, 'location')
   const realLocation = location && location !== DEFAULT_LOCATION ? location : undefined
   const description = buildProductDescription(product, realLocation ?? '')
@@ -131,7 +151,7 @@ function buildJsonLd(product: ProductHit, slug: string) {
 
   return graph([
     ...siteNodes(),
-    productNode(product, slug, description),
+    productNode(product, slug, description, now),
     breadcrumbNode([
       { name: 'Home', path: ROUTES.HOME },
       { name: 'Shipping Containers', path: ROUTES.PLP },
@@ -141,17 +161,30 @@ function buildJsonLd(product: ProductHit, slug: string) {
   ])
 }
 
+/**
+ * Today, for the JSON-LD's rolling `priceValidUntil`.
+ *
+ * Behind 'use cache' because a bare `new Date()` makes a page impossible to
+ * prerender, and product pages are now cached whole (generateStaticParams).
+ * The date only has to be right to the day, a year out.
+ */
+async function getToday(): Promise<number> {
+  'use cache'
+  cacheLife('days')
+  return Date.now()
+}
+
 async function ProductContent({ params }: Props) {
   const { slug } = await params
   // In parallel: the switch is a cached Redis read, and nothing about the
   // product depends on it, so it must not add its latency to the product's.
-  const [result, panelV2] = await Promise.all([getProductByHandle(slug), isProductPanelV2()])
+  const [result, panelV2, today] = await Promise.all([getProductByHandle(slug), isProductPanelV2(), getToday()])
   if (!result) notFound()
   const { product, related_products } = result
 
   return (
     <>
-      <JsonLd data={buildJsonLd(product, slug)} />
+      <JsonLd data={buildJsonLd(product, slug, new Date(today))} />
       {/* No separate no-JS copy of the specs and FAQ any more. Both are in the
           server HTML already: the tab section renders every panel (hiding the
           inactive ones) and the FAQ keeps collapsed answers in the DOM. The old
@@ -162,20 +195,20 @@ async function ProductContent({ params }: Props) {
 }
 
 /**
- * The shell stays free of `params`, deliberately.
+ * The handle is checked here, above the Suspense boundary, so a miss is a real
+ * 404 status rather than a 200 with the not-found page streamed underneath.
  *
- * Checking the handle here would let a miss set a real 404 status instead of
- * the soft one described in `generateMetadata` — but `params` is runtime data,
- * and reading it outside the Suspense boundary is what `cacheComponents`
- * forbids: tried on 2026-09-30, and every render logged "Route
- * '/product/[slug]': Next.js encountered runtime data during prerendering".
- *
- * So the status cannot be fixed from inside this route while its shell is
- * prerendered. The place that could is proxy.ts, which already rewrites
- * unknown paths to `/_not-found` with a 404 and would need the published
- * handle list to do the same here.
+ * This used to be impossible: without generateStaticParams, `params` was
+ * runtime data and reading it outside Suspense failed every prerender
+ * ("encountered runtime data during prerendering", 2026-09-30). With known
+ * params it is allowed. The cost: an unlisted handle has no App Shell to serve
+ * on its very first request and waits for the render instead — after which the
+ * whole page is cached, and `getProductByHandle` is the same cached read the
+ * content below makes.
  */
-export default function ProductPage(props: Props) {
+export default async function ProductPage(props: Props) {
+  const { slug } = await props.params
+  if (!(await getProductByHandle(slug))) notFound()
   return (
     <Suspense fallback={<PdpSkeleton />}>
       <ProductContent {...props} />

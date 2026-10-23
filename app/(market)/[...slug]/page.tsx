@@ -27,6 +27,27 @@ type Props = {
   params: Promise<{ slug: string[] }>
 }
 
+// A link prefetch loads this route's App Shell (shared by every page of the
+// route) rather than one page's whole payload; the content follows on click.
+export const prefetch = 'partial'
+
+/**
+ * High-traffic WordPress pages built at deploy time. Every other path gets the
+ * App Shell on its first request and is then served whole from the cache
+ * ('days', busted by the `pages` tag) rather than rendered per view.
+ */
+const PRERENDERED_WP_PATHS = [
+  'shipping-container-faqs',
+  'types-of-shipping-containers',
+  'complete-shipping-container-delivery-guide',
+  'why-onsite-storage',
+  'special-promotions',
+]
+
+export function generateStaticParams() {
+  return PRERENDERED_WP_PATHS.map((path) => ({ slug: path.split('/') }))
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   if (isNativePath(slug[0])) return { title: 'Not Found' }

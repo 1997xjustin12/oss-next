@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { getCachedBlog } from '@/services/blog.service'
+import { getAllBlogSlugs, getCachedBlog } from '@/services/blog.service'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { blogPostingNode, breadcrumbNode, graph, siteNodes } from '@/lib/schema'
@@ -13,6 +13,20 @@ import { RelatedPosts, RelatedPostsSkeleton } from './_components/RelatedPosts'
 
 type Props = {
   params: Promise<{ slug: string }>
+}
+
+// A link prefetch loads this route's App Shell (shared by every page of the
+// route) rather than one page's whole payload; the content follows on click.
+export const prefetch = 'partial'
+
+/**
+ * The most recent posts are built at deploy time; older ones are cached whole
+ * after their first request. At least one entry is required, hence the
+ * placeholder (a 404) when the list cannot be read during the build.
+ */
+export async function generateStaticParams() {
+  const recent = (await getAllBlogSlugs()).slice(0, 20).map(({ slug }) => ({ slug }))
+  return recent.length ? recent : [{ slug: '__placeholder__' }]
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
