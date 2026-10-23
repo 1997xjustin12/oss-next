@@ -188,11 +188,11 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none z-10">
-            <span className={`text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded shadow ${inStock ? 'bg-emerald-600' : 'bg-theme-muted'}`}>
+            <span className={`text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded shadow ${inStock ? 'bg-emerald-700' : 'bg-theme-muted'}`}>
               {inStock ? 'In Stock' : 'Out of Stock'}
             </span>
             {tag && (
-              <span className="bg-amber-500 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded shadow">
+              <span className="bg-amber-500 text-stone-900 text-[10px] sm:text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded shadow">
                 {tag}
               </span>
             )}
@@ -286,7 +286,8 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
 
         {/* Dot indicators — mobile only */}
         {total > 1 && (
-          <div className="flex justify-center gap-1.5 mt-3 sm:hidden" role="tablist" aria-label="Image navigation">
+          // Each dot sits in a 24px button: the touch-target minimum (WCAG 2.5.8).
+          <div className="flex justify-center mt-3 sm:hidden" role="tablist" aria-label="Image navigation">
             {slides.map((slide, i) => (
               <button
                 key={i}
@@ -294,8 +295,13 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
                 role="tab"
                 aria-selected={i === active}
                 aria-label={slide.kind === 'video' ? slide.label : `Go to image ${i + 1}`}
-                className={`rounded-full transition-all duration-300 ${i === active ? 'w-5 h-2 bg-theme-primary' : 'w-2 h-2 bg-theme-border hover:bg-theme-primary/50'}`}
-              />
+                className="group/dot flex h-6 min-w-6 items-center justify-center px-0.5"
+              >
+                <span
+                  aria-hidden
+                  className={`rounded-full transition-all duration-300 ${i === active ? 'w-5 h-2 bg-theme-primary' : 'w-2 h-2 bg-theme-border group-hover/dot:bg-theme-primary/50'}`}
+                />
+              </button>
             ))}
           </div>
         )}

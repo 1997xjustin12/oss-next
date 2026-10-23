@@ -304,11 +304,11 @@ export function RegisterForm({ showTitle = true, showBenefits = true, className 
           <span>
             <span className="text-theme-primary dark:text-red-400">*</span> By checking this box, I agree to{' '}
             {SITE.name}&apos;s{' '}
-            <Link href="/terms-and-conditions" className="text-theme-primary hover:underline dark:text-red-400">
+            <Link href="/terms-and-conditions" className="text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
               Terms and conditions
             </Link>
             , and{' '}
-            <Link href="/privacy-policy" className="text-theme-primary hover:underline dark:text-red-400">
+            <Link href="/privacy-policy" className="text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
               Privacy policy
             </Link>
           </span>

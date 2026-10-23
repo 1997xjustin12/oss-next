@@ -141,7 +141,7 @@ export function QuoteForm({
           >
             {heading}
           </h2>
-          <p className="text-[15px] text-white/[.78] leading-[1.65] mb-[22px] capitalize">
+          <p className="text-[15px] text-white/90 leading-[1.65] mb-[22px] capitalize">
             Tell us your size, location, and needs — we&rsquo;ll respond with an
             accurate, no-obligation price and fast delivery timeline from our
             nearest depot

@@ -161,16 +161,23 @@ export function ReviewsSection({
           </button>
         </div>
 
-        <div className="flex justify-center gap-2 mt-6 sm:mt-8">
+        {/* Each dot sits in a 24px button: the touch-target minimum (WCAG
+            2.5.8). The visible dot keeps its size. */}
+        <div className="flex justify-center mt-6 sm:mt-8">
           {Array.from({ length: maxIndex + 1 }, (_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
               aria-label={`Go to review set ${i + 1}`}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                i === current ? 'bg-[#C60C29]' : 'bg-gray-300 dark:bg-gray-600'
-              }`}
-            />
+              className="flex h-6 w-6 items-center justify-center"
+            >
+              <span
+                aria-hidden
+                className={`h-2 w-2 rounded-full transition-colors ${
+                  i === current ? 'bg-[#C60C29]' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>

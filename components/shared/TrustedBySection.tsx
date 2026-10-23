@@ -75,7 +75,7 @@ export function TrustedBySection({
       </div>
 
       <div className="overflow-hidden">
-        <div className="logo-track flex w-max" aria-label="Trusted organizations carousel">
+        <div className="logo-track flex w-max" role="group" aria-label="Trusted organizations carousel">
           {[...LOGOS, ...LOGOS].map((logo, i) => (
             <div key={i} className="flex items-center justify-center mx-4.75 w-34.75 h-25">
               <Image

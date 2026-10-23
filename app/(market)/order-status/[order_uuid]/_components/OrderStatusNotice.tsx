@@ -36,7 +36,7 @@ export function OrderStatusNotice({ kind }: Props) {
       <p className="max-w-md text-sm text-theme-muted dark:text-gray-400">{body}</p>
       <p className="text-sm text-theme-muted dark:text-gray-400">
         Questions? Call{' '}
-        <a href={`tel:${SITE.telephone}`} className="font-semibold text-theme-primary hover:underline dark:text-red-400">
+        <a href={`tel:${SITE.telephone}`} className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
           {SITE.telephoneDisplay}
         </a>
       </p>

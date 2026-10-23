@@ -327,7 +327,7 @@ function EmptyCart() {
       </PlpLink>
       <a
         href="tel:8889779085"
-        className="mt-3 text-sm font-semibold text-theme-primary hover:underline dark:text-red-400"
+        className="mt-3 text-sm font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400"
       >
         Or call us at (888) 977-9085
       </a>
@@ -381,7 +381,7 @@ function OrderComplete({
       )}
       <a
         href="tel:8889779085"
-        className="mt-3 text-sm font-semibold text-theme-primary hover:underline dark:text-red-400"
+        className="mt-3 text-sm font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400"
       >
         Questions? Call us at (888) 977-9085
       </a>
@@ -1016,7 +1016,7 @@ export function CheckoutClient() {
     <div className="min-h-screen bg-theme-subtle px-4 py-8 dark:bg-neutral-950 sm:px-6 lg:px-10">
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="mx-auto mb-6 max-w-7xl text-sm">
-        <Link href={ROUTES.HOME} className="font-semibold text-theme-primary hover:underline dark:text-red-400">
+        <Link href={ROUTES.HOME} className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
           Home
         </Link>
         <span className="mx-2 text-theme-muted dark:text-neutral-600">/</span>
@@ -1335,7 +1335,7 @@ export function CheckoutClient() {
 
             <p className="mt-4 text-sm text-theme-mid dark:text-neutral-400">
               Want faster service?{' '}
-              <a href="tel:8889779085" className="font-bold text-theme-primary hover:underline dark:text-red-400">
+              <a href="tel:8889779085" className="font-bold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
                 Give us a ring!
               </a>{' '}
               Don&apos;t forget to ask about specials in your area to see if you can save even more.
@@ -1368,7 +1368,7 @@ export function CheckoutClient() {
               </p>
               <a
                 href="tel:18889779085"
-                className="mt-1 block text-sm font-bold text-theme-primary hover:underline dark:text-red-400"
+                className="mt-1 block text-sm font-bold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400"
               >
                 Call us at 1-888-977-9085
               </a>
@@ -1431,7 +1431,7 @@ export function CheckoutClient() {
                   />
                   <span>
                     I confirm that I have read the{' '}
-                    <Link href="/shipping-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary hover:underline dark:text-red-400">
+                    <Link href="/shipping-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
                       Delivery Requirement
                     </Link>{' '}
                     and that the delivery site is suitable for delivery of the container(s)/equipment{' '}
@@ -1448,11 +1448,11 @@ export function CheckoutClient() {
                   />
                   <span>
                     I have read and agree to the website{' '}
-                    <Link href="/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary hover:underline dark:text-red-400">
+                    <Link href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
                       terms and conditions
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary hover:underline dark:text-red-400">
+                    <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
                       privacy policy
                     </Link>{' '}
                     <span className="text-theme-primary dark:text-red-400">*</span>
@@ -1498,7 +1498,7 @@ export function CheckoutClient() {
               <p className="text-xs text-theme-muted dark:text-neutral-400">
                 Your personal data will be used to process your order, support your experience
                 throughout this website, and for other purposes described in our{' '}
-                <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-theme-primary hover:underline dark:text-red-400">
+                <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
                   privacy policy
                 </Link>
                 .

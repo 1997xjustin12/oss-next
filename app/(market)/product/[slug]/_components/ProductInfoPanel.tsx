@@ -81,6 +81,8 @@ function InfoHint({ text }: { text: string }) {
   return (
     <span
       tabIndex={0}
+      // role="img": an aria-label is not allowed on a plain span.
+      role="img"
       title={text}
       aria-label={text}
       className="inline-flex shrink-0 cursor-help align-middle text-theme-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary/40 rounded-full"
@@ -494,7 +496,7 @@ function OptionBtn({
             className={`whitespace-nowrap text-[10px] font-semibold leading-tight sm:text-[13px] sm:font-bold ${
               entry.active && entry.available
                 ? "text-theme-primary sm:text-[#F5A623]"
-                : "text-[#7C7C7C] dark:text-gray-400"
+                : "text-[#666666] dark:text-gray-400"
             }`}
           >
             {entry.price}
@@ -1415,7 +1417,7 @@ export function ProductInfoPanel({
           <div className="text-[17px] font-extrabold sm:text-[22px]">
             {product?.size_title}
           </div>
-          <div className="text-[12px] text-[#A3A3A3] underline sm:text-[14px]">
+          <div className="text-[12px] text-neutral-500 underline sm:text-[14px]">
             Other size available
           </div>
         </div>
@@ -1446,7 +1448,7 @@ export function ProductInfoPanel({
         </div>
       </div>
 
-      <p className="mb-3 text-[12px] text-[#A3A3A3] sm:text-[14px]">
+      <p className="mb-3 text-[12px] text-neutral-500 sm:text-[14px]">
         SKU: {product.variants?.[0]?.sku}
       </p>
 
@@ -1489,7 +1491,7 @@ export function ProductInfoPanel({
 
         <div className="flex gap-[5px]">
           <Link
-            className="inline-flex items-center gap-1.5 text-[14px] text-[#279ED4] font-bold"
+            className="inline-flex items-center gap-1.5 text-[14px] text-[#1B6FA3] font-bold"
             prefetch={false}
             href={CONTACT_TEL}
           >
@@ -1570,7 +1572,7 @@ export function ProductInfoPanel({
           return (
             <div key={key} className="relative">
               {key === "rto" && (
-                <span className="pointer-events-none absolute -top-2.5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-xs bg-[#1F8A3B] px-2 py-[3px] text-[8px] font-bold uppercase leading-none tracking-[0.04em] text-white shadow-sm">
+                <span className="pointer-events-none absolute -top-2.5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-xs bg-[#1A7A34] px-2 py-[3px] text-[8px] font-bold uppercase leading-none tracking-[0.04em] text-white shadow-sm">
                   No Credit Check Required
                 </span>
               )}
@@ -1668,16 +1670,16 @@ export function ProductInfoPanel({
           same breakpoint where that section switches to a 5% gutter. */}
       <div className="-mx-4 mt-6 border-t-2 border-theme-primary px-4 pt-3 sm:mx-0 sm:px-0">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-[15px] font-bold text-theme-dark dark:text-white">
+          <h2 className="text-[15px] font-bold text-theme-dark dark:text-white">
             Selected Container Summary
-          </h3>
+          </h2>
           {/* Stock state as a pill rather than a line of text: it is the one
               thing here that changes what the buttons below can do, so it
               should read at a glance instead of being scanned for. */}
           <span
             className={`shrink-0 rounded-sm px-2.5 py-1 text-[12px] font-semibold ${
               inStock
-                ? "bg-[#E8F5EC] text-[#1F8A3B] dark:bg-[#123021] dark:text-[#4ADE80]"
+                ? "bg-[#E8F5EC] text-[#166A2C] dark:bg-[#123021] dark:text-[#4ADE80]"
                 : "bg-theme-subtle text-theme-muted"
             }`}
           >
@@ -1784,7 +1786,7 @@ export function ProductInfoPanel({
               // upstream in favour of a conversation, not an error.
               <Link
                 href={CONTACT_TEL}
-                className="text-right font-medium text-theme-primary hover:underline"
+                className="text-right font-medium text-theme-primary underline underline-offset-2 hover:decoration-2"
               >
                 Call for rate
               </Link>

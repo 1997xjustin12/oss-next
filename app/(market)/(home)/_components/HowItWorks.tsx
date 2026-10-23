@@ -19,7 +19,7 @@ export function HowItWorks({
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12.5">
-          <p className="text-[11.5px] font-bold text-theme-primary uppercase tracking-widest mb-2">
+          <p className="text-[11.5px] font-bold text-red-400 uppercase tracking-widest mb-2">
             Simple Process
           </p>
           <h2

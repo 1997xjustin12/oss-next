@@ -113,6 +113,8 @@ type SidebarProps = {
 // ─── Filter styling ───────────────────────────────────────────────────────────
 
 const filterItemCls  = 'flex w-full items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 dark:text-gray-300 transition-colors hover:bg-theme-subtle dark:hover:bg-neutral-800'
+// The checkbox is a picture of the state: the button carries it (aria-pressed),
+// so the input is hidden from assistive tech and skipped by the keyboard.
 const filterCheckCls = 'h-4 w-4 accent-red-600 pointer-events-none'
 const filterLabelCls = 'mb-1 text-[10px] font-extrabold uppercase tracking-wider text-theme-muted dark:text-gray-500'
 
@@ -123,8 +125,8 @@ function ProductTypeFilter({ selectedType, onTypeSelect }: Pick<SidebarProps, 's
     <div className="mt-3">
       <div className={filterLabelCls}>Products</div>
       {FILTER_TABS.map((tab) => (
-        <button key={tab.value} type="button" onClick={() => onTypeSelect(tab.value)} className={filterItemCls}>
-          <input type="checkbox" checked={selectedType === tab.value} readOnly className={filterCheckCls} />
+        <button key={tab.value} type="button" onClick={() => onTypeSelect(tab.value)} aria-pressed={selectedType === tab.value} className={filterItemCls}>
+          <input type="checkbox" checked={selectedType === tab.value} readOnly aria-hidden tabIndex={-1} className={filterCheckCls} />
           {tab.label}
         </button>
       ))}
@@ -149,8 +151,8 @@ function MultiFilter({ label, options, selected, onToggle, formatLabel = (opt) =
     <div className="mt-3">
       <div className={filterLabelCls}>{label}</div>
       {options.map((opt) => (
-        <button key={opt} type="button" onClick={() => onToggle(opt)} className={filterItemCls}>
-          <input type="checkbox" checked={selected.includes(opt)} readOnly className={filterCheckCls} />
+        <button key={opt} type="button" onClick={() => onToggle(opt)} aria-pressed={selected.includes(opt)} className={filterItemCls}>
+          <input type="checkbox" checked={selected.includes(opt)} readOnly aria-hidden tabIndex={-1} className={filterCheckCls} />
           {formatLabel(opt)}
         </button>
       ))}
@@ -165,8 +167,8 @@ function AccessoryCategoryFilter({ selected, onSelect }: { selected: string | nu
       {ACCESSORY_CATEGORY_OPTIONS.map((opt) => {
         const isActive = opt.value === null ? selected === null : selected === opt.value
         return (
-          <button key={opt.label} type="button" onClick={() => onSelect(opt.value)} className={filterItemCls}>
-            <input type="checkbox" checked={isActive} readOnly className={filterCheckCls} />
+          <button key={opt.label} type="button" onClick={() => onSelect(opt.value)} aria-pressed={isActive} className={filterItemCls}>
+            <input type="checkbox" checked={isActive} readOnly aria-hidden tabIndex={-1} className={filterCheckCls} />
             {opt.label}
           </button>
         )
@@ -413,14 +415,14 @@ function hitToAccessory(hit: HitData): Accessory {
 
 const BADGE_CLASSES = {
   red:   'bg-theme-primary',
-  amber: 'bg-amber-600',
-  green: 'bg-green-600',
+  amber: 'bg-amber-700',
+  green: 'bg-green-700',
 } as const
 
 function StarRow({ rating }: { rating: number }) {
   const full = Math.round(rating)
   return (
-    <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+    <div className="flex items-center gap-0.5" role="img" aria-label={`${rating} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
@@ -488,9 +490,10 @@ function ProductHit({ hit }: { hit: HitData }) {
 
       {/* Info */}
       <div className="sm:col-span-6 flex min-w-0 flex-col gap-2">
-        <h3 className="text-lg font-extrabold leading-tight text-theme-dark">
+        {/* h2: the page h1 is the location header; tiles are the next level. */}
+        <h2 className="text-lg font-extrabold leading-tight text-theme-dark">
           <TileLink href={href} rounded="lg">{hit.title}</TileLink>
-        </h3>
+        </h2>
 
         <div className="flex items-center gap-2 text-xs">
           <StarRow rating={rating} />

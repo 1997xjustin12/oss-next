@@ -24,7 +24,7 @@ export function AccountView() {
           <button
             type="button"
             onClick={logout}
-            className="font-semibold text-theme-primary hover:underline dark:text-red-400"
+            className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400"
           >
             Log Out
           </button>
@@ -33,17 +33,17 @@ export function AccountView() {
 
         <p className="mt-4 max-w-2xl text-sm sm:text-base leading-relaxed text-theme-muted dark:text-gray-400">
           From your account dashboard you can view your{' '}
-          <Link href={ROUTES.ACCOUNT.ORDERS} className="font-medium text-theme-primary hover:underline dark:text-red-400">
+          <Link href={ROUTES.ACCOUNT.ORDERS} className="font-medium text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
             recent orders
           </Link>
           , manage your{' '}
-          <Link href={ROUTES.ACCOUNT.EDIT_ADDRESS} className="font-medium text-theme-primary hover:underline dark:text-red-400">
+          <Link href={ROUTES.ACCOUNT.EDIT_ADDRESS} className="font-medium text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
             shipping and billing addresses
           </Link>
           , and{' '}
           <Link
             href={ROUTES.ACCOUNT.EDIT_ACCOUNT}
-            className="font-medium text-theme-primary hover:underline dark:text-red-400"
+            className="font-medium text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400"
           >
             edit your password and account details
           </Link>

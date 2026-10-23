@@ -165,7 +165,7 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
             </div>
             {isGenericLocation && (
               <p className="text-xs text-theme-muted -mt-1">
-                Call <a href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`} className="text-theme-primary hover:underline">{CONTACT_NUMBER}</a> to check availability near you.
+                Call <a href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`} className="text-theme-primary underline underline-offset-2 hover:decoration-2">{CONTACT_NUMBER}</a> to check availability near you.
               </p>
             )}
           </div>

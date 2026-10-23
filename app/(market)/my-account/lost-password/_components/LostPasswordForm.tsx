@@ -96,7 +96,7 @@ export function LostPasswordForm() {
             {isSubmitting ? 'Sending…' : 'Reset Password'}
           </button>
 
-          <Link href={ROUTES.ACCOUNT.ROOT} className="text-sm font-semibold text-theme-primary hover:underline dark:text-red-400">
+          <Link href={ROUTES.ACCOUNT.ROOT} className="text-sm font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
             Back to login
           </Link>
         </div>

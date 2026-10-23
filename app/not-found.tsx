@@ -29,7 +29,7 @@ export default function NotFound() {
       </PlpLink>
       <Link
         href={ROUTES.HOME}
-        className="mt-3 text-sm font-semibold text-theme-primary hover:underline dark:text-red-400"
+        className="mt-3 text-sm font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400"
       >
         Back to Home
       </Link>

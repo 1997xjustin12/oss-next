@@ -35,7 +35,7 @@ function Card({ item, price }: { item: FeaturedContainer; price: number | null }
           <div className="min-h-7 text-lg sm:text-[18px] font-bold dark:text-white">
             {price !== null && `Starts at ${formatMoney(price)}`}
           </div>
-          <div className="text-xs text-[#04B761] font-bold">
+          <div className="text-xs text-green-700 font-bold">
             Buy &middot; Rent &middot; Rent-To-Own
           </div>
         </div>

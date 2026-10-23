@@ -96,7 +96,7 @@ export function MobileTrustSection({ rentFrom, rtoFrom }: Props) {
           <Phone className="h-5 w-5" aria-hidden />
         </span>
         <span className="block text-[15px] font-bold leading-snug">
-          Need Delivery? <span className="text-[#FFC94A]">CALL NOW</span> for
+          Need Delivery? <span className="text-[#FFDC80]">CALL NOW</span> for
           Instant All-In Price
         </span>
         <span className="mt-1 block text-[22px] font-extrabold underline underline-offset-4">

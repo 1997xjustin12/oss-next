@@ -101,7 +101,7 @@ export function CartLocationConflictModal({
 
           <p className="mt-auto pt-6 text-sm text-theme-mid dark:text-gray-300">
             Call Us for more details.{' '}
-            <a href={CONTACT_TEL} className="text-theme-primary hover:underline">
+            <a href={CONTACT_TEL} className="text-theme-primary underline underline-offset-2 hover:decoration-2">
               {CONTACT_NUMBER}
             </a>
           </p>

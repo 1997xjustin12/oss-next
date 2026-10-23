@@ -159,7 +159,7 @@ export function LoginForm({ showTitle = true, className = '' }: Props) {
         </div>
 
         <div>
-          <Link href={ROUTES.ACCOUNT.LOST_PASSWORD} className="text-sm font-semibold text-theme-primary hover:underline dark:text-red-400">
+          <Link href={ROUTES.ACCOUNT.LOST_PASSWORD} className="text-sm font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
             Lost your password?
           </Link>
         </div>

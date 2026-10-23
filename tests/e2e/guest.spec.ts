@@ -218,7 +218,7 @@ test.describe('guest', () => {
     await test.step('accessories listing → an accessory', async () => {
       await page.goto('/sale-shipping-containers?ptype=accessories')
       await expectNoErrorScreen(page)
-      await page.locator('h3').first().click()
+      await page.locator('li.ais-Hits-item h2').first().click()
       await expect(page).toHaveURL(/\/product\//)
       await expectNoErrorScreen(page)
     })

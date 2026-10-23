@@ -147,7 +147,8 @@ export async function openListingFromHome(page: Page) {
 
 /** Click the first container card on the listing through to its product page. */
 export async function openFirstContainer(page: Page) {
-  const card = page.locator('h3').filter({ hasText: /container/i }).first()
+  // Result tiles only: the footer has an h2 that also says "Containers".
+  const card = page.locator('li.ais-Hits-item h2').filter({ hasText: /container/i }).first()
   await expect(card).toBeVisible()
   await card.click()
   await expect(page).toHaveURL(/\/product\//)

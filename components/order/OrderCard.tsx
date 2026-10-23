@@ -102,7 +102,7 @@ export function OrderCard({ order, isDemo = false, itemActions, collapsible = fa
                       href={trackingUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-semibold text-theme-primary hover:underline dark:text-red-400"
+                      className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400"
                     >
                       {order.tracking_number}
                     </a>

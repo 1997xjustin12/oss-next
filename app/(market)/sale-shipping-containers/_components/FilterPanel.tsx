@@ -97,12 +97,16 @@ export function ShippingContainerFilters() {
                   key={option.label}
                   href={buildFilterHref(searchParams, group.property, option.value)}
                   scroll={false}
+                  aria-current={isSelected ? "true" : undefined}
                   className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 dark:text-gray-300 transition-colors hover:bg-theme-subtle dark:hover:bg-neutral-800"
                 >
                   <input
                     type="checkbox"
                     checked={isSelected}
                     readOnly
+                    // A picture of the state; the link carries it (aria-current).
+                    aria-hidden
+                    tabIndex={-1}
                     className="h-4 w-4 accent-red-600 pointer-events-none"
                   />
                   {option.label}
@@ -156,12 +160,15 @@ export function FilterPanel({ zipcode, location, ptype = "buy" }: Props) {
                 key={f.label}
                 href={buildFilterHref(searchParams, "ptype", f.param)}
                 scroll={false}
+                aria-current={activePtype === f.param ? "true" : undefined}
                 className="flex items-center gap-2.5 rounded-md px-1 py-1.5 text-sm text-theme-dark-2 dark:text-gray-300 transition-colors hover:bg-theme-subtle dark:hover:bg-neutral-800"
               >
                 <input
                   type="checkbox"
                   checked={activePtype === f.param}
                   readOnly
+                  aria-hidden
+                  tabIndex={-1}
                   className="h-4 w-4 accent-red-600 pointer-events-none"
                 />
                 {f.label}

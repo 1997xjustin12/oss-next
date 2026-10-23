@@ -76,7 +76,7 @@ export function WhyUs() {
         <div className="flex flex-col gap-[13px]">
           <div className="bg-theme-primary rounded-[10px] p-[34px] text-white text-center">
             <span className="text-[68px] font-black leading-none block">22+</span>
-            <p className="text-[14.5px] text-white/[.78] mt-2">
+            <p className="text-[14.5px] text-white/90 mt-2">
               Years serving businesses and homeowners across North America with
               steel-strong storage solutions
             </p>

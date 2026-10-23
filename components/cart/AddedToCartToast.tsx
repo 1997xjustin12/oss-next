@@ -113,7 +113,7 @@ export function AddedToCartToast({
                 }
                 onClose()
               }}
-              className="text-xs font-semibold text-theme-muted underline-offset-2 hover:text-theme-primary hover:underline"
+              className="text-xs font-semibold text-theme-muted underline-offset-2 hover:text-theme-primary underline underline-offset-2 hover:decoration-2"
             >
               Checkout
             </Link>

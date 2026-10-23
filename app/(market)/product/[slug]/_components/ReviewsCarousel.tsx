@@ -69,7 +69,7 @@ function ReviewCard({ review, colorIndex }: { review: Review; colorIndex: number
           <button
             type="button"
             onClick={() => setExpanded((e) => !e)}
-            className="self-start text-xs font-semibold text-theme-primary hover:underline"
+            className="self-start text-xs font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2"
           >
             {expanded ? 'Hide' : 'Read More'}
           </button>
@@ -236,15 +236,21 @@ export function ReviewsCarousel({ productId }: Props) {
           )}
 
           {maxIndex > 0 && (
-            <div className="flex justify-center gap-2 mt-6">
+            // Each dot sits in a 24px button: the touch-target minimum (WCAG 2.5.8).
+            <div className="flex justify-center mt-6">
               {Array.from({ length: maxIndex + 1 }, (_, i) => (
                 <button
                   key={`review-carousel-dot-${i}`}
                   type="button"
                   onClick={() => goTo(i)}
                   aria-label={`Go to review set ${i + 1}`}
-                  className={`w-2 h-2 rounded-full transition-colors ${i === clampedCurrent ? 'bg-theme-primary' : 'bg-theme-border'}`}
-                />
+                  className="flex h-6 w-6 items-center justify-center"
+                >
+                  <span
+                    aria-hidden
+                    className={`w-2 h-2 rounded-full transition-colors ${i === clampedCurrent ? 'bg-theme-primary' : 'bg-theme-border'}`}
+                  />
+                </button>
               ))}
             </div>
           )}

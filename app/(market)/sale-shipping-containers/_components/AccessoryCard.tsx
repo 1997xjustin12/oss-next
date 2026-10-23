@@ -10,8 +10,8 @@ type Props = { product: Accessory }
 
 const BADGE_CLASSES = {
   red:   'bg-theme-primary',
-  amber: 'bg-amber-600',
-  green: 'bg-green-600',
+  amber: 'bg-amber-700',
+  green: 'bg-green-700',
 } satisfies Record<Accessory['badge']['tone'], string>
 
 export function AccessoryCard({ product }: Props) {
@@ -42,9 +42,9 @@ export function AccessoryCard({ product }: Props) {
 
       {/* Info */}
       <div className="flex flex-col gap-1.5 p-3 flex-1">
-        <h3 className="text-sm font-bold leading-snug text-theme-dark dark:text-gray-100 line-clamp-2">
+        <h2 className="text-sm font-bold leading-snug text-theme-dark dark:text-gray-100 line-clamp-2">
           <TileLink href={href} rounded="xl">{product.title}</TileLink>
-        </h3>
+        </h2>
 
         {product.rating > 0 && (
           <div className="flex items-center gap-1 text-xs text-theme-muted dark:text-gray-500">

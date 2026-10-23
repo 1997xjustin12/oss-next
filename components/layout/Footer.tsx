@@ -104,7 +104,7 @@ export async function Footer() {
               height={40}
             />
           </Link>
-          <p className="text-[13px] text-[#666] leading-[1.65] mb-[15px]">
+          <p className="text-[13px] text-[#8a8a8a] leading-[1.65] mb-[15px]">
             America&apos;s leading shipping container wholesaler since 2002. New
             and used containers for sale, rent, and lease-to-own across the
             United States and Canada.
@@ -174,7 +174,7 @@ export async function Footer() {
               <PlpLink
                 key={`container-link-${index}-${href}`}
                 href={href}
-                className="block text-[13px] text-[#666] mb-2 transition-colors hover:text-white"
+                className="block text-[13px] text-[#8a8a8a] mb-2 transition-colors hover:text-white"
               >
                 {label}
               </PlpLink>
@@ -191,7 +191,7 @@ export async function Footer() {
               <Link
                 key={`resources-link-${index}-${href}`}
                 href={href}
-                className="block text-[13px] text-[#666] mb-2 transition-colors hover:text-white"
+                className="block text-[13px] text-[#8a8a8a] mb-2 transition-colors hover:text-white"
               >
                 {label}
               </Link>
@@ -208,7 +208,7 @@ export async function Footer() {
               <Link
                 key={`company-link-${index}-${href}`}
                 href={href}
-                className="block text-[13px] text-[#666] mb-2 transition-colors hover:text-white"
+                className="block text-[13px] text-[#8a8a8a] mb-2 transition-colors hover:text-white"
               >
                 {label}
               </Link>
@@ -225,7 +225,7 @@ export async function Footer() {
               <Link
                 key={`policy-link-${index}-${href}`}
                 href={href}
-                className="block text-[13px] text-[#666] mb-2 transition-colors hover:text-white"
+                className="block text-[13px] text-[#8a8a8a] mb-2 transition-colors hover:text-white"
               >
                 {label}
               </Link>
@@ -236,25 +236,25 @@ export async function Footer() {
       
 
       <div className="border-t border-[#1f1f1f] pt-5 flex justify-between items-center flex-wrap gap-3">
-        <p className="text-xs text-[#444]">
+        <p className="text-xs text-[#8a8a8a]">
           © {currentYear} On-Site Storage Solutions, Inc. | All Rights Reserved ·{" "}
           <Link
             href="/privacy-policy"
-            className="text-[#555] transition-colors hover:text-[#888]"
+            className="text-[#a3a3a3] underline underline-offset-2 transition-colors hover:text-white"
           >
             Privacy Policy
           </Link>{" "}
           ·{" "}
           <Link
             href="/terms-and-conditions"
-            className="text-[#555] transition-colors hover:text-[#888]"
+            className="text-[#a3a3a3] underline underline-offset-2 transition-colors hover:text-white"
           >
             Terms of Use
           </Link>{" "}
           ·{" "}
           <Link
             href={ROUTES.SITEMAP}
-            className="text-[#555] transition-colors hover:text-[#888]"
+            className="text-[#a3a3a3] underline underline-offset-2 transition-colors hover:text-white"
           >
             Sitemap
           </Link>
@@ -269,7 +269,7 @@ export async function Footer() {
           ].map((cert) => (
             <span
               key={cert}
-              className="bg-white/[.04] border border-white/[.07] text-[#555] text-[11px] px-[9px] py-1 rounded-[2px] font-semibold"
+              className="bg-white/[.04] border border-white/[.07] text-[#8a8a8a] text-[11px] px-[9px] py-1 rounded-[2px] font-semibold"
             >
               {cert}
             </span>

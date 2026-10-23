@@ -112,7 +112,7 @@ async function ArticleContent({ params }: Props) {
       <JsonLd data={jsonLd} />
 
       <nav aria-label="Breadcrumb" className="mb-6 text-sm">
-        <Link href={ROUTES.BLOGS} className="font-semibold text-theme-primary hover:underline dark:text-red-400">
+        <Link href={ROUTES.BLOGS} className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">
           ← Back to Blog
         </Link>
       </nav>

@@ -81,20 +81,26 @@ export function CardCarousel({
       {/* Only on a phone, where the track scrolls. From sm up every card is
           already on screen and dots would point at nothing. */}
       {count > 1 && (
-        <div className="flex justify-center gap-2 sm:hidden">
+        <div className="flex justify-center sm:hidden">
           {Array.from({ length: count }, (_, i) => (
+            // Each dot sits in a 24px button: the touch-target minimum (WCAG 2.5.8).
             <button
               key={i}
               type="button"
               onClick={() => goTo(i)}
               aria-label={`Show item ${i + 1} of ${count}`}
               aria-current={i === active}
-              className={`h-2 rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2 ${
-                i === active
-                  ? "w-5 bg-theme-primary"
-                  : "w-2 bg-theme-border hover:bg-theme-muted"
-              }`}
-            />
+              className="group/dot flex h-6 min-w-6 items-center justify-center rounded-full px-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary focus-visible:ring-offset-2"
+            >
+              <span
+                aria-hidden
+                className={`h-2 rounded-full transition-all ${
+                  i === active
+                    ? "w-5 bg-theme-primary"
+                    : "w-2 bg-theme-border group-hover/dot:bg-theme-muted"
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}

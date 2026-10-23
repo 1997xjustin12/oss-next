@@ -180,7 +180,7 @@ async function SaleContainersContent({ searchParams }: Props) {
       <nav aria-label="Breadcrumb" className="px-[5%] pt-4 pb-1">
         <ol className="flex items-center gap-1 text-xs text-theme-muted">
           <li>
-            <Link href={ROUTES.HOME} className="font-semibold text-theme-primary hover:underline">Home</Link>
+            <Link href={ROUTES.HOME} className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2">Home</Link>
           </li>
           <li aria-hidden>/</li>
           <li className="dark:text-gray-400">

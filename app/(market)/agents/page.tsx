@@ -45,7 +45,7 @@ export default async function AgentPolicyPage() {
       <JsonLd data={jsonLd} />
 
       <nav aria-label="Breadcrumb" className="mb-6 text-xs text-theme-muted">
-        <Link href={ROUTES.HOME} className="font-semibold text-theme-primary hover:underline">Home</Link>
+        <Link href={ROUTES.HOME} className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2">Home</Link>
         <span aria-hidden> / </span>
         <span>AI Agent Policy</span>
       </nav>
@@ -185,7 +185,7 @@ export default async function AgentPolicyPage() {
         <h2 className={H2}>Contact</h2>
         <p className={P}>
           For a higher rate limit, a bulk export, or anything this page does not cover, email{' '}
-          <a href={`mailto:${SITE.email}`} className="font-semibold text-theme-primary hover:underline">
+          <a href={`mailto:${SITE.email}`} className="font-semibold text-theme-primary underline underline-offset-2 hover:decoration-2">
             {SITE.email}
           </a>{' '}
           or call {SITE.telephoneDisplay}. Say what you are building and roughly what volume you

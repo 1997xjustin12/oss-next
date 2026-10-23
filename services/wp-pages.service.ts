@@ -218,6 +218,44 @@ function demoteExtraH1s($: ReturnType<typeof load>): void {
 }
 
 /**
+ * Accessibility repairs the converted WordPress markup needs.
+ *
+ * - **Form fields named by hidden labels.** The embedded Zoho lead form has a
+ *   real `<label for>` on every field, but the theme CSS hides them (the form
+ *   uses placeholders visually), so assistive tech gets fields with no name.
+ *   Each field without a name of its own gets its label's text as
+ *   `aria-label`. A control wrapped in an empty label (Zoho's privacy
+ *   checkbox) takes the text of the row it sits in instead.
+ * - **`role="heading"` with no level.** The converted cards mark prices
+ *   (`<strong role="heading">$1,350</strong>`) as headings without the
+ *   required `aria-level`. A price is not a heading, so the role goes; the
+ *   element and its styling stay.
+ */
+function repairAccessibility($: ReturnType<typeof load>): void {
+  const textOf = (el: Parameters<typeof $>[0]) =>
+    $(el).text().replace(/\s+/g, ' ').replace(/\s*\*\s*/g, ' ').trim().slice(0, 140)
+  const named = (el: Parameters<typeof $>[0]) => Boolean($(el).attr('aria-label') || $(el).attr('aria-labelledby'))
+
+  $('label[for]').each((_, label) => {
+    const id = $(label).attr('for')
+    if (!id) return
+    const control = $(`[id="${id.replace(/"/g, '\\"')}"]`).first()
+    if (!control.length || !control.is('input, select, textarea') || named(control[0])) return
+    const text = textOf(label)
+    if (text) control.attr('aria-label', text)
+  })
+
+  $('label:not([for]) input, label:not([for]) select, label:not([for]) textarea').each((_, control) => {
+    if (named(control) || textOf($(control).closest('label')[0])) return
+    const row = $(control).parents().filter((_, p) => textOf(p).length > 0).first()
+    const text = row.length ? textOf(row[0]) : ''
+    $(control).attr('aria-label', text || 'Consent')
+  })
+
+  $('[role="heading"]:not([aria-level])').removeAttr('role')
+}
+
+/**
  * Prioritise the first two images and lazy-load the rest, leaving any tag that
  * already declares its own loading/fetchpriority untouched.
  */
@@ -407,6 +445,7 @@ export async function fetchWpPage(segments: string[]): Promise<WpPage | null> {
   $('script').remove()
 
   demoteExtraH1s($)
+  repairAccessibility($)
   optimiseImages($)
 
   // Converted pages are content-only — the conversion drops the WordPress

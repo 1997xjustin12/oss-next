@@ -38,7 +38,7 @@ export function StatesSection({
       aria-labelledby="states-title"
     >
       <div className="max-w-[1280px] mx-auto">
-        <p className="text-[11.5px] font-bold text-theme-primary uppercase tracking-[.1em] mb-2">
+        <p className="text-[11.5px] font-bold text-red-400 uppercase tracking-[.1em] mb-2">
           Coverage
         </p>
         <h2
