@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { saveVisitorZip } from '@/lib/visitorZip'
-import { getNearestLocation } from '@/lib/locations'
+import { getNearestLocation } from '@/lib/nearestDepot'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { ROUTES } from '@/config/routes'

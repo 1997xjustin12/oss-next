@@ -45,6 +45,9 @@ function ReviewCard({ review }: { review: Review }) {
               alt={`${review.name} profile picture`}
               width={40}
               height={40}
+              // Google already serves these at 40px (about 1.4 KB); sending them
+              // through the optimizer only added transformations and cache writes.
+              unoptimized
               className="rounded-full"
             />
             <div>

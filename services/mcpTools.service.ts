@@ -2,7 +2,7 @@ import { cachedEsSearch, getProductByHandle, getShippingContainersByLocation, DE
 import { getPageMarkdown } from '@/services/pageMarkdown.service'
 import { toAgentProduct, toAgentProductDetail } from '@/lib/agentProduct'
 import { findEquivalentContainer, isContainerHit } from '@/lib/pricing'
-import { findNearestLocation } from '@/lib/locations'
+import { findNearestLocation } from '@/lib/nearestDepot'
 import { lookupZipGeo } from '@/lib/zippopotam'
 import { SITE, absoluteUrl } from '@/config/site'
 import { argInt, argString, toolError, toolResult, type McpTool } from '@/lib/mcp'

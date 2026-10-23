@@ -3,7 +3,7 @@ import { agentError, agentJson, checkRateLimit, rateLimitHeaders } from '@/lib/a
 import { deliverQuoteRequest, type QuoteRequest } from '@/services/quote.service'
 import { getProductByHandle } from '@/services/search.service'
 import { lookupZipGeo } from '@/lib/zippopotam'
-import { findNearestLocation } from '@/lib/locations'
+import { findNearestLocation } from '@/lib/nearestDepot'
 import { SITE } from '@/config/site'
 
 /**

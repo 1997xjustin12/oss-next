@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Navigation, Loader2, MapPin } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
-import { getNearestLocation } from '@/lib/locations'
+import { getNearestLocation } from '@/lib/nearestDepot'
 
 type Props = {
   initialZip?: string

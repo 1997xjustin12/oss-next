@@ -1,6 +1,6 @@
 import { getProductByHandle, getShippingContainersByLocation } from '@/services/search.service'
 import { findEquivalentContainer, isContainerHit } from '@/lib/pricing'
-import { findNearestLocation } from '@/lib/locations'
+import { findNearestLocation } from '@/lib/nearestDepot'
 import { lookupZipGeo } from '@/lib/zippopotam'
 import { agentError, agentJson, withRateLimit } from '@/lib/agentApi'
 import { toAgentProduct } from '@/lib/agentProduct'

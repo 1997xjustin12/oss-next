@@ -5,7 +5,7 @@ import { saveVisitorZip } from '@/lib/visitorZip'
 import { useCart } from '@/hooks/useCart'
 import { findLocationConflict } from '@/lib/cart'
 import { usePathname } from 'next/navigation'
-import { getNearestLocation } from '@/lib/locations'
+import { getNearestLocation } from '@/lib/nearestDepot'
 import { ROUTES } from '@/config/routes'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'

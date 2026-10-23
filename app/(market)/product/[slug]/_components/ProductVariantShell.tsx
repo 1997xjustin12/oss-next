@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { ChevronRight } from "lucide-react";
@@ -10,8 +11,6 @@ import {
 } from "@/lib/pricing";
 import type { ProductHit } from "@/types/product";
 import { ProductImageGallery } from "@/components/product/ProductImageGallery";
-import { ProductInfoPanel } from "./ProductInfoPanel";
-import { ProductInfoPanelV2 } from "./ProductInfoPanelV2";
 import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { BASE_URL } from "@/lib/helpers";
 import { ROUTES } from "@/config/routes";
@@ -22,6 +21,12 @@ import { getContainerVideo } from "@/lib/containerVideo";
 import { getContainerImages } from "@/lib/containerImages";
 import { YouTubeEmbed } from "@/components/product/YouTubeEmbed";
 import { InfoCard } from "@/components/ui/InfoCard";
+
+// Only one panel renders per page (an admin switch picks which), so each gets
+// its own chunk and the other is never downloaded. Still server-rendered:
+// next/dynamic keeps SSR on by default.
+const ProductInfoPanel = dynamic(() => import("./ProductInfoPanel").then((m) => m.ProductInfoPanel));
+const ProductInfoPanelV2 = dynamic(() => import("./ProductInfoPanelV2").then((m) => m.ProductInfoPanelV2));
 
 const base = BASE_URL.replace(/\/$/, "");
 

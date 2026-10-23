@@ -83,6 +83,8 @@ export function TrustedBySection({
                 alt={logo.alt}
                 width={120}
                 height={80}
+                // Already 150x150 on the CDN: the optimizer had nothing to gain.
+                unoptimized
                 className="object-contain grayscale hover:grayscale-0 dark:grayscale-0 transition-[filter] duration-300"
               />
             </div>

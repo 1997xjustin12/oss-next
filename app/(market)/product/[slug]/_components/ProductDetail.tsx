@@ -6,7 +6,7 @@ import { findEquivalentContainer, isContainerHit, isGenericDisplayHit, lowestPri
 import { resolveContainerVariant } from "@/lib/containerVariant";
 import { ROUTES } from "@/config/routes";
 import { notifyVisitorZipChange, readVisitorZip } from "@/lib/visitorZip";
-import { getNearestLocation } from "@/lib/locations";
+import { getNearestLocation } from "@/lib/nearestDepot";
 import type { ProductHit } from "@/types/product";
 import { ProductVariantShell } from "./ProductVariantShell";
 import { MobileTrustSection } from "./MobileTrustSection";

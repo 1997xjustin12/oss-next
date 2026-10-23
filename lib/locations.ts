@@ -3,70 +3,8 @@ import { SITE } from '@/config/site'
 import type { Location, LocationCustom, OpenHours } from '@/types/location'
 import type { LocalBusinessInput } from '@/lib/schema'
 
-/** Haversine distance between two lat/lon points in kilometres */
-function haversineKm(
-  lat1: number, lon1: number,
-  lat2: number, lon2: number,
-): number {
-  const R = 6371
-  const dLat = ((lat2 - lat1) * Math.PI) / 180
-  const dLon = ((lon2 - lon1) * Math.PI) / 180
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLon / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-/**
- * Nearest active location to a point, with the distance.
- *
- * `getNearestLocation` below returns only the title, which is all the existing
- * client flow needs. The agent availability endpoint has to tell a caller *how
- * far away* the depot is — "we deliver there" is a different answer at 40km and
- * at 900km — so this returns both.
- */
-export function findNearestLocation(
-  lat: number,
-  lon: number,
-): { title: string; distanceKm: number } | null {
-  let nearest: { title: string; distanceKm: number } | null = null
-
-  for (const loc of LOCATIONS) {
-    if (loc.is_disabled !== '0') continue
-    const latitude = Number(loc.lat)
-    const longitude = Number(loc.lng)
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) continue
-
-    const distanceKm = haversineKm(lat, lon, latitude, longitude)
-    if (!nearest || distanceKm < nearest.distanceKm) {
-      nearest = { title: loc.title, distanceKm }
-    }
-  }
-
-  return nearest
-}
-
-/**
- * Returns the `title` of the nearest active location to the given coordinates,
- * or `null` if LOCATIONS is empty.
- */
-export function getNearestLocation(lat: number, lon: number): string | null {
-  let nearest: string | null = null
-  let minDist = Infinity
-
-  for (const loc of LOCATIONS) {
-    if (loc.is_disabled !== '0') continue
-    const dist = haversineKm(lat, lon, Number(loc.lat), Number(loc.lng))
-    if (dist < minDist) {
-      minDist = dist
-      nearest = loc.title
-    }
-  }
-
-  return nearest
-}
+// The nearest-depot helpers live in lib/nearestDepot.ts, which reads a small
+// generated coordinate table and is safe for client bundles.
 
 // ─── Depot pages → LocalBusiness ─────────────────────────────────────────────
 

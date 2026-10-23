@@ -10,8 +10,8 @@
     "audit:agentic": "node scripts/audit-agentic.mjs",
     "resources:manifest": "node scripts/generate-pdp-resources.mjs",
     "resources:check": "node --experimental-strip-types scripts/check-pdp-resources.mjs",
-    "predev": "node scripts/generate-pdp-resources.mjs",
-    "prebuild": "node scripts/generate-pdp-resources.mjs",
+    "predev": "node scripts/generate-pdp-resources.mjs && node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/generate-depot-coordinates.mjs",
+    "prebuild": "node scripts/generate-pdp-resources.mjs && node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning scripts/generate-depot-coordinates.mjs",
     "prepare": "node -e \"try{require('child_process').execSync('git config core.hooksPath .githooks',{stdio:'ignore'})}catch{}\"",
     "test:e2e": "playwright test"
   },

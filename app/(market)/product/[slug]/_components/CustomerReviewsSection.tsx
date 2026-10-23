@@ -116,6 +116,8 @@ function ReviewCard({ review }: { review: Review }) {
               alt=""
               width={36}
               height={36}
+              // Google serves these at 40px already; see ReviewsSection.
+              unoptimized
               className="h-9 w-9 shrink-0 rounded-full object-cover"
             />
             <div className="min-w-0">

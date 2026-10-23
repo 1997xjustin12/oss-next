@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
 
   images: {
+    // Optimized copies are kept for 31 days instead of the 4-hour default, so
+    // each image is transformed (and billed) far less often. There is no purge:
+    // a remote file replaced under the same URL keeps its old optimized copy
+    // until this expires, so give a replaced file a new name.
+    minimumCacheTTL: 2678400,
     remotePatterns: [
       { protocol: 'https', hostname: 'onsite-cdn.sfo3.cdn.digitaloceanspaces.com' },
       { protocol: 'https', hostname: 'bbq-spaces.sfo3.cdn.digitaloceanspaces.com' },

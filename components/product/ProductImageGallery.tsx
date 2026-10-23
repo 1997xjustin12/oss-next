@@ -65,9 +65,8 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
   const total = slides.length
   const current = slides[active]
   const isVideo = current?.kind === 'video'
-  const videoRef = useRef<HTMLVideoElement>(null)
   /**
-   * Honoured, because this plays on its own and never stops.
+   * Honoured in the lightbox player, which plays on its own and never stops.
    *
    * An autoplaying loop with no controls is the exact thing "reduce motion"
    * asks us not to do, and WCAG 2.2.2 wants anything moving for more than five
@@ -76,113 +75,6 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
    * play it.
    */
   const reduceMotion = useSyncExternalStore(subscribeToReducedMotion, getReducedMotion, () => false)
-
-  /**
-   * Nothing is fetched on page load, and the first frames are ready by the
-   * time anyone presses play.
-   *
-   * These files are around 5MB and the gallery is the first thing on the page,
-   * so `preload` starts at `none`: the poster is a still we already serve, and
-   * a visitor who never plays the video never pays for it. Once the browser is
-   * idle — after first paint, never during it — the element is upgraded to
-   * `metadata`, which fetches the header rather than the film. Pressing play
-   * then starts from something already in hand instead of from nothing.
-   *
-   * Re-runs on `src`, so changing container variant warms the new video the
-   * same way. Switching back is instant: the file is still in the HTTP cache,
-   * which next.config.ts keeps for a year.
-   *
-   * Guarded on `readyState` and `paused` because `load()` restarts an element
-   * — warming a video someone is already watching would drop them to the
-   * beginning.
-   */
-  useEffect(() => {
-    if (!isVideo) return
-    const el = videoRef.current
-    if (!el) return
-
-    const abort = new AbortController()
-    let cancelled = false
-
-    const warm = () => {
-      if (cancelled || !videoRef.current) return
-      const node = videoRef.current
-      // Already loading, or already playing — nothing to warm, and touching it
-      // would only interfere.
-      if (node.readyState !== 0 || !node.paused) return
-
-      // A bounded range request rather than `preload="metadata"`.
-      //
-      // Measured on a throttled 4G profile: `preload="metadata"` plus `load()`
-      // does not stop at the metadata — Chrome ran the request to completion
-      // and pulled all 5.06MB of it. That is most of a video nobody has asked
-      // to watch. This asks for the first 512KB and no more, which covers the
-      // `moov` header of a faststart file and some leading media, so pressing
-      // play starts from the HTTP cache while the rest streams in behind it.
-      //
-      // Same-origin and cacheable for a year (see next.config.ts), so the
-      // element picks this up rather than starting again.
-      void fetch(node.currentSrc || node.src, {
-        headers: { Range: 'bytes=0-524287' },
-        signal: abort.signal,
-        // Never at the expense of anything the visitor is actually waiting on.
-        priority: 'low',
-      } as RequestInit).catch(() => {
-        // An aborted or failed warm costs nothing — play still works, it just
-        // starts from cold.
-      })
-    }
-
-    // Safari only shipped requestIdleCallback in 16.4, so the timeout is a
-    // real path rather than a formality.
-    const canIdle = typeof window.requestIdleCallback === 'function'
-    const handle = canIdle
-      ? window.requestIdleCallback(warm, { timeout: 2500 })
-      : window.setTimeout(warm, 1200)
-
-    return () => {
-      cancelled = true
-      abort.abort()
-      if (canIdle) window.cancelIdleCallback(handle)
-      else window.clearTimeout(handle)
-    }
-  }, [isVideo, current?.src])
-
-  /**
-   * Plays while it is on screen, pauses when it is not.
-   *
-   * The gallery sits at the top of a long page, so without this the video
-   * carries on decoding and buffering while someone reads the specifications
-   * two screens below — spending battery and bandwidth on a picture nobody can
-   * see. Pausing also stops the browser buffering further, which is most of the
-   * saving.
-   */
-  useEffect(() => {
-    if (!isVideo || reduceMotion) return
-    const el = videoRef.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          // Read live rather than trusting the render-time value. During
-          // hydration `useSyncExternalStore` has to return the server's answer
-          // — false — so for one commit this effect can run believing motion is
-          // allowed, and start a 5MB fetch for a visitor who asked for neither.
-          if (window.matchMedia(REDUCED_MOTION).matches) return
-          // Rejects when the browser declines to autoplay. Muted autoplay is
-          // allowed everywhere this storefront supports, but a rejected promise
-          // is still an unhandled rejection if nobody catches it.
-          void el.play().catch(() => {})
-        } else {
-          el.pause()
-        }
-      },
-      { threshold: 0.25 },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [isVideo, reduceMotion, current?.src])
 
   const prev = useCallback(() => {
     setActive(i => (i - 1 + total) % total)
@@ -248,55 +140,41 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
           className="relative aspect-4/3 rounded-xl overflow-hidden border-2 border-theme-border bg-theme-subtle group cursor-zoom-in hover:border-theme-primary transition-colors"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
-          // With no control bar of its own, the video is a preview that opens
-          // the real player — the same gesture as every image beside it. Under
-          // reduced motion it keeps its controls, so the click belongs to it.
-          onClick={isVideo && reduceMotion ? undefined : () => setLightbox(true)}
-          role={isVideo && reduceMotion ? undefined : 'button'}
-          aria-label={
-            isVideo && reduceMotion
-              ? undefined
-              : isVideo
-                ? 'Open video fullscreen'
-                : 'Open image fullscreen'
-          }
-          tabIndex={isVideo && reduceMotion ? undefined : 0}
-          onKeyDown={
-            isVideo && reduceMotion ? undefined : (e) => e.key === 'Enter' && setLightbox(true)
-          }
+          // The video slide is a poster with a play button; the lightbox has the
+          // real player. Same gesture as every image beside it.
+          onClick={() => setLightbox(true)}
+          role="button"
+          aria-label={isVideo ? 'Play video' : 'Open image fullscreen'}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && setLightbox(true)}
         >
           {current?.kind === 'video' ? (
-            <video
-              ref={videoRef}
-              key={current.src}
-              src={current.src}
-              poster={current.poster || undefined}
-              // Silent, looping, no control bar: a moving photograph rather
-              // than something to operate. The lightbox has the real player.
-              //
-              // `muted` is not a preference — no browser autoplays a video with
-              // sound, so without it this simply would not start.
-              loop
-              muted
-              playsInline
-              disablePictureInPicture
-              // Under reduced motion it does not start itself, so it needs the
-              // controls back to be playable at all.
-              controls={reduceMotion}
-              // And when they do appear, without the overflow menu behind them
-              // — download, playback rate and casting are not what this is for.
-              controlsList="nodownload noplaybackrate noremoteplayback"
-              // Deliberately no `autoPlay` attribute. During hydration
-              // `reduceMotion` has to be the server's answer — false — so the
-              // attribute rendered as true for one commit, and Chrome began
-              // fetching all 5MB before React could correct it. Measured: a
-              // visitor who asked for reduced motion downloaded the whole video
-              // and never played it. The in-view observer starts playback
-              // instead, where the preference can be read live.
-              preload="none"
-              aria-label={current.label}
-              className="absolute inset-0 h-full w-full bg-black object-cover"
-            />
+            // Click to play. The walkaround used to autoplay here, after a 512 KB
+            // warm-up fetched on idle: every product view paid for a 2-4 MB video
+            // most visitors never meant to watch, and its raw 150-250 KB poster
+            // (not an optimized image) was likely the page's LCP element.
+            <>
+              {current.poster ? (
+                <Image
+                  src={current.poster}
+                  alt=""
+                  fill
+                  className="bg-black object-cover"
+                  priority={active === 0}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-black" />
+              )}
+              <span
+                aria-hidden
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/60 text-white shadow-lg transition-transform group-hover:scale-110">
+                  <Play className="h-7 w-7 translate-x-0.5" fill="currentColor" />
+                </span>
+              </span>
+            </>
           ) : current ? (
             <Image
               src={current.src}
@@ -484,11 +362,11 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
                 muted
                 playsInline
                 disablePictureInPicture
-                // Unlike the inline player this is only mounted once someone
-                // has clicked (see the `lightbox &&` guard above), so it never
-                // renders during hydration and `reduceMotion` is the real
-                // answer by the time this is evaluated. The inline player
-                // cannot do this — see its own note.
+                // Only mounted once someone has clicked (see the `lightbox &&`
+                // guard above), so it never renders during hydration and
+                // `reduceMotion` is the real answer by the time this is
+                // evaluated. This is the only player: the gallery frame shows a
+                // poster and a play button.
                 autoPlay={!reduceMotion}
                 controls={reduceMotion}
                 // Keeps the overflow menu off the controls that reduced-motion
