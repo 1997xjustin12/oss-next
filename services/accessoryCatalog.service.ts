@@ -1,20 +1,38 @@
-import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS } from '@/config/cache'
-import { ACCESSORY_CATALOG_DEMO } from '@/lib/data/accessoryCatalogDemo'
-import type { AccessoryListing } from '@/types/accessoryCatalog'
+import { cachedEsSearch, DEFAULT_LOCATION } from '@/services/search.service'
+import { ACCESSORY_HITS_PER_PAGE } from '@/lib/accessoryCatalog'
+import type { ProductHit } from '@/types/product'
 
 /**
- * Every product shown on /shipping-container-accessory-products.
+ * The accessories page's first page of products, server-side.
  *
- * Returns the placeholder catalogue for now. When the real accessories are
- * wired in (the Elasticsearch accessory products), only this function changes:
- * map them to `AccessoryListing` here, keep the cache directive, and on a
- * failed read cache briefly with OUTAGE_CACHE_LIFE rather than as "no products"
- * (see services/search.service.ts).
+ * The visible grid is InstantSearch in the browser; this gives the server HTML
+ * the same products for the ItemList structured data and the no-JavaScript
+ * list, so crawlers see the catalogue without running the search. Cached by
+ * cachedEsSearch ('minutes'). A failed search yields an empty list: the page
+ * still renders, and the browser search shows its own notice.
  */
-export async function getAccessoryCatalog(): Promise<AccessoryListing[]> {
-  'use cache'
-  cacheLife('hours')
-  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
-  return ACCESSORY_CATALOG_DEMO
+export async function getAccessoryHighlights(): Promise<ProductHit[]> {
+  try {
+    const { hits } = await cachedEsSearch({
+      query: '',
+      hitsPerPage: ACCESSORY_HITS_PER_PAGE,
+      page: 0,
+      facets: [],
+      facetFilters: [],
+      productType: 'accessories',
+      locationFilter: DEFAULT_LOCATION,
+      sortParam: 'default',
+      accessoryCategory: undefined,
+      sizeFilter: [],
+      conditionFilter: [],
+      gradeFilter: [],
+      heightFilter: [],
+      containerTypeFilter: [],
+      termFilter: [],
+    })
+    return hits as unknown as ProductHit[]
+  } catch (err) {
+    console.error('[accessories] server product list failed:', err)
+    return []
+  }
 }

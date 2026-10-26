@@ -25,8 +25,15 @@ const client = new Client({
 
 const INDEX = cleanEnv(process.env.NEXT_PUBLIC_SEARCH_INDEX) || 'onsite_products_index'
 
-// "Accesories" is intentionally one-s — that is how it is stored in Elasticsearch
-const ACCESSORY_CATEGORY_NAMES = ['Accesories', 'Shelving', 'Parts', 'Ramp', 'Security', 'Others']
+/**
+ * Every category an accessory is filed under. Checked against the index on
+ * 2026-10-26: "Accessories" (161 products) is spelled with a double s. The
+ * single-s "Accesories" this list used to hold matches nothing, so products
+ * filed only under "Accessories" never reached the accessories listing, and
+ * "Lighting" was missing. The old spelling stays, harmlessly, in case any
+ * document still carries it.
+ */
+export const ACCESSORY_CATEGORY_NAMES = ['Accessories', 'Accesories', 'Lighting', 'Others', 'Shelving', 'Parts', 'Security', 'Ramp']
 
 const FACET_FIELD_MAP: Record<string, string> = {
   'product_category.category_name': 'product_category.category_name.keyword',
@@ -35,12 +42,23 @@ const FACET_FIELD_MAP: Record<string, string> = {
 
 export type FacetFilter = string | string[]
 
+/** InstantSearch numeric filter, e.g. "variants.price>=50"; arrays are OR groups. */
+export type NumericFilter = string | string[]
+
+/**
+ * Numeric fields a client may filter on. Anything else is ignored rather than
+ * passed to Elasticsearch, so a request cannot range-scan arbitrary fields.
+ */
+const NUMERIC_FILTER_FIELDS = new Set(['variants.price', 'variants.qty'])
+const NUMERIC_OPS = { '>=': 'gte', '<=': 'lte', '>': 'gt', '<': 'lt' } as const
+
 export type SearchInput = {
   query:               string
   hitsPerPage:         number
   page:                number
   facets:              string[]
   facetFilters:        FacetFilter[]
+  numericFilters?:     NumericFilter[]
   productType:         string | undefined
   locationFilter:      string
   sortParam:           string
@@ -71,6 +89,28 @@ function buildFilters(facetFilters: FacetFilter[] = []): object[] {
     } else {
       clauses.push({ bool: { should: terms, minimum_should_match: 1 } })
     }
+  }
+  return clauses
+}
+
+function numericClause(filter: string): object | null {
+  const m = filter.replace(/\s+/g, '').match(/^([\w.]+)(>=|<=|>|<|=)(-?\d+(?:\.\d+)?)$/)
+  if (!m || !NUMERIC_FILTER_FIELDS.has(m[1])) return null
+  const [, field, op, raw] = m
+  const value = Number(raw)
+  if (op === '=') return { term: { [field]: value } }
+  return { range: { [field]: { [NUMERIC_OPS[op as keyof typeof NUMERIC_OPS]]: value } } }
+}
+
+/** InstantSearch numericFilters to Elasticsearch clauses: AND between entries, OR inside an array. */
+export function buildNumericFilters(numericFilters: NumericFilter[] = []): object[] {
+  const clauses: object[] = []
+  for (const group of numericFilters) {
+    const entries = (Array.isArray(group) ? group : [group])
+      .map(numericClause)
+      .filter((c): c is object => c !== null)
+    if (entries.length === 1) clauses.push(entries[0])
+    else if (entries.length > 1) clauses.push({ bool: { should: entries, minimum_should_match: 1 } })
   }
   return clauses
 }
@@ -106,6 +146,7 @@ function buildSort(sortParam: string): object[] {
     case 'best_rated': return [{ 'ratings.rating': { order: 'desc' } }]
     case 'name_asc':   return [{ 'title.keyword': { order: 'asc' } }]
     case 'name_desc':  return [{ 'title.keyword': { order: 'desc' } }]
+    case 'newest':     return [{ created_at: { order: 'desc' } }]
     default:           return []
   }
 }
@@ -597,12 +638,12 @@ export async function cachedEsSearch(input: SearchInput) {
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.SEARCH)
 
   const {
-    query, hitsPerPage, page, facets, facetFilters,
+    query, hitsPerPage, page, facets, facetFilters, numericFilters = [],
     productType, locationFilter, sortParam, accessoryCategory,
     sizeFilter, conditionFilter, gradeFilter, heightFilter, containerTypeFilter, termFilter,
   } = input
 
-  const filters = buildFilters(facetFilters)
+  const filters = [...buildFilters(facetFilters), ...buildNumericFilters(numericFilters)]
 
   if (productType === 'buy' || productType === 'rental' || productType === 'rto') {
     filters.push(cfFilter('payment_type', [productType]))

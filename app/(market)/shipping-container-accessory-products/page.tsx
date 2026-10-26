@@ -1,29 +1,22 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
 import { ROUTES } from "@/config/routes";
 import { PAGE_SEO_DEFAULTS } from "@/config/pageSeoDefaults";
 import { resolvePageMetadata } from "@/lib/seo";
-import { breadcrumbNode, graph, siteNodes, webPageNode } from "@/lib/schema";
+import { breadcrumbNode, graph, itemListNode, siteNodes, webPageNode } from "@/lib/schema";
 import { ACCESSORY_RESULTS_ID } from "@/lib/accessoryCatalog";
+import { getAccessoryHighlights } from "@/services/accessoryCatalog.service";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { AccessoryHero } from "./_components/AccessoryHero";
 import { CategoryTiles } from "./_components/CategoryTiles";
-import { AccessoryResults } from "./_components/AccessoryResults";
+import { AccessoryInstantSearch } from "./_components/AccessoryInstantSearch";
 import { ResultsSkeleton } from "./_components/ResultsSkeleton";
-
-type Props = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
 
 const PAGE_NAME = "Shipping Container Accessories";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const metadata = await resolvePageMetadata(ROUTES.ACCESSORY_PRODUCTS);
-  // TEMPORARY: the products are placeholder data (lib/data/accessoryCatalogDemo.ts),
-  // so the page stays out of search results. Remove this line when the real
-  // catalogue is wired into getAccessoryCatalog().
-  return { ...metadata, robots: { index: false, follow: true } };
+export function generateMetadata() {
+  return resolvePageMetadata(ROUTES.ACCESSORY_PRODUCTS);
 }
 
 /**
@@ -31,13 +24,16 @@ export async function generateMetadata(): Promise<Metadata> {
  * the WordPress page at the same URL, whose product grid and filters were a
  * plugin that did not work once the page was served by this app.
  *
- * Everything but the results is static. The results read the URL (filters,
- * search, sort, page), so they sit behind Suspense and render on the server:
- * filters are plain links and the search is a GET form, so the page works
- * without JavaScript and every filtered view has a real URL. The only client
- * code is the sort dropdown's auto-submit.
+ * Static apart from the product search, which is InstantSearch in the browser
+ * (search, category / price / availability filters, sort, pagination) over
+ * POST /api/search. Its state lives in the URL, so a filtered view can be
+ * shared and the category tiles link straight to one. The first page of
+ * products is also rendered on the server — in the ItemList structured data
+ * and a no-JavaScript list — so crawlers see the catalogue without running
+ * the search.
  */
-export default function AccessoryProductsPage({ searchParams }: Props) {
+export default async function AccessoryProductsPage() {
+  const highlights = await getAccessoryHighlights();
   const jsonLd = graph([
     ...siteNodes(),
     webPageNode({
@@ -46,6 +42,7 @@ export default function AccessoryProductsPage({ searchParams }: Props) {
       description: PAGE_SEO_DEFAULTS[ROUTES.ACCESSORY_PRODUCTS]?.description,
     }),
     breadcrumbNode([{ name: "Home", path: ROUTES.HOME }, { name: PAGE_NAME }]),
+    itemListNode(highlights, PAGE_NAME),
   ]);
 
   return (
@@ -67,8 +64,21 @@ export default function AccessoryProductsPage({ searchParams }: Props) {
             All accessories
           </h2>
           <Suspense fallback={<ResultsSkeleton />}>
-            <AccessoryResults searchParams={searchParams} />
+            <AccessoryInstantSearch />
           </Suspense>
+          {highlights.length > 0 && (
+            <noscript>
+              <ul className="mt-6 grid gap-2 sm:grid-cols-2">
+                {highlights.map((product) => (
+                  <li key={product.handle}>
+                    <Link href={ROUTES.PRODUCT(product.handle)} className="underline underline-offset-2">
+                      {product.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </noscript>
+          )}
         </div>
       </section>
     </>

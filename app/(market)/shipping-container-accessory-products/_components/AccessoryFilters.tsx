@@ -1,105 +1,164 @@
-import { Check } from "lucide-react";
+"use client";
+
+import { useNumericMenu, useRefinementList } from "react-instantsearch";
+import type { UseRefinementListProps } from "react-instantsearch";
 import {
-  ACCESSORY_CATEGORIES,
+  ACCESSORY_FILTER_CATEGORIES,
   ACCESSORY_PRICE_RANGES,
-  accessoryHref,
-  toggleCategory,
-  withQuery,
+  CATEGORY_ATTRIBUTE,
+  PRICE_ATTRIBUTE,
+  STOCK_ATTRIBUTE,
 } from "@/lib/accessoryCatalog";
-import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
-import type { AccessoryResults } from "@/lib/accessoryCatalog";
-import type { AccessoryCatalogQuery } from "@/types/accessoryCatalog";
 
 type Props = {
-  query: AccessoryCatalogQuery;
-  counts: AccessoryResults["counts"];
+  /** The panel renders twice (phone and desktop); this keeps input ids unique. */
+  idPrefix: string;
 };
 
-type OptionProps = { href: string; active: boolean; label: string; count?: number };
+const OPTION =
+  "flex min-h-9 cursor-pointer items-center gap-2.5 rounded-md px-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-theme-primary dark:text-gray-300 dark:hover:bg-neutral-800";
+const INPUT = "h-4 w-4 shrink-0 accent-theme-primary dark:accent-red-400";
+
+// The inputs are uncontrolled and keyed on the refinement: a click ticks the
+// box at once, and when the search answers the input remounts in step with the
+// real state. Controlled inputs would wait for the response before showing the
+// tick, so a click looked ignored on a slow connection.
+
+// Widget options are module constants on purpose: InstantSearch re-registers a
+// widget whose options change identity, and a new array or function on every
+// render loops forever (React error #301).
 
 /**
- * One filter option: a link to the page with the option toggled. The box is a
- * picture of the state; the link itself carries it (aria-current), so assistive
- * tech hears "current" rather than a checkbox that cannot be checked.
+ * Only the page's categories, in its order; one with no products still shows,
+ * with (0), so the list does not jump around as filters change.
  */
-function FilterOption({ href, active, label, count }: OptionProps) {
-  return (
-    <li>
-      <Link
-        href={href}
-        scroll={false}
-        aria-current={active ? "true" : undefined}
-        className="flex min-h-9 items-center gap-2.5 rounded-md px-1.5 text-sm text-theme-dark-2 transition-colors hover:bg-theme-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary dark:text-gray-300 dark:hover:bg-neutral-800"
-      >
-        <span
-          aria-hidden
-          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${
-            active
-              ? "border-theme-primary bg-theme-primary text-white dark:border-red-400 dark:bg-red-400 dark:text-neutral-950"
-              : "border-theme-muted dark:border-gray-500"
-          }`}
-        >
-          {active && <Check className="h-3 w-3" strokeWidth={3} />}
-        </span>
-        <span className="flex-1">{label}</span>
-        {count !== undefined && <span className="text-theme-muted dark:text-gray-400">({count})</span>}
-      </Link>
-    </li>
+const orderCategories: NonNullable<UseRefinementListProps["transformItems"]> = (found) =>
+  ACCESSORY_FILTER_CATEGORIES.map(
+    (name) =>
+      found.find((item) => item.value === name) ?? {
+        value: name,
+        label: name,
+        highlighted: name,
+        count: 0,
+        isRefined: false,
+      },
   );
-}
 
-function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
+const PRICE_ITEMS = [{ label: "All" }, ...ACCESSORY_PRICE_RANGES.map(({ label, start, end }) => ({ label, start, end }))];
+
+const STOCK_ITEMS = [{ label: "Show all" }, { label: "In stock", start: 1 }];
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-5 first:mt-4">
-      <h3 className="mb-1.5 text-xs font-extrabold uppercase tracking-wider text-theme-muted dark:text-gray-400">{title}</h3>
+    <fieldset className="mt-5 first:mt-4">
+      <legend className="mb-1.5 text-xs font-extrabold uppercase tracking-wider text-theme-muted dark:text-gray-400">
+        {title}
+      </legend>
       <ul className="space-y-0.5">{children}</ul>
-    </div>
+    </fieldset>
   );
 }
 
-/** Category, price and availability filters. Server-rendered links only. */
-export function AccessoryFilters({ query, counts }: Props) {
+/** Category, in the page's fixed order, with how many products each has. */
+function CategoryFilter({ idPrefix }: Props) {
+  const { items, refine } = useRefinementList({
+    attribute: CATEGORY_ATTRIBUTE,
+    operator: "or",
+    limit: 50,
+    transformItems: orderCategories,
+  });
+
+  return (
+    <Group title="Category">
+      {items.map((item) => {
+        const id = `${idPrefix}-cat-${item.value}`;
+        return (
+          <li key={item.value}>
+            <label htmlFor={id} className={OPTION}>
+              <input key={String(item.isRefined)} id={id} type="checkbox" className={INPUT} defaultChecked={item.isRefined} onChange={() => refine(item.value)} />
+              <span className="flex-1">{item.label}</span>
+              <span className="text-theme-muted dark:text-gray-400">({item.count})</span>
+            </label>
+          </li>
+        );
+      })}
+    </Group>
+  );
+}
+
+/** Price range: one at a time; ticking the active range again clears it. */
+function PriceFilter({ idPrefix }: Props) {
+  const { items, refine } = useNumericMenu({
+    attribute: PRICE_ATTRIBUTE,
+    items: PRICE_ITEMS,
+  });
+  const all = items[0];
+
+  return (
+    <Group title="Price range">
+      {items.slice(1).map((item) => {
+        const id = `${idPrefix}-price-${item.label}`;
+        return (
+          <li key={item.value}>
+            <label htmlFor={id} className={OPTION}>
+              <input
+                key={String(item.isRefined)}
+                id={id}
+                type="checkbox"
+                className={INPUT}
+                defaultChecked={item.isRefined}
+                onChange={() => refine(item.isRefined ? all.value : item.value)}
+              />
+              <span className="flex-1">{item.label}</span>
+            </label>
+          </li>
+        );
+      })}
+    </Group>
+  );
+}
+
+/** Availability: in stock means variants[0].qty of at least 1. */
+function AvailabilityFilter({ idPrefix }: Props) {
+  const { items, refine } = useNumericMenu({
+    attribute: STOCK_ATTRIBUTE,
+    items: STOCK_ITEMS,
+  });
+  // The page's order: In stock, then Show all.
+  const ordered = [items[1], items[0]].filter(Boolean);
+
+  return (
+    <Group title="Availability">
+      {ordered.map((item) => {
+        const id = `${idPrefix}-stock-${item.label}`;
+        return (
+          <li key={item.value}>
+            <label htmlFor={id} className={OPTION}>
+              <input
+                key={String(item.isRefined)}
+                id={id}
+                type="radio"
+                name={`${idPrefix}-availability`}
+                className={INPUT}
+                defaultChecked={item.isRefined}
+                onChange={() => refine(item.value)}
+              />
+              <span className="flex-1">{item.label}</span>
+            </label>
+          </li>
+        );
+      })}
+    </Group>
+  );
+}
+
+/** The filter panel: category, price range and availability. */
+export function AccessoryFilters({ idPrefix }: Props) {
   return (
     <>
-      <FilterGroup title="Category">
-        {ACCESSORY_CATEGORIES.map((c) => (
-          <FilterOption
-            key={c.key}
-            href={accessoryHref(toggleCategory(query, c.key))}
-            active={query.categories.includes(c.key)}
-            label={c.label}
-            count={counts.category[c.key]}
-          />
-        ))}
-      </FilterGroup>
-
-      <FilterGroup title="Price range">
-        {ACCESSORY_PRICE_RANGES.map((r) => {
-          const active = query.price === r.key;
-          return (
-            <FilterOption
-              key={r.key}
-              href={accessoryHref(withQuery(query, { price: active ? null : r.key }))}
-              active={active}
-              label={r.label}
-              count={counts.price[r.key]}
-            />
-          );
-        })}
-      </FilterGroup>
-
-      <FilterGroup title="Availability">
-        <FilterOption
-          href={accessoryHref(withQuery(query, { inStockOnly: true }))}
-          active={query.inStockOnly}
-          label="In stock"
-        />
-        <FilterOption
-          href={accessoryHref(withQuery(query, { inStockOnly: false }))}
-          active={!query.inStockOnly}
-          label="Show all"
-        />
-      </FilterGroup>
+      <CategoryFilter idPrefix={idPrefix} />
+      <PriceFilter idPrefix={idPrefix} />
+      <AvailabilityFilter idPrefix={idPrefix} />
     </>
   );
 }

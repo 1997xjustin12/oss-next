@@ -1,18 +1,18 @@
-import { accessoryHref, parseAccessoryQuery, withQuery } from "@/lib/accessoryCatalog";
+import { Layers, Lightbulb, Shield, Truck, Wrench } from "lucide-react";
+import { accessoryCategoryHref } from "@/lib/accessoryCatalog";
 import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
-import { CategoryIcon } from "./CategoryIcon";
-import type { AccessoryCategoryKey } from "@/types/accessoryCatalog";
 
-/** The five categories the WordPress page led with, in its order. */
-const TILES: { key: AccessoryCategoryKey; label: string }[] = [
-  { key: "security", label: "Security" },
-  { key: "lighting", label: "Lighting" },
-  { key: "shelving", label: "Shelving" },
-  { key: "ramps", label: "Ramps" },
-  { key: "parts", label: "Parts" },
-];
-
-const BASE_QUERY = parseAccessoryQuery({});
+/**
+ * The five categories the WordPress page led with, in its order. `category`
+ * is the Elasticsearch category name the tile filters to.
+ */
+const TILES = [
+  { label: "Security", category: "Security", Icon: Shield },
+  { label: "Lighting", category: "Lighting", Icon: Lightbulb },
+  { label: "Shelving", category: "Shelving", Icon: Layers },
+  { label: "Ramps", category: "Ramp", Icon: Truck },
+  { label: "Parts", category: "Parts", Icon: Wrench },
+] as const;
 
 /** Shop by category: each tile opens the product list filtered to it. */
 export function CategoryTiles() {
@@ -26,17 +26,17 @@ export function CategoryTiles() {
           Shop by category
         </h2>
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-          {TILES.map((tile) => (
-            <li key={tile.key}>
+          {TILES.map(({ label, category, Icon }) => (
+            <li key={category}>
               <Link
-                href={accessoryHref(withQuery(BASE_QUERY, { categories: [tile.key] }))}
+                href={accessoryCategoryHref(category)}
                 className="group flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-theme-border bg-white px-4 py-6 text-center transition-colors hover:border-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-red-400"
               >
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-theme-primary-light text-theme-primary dark:bg-red-950 dark:text-red-400">
-                  <CategoryIcon category={tile.key} className="h-7 w-7" />
+                  <Icon aria-hidden className="h-7 w-7" />
                 </span>
                 <h3 className="text-sm font-extrabold uppercase tracking-wide text-theme-dark dark:text-gray-100">
-                  {tile.label}
+                  {label}
                 </h3>
               </Link>
             </li>

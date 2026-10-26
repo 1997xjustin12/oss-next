@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cachedEsSearch, DEFAULT_LOCATION } from '@/services/search.service'
-import type { FacetFilter } from '@/services/search.service'
+import type { FacetFilter, NumericFilter } from '@/services/search.service'
 
 const INDEX = process.env.NEXT_PUBLIC_SEARCH_INDEX ?? 'onsite_products_index'
 
@@ -10,6 +10,7 @@ type ISParams = {
   page?:                    number
   facets?:                  string[]
   facetFilters?:            FacetFilter[]
+  numericFilters?:          NumericFilter[] | string
   productType?:             string
   locationFilter?:          string
   sortParam?:               string
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
           page                = 0,
           facets              = [],
           facetFilters        = [],
+          numericFilters      = [],
           productType,
           locationFilter      = DEFAULT_LOCATION,
           sortParam           = 'default',
@@ -85,10 +87,14 @@ export async function POST(req: NextRequest) {
 
         const result = await cachedEsSearch({
           query:               query as string,
-          hitsPerPage:         hitsPerPage as number,
-          page:                page as number,
+          // Bounded: a request for the whole index is one Elasticsearch call
+          // and one cache entry the size of the catalogue.
+          hitsPerPage:         Math.min(Math.max(Number(hitsPerPage) || 20, 1), 100),
+          page:                Math.max(Number(page) || 0, 0),
           facets:              facets as string[],
           facetFilters:        facetFilters as FacetFilter[],
+          // InstantSearch sends a lone filter as a string, several as an array.
+          numericFilters:      typeof numericFilters === 'string' ? [numericFilters] : numericFilters,
           productType:         productType as string | undefined,
           locationFilter:      locationFilter as string,
           sortParam:           sortParam as string,
