@@ -3,6 +3,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  ACCESSORY_FILTER_CATEGORIES,
   ACCESSORY_INDEX,
   CATEGORY_ATTRIBUTE,
   PRICE_ATTRIBUTE,
@@ -33,6 +34,11 @@ describe('uiStateFromParams', () => {
   it('drops unknown categories, ranges, sorts and junk pages', () => {
     const state = uiStateFromParams({ category: 'Security,Bogus,Security', price: 'free', sort: 'random', page: '-1', stock: 'yes' })
     assert.deepEqual(state, { refinementList: { [CATEGORY_ATTRIBUTE]: ['Security'] } })
+  })
+
+  it('does not offer "Accessories" (the default scope), and ignores it in a URL', () => {
+    assert.ok(!(ACCESSORY_FILTER_CATEGORIES as readonly string[]).includes('Accessories'))
+    assert.deepEqual(uiStateFromParams({ category: 'Accessories,Ramp' }), { refinementList: { [CATEGORY_ATTRIBUTE]: ['Ramp'] } })
   })
 
   it('reads the open-ended range and caps the search length', () => {

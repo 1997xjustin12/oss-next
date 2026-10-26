@@ -31,8 +31,12 @@ export const STOCK_ATTRIBUTE = 'variants.qty'
 /**
  * The category filter, in the order the page shows it. Values are the
  * Elasticsearch category names exactly as stored.
+ *
+ * "Accessories" is not an option: it is the page's default scope (the server
+ * lists every accessory category for productType "accessories"), and nearly
+ * every product carries it, so ticking it would change nothing.
  */
-export const ACCESSORY_FILTER_CATEGORIES = ['Accessories', 'Lighting', 'Others', 'Shelving', 'Parts', 'Security', 'Ramp'] as const
+export const ACCESSORY_FILTER_CATEGORIES = ['Lighting', 'Others', 'Shelving', 'Parts', 'Security', 'Ramp'] as const
 
 /** Price ranges; `end` is inclusive (NumericMenu uses <=), so a range ends where the next starts. */
 export const ACCESSORY_PRICE_RANGES: readonly { key: string; label: string; start: number; end?: number }[] = [
@@ -128,8 +132,7 @@ export function hitToAccessoryCard(hit: RawHit): AccessoryCardData {
   const names = (hit.product_category ?? []).map((c) => c.category_name ?? '')
   // The specific category reads better than the umbrella "Accessories" most carry.
   const category =
-    ACCESSORY_FILTER_CATEGORIES.find((c) => c !== 'Accessories' && names.includes(c)) ??
-    (names.includes('Accessories') ? 'Accessories' : '')
+    ACCESSORY_FILTER_CATEGORIES.find((c) => names.includes(c)) ?? (names.includes('Accessories') ? 'Accessories' : '')
   const qty = Number(hit.variants?.[0]?.qty)
   const image = hit.images?.[0]
 
