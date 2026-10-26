@@ -1,23 +1,21 @@
+'use client'
+
 import Image from 'next/image'
 import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { Stars } from '@/components/product/Stars'
 import { ROUTES } from '@/config/routes'
 import { formatPrice } from '@/lib/formatters'
+import { calculateProductPrice } from '@/lib/pricing'
 import { displayRating } from '@/lib/ratings'
 import type { ProductHit } from '@/types/product'
 
 /**
- * Months the "or Purchase for as low as …" line divides by.
- *
- * **Unconfirmed.** `payment_term` is empty on every `buy` product, so this is
- * not in the catalogue — the number is read back from the reference design,
- * where all four figures divide out at exactly 22 (1,350/61.36, 1,800/81.82,
- * 2,000/90.91, 2,900/131.82).
- *
- * It is a price shown to customers, so it wants confirming before launch
- * rather than after. One constant to change if it is wrong.
+ * The term the "or Purchase for as low as …" line is quoted on: the longest
+ * rent-to-own agreement, so the lowest monthly figure. Worked out by
+ * `calculateProductPrice`, the rule the catalogue prices rent-to-own listings
+ * with, so this line cannot drift from what the listing then charges.
  */
-const PURCHASE_FINANCING_MONTHS = 22
+const RTO_QUOTE_TERM = '48'
 
 /**
  * The headline price, without the trailing `.00` on a whole number.
@@ -42,7 +40,10 @@ export function FeaturedContainerCard({ product }: Props) {
   const handle = String(product.handle ?? '')
   const image = product.images?.[0]?.src ?? ''
   const price = Number(product.sale_price) || 0
-  const monthly = price > 0 ? price / PURCHASE_FINANCING_MONTHS : 0
+  const monthly =
+    price > 0
+      ? calculateProductPrice({ price, paymentType: 'rto', paymentTerm: RTO_QUOTE_TERM, size: '', height: '' })
+      : 0
 
   const { value: rating, count: reviews } = displayRating(product.ratings)
 

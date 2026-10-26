@@ -1,12 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useStoredZip } from '@/hooks/useStoredZip'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { FeaturedContainerCard, FeaturedContainerCardSkeleton } from './FeaturedContainerCard'
 import type { ProductHit } from '@/types/product'
-
-/** Where the ZIP lookup stores the depot it resolved to. */
-const DEPOT_KEY = 'zipcode_depot'
 
 /** How many the lookup asks for, and so how many skeletons to show. */
 const SLOTS = 4
@@ -30,19 +28,23 @@ type State =
  * no server render can see — so the fetch happens after mount, through
  * `/api/shipping-containers/featured`.
  *
+ * Follows the saved location through `useStoredZip`, so when any ZIP box on
+ * the page saves a new one the four cards refetch for that depot. The same
+ * four specs come back for every depot, keyed the same, so the titles stay put
+ * and only each card's price, monthly figure and link change. The previous
+ * cards stay up while the next depot's load; the skeleton is first load only.
+ *
  * Renders nothing at all when the lookup finds none or fails: a heading over an
  * empty row says less than no row.
  */
 export function LocationFeaturedContainers() {
   const [state, setState] = useState<State>({ status: 'loading' })
+  const { depot: stored, resolved } = useStoredZip()
 
   useEffect(() => {
-    let stored = ''
-    try {
-      stored = localStorage.getItem(DEPOT_KEY) ?? ''
-    } catch {
-      // Private mode or storage blocked — treated as "no depot yet".
-    }
+    // Wait for storage to be read, or every visitor with a saved depot would
+    // fetch the national pool first and then their own.
+    if (!resolved) return
 
     /**
      * No stored depot means a visitor who has not given a ZIP yet, which is
@@ -87,8 +89,10 @@ export function LocationFeaturedContainers() {
       }
     })()
 
+    // Also aborts a lookup a newer location has overtaken, so a slow answer
+    // for the old depot can never land on top of the new one.
     return () => abort.abort()
-  }, [])
+  }, [resolved, stored])
 
   if (state.status === 'empty') return null
 
