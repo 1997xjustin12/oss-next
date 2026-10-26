@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useId } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Navigation, Loader2, MapPin } from 'lucide-react'
 import { useZipLookup } from '@/hooks/useGeoapify'
@@ -26,6 +26,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     value: zip,
     setValue: setZip,
     showResult,
+    edited,
     results,
     loading,
     error,
@@ -36,10 +37,15 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     locating,
   } = useZipLookup({ initialZip, type: 'postcode', countries: 'us,ca', debounceMs: 300, limit: 5 })
 
+  // Auto-select a lone suggestion as it arrives for typed text, with the list
+  // open, once per place. Triggered by `results` only, so focusing the box
+  // never picks anything.
+  const autoSelected = useRef<string | null>(null)
   useEffect(() => {
-    if (open && results.length === 1) {
-      handleSelect(results[0])
-    }
+    if (!edited || !open || results.length !== 1) return
+    if (autoSelected.current === results[0].placeId) return
+    autoSelected.current = results[0].placeId
+    handleSelect(results[0])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results])
 

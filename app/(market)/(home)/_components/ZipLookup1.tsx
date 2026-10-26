@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useId } from "react";
+import { useState, useEffect, useMemo, useId, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { PlpLink } from "@/components/shared/PlpLink";
@@ -161,6 +161,7 @@ export function ZipLookup1({
     value: zip,
     setValue: setZip,
     showResult,
+    edited,
     results,
     loading,
     error,
@@ -192,11 +193,15 @@ export function ZipLookup1({
   }, [initialZip]);
 
   // Auto-select when the dropdown narrows to exactly one match. Whether this
-  // redirects depends on homeVersion — see handleSelect below.
+  // redirects depends on homeVersion — see handleSelect below. Only as the
+  // suggestions arrive for typed text, with the list open, once per place:
+  // triggered by `results` only, so focusing the box never picks anything.
+  const autoSelected = useRef<string | null>(null);
   useEffect(() => {
-    if (open && results.length === 1) {
-      handleSelect(results[0]);
-    }
+    if (!edited || !open || results.length !== 1) return;
+    if (autoSelected.current === results[0].placeId) return;
+    autoSelected.current = results[0].placeId;
+    handleSelect(results[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results]);
 

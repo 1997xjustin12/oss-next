@@ -107,6 +107,10 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
     // was a silent no-op until selecting could be refused: with a cart from
     // another depot it now raised the conflict prompt for a location nobody
     // tried to change.
+    //
+    // Triggered by `results` only, never by `open`: a lone suggestion that
+    // arrived after the visitor clicked away would otherwise be picked by the
+    // next click into the box, which is meant to edit the text.
     if (!edited) return
     if (!open || results.length !== 1) return
     if (autoSelectedRef.current === results[0].placeId) return
@@ -114,7 +118,7 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
     autoSelectedRef.current = results[0].placeId
     handleSelect(results[0])
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results, open])
+  }, [results])
 
   // Fetches the same container pool ZipLookup1/useGeoapify already use for
   // `depotContainers`, but awaited directly here so the match runs against

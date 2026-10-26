@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CircleArrowRight, Loader2, LocateFixed, MapPin } from 'lucide-react'
 import { useZipLookup } from '@/hooks/useGeoapify'
@@ -29,6 +29,7 @@ export function LocationSearch() {
     value: zip,
     setValue: setZip,
     showResult,
+    edited,
     results,
     loading,
     error,
@@ -44,18 +45,25 @@ export function LocationSearch() {
   const showDropdown = open && (results.length > 0 || loading || !!error)
 
   /**
-   * One suggestion means there is nothing to choose, so choose it.
+   * One suggestion means there is nothing to choose, so choose it — but only
+   * as the suggestions *arrive* for what the visitor typed, with the list open,
+   * and once per place.
    *
-   * Guarded on `open`: without it this fires for the list that arrives after
-   * "use my current location" has already navigated, and for a list left over
-   * from a blurred input.
+   * Runs on `results` alone, never on `open`. With `open` as a trigger, a
+   * single suggestion that landed after the visitor clicked away sat waiting,
+   * and the next click into the box — meant to edit the text — chose it and
+   * left the page. Focusing the box must only open the list.
    */
+  const autoSelected = useRef<string | null>(null)
   useEffect(() => {
-    if (open && results.length === 1) handleSelect(results[0])
+    if (!edited || !open || results.length !== 1) return
+    if (autoSelected.current === results[0].placeId) return
+    autoSelected.current = results[0].placeId
+    handleSelect(results[0])
     // handleSelect is stable enough for this purpose and re-creating the effect
     // on every render would re-fire the navigation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results, open])
+  }, [results])
 
   function goToListing(postcode: string, depot: string) {
     const params = new URLSearchParams({ zipcode: postcode, location: depot, ptype: 'buy' })
