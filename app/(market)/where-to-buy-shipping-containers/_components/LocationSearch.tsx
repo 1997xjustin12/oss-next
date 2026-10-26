@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CircleArrowRight, Loader2, LocateFixed, MapPin } from 'lucide-react'
 import { useGeoapify } from '@/hooks/useGeoapify'
+import { useStoredZip } from '@/hooks/useStoredZip'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import { ROUTES } from '@/config/routes'
 
@@ -32,8 +33,32 @@ export function LocationSearch() {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  // Whether the visitor has typed in the box. Until they do, it shows their
+  // saved location and asks Geoapify for nothing.
+  const [edited, setEdited] = useState(false)
+  const stored = useStoredZip()
 
-  const { results, loading, error, clear, selectResult, resolveTyped } = useGeoapify(zip, {
+  /**
+   * Prefill from storage, as the listing's ZipLookup does: the saved location's
+   * label ("Atlanta, GA 30303") when the visitor has chosen one, else the ZIP
+   * the geolocation detector found. Follows a change made elsewhere (another
+   * ZIP box, another tab) until the visitor types here.
+   */
+  useEffect(() => {
+    if (!stored.resolved || edited) return
+    let detected = ''
+    try {
+      detected = localStorage.getItem(DETECTED_ZIP_KEY) ?? ''
+    } catch {
+      // Private mode, or storage blocked: nothing to prefill from.
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirrors storage (client-only) into the box
+    setZip(stored.label || stored.postcode || detected)
+  }, [stored, edited])
+
+  // Suggestions only for what the visitor types: the prefilled label is not a
+  // query, and looking it up on every page view would be a wasted request.
+  const { results, loading, error, clear, selectResult, resolveTyped } = useGeoapify(edited ? zip : '', {
     type: 'postcode',
     countries: 'us,ca',
     debounceMs: 300,
@@ -79,6 +104,15 @@ export function LocationSearch() {
   async function handleSubmit() {
     const trimmed = zip.trim()
     if (!trimmed || busy) return
+
+    // Untouched prefill of the saved location: its ZIP and depot are already
+    // known and already saved, so go straight to that listing.
+    if (!edited && stored.postcode && stored.depot && trimmed === (stored.label || stored.postcode)) {
+      setOpen(false)
+      setNotice(null)
+      goToListing(stored.postcode, stored.depot)
+      return
+    }
 
     setOpen(false)
     setNotice(null)
@@ -161,6 +195,7 @@ export function LocationSearch() {
           value={zip}
           onChange={(e) => {
             setZip(e.target.value)
+            setEdited(true)
             setOpen(true)
             setNotice(null)
           }}
