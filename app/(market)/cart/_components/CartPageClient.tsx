@@ -17,14 +17,41 @@ import { CartSkeleton, SummarySkeleton } from './CartSkeleton'
 import type { CartItem } from '@/types/cart'
 import type { GetOrderTotalPayload, OrderTotal } from '@/types/order'
 
+/**
+ * What a backend total was priced for: every line, its quantity and price, and
+ * the ZIP. A total is only shown while this still matches the cart on screen.
+ */
+function pricingKey(items: CartItem[], zip: string): string {
+  return `${items.map((item) => `${item.id}:${item.quantity}:${item.price}`).join(',')}|${zip}`
+}
+
+type Priced = {
+  key: string
+  total: OrderTotal | null
+  /** The backend's reason it can't deliver to the stored ZIP, when that is the answer. */
+  refusal: string | null
+}
+
 export function CartPageClient() {
   const { cart } = useCart()
   const [mounted, setMounted] = useState(false)
-  const [liveTotal, setLiveTotal] = useState<OrderTotal | null>(null)
+  const [priced, setPriced] = useState<Priced | null>(null)
   const [totalsLoading, setTotalsLoading] = useState(false)
-  // The backend's reason it can't deliver to the stored ZIP, when that is the answer.
-  const [refusal, setRefusal] = useState<string | null>(null)
+  // Only the newest request may write its answer. Removing items one after
+  // another sends one request per cart; a slow answer for an earlier cart used
+  // to land last and put its tax and delivery back onto a cart that no longer
+  // had those items — an empty cart showing a Total of $179.13.
+  const requestSeq = useRef(0)
   const { postcode, resolved: zipResolved } = useStoredZip()
+
+  // A total priced for a different cart (an item removed, a quantity changed,
+  // a new ZIP) is not shown: until the new one arrives the summary says
+  // "Calculating…" rather than adding the old tax to the new subtotal.
+  const currentKey = pricingKey(cart.items, postcode)
+  const fresh = priced?.key === currentKey ? priced : null
+  const liveTotal = fresh?.total ?? null
+  const refusal = fresh?.refusal ?? null
+  const awaitingTotal = cart.items.length > 0 && !!priced && !fresh
 
   useEffect(() => {
     // Hydration-safe mount detection — cart data is client-only (localStorage),
@@ -49,6 +76,8 @@ export function CartPageClient() {
   // also quotes delivery (for the default method), which CartSummary shows as
   // an estimate billed after the order.
   async function fetchTotals(items: CartItem[], zip: string) {
+    const seq = ++requestSeq.current
+    const key = pricingKey(items, zip)
     const lineItems = cartItemsToLineItems(items)
     const hasContainer = items.some((item) => item.isContainer)
     const country = /^\d/.test(zip.trim()) ? 'US' : 'CA'
@@ -60,8 +89,8 @@ export function CartPageClient() {
     // send, so skip a request that always fails; CartSummary then says
     // "Calculated at checkout".
     if (lineItems.length === 0 || (hasContainer && !pricedZip)) {
-      setLiveTotal(null)
-      setRefusal(null)
+      setPriced({ key, total: null, refusal: null })
+      setTotalsLoading(false)
       return
     }
 
@@ -86,17 +115,20 @@ export function CartPageClient() {
         body: JSON.stringify(payload),
       })
       const data = await res.json().catch(() => null)
+      if (seq !== requestSeq.current) return
       if (res.ok && data) {
-        setLiveTotal(data as OrderTotal)
-        setRefusal(null)
+        setPriced({ key, total: data as OrderTotal, refusal: null })
       } else if (data?.code === 'undeliverable') {
-        setLiveTotal(null)
-        setRefusal(data.error)
+        setPriced({ key, total: null, refusal: data.error })
+      } else {
+        // No total for this cart. Recorded as priced-with-nothing, so the
+        // summary falls back to "at checkout" instead of spinning forever.
+        setPriced({ key, total: null, refusal: null })
       }
     } catch {
-      // keep whatever total we last had
+      if (seq === requestSeq.current) setPriced({ key, total: null, refusal: null })
     } finally {
-      setTotalsLoading(false)
+      if (seq === requestSeq.current) setTotalsLoading(false)
     }
   }
 
@@ -169,7 +201,7 @@ export function CartPageClient() {
             tax={liveTotal?.total_tax}
             quote={liveTotal?.shipping}
             refusal={refusal}
-            loading={totalsLoading}
+            loading={totalsLoading || awaitingTotal}
           />
         )}
       </div>
