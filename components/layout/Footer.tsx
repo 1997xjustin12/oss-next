@@ -28,7 +28,7 @@ const CONTAINER_LINKS = [
     label: "Modified Containers",
   },
   {
-    href: "/shipping-container-accessory-products",
+    href: ROUTES.ACCESSORY_PRODUCTS,
     label: "Accessories",
   },
 ];

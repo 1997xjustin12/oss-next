@@ -59,6 +59,15 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     openGraph: { type: 'website', images: ['/images/og-containers.jpg'] },
   },
 
+  // Carried over from the WordPress page this replaced.
+  [ROUTES.ACCESSORY_PRODUCTS]: {
+    title: 'Shipping Container Accessory Products',
+    description:
+      'Upgrade your shipping container with essential accessories like ramps, shelving, LED lights and locks. These add-ons boost functionality, safety and organization while protecting your cargo.',
+    canonical: ROUTES.ACCESSORY_PRODUCTS,
+    openGraph: { type: 'website', images: ['/images/home-banners/hero-image.webp'] },
+  },
+
   [ROUTES.BLOGS]: {
     title: 'Blog',
     description:

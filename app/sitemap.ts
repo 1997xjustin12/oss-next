@@ -33,6 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // neither list. The cities beneath it are not exact-matched, so they stay
     // in `pageRoutes` where they belong.
     { url: `${origin}${ROUTES.WHERE_TO_BUY}`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${origin}${ROUTES.ACCESSORY_PRODUCTS}`, changeFrequency: 'weekly', priority: 0.7 },
   ]
 
   // The backend's product pattern is multi-brand ({brand_slug}/product/{handle});

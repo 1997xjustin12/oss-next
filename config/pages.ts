@@ -33,6 +33,7 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'blogs', path: ROUTES.BLOGS, label: 'Blog Index', group: 'Storefront', indexable: true },
   { id: 'agents', path: ROUTES.AGENTS, label: 'AI Agent Policy', group: 'Storefront', indexable: true },
   { id: 'where-to-buy', path: ROUTES.WHERE_TO_BUY, label: 'Where to Buy / Locations', group: 'Storefront', indexable: true },
+  { id: 'accessory-products', path: ROUTES.ACCESSORY_PRODUCTS, label: 'Container Accessories', group: 'Storefront', indexable: true },
 
   { id: 'cart', path: ROUTES.CART, label: 'Cart', group: 'Commerce', indexable: false },
   { id: 'checkout', path: ROUTES.CHECKOUT, label: 'Checkout', group: 'Commerce', indexable: false },
