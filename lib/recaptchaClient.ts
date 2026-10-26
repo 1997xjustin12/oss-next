@@ -95,16 +95,20 @@ export async function getRecaptchaToken(siteKey: string, action: string): Promis
   try {
     await loadScript(siteKey)
 
-    const grecaptcha = window.grecaptcha
-    if (typeof grecaptcha?.execute !== 'function') return null
-
-    // `ready` resolves once the API has finished initialising. `window.grecaptcha`
-    // is defined before that, which is how the v2 component ended up calling a
-    // method that did not exist yet and taking the account page down with it.
+    // `ready` resolves once the API has finished initialising. Wait for it
+    // BEFORE looking for `execute`: right after api.js loads, `window.grecaptcha`
+    // has `ready` but not yet `execute` (that arrives with the second script it
+    // pulls in). Checking first returned null on every cold call, so a form
+    // that had not preloaded (the newsletter signup) always sent no token and
+    // was rejected; preloading forms only got away with it by being slow.
     await new Promise<void>((resolve) => {
-      if (typeof grecaptcha.ready === 'function') grecaptcha.ready(resolve)
+      const ready = window.grecaptcha?.ready
+      if (typeof ready === 'function') ready(resolve)
       else resolve()
     })
+
+    const grecaptcha = window.grecaptcha
+    if (typeof grecaptcha?.execute !== 'function') return null
 
     return await grecaptcha.execute(siteKey, { action })
   } catch (err) {

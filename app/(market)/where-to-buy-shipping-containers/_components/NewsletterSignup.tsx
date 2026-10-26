@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { subscribeToNewsletter } from "@/lib/newsletter";
-import { getRecaptchaToken } from "@/lib/recaptchaClient";
+import { getRecaptchaToken, preloadRecaptcha } from "@/lib/recaptchaClient";
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
@@ -47,6 +47,9 @@ export function NewsletterSignup() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            // Load reCAPTCHA when someone starts on the form, not with the page:
+            // it gets time to observe the visitor, and nobody else downloads it.
+            onFocus={() => RECAPTCHA_SITE_KEY && preloadRecaptcha(RECAPTCHA_SITE_KEY)}
             placeholder="Your email address"
             aria-invalid={status.kind === "error" || undefined}
             aria-describedby="newsletter-status"
