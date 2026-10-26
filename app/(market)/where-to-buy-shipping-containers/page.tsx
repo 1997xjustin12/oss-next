@@ -2,12 +2,23 @@ import Image from "next/image";
 import { Phone } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import { CONTACT_NUMBER, telHref } from "@/lib/helpers";
+import { PAGE_SEO_DEFAULTS } from "@/config/pageSeoDefaults";
+import { WHERE_TO_BUY_FAQS } from "@/lib/data/whereToBuyContent";
+import { breadcrumbNode, faqNode, graph, siteNodes, webPageNode } from "@/lib/schema";
+import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
 import { resolvePageMetadata } from "@/lib/seo";
 import { LocationSearch } from "./_components/LocationSearch";
 import { SectionTagline2 } from "./_components/SectionTagline2";
 import { SelectContainerType } from "./_components/SelectContainerType";
 import { LocationFeaturedContainers } from "./_components/LocationFeaturedContainers";
+import { InstantPricingSection } from "./_components/InstantPricingSection";
+import { ShippingRatesSection } from "./_components/ShippingRatesSection";
+import { ContainerTypesSection } from "./_components/ContainerTypesSection";
+import { ContainerConditionsSection } from "./_components/ContainerConditionsSection";
+import { WhereToBuyFaq } from "./_components/WhereToBuyFaq";
+import { CustomerTestimonials } from "./_components/CustomerTestimonials";
+import { NewsletterSignup } from "./_components/NewsletterSignup";
 import type { ContainerType } from "./_components/ContainerTypeCardLink";
 
 export function generateMetadata() {
@@ -159,17 +170,38 @@ function Hero() {
 
 
 export default function WhereToBuyPage() {
+  const jsonLd = graph([
+    ...siteNodes(),
+    webPageNode({
+      path: ROUTES.WHERE_TO_BUY,
+      name: "Where to Buy Shipping Containers",
+      description: PAGE_SEO_DEFAULTS[ROUTES.WHERE_TO_BUY]?.description,
+    }),
+    breadcrumbNode([{ name: "Home", path: ROUTES.HOME }, { name: "Where to Buy Shipping Containers" }]),
+    // Built from the same list the visible FAQ renders.
+    faqNode(WHERE_TO_BUY_FAQS),
+  ]);
+
+  // The (market) layout already provides <main>; a second one inside it was
+  // an invalid nested landmark.
   return (
     <>
+      <JsonLd data={jsonLd} />
       <PageHeadScripts path={ROUTES.WHERE_TO_BUY} />
-      <main>
-        <Hero />
-        <SectionTagline2 text="On-Site Storage Solutions have a shipping container near you" />
-        <SelectContainerType types={CONTAINER_TYPES} />
-        <LocationFeaturedContainers />
-        <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT TYPES OF SHIPPING CONTAINER" />
-        <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT CONDITIONS OF SHIPPING CONTAINER" />
-      </main>
+      <Hero />
+      <SectionTagline2 text="On-Site Storage Solutions have a shipping container near you" />
+      <SelectContainerType types={CONTAINER_TYPES} />
+      <LocationFeaturedContainers />
+      <SectionTagline2 text="Get instant pricing now!" />
+      <InstantPricingSection />
+      <ShippingRatesSection />
+      <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT TYPES OF SHIPPING CONTAINER" />
+      <ContainerTypesSection />
+      <SectionTagline2 bg="blue" text="LEARN THE DIFFERENT CONDITIONS OF SHIPPING CONTAINER" />
+      <ContainerConditionsSection />
+      <WhereToBuyFaq />
+      <CustomerTestimonials />
+      <NewsletterSignup />
     </>
   );
 }

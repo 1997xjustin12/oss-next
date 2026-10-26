@@ -6,12 +6,12 @@
 // handlers below.
 export type NewsletterResult = { ok: true } | { ok: false; error: string }
 
-export async function subscribeToNewsletter(email: string): Promise<NewsletterResult> {
+export async function subscribeToNewsletter(email: string, recaptchaToken?: string | null): Promise<NewsletterResult> {
   try {
     const res = await fetch('/api/subscribers/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, recaptchaToken }),
     })
     const data = await res.json().catch(() => null)
 

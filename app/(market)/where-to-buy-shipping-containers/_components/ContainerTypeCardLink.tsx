@@ -38,8 +38,10 @@ export function ContainerTypeCardLink({ type }: Props) {
       href={url}
       // `group` so the button can react to a hover anywhere on the card, which
       // is what makes the whole surface read as one control.
+      // Hover as on the WordPress page: the border goes full brand red and a
+      // tight shadow lifts the card.
       className="group flex h-full w-full flex-col gap-4 rounded-lg border-2 border-theme-primary/70 bg-white p-4
-                 transition-shadow hover:shadow-lg
+                 transition-[border-color,box-shadow] duration-300 hover:border-theme-primary hover:shadow-[1px_2px_5px_-1px_rgba(0,0,0,0.49)]
                  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-primary
                  dark:bg-neutral-900 sm:p-5"
     >

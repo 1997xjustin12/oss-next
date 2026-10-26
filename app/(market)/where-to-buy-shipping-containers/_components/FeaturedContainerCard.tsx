@@ -49,8 +49,10 @@ export function FeaturedContainerCard({ product }: Props) {
   return (
     <Link
       href={ROUTES.PRODUCT(handle)}
-      className="group flex h-full w-full flex-col overflow-hidden rounded-lg border border-theme-border bg-white
-                 shadow-sm transition-shadow hover:border-theme-primary/60 hover:shadow-lg
+      // Hover as on the WordPress page: a 2px brand-red border and a tight
+      // shadow, eased in. The border is 2px at rest too, so nothing moves.
+      className="group flex h-full w-full flex-col overflow-hidden rounded-lg border-2 border-theme-border bg-white
+                 shadow-sm transition-[border-color,box-shadow] duration-700 hover:border-theme-primary hover:shadow-[1px_2px_5px_-1px_rgba(0,0,0,0.49)]
                  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-primary
                  dark:border-neutral-800 dark:bg-neutral-900"
     >
