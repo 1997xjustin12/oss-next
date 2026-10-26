@@ -160,7 +160,9 @@ export function GuestLeadModal({
     loading: addressLoading,
     error: addressError,
     clear: clearAddress,
-  } = useGeoapify(address, {
+    // Only while the dialog is open: it is mounted closed on every product
+    // page with the saved ZIP prefilled, which looked that ZIP up on each view.
+  } = useGeoapify(open ? address : '', {
     type: 'postcode',
     countries: 'us,ca',
     debounceMs: 300,

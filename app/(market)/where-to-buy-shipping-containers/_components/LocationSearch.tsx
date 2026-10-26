@@ -3,67 +3,41 @@
 import { useEffect, useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CircleArrowRight, Loader2, LocateFixed, MapPin } from 'lucide-react'
-import { useGeoapify } from '@/hooks/useGeoapify'
-import { useStoredZip } from '@/hooks/useStoredZip'
+import { useZipLookup } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import { ROUTES } from '@/config/routes'
-
-/** Where the geolocation detector caches what it found. */
-const DETECTED_ZIP_KEY = 'userZipCode'
 
 /**
  * The depot finder: a ZIP, its suggestions, and the listing for whichever one
  * is chosen.
  *
- * Deliberately built on `useGeoapify` rather than on the listing's own
- * `ZipLookup`. The two look nothing alike and want different chrome, but more
- * importantly the hook already owns every subtle part: the debounce, the
- * one-depot-per-order guard, and `resolveTyped`, whose comment names "use my
- * current location" as the case it was hardened against.
- *
- * That last point is why this does not copy `ZipLookup.handleUseLocation`,
- * which hand-rolls its own `/api/geoapify` fetch. `resolveTyped` resolves a raw
- * ZIP correctly even while the suggestion list still holds results for whatever
- * the box showed a moment ago — the exact confusion the hand-rolled version was
- * patched for.
+ * Built on `useZipLookup` (hooks/useGeoapify.ts), like every ZIP box: it
+ * starts from the visitor's saved or detected location, suggests only for what
+ * they type, resolves a submit without a pick, and handles "use my current
+ * location". What is particular to this box is only where a pick leads: the
+ * listing for that ZIP and depot.
  */
 export function LocationSearch() {
   const router = useRouter()
-  const [zip, setZip] = useState('')
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
-  // Whether the visitor has typed in the box. Until they do, it shows their
-  // saved location and asks Geoapify for nothing.
-  const [edited, setEdited] = useState(false)
-  const stored = useStoredZip()
 
-  /**
-   * Prefill from storage, as the listing's ZipLookup does: the saved location's
-   * label ("Atlanta, GA 30303") when the visitor has chosen one, else the ZIP
-   * the geolocation detector found. Follows a change made elsewhere (another
-   * ZIP box, another tab) until the visitor types here.
-   */
-  useEffect(() => {
-    if (!stored.resolved || edited) return
-    let detected = ''
-    try {
-      detected = localStorage.getItem(DETECTED_ZIP_KEY) ?? ''
-    } catch {
-      // Private mode, or storage blocked: nothing to prefill from.
-    }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirrors storage (client-only) into the box
-    setZip(stored.label || stored.postcode || detected)
-  }, [stored, edited])
-
-  // Suggestions only for what the visitor types: the prefilled label is not a
-  // query, and looking it up on every page view would be a wasted request.
-  const { results, loading, error, clear, selectResult, resolveTyped } = useGeoapify(edited ? zip : '', {
-    type: 'postcode',
-    countries: 'us,ca',
-    debounceMs: 300,
-    limit: 5,
-  })
+  // Prefill from the saved / detected location, typed-only suggestions,
+  // "use my current location": all in the shared hook.
+  const {
+    value: zip,
+    setValue: setZip,
+    showResult,
+    results,
+    loading,
+    error,
+    clear,
+    selectResult,
+    resolveValue,
+    locateMe,
+    locating,
+  } = useZipLookup({ type: 'postcode', countries: 'us,ca', debounceMs: 300, limit: 5 })
 
   const listboxId = useId()
   const noticeId = useId()
@@ -95,30 +69,20 @@ export function LocationSearch() {
     if (!selectResult(result, () => handleSelect(result))) return
 
     setNotice(null)
-    setZip(result.formatted)
+    showResult(result)
     setOpen(false)
     goToListing(result.postcode || zip.trim(), result.nearestLocation ?? result.formatted)
   }
 
-  /** Typed a ZIP and pressed the button before the suggestions caught up. */
+  /** Submitted without picking a suggestion: what was typed, or the prefilled location. */
   async function handleSubmit() {
-    const trimmed = zip.trim()
-    if (!trimmed || busy) return
-
-    // Untouched prefill of the saved location: its ZIP and depot are already
-    // known and already saved, so go straight to that listing.
-    if (!edited && stored.postcode && stored.depot && trimmed === (stored.label || stored.postcode)) {
-      setOpen(false)
-      setNotice(null)
-      goToListing(stored.postcode, stored.depot)
-      return
-    }
+    if (!zip.trim() || busy) return
 
     setOpen(false)
     setNotice(null)
     setBusy(true)
     try {
-      const match = await resolveTyped(trimmed)
+      const match = await resolveValue()
       if (match) {
         handleSelect(match)
         return
@@ -129,44 +93,19 @@ export function LocationSearch() {
     }
   }
 
-  /**
-   * The ZIP the geolocation detector already found, if it ever ran.
-   *
-   * Reads storage rather than asking the browser for coordinates: the
-   * permission prompt belongs to whatever first detected the location, and
-   * asking again here would be a second prompt for an answer we already have.
-   */
   async function handleUseMyLocation() {
-    if (busy) return
+    if (busy || locating) return
     setNotice(null)
-
-    let detected = ''
-    try {
-      detected = localStorage.getItem(DETECTED_ZIP_KEY) ?? ''
-    } catch {
-      // Private mode, or storage blocked. Treated as "nothing stored".
-    }
-
-    if (!detected) {
-      setNotice('We do not have your location yet. Please enter your ZIP or postal code.')
+    const outcome = await locateMe()
+    if (outcome.result) {
+      handleSelect(outcome.result)
       return
     }
-
-    // Shown in the box first, so the button visibly does something even while
-    // the lookup is in flight — and so a failure leaves them with the ZIP to
-    // correct rather than an empty field.
-    setZip(detected)
-    setBusy(true)
-    try {
-      const match = await resolveTyped(detected)
-      if (match) {
-        handleSelect(match)
-        return
-      }
-      setNotice('We could not find that ZIP or postal code. Please check it and try again.')
-    } finally {
-      setBusy(false)
-    }
+    setNotice(
+      outcome.reason === 'unknown'
+        ? 'We do not have your location yet. Please enter your ZIP or postal code.'
+        : 'We could not find that ZIP or postal code. Please check it and try again.',
+    )
   }
 
   return (
@@ -195,7 +134,6 @@ export function LocationSearch() {
           value={zip}
           onChange={(e) => {
             setZip(e.target.value)
-            setEdited(true)
             setOpen(true)
             setNotice(null)
           }}
@@ -225,7 +163,7 @@ export function LocationSearch() {
 
         <button
           type="submit"
-          disabled={busy}
+          disabled={busy || locating}
           // The icon is the whole control, so the name has to come from
           // somewhere a pointer user never sees.
           aria-label="Search this location"
@@ -233,7 +171,7 @@ export function LocationSearch() {
                      transition-colors hover:bg-theme-primary-dark disabled:cursor-not-allowed disabled:opacity-80
                      focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white"
         >
-          {busy ? (
+          {busy || locating ? (
             <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
           ) : (
             <CircleArrowRight className="h-6 w-6" aria-hidden />
@@ -300,7 +238,7 @@ export function LocationSearch() {
         <button
           type="button"
           onClick={() => void handleUseMyLocation()}
-          disabled={busy}
+          disabled={busy || locating}
           className="inline-flex items-center gap-2 rounded-full border border-white/70 px-4 py-2
                      text-xs font-semibold text-white backdrop-blur-[2px]
                      transition-colors hover:border-white hover:bg-white/10

@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useEffect, useId } from 'react'
-import { saveVisitorZip } from '@/lib/visitorZip'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Navigation, Loader2, MapPin } from 'lucide-react'
-import { useGeoapify } from '@/hooks/useGeoapify'
+import { useZipLookup } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
-import { getNearestLocation } from '@/lib/nearestDepot'
 
 type Props = {
   initialZip?: string
@@ -14,32 +12,29 @@ type Props = {
   ptype?: string
 }
 
+/**
+ * The listing's ZIP box. Starts from the URL's ZIP (shown as the saved label
+ * when it is the saved ZIP), else the visitor's saved or detected location;
+ * all of that, typed-only suggestions and "use current location" come from
+ * useZipLookup. A pick, or a submit, goes to this listing for that ZIP.
+ */
 export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
   const router = useRouter()
-  const [zip, setZip] = useState(initialZip)
   const [open, setOpen] = useState(false)
-  const [locating, setLocating] = useState(false)
 
-  const { results, loading, error, clear, selectResult, confirmLocationChange, resolveTyped } = useGeoapify(zip, {
-    type: 'postcode',
-    countries: 'us,ca',
-    debounceMs: 300,
-    limit: 5,
-  })
-
-  // Sync input with URL: clear when no zipcode param, show pretty label when there is one
-  useEffect(() => {
-    if (!initialZip) {
-      // Syncs from the URL and localStorage, which only exists after hydration.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setZip('')
-      return
-    }
-    const label  = localStorage.getItem('zipcode_label')
-    const stored = localStorage.getItem('zipcode')
-    if (stored === initialZip && label) setZip(label)
-    else setZip(initialZip)
-  }, [initialZip])
+  const {
+    value: zip,
+    setValue: setZip,
+    showResult,
+    results,
+    loading,
+    error,
+    clear,
+    selectResult,
+    resolveValue,
+    locateMe,
+    locating,
+  } = useZipLookup({ initialZip, type: 'postcode', countries: 'us,ca', debounceMs: 300, limit: 5 })
 
   useEffect(() => {
     if (open && results.length === 1) {
@@ -57,7 +52,7 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     // Refused when the cart holds a container from another depot; the prompt
     // is showing, so stay on this listing rather than navigate to the new one.
     if (!selectResult(result, () => handleSelect(result))) return
-    setZip(result.formatted)
+    showResult(result)
     setOpen(false)
     navigate(result.postcode || zip, result.nearestLocation ?? result.formatted)
   }
@@ -67,59 +62,18 @@ export function ZipLookup({ initialZip = '', location, ptype = 'buy' }: Props) {
     if (!trimmed) return
     setOpen(false)
 
-    // Typed and submitted without picking a suggestion. This used to save
-    // nothing and navigate with `location` — the depot of the page they were
-    // already on — beside a ZIP that may belong to a different one. Resolved
-    // and saved like a picked suggestion instead; handleSelect navigates.
-    const match = await resolveTyped(trimmed)
+    // Submitted without picking a suggestion: resolved and saved like a picked
+    // one (handleSelect navigates). Only text that cannot be placed at all
+    // falls back to navigating with it as-is.
+    const match = await resolveValue()
     if (match) return handleSelect(match)
     navigate(trimmed, location ?? trimmed)
   }
 
   async function handleUseLocation() {
-    const userZipCode = localStorage.getItem('userZipCode')
-    if (!userZipCode) return
-
-    setLocating(true)
-    try {
-      const params = new URLSearchParams({
-        text:   userZipCode,
-        limit:  '1',
-        type:   'postcode',
-        filter: 'countrycode:us,ca',
-      })
-
-      const res = await fetch(`/api/geoapify?${params}`)
-      if (!res.ok) return
-
-      const json = (await res.json()) as { features?: unknown[] }
-      const feature = json.features?.[0]
-      if (!feature) return
-
-      const p = (feature as { properties: Record<string, unknown> }).properties
-      const lat         = Number(p.lat      ?? 0)
-      const lon         = Number(p.lon      ?? 0)
-      const postcode    = String(p.postcode  ?? userZipCode)
-      const formatted   = String(p.formatted ?? userZipCode)
-      const nearestLocation = getNearestLocation(lat, lon)
-
-      const redirectParams = new URLSearchParams({ zipcode: postcode })
-      if (nearestLocation) redirectParams.set('location', nearestLocation)
-      const galleryRedirect = `/sale-shipping-containers?${redirectParams}`
-
-      localStorage.setItem('gallery_redirect', galleryRedirect)
-      // Same one-depot-per-order guard as a picked suggestion.
-      if (!confirmLocationChange(nearestLocation ?? '', () => void handleUseLocation())) return
-      // The same single write every ZIP input uses — see saveVisitorZip.
-      saveVisitorZip({ postcode, label: formatted, depot: nearestLocation ?? '' })
-
-      setZip(formatted)
-      navigate(postcode, nearestLocation ?? formatted)
-    } catch {
-      // silently fail — user can type manually
-    } finally {
-      setLocating(false)
-    }
+    // Nothing detected, or it cannot be placed: stay put, the visitor can type.
+    const outcome = await locateMe()
+    if (outcome.result) handleSelect(outcome.result)
   }
 
   const listboxId = useId()

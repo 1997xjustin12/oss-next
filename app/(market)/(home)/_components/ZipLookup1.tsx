@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { Loader2, MapPin } from "lucide-react";
-import { useGeoapify } from "@/hooks/useGeoapify";
+import { useZipLookup } from "@/hooks/useGeoapify";
 import type { GeoapifyResult } from "@/hooks/useGeoapify";
 import type { FormattedContainerHit } from "@/types/product";
 import { getCustomFieldValue } from "@/lib/pricing";
@@ -151,12 +151,25 @@ export function ZipLookup1({
   homeVersion = 1,
 }: Props) {
   const router = useRouter();
-  const [zip, setZip] = useState(initialZip);
   const [open, setOpen] = useState(false);
   const [selectedZipcode, setSelectedZipcode] = useState(initialZip);
   const [selectedLocation, setSelectedLocation] = useState(location);
 
-  const { results, loading, error, clear, selectResult, resolveTyped, depotContainers } = useGeoapify(zip, {
+  // Prefill (URL ZIP, else the saved / detected location) and typed-only
+  // suggestions come from the shared hook.
+  const {
+    value: zip,
+    setValue: setZip,
+    showResult,
+    results,
+    loading,
+    error,
+    clear,
+    selectResult,
+    resolveValue,
+    depotContainers,
+  } = useZipLookup({
+    initialZip,
     type: "postcode",
     countries: "us,ca",
     debounceMs: 300,
@@ -165,24 +178,14 @@ export function ZipLookup1({
     loadDepotContainers: homeVersion === 3,
   });
 
-  // Sync input with URL when a zipcode param is present; otherwise fall back
-  // to the last zip the user picked (there's no URL param to sync from on
-  // the homepage, so this is what actually populates the field here).
+  // The banner prices (variant 3) follow the saved location. The box itself is
+  // prefilled by useZipLookup.
   useEffect(() => {
-    const label = localStorage.getItem("zipcode_label");
     const stored = localStorage.getItem("zipcode");
     const storedDepot = localStorage.getItem("zipcode_depot");
 
-    if (!initialZip) {
-      // localStorage only exists after hydration, so the stored ZIP arrives here.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setZip(label ?? "");
-    } else if (stored === initialZip && label) {
-      setZip(label);
-    } else {
-      setZip(initialZip);
-    }
-
+    // localStorage only exists after hydration, so the stored ZIP arrives here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedZipcode(stored ?? initialZip);
     setSelectedLocation(storedDepot ?? location);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -210,7 +213,7 @@ export function ZipLookup1({
     // Refused when the cart holds a container from another depot — the prompt
     // is already up, and navigating to the new location would contradict it.
     if (!selectResult(result, () => handleSelect(result))) return;
-    setZip(result.formatted);
+    showResult(result);
     setOpen(false);
     setSelectedZipcode(result.postcode || zip);
     setSelectedLocation(result.nearestLocation ?? location);
@@ -234,7 +237,7 @@ export function ZipLookup1({
     // old one. Resolved and saved like a picked suggestion instead. Navigates
     // here rather than through handleSelect because version 3 of the homepage
     // deliberately does not navigate on select, and this button always should.
-    const match = await resolveTyped(trimmed);
+    const match = await resolveValue();
     if (match) {
       if (!selectResult(match, () => void handleSeePrices())) return;
       navigate(match.postcode || trimmed, match.nearestLocation ?? match.formatted);

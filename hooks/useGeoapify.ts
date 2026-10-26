@@ -12,6 +12,8 @@ import type { FormattedContainerHit } from '@/types/product'
 export type { ShippingContainerHit, FormattedContainerHit } from '@/types/product'
 
 import { isAbandonedRequest } from '@/lib/pageUnloading'
+import { useStoredZip } from '@/hooks/useStoredZip'
+import { readDetectedZip, savedLocationResult, zipPrefill } from '@/lib/zipLookup'
 
 const GEOAPIFY_PROXY = '/api/geoapify'
 
@@ -31,7 +33,7 @@ export interface GeoapifyResult {
   galleryRedirect: string
 }
 
-interface UseGeoapifyOptions {
+export interface UseGeoapifyOptions {
   /** Debounce delay in ms before firing the request. Default: 300 */
   debounceMs?: number
   /** Max number of suggestions to return. Default: 5 */
@@ -51,7 +53,7 @@ interface UseGeoapifyOptions {
   loadDepotContainers?: boolean
 }
 
-interface UseGeoapifyReturn {
+export interface UseGeoapifyReturn {
   results: GeoapifyResult[]
   loading: boolean
   error: string | null
@@ -347,5 +349,127 @@ export function useGeoapify(
     depotContainers,
     depotContainersLoading,
     depotContainersError,
+  }
+}
+
+// ─── useZipLookup: every ZIP box ───────────────────────────────────────────────
+
+export interface UseZipLookupOptions extends UseGeoapifyOptions {
+  /** A ZIP the page already has (the URL's ?zipcode=). It wins over storage. */
+  initialZip?: string
+}
+
+/** "Use my current location": the place to select, or why there is none. */
+export type LocateOutcome =
+  | { result: GeoapifyResult; reason?: undefined }
+  | { result: null; reason: 'unknown' | 'not-found' }
+
+export interface UseZipLookupReturn extends UseGeoapifyReturn {
+  /** What the box shows. Bind it to the input's value. */
+  value: string
+  /** For the input's onChange: the visitor typed. Suggestions follow from here. */
+  setValue: (value: string) => void
+  /** Show a chosen place in the box after a pick, without counting as typing. */
+  showResult: (result: GeoapifyResult) => void
+  /** Whether the visitor has typed in the box since it was prefilled. */
+  edited: boolean
+  /** True while locateMe() is resolving the detected ZIP. */
+  locating: boolean
+  /**
+   * The place the box stands for, for a submit without a picked suggestion:
+   * what the visitor typed, or (untouched) the prefilled location, using the
+   * saved depot directly when there is one rather than looking it up again.
+   */
+  resolveValue: () => Promise<GeoapifyResult | null>
+  /**
+   * The visitor's detected location (the ZIP ZipAutoDetect stored in
+   * userZipCode), as a place to select. Never a permission prompt. The saved
+   * location is reused when the detected ZIP is the saved one; any other ZIP is
+   * resolved afresh, so a detected ZIP is never paired with another ZIP's city
+   * and depot. The box shows the detected ZIP while it resolves.
+   */
+  locateMe: () => Promise<LocateOutcome>
+}
+
+/**
+ * Everything a ZIP box needs, so no box re-implements it: built on
+ * useGeoapify, it also owns the box's value.
+ *
+ * - **Starts from what we know**: the page's ZIP, else the visitor's saved
+ *   location ("Atlanta, GA 30303"), else the detected ZIP. It follows a change
+ *   made elsewhere (another box, another tab) until the visitor types here.
+ * - **Suggestions only for typed text**: the prefill is not a query, so it
+ *   costs no lookup on page load, and it never auto-selects the location the
+ *   visitor already has.
+ * - **"Use my current location"** and **submit without a pick** behave the
+ *   same in every box (locateMe, resolveValue).
+ *
+ * The component keeps its own UI and its own "what happens after a pick":
+ * call selectResult (or its handler that does) with what these return, then
+ * showResult.
+ */
+export function useZipLookup({ initialZip = '', ...options }: UseZipLookupOptions = {}): UseZipLookupReturn {
+  const stored = useStoredZip()
+  const [value, setValueState] = useState(initialZip)
+  const [edited, setEdited] = useState(false)
+  const [locating, setLocating] = useState(false)
+
+  // A new ZIP from the page (the URL changed: a navigation, back/forward) is
+  // the box's new starting point, even after the visitor typed.
+  const [prevInitialZip, setPrevInitialZip] = useState(initialZip)
+  if (prevInitialZip !== initialZip) {
+    setPrevInitialZip(initialZip)
+    setEdited(false)
+  }
+
+  // Storage is client-only, so the prefill lands after hydration.
+  useEffect(() => {
+    if (!stored.resolved || edited) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirrors client-only storage into the box
+    setValueState(zipPrefill(initialZip, stored, readDetectedZip()))
+  }, [stored, edited, initialZip])
+
+  const geo = useGeoapify(edited ? value : '', options)
+
+  async function resolveValue(): Promise<GeoapifyResult | null> {
+    const typed = value.trim()
+    if (edited) return typed ? geo.resolveTyped(typed) : null
+    if (!initialZip || initialZip === stored.postcode) {
+      const saved = savedLocationResult(stored)
+      if (saved) return saved
+    }
+    const source = initialZip || stored.postcode || readDetectedZip()
+    return source ? geo.resolveTyped(source) : null
+  }
+
+  async function locateMe(): Promise<LocateOutcome> {
+    const detected = readDetectedZip()
+    if (!detected) return { result: null, reason: 'unknown' }
+    if (detected === stored.postcode) {
+      const saved = savedLocationResult(stored)
+      if (saved) return { result: saved }
+    }
+    setValueState(detected)
+    setLocating(true)
+    try {
+      const result = await geo.resolveTyped(detected)
+      return result ? { result } : { result: null, reason: 'not-found' }
+    } finally {
+      setLocating(false)
+    }
+  }
+
+  return {
+    ...geo,
+    value,
+    setValue: (next: string) => {
+      setValueState(next)
+      setEdited(true)
+    },
+    showResult: (result: GeoapifyResult) => setValueState(result.formatted),
+    edited,
+    locating,
+    resolveValue,
+    locateMe,
   }
 }

@@ -3,10 +3,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, MapPin, Pencil } from 'lucide-react'
-import { useGeoapify } from '@/hooks/useGeoapify'
+import { useZipLookup } from '@/hooks/useGeoapify'
 import type { GeoapifyResult } from '@/hooks/useGeoapify'
 import { findEquivalentContainer, getCustomFieldValue, isGenericDisplayHit } from '@/lib/pricing'
-import { useStoredZip } from '@/hooks/useStoredZip'
 import type { ProductHit, FormattedContainerHit } from '@/types/product'
 
 /**
@@ -52,13 +51,6 @@ type Props = {
 
 export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props) {
   const router = useRouter()
-  // Null until the visitor touches the field; the stored ZIP shows through
-  // until then. Derived rather than copied into state on mount, so there is no
-  // effect racing the first paint.
-  const [typedZip, setTypedZip] = useState<string | null>(null)
-  const storedZip = useStoredZip()
-  const zip = typedZip ?? storedZip.label ?? ''
-  const setZip = setTypedZip
   const [open, setOpen] = useState(false)
   const [matching, setMatching] = useState(false)
   const [locateError, setLocateError] = useState<string | null>(null)
@@ -81,12 +73,21 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
   // caller loading the new depot's containers for a swap.
   const busy = matching || locationChange?.loading === true
 
-  const { results, loading, error, clear, selectResult, resolveTyped } = useGeoapify(zip, {
-    type: 'postcode',
-    countries: 'us,ca',
-    debounceMs: 300,
-    limit: 5,
-  })
+  // Prefill (the saved / detected location), typed-only suggestions and
+  // "use my current location" come from the shared hook.
+  const {
+    value: zip,
+    setValue: setZip,
+    showResult,
+    edited,
+    results,
+    loading,
+    error,
+    clear,
+    selectResult,
+    resolveValue,
+    locateMe,
+  } = useZipLookup({ type: 'postcode', countries: 'us,ca', debounceMs: 300, limit: 5 })
 
   // The last result auto-selected, so it is not selected again.
   //
@@ -106,7 +107,7 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
     // was a silent no-op until selecting could be refused: with a cart from
     // another depot it now raised the conflict prompt for a location nobody
     // tried to change.
-    if (typedZip === null) return
+    if (!edited) return
     if (!open || results.length !== 1) return
     if (autoSelectedRef.current === results[0].placeId) return
 
@@ -139,7 +140,7 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
     // swapping the page onto the new depot's container would show a location
     // the prompt has just said cannot be used.
     if (!selectResult(result, () => handleSelect(result))) return
-    setZip(result.formatted)
+    showResult(result)
     onZipChange?.(result.postcode)
     setOpen(false)
     if (!result.nearestLocation) return
@@ -154,74 +155,32 @@ export function DeliveryZipCheck({ product, onZipChange, locationChange }: Props
   }
 
   /**
-   * Apply the location the site already detected for this visitor.
-   *
-   * Not a geolocation prompt: `ZipAutoDetect` asks the browser once on load
-   * and stores the result, so by the time this link is clickable the answer is
-   * already sitting in `userZipCode`. Prompting again would be a second
-   * permission dialog for something we know.
-   *
-   * Read at click time rather than on mount, because that detection finishes
-   * asynchronously and may well land after this component has rendered.
+   * Apply the location the site already detected for this visitor (the ZIP
+   * ZipAutoDetect stored), through the same handleSelect as a typed ZIP, so
+   * both behave identically. Not a permission prompt. useZipLookup reuses the
+   * saved depot when the detected ZIP is the saved one, and resolves any
+   * other afresh.
    */
-  function handleUseMyLocation() {
-    let detected = ''
-    let depot = ''
-    let label = ''
-    try {
-      detected = localStorage.getItem('userZipCode') ?? ''
-      depot = localStorage.getItem('zipcode_depot') ?? ''
-      label = localStorage.getItem('zipcode_label') ?? ''
-    } catch {
-      // Storage unavailable — treated the same as never having detected it.
-    }
-
-    if (!detected) {
-      setLocateError("We don't have your location yet — enter your ZIP code instead.")
-      return
-    }
-
+  async function handleUseMyLocation() {
     setLocateError(null)
-
-    // The label and depot in storage belong to whatever ZIP is *current*,
-    // which is the detected one only until the visitor types another. After
-    // that, reusing them paired the detected ZIP with the typed ZIP's city and
-    // depot — and saved nothing, so the links kept the typed one. Resolve the
-    // detected ZIP the same way a typed one is, through handleSelect.
-    let current = ''
-    try {
-      current = localStorage.getItem('zipcode') ?? ''
-    } catch {
-      // Unreadable storage — resolving afresh below is the safe path anyway.
-    }
-    if (detected !== current) {
-      setOpen(false)
-      void resolveTyped(detected).then((match) => {
-        if (match) handleSelect(match)
-        else setLocateError("We couldn't place your location — enter your ZIP code instead.")
-      })
+    setOpen(false)
+    const outcome = await locateMe()
+    if (outcome.result) {
+      handleSelect(outcome.result)
       return
     }
-
-    setZip(label || detected)
-    setOpen(false)
-    onZipChange?.(detected)
-
-    // Same two strategies as picking a suggestion, so a detected ZIP and a
-    // typed one behave identically from here on.
-    if (!depot) return
-    if (locationChange?.mode === 'swap' && locationChange.onChange) {
-      locationChange.onChange(depot)
-    } else {
-      void redirectToEquivalentAt(depot)
-    }
+    setLocateError(
+      outcome.reason === 'unknown'
+        ? "We don't have your location yet — enter your ZIP code instead."
+        : "We couldn't place your location — enter your ZIP code instead.",
+    )
   }
 
   // Enter without picking. Used to act only when the list had already
   // narrowed to one, so pressing Enter straight after typing — before the
   // debounce — did nothing at all.
   async function handleCheck() {
-    const match = await resolveTyped(zip)
+    const match = await resolveValue()
     // Shares the auto-select latch: the suggestion list can land while this
     // is still resolving, and both would otherwise select the same place —
     // two depot lookups and two product swaps for one Enter.
