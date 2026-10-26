@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
+import { PlpLink } from '@/components/shared/PlpLink'
 import { ArrowRight } from 'lucide-react'
 
 export type ContainerType = {
@@ -24,17 +24,16 @@ type Props = { type: ContainerType }
  * there is one tab stop and one thing to activate rather than a link wrapping
  * another link — which is invalid markup and unpredictable for a screen reader.
  *
- * Not a Client Component, deliberately, despite the brief asking for one: it
- * renders a link, a picture and a list, with no state, no effect and no
- * handler. `'use client'` would ship JavaScript for a card that never needs
- * any, against the project's own "Server Components by default" rule. Say so
- * if an interaction is coming and it should be one from the start.
+ * The card is a Server Component; only the anchor is client-side. `PlpLink`
+ * adds the visitor's saved `zipcode` and `location` (their depot) to the href
+ * after hydration, and re-applies them whenever any ZIP box on the page saves a
+ * new location, so "See Prices" lands on the listing for their own yard.
  */
 export function ContainerTypeCardLink({ type }: Props) {
   const { item, image, url, perks } = type
 
   return (
-    <Link
+    <PlpLink
       href={url}
       // `group` so the button can react to a hover anywhere on the card, which
       // is what makes the whole surface read as one control.
@@ -103,6 +102,6 @@ export function ContainerTypeCardLink({ type }: Props) {
         See Prices
         <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
       </span>
-    </Link>
+    </PlpLink>
   )
 }
