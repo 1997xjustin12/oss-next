@@ -1,6 +1,7 @@
 "use client";
 
 import { useClearRefinements, useHits } from "react-instantsearch";
+import type { ShippingContainerHit } from "@/types/product";
 import { ACCESSORY_HITS_PER_PAGE, hitToAccessoryCard } from "@/lib/accessoryCatalog";
 import { AccessoryCard } from "./AccessoryCard";
 
@@ -54,7 +55,7 @@ export function AccessoryHits() {
             const card = hitToAccessoryCard(hit);
             return (
               <li key={card.id}>
-                <AccessoryCard item={card} />
+                <AccessoryCard item={card} hit={hit as unknown as ShippingContainerHit} />
               </li>
             );
           })}

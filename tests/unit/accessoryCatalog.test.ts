@@ -8,6 +8,8 @@ import {
   CATEGORY_ATTRIBUTE,
   PRICE_ATTRIBUTE,
   STOCK_ATTRIBUTE,
+  ACCESSORY_MAX_QUANTITY,
+  accessoryCartItem,
   accessoryCategoryHref,
   hitToAccessoryCard,
   paramsFromUiState,
@@ -113,5 +115,41 @@ describe('hitToAccessoryCard', () => {
     assert.equal(card.price, 0)
     assert.equal(card.imageUrl, undefined)
     assert.equal(card.imageAlt, 'Bare')
+  })
+})
+
+describe('accessoryCartItem', () => {
+  const hit = {
+    objectID: 'abc',
+    title: 'Steel Ramp',
+    handle: 'steel-ramp',
+    sale_price: 899,
+    images: [{ src: 'https://cdn.example/ramp.webp' }],
+    variants: [{ sku: 'RAMP-1', qty: 4 }],
+    custom_fields: [{ name: 'condition', value: 'New' }],
+    product_category: [{ category_name: 'Ramp' }],
+  }
+
+  it('builds the same cart line the product page adds, with the quantity', () => {
+    const item = accessoryCartItem(hit, 3)
+    assert.deepEqual({ ...item, rawHit: undefined }, {
+      id: 'abc',
+      name: 'Steel Ramp',
+      price: 899,
+      quantity: 3,
+      sku: 'RAMP-1',
+      condition: 'New',
+      orderType: 'Purchase',
+      image: 'https://cdn.example/ramp.webp',
+      rawHit: undefined,
+    })
+    assert.equal(item.rawHit, hit)
+  })
+
+  it('keeps the quantity between 1 and the maximum', () => {
+    assert.equal(accessoryCartItem(hit, 0).quantity, 1)
+    assert.equal(accessoryCartItem(hit, -5).quantity, 1)
+    assert.equal(accessoryCartItem(hit, 2.6).quantity, 3)
+    assert.equal(accessoryCartItem(hit, 1000).quantity, ACCESSORY_MAX_QUANTITY)
   })
 })

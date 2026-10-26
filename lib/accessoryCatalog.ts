@@ -1,6 +1,9 @@
 import { ROUTES } from '@/config/routes'
+import { getCustomFieldValue } from '@/lib/pricing'
 import type { IndexUiState } from 'instantsearch.js'
 import type { AccessoryCardData } from '@/types/accessoryCatalog'
+import type { CartItem } from '@/types/cart'
+import type { ShippingContainerHit } from '@/types/product'
 
 /**
  * Configuration and pure helpers for the accessories page's InstantSearch
@@ -145,5 +148,30 @@ export function hitToAccessoryCard(hit: RawHit): AccessoryCardData {
     imageAlt: image?.alt || hit.title || '',
     inStock: Number.isFinite(qty) && qty > 0,
     category,
+  }
+}
+
+/** The most a card's quantity field allows in one add. */
+export const ACCESSORY_MAX_QUANTITY = 99
+
+/**
+ * The cart line for adding `quantity` of an accessory from a search hit: the
+ * same shape the product page adds (AccessoryDetail), so the cart, the
+ * confirmation and the backend sync treat both the same. The full hit rides
+ * along as `rawHit`, which the backend cart sync needs.
+ */
+export function accessoryCartItem(hit: ShippingContainerHit, quantity: number): CartItem {
+  const card = hitToAccessoryCard(hit as RawHit)
+  const variants = hit.variants as { sku?: string }[] | undefined
+  return {
+    id: hit.objectID,
+    name: card.title,
+    price: card.price,
+    quantity: Math.min(ACCESSORY_MAX_QUANTITY, Math.max(1, Math.round(quantity))),
+    sku: variants?.[0]?.sku ?? '',
+    condition: getCustomFieldValue(hit, 'condition'),
+    orderType: 'Purchase',
+    image: card.imageUrl,
+    rawHit: hit,
   }
 }

@@ -3,17 +3,23 @@ import { Package } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import { formatMoney } from "@/lib/formatters";
 import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
+import { AccessoryAddToCart } from "./AccessoryAddToCart";
 import type { AccessoryCardData } from "@/types/accessoryCatalog";
+import type { ShippingContainerHit } from "@/types/product";
 
-type Props = { item: AccessoryCardData };
+type Props = {
+  item: AccessoryCardData;
+  /** The search hit, added to the cart as-is (the backend cart sync needs it). */
+  hit: ShippingContainerHit;
+};
 
 /**
- * One product: photo, category, title, price, stock and a link to its page.
- * The title's link stretches over the whole card (after:inset-0), so the card
- * is one target and the "View details" label is not a second link to the same
- * place.
+ * One product: photo, category, title, price, stock, then quantity and
+ * "Add to cart". The title's link stretches over the whole card
+ * (after:inset-0), so clicking anywhere else on the card opens the product
+ * page; the cart controls sit above it.
  */
-export function AccessoryCard({ item }: Props) {
+export function AccessoryCard({ item, hit }: Props) {
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-theme-border bg-white transition-colors hover:border-theme-primary dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-red-400">
       <div className="relative flex aspect-video items-center justify-center bg-theme-subtle sm:aspect-4/3 dark:bg-neutral-800">
@@ -48,12 +54,7 @@ export function AccessoryCard({ item }: Props) {
               "out of stock" would be a guess. */}
           {item.inStock && <p className="text-sm font-semibold text-green-700 dark:text-green-400">In stock</p>}
         </div>
-        <span
-          aria-hidden
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-theme-primary px-4 text-sm font-bold text-white transition-colors group-hover:bg-theme-primary-dark"
-        >
-          View details
-        </span>
+        <AccessoryAddToCart hit={hit} title={item.title} />
       </div>
     </article>
   );
