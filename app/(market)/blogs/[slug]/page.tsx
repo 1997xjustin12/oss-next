@@ -150,7 +150,10 @@ async function ArticleContent({ params }: Props) {
                 {formatBlogDate(post.date)}
               </time>
             )}
-            <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-theme-dark sm:text-4xl dark:text-white">
+            {/* Brand red in both schemes. On the dark background it is 3.09:1,
+                which passes only because this is large bold text (3:1 needed);
+                keep it at least text-3xl font-bold if it is ever restyled. */}
+            <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-theme-primary sm:text-4xl">
               {post.title}
             </h1>
           </header>
