@@ -129,7 +129,8 @@ async function ArticleContent({ params }: Props) {
 
   return (
     // <div>, not <main> — the (market) layout owns the single <main> landmark.
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    // px-[5%], the container every other page and the navbar use.
+    <div className="px-[5%] py-10 sm:py-14">
       <JsonLd data={jsonLd} />
 
       <nav aria-label="Breadcrumb" className="mb-6 text-sm">
@@ -138,52 +139,80 @@ async function ArticleContent({ params }: Props) {
         </Link>
       </nav>
 
-      <article>
-        <header className="mb-6">
-          {post.date && (
-            <time dateTime={post.date} className="text-xs font-semibold uppercase tracking-wider text-theme-muted dark:text-neutral-400">
-              {formatBlogDate(post.date)}
-            </time>
-          )}
-          <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-theme-dark sm:text-4xl dark:text-white">
-            {post.title}
-          </h1>
-        </header>
+      <div className={ARTICLE_GRID}>
+        <article className="min-w-0">
+          <header className="mb-6">
+            {post.date && (
+              <time dateTime={post.date} className="text-xs font-semibold uppercase tracking-wider text-theme-muted dark:text-neutral-400">
+                {formatBlogDate(post.date)}
+              </time>
+            )}
+            <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-theme-dark sm:text-4xl dark:text-white">
+              {post.title}
+            </h1>
+          </header>
 
-        <div className="relative mb-8 aspect-[16/9] overflow-hidden rounded-lg bg-theme-subtle dark:bg-neutral-800">
-          <Image
-            src={post.imageUrl}
-            alt={post.imageAlt}
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 768px"
-            className="object-cover"
-          />
-        </div>
+          <div className="relative mb-8 aspect-video overflow-hidden rounded-lg bg-theme-subtle dark:bg-neutral-800">
+            <Image
+              src={post.imageUrl}
+              alt={post.imageAlt}
+              fill
+              priority
+              sizes="(max-width: 1024px) 90vw, 66vw"
+              className="object-cover"
+            />
+          </div>
 
-        <ArticleBody html={post.contentHtml} />
-      </article>
+          <ArticleBody html={post.contentHtml} />
+        </article>
 
-      <Suspense fallback={<RelatedPostsSkeleton />}>
-        <RelatedPosts currentSlug={post.slug} />
-      </Suspense>
+        <aside aria-label="More articles" className={SIDEBAR}>
+          {/* Sticky in the two-column layout, so the list stays in view through
+              a long article; below the navbar, which is sticky itself. */}
+          <div className="lg:sticky lg:top-28">
+            <Suspense fallback={<RelatedPostsSkeleton />}>
+              <RelatedPosts currentSlug={post.slug} />
+            </Suspense>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }
 
 
+/**
+ * The article and its "More Articles" column. Side by side from `lg`, the
+ * related list stacked under the article below that. The article column is
+ * `minmax(0, 1fr)` so wide content in the CMS markup (a table, a long URL)
+ * scrolls inside it instead of pushing the sidebar off the page.
+ */
+const ARTICLE_GRID =
+  'grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-16'
+
+/** Separates the sidebar from the article: a rule above it when stacked, beside it in two columns. */
+const SIDEBAR =
+  'border-t border-theme-border pt-8 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0 xl:pl-10 dark:border-neutral-800'
+
 function ArticleSkeleton() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14" aria-hidden>
+    <div className="px-[5%] py-10 sm:py-14" aria-hidden>
       <div className="mb-6 h-4 w-28 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
-      <div className="mb-2 h-3 w-32 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
-      <div className="mb-3 h-9 w-full animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
-      <div className="mb-8 h-9 w-3/4 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
-      <div className="mb-8 aspect-video animate-pulse rounded-lg bg-theme-subtle dark:bg-neutral-800" />
-      <div className="space-y-3">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="h-4 w-full animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
-        ))}
+      <div className={ARTICLE_GRID}>
+        <div className="min-w-0">
+          <div className="mb-2 h-3 w-32 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
+          <div className="mb-3 h-9 w-full animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
+          <div className="mb-8 h-9 w-3/4 animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
+          <div className="mb-8 aspect-video animate-pulse rounded-lg bg-theme-subtle dark:bg-neutral-800" />
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="h-4 w-full animate-pulse rounded bg-theme-subtle dark:bg-neutral-800" />
+            ))}
+          </div>
+        </div>
+        <div className={SIDEBAR}>
+          <RelatedPostsSkeleton />
+        </div>
       </div>
     </div>
   )
