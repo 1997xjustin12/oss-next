@@ -37,8 +37,19 @@ function GoogleIcon() {
  * Where a review was posted. REVIEWS.io's mark links to the store's page there,
  * as the WordPress slider's cards do; Google's stays a plain icon, because the
  * Google Business Profile URL is not recorded anywhere (see config/reviews.ts).
+ * A review left on this site is from a customer with an order, so it says so.
  */
 function SourceMark({ review }: { review: Review }) {
+  if (review.source === 'onsite') {
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 dark:text-green-400">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3">
+          <path d="M5 12l5 5L20 7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Verified buyer
+      </span>
+    );
+  }
   if (review.source !== 'reviews.io') return <GoogleIcon />;
   return (
     <a

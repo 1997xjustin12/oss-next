@@ -3,9 +3,9 @@ import { visitorAuthHeaders } from '@/lib/backendAuth'
 import { rateLimitedFrom } from '@/lib/backendError'
 import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import type { ContainerVariantKey } from '@/lib/containerVariant'
-import { toStoreReview } from '@/lib/storeReviews'
+import { toBackendReview, toStoreReview } from '@/lib/storeReviews'
 import type { Review } from '@/config/reviews'
-import type { RawStoreReview } from '@/lib/storeReviews'
+import type { RawBackendReview, RawStoreReview } from '@/lib/storeReviews'
 import type { ReviewListResponse } from '@/types/review'
 
 const TARGET_SITE = 'https://onsitestorage.com'
@@ -134,6 +134,55 @@ export async function getStoreReviews(limit = 12): Promise<Review[]> {
       .slice(0, limit)
   } catch (err) {
     console.error('[reviews] REVIEWS.io store reviews failed:', err)
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return []
+  }
+}
+
+/**
+ * This site's own reviews — left by customers with a delivered order, through
+ * the Django backend — for the homepage, newest first, 4–5 stars with text,
+ * at most `limit`.
+ *
+ * The site-wide feed: GET {backend}/api/reviews/list with no product_id.
+ * Empty today (count 0 on be-admin, 2026-10-27), so this returns [] and the
+ * homepage shows REVIEWS.io and Google alone; reviews appear within the hour
+ * once the feed has them, or at once when the reviews tag is revalidated.
+ *
+ * Sent with the API key and no visitor address (`ip: null`): it runs for a
+ * shared cache, not for one visitor. Failures return [] and are cached for
+ * minutes only, as for REVIEWS.io.
+ */
+export async function getOnsiteReviews(limit = 12): Promise<Review[]> {
+  'use cache'
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.REVIEWS)
+
+  if (!OSS_BACKEND_URL) {
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return []
+  }
+
+  try {
+    const res = await fetch(`${REVIEWS_LIST_URL}?page=1`, {
+      headers: {
+        Accept: 'application/json',
+        'X-Store-Domain': STORE_DOMAIN ?? '',
+        ...(await visitorAuthHeaders({ ip: null })),
+      },
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = (await res.json()) as { results?: RawBackendReview[] }
+    cacheLife('hours')
+    return (data.results ?? [])
+      .map((raw) => ({ raw, review: toBackendReview(raw) }))
+      .filter((entry): entry is { raw: RawBackendReview; review: Review } => entry.review !== null)
+      // Newest first, whatever order the feed uses.
+      .sort((a, b) => String(b.raw.created_at ?? '').localeCompare(String(a.raw.created_at ?? '')))
+      .map((entry) => entry.review)
+      .slice(0, limit)
+  } catch (err) {
+    console.error('[reviews] backend store reviews failed:', err)
     cacheLife(OUTAGE_CACHE_LIFE)
     return []
   }

@@ -26,8 +26,11 @@ export type Review = {
   text: string;
   /** Stable key. Optional: the hand-kept Google list below has none. */
   id?: string;
-  /** Where it was posted. Absent means Google, as for the list below. */
-  source?: 'google' | 'reviews.io';
+  /**
+   * Where it was posted. Absent means Google, as for the list below. 'onsite'
+   * is a review left on this site by a customer with an order (the backend).
+   */
+  source?: 'google' | 'reviews.io' | 'onsite';
   /** The review on its source, for the card's attribution link. */
   url?: string;
 };

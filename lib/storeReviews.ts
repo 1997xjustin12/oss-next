@@ -63,16 +63,60 @@ export function formatReviewDate(value: string | null | undefined): string {
 }
 
 /**
- * Two review lists woven together — one from each in turn, then whatever is
- * left of the longer — so neither source fills the first screens on its own.
+ * Review lists woven together — one from each in turn, then whatever is left
+ * of the longer ones — so no source fills the first screens on its own.
  */
-export function mixReviews(first: readonly Review[], second: readonly Review[]): Review[] {
+export function mixReviews(...lists: readonly (readonly Review[])[]): Review[] {
   const mixed: Review[] = []
-  for (let i = 0; i < Math.max(first.length, second.length); i++) {
-    if (i < first.length) mixed.push(first[i])
-    if (i < second.length) mixed.push(second[i])
+  const longest = Math.max(0, ...lists.map((list) => list.length))
+  for (let i = 0; i < longest; i++) {
+    for (const list of lists) if (i < list.length) mixed.push(list[i])
   }
   return mixed
+}
+
+// ── This site's own reviews (the Django backend) ────────────────────────────
+
+/**
+ * One review as GET {backend}/api/reviews/list returns it (fields read). The
+ * shape is from the reference implementation (docs/reference/REVIEWS_FLOW.md)
+ * and not yet seen live — the feed is empty — so every field is optional.
+ */
+export type RawBackendReview = {
+  id: number | string
+  rating?: number | string | null
+  title?: string | null
+  comment?: string | null
+  created_at?: string | null
+  user?: { username?: string | null; first_name?: string | null; last_name?: string | null } | null
+}
+
+/**
+ * A backend review as a homepage card, or null when it should not be shown:
+ * under 4 stars, or no text. Never shows an email address — a username can be
+ * one, so that falls back to a neutral name.
+ */
+export function toBackendReview(raw: RawBackendReview): Review | null {
+  const rating = Number(raw.rating)
+  const text = raw.comment?.trim() || raw.title?.trim() || ''
+  if (!(rating >= MIN_STORE_REVIEW_RATING) || !text) return null
+
+  const fullName = [raw.user?.first_name, raw.user?.last_name]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(' ')
+  const username = raw.user?.username?.trim() ?? ''
+  const name = fullName || (username && !username.includes('@') ? username : '') || 'Verified buyer'
+
+  return {
+    id: `onsite-${raw.id}`,
+    name,
+    avatar: '',
+    rating: Math.min(5, Math.round(rating)),
+    date: formatReviewDate(raw.created_at),
+    text,
+    source: 'onsite',
+  }
 }
 
 /** "Tommy Slagle" → "TS", for a card without a photo. */
