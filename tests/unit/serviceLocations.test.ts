@@ -7,6 +7,7 @@ import {
   LOCATION_PAGE_PATH,
   SERVICE_LOCATIONS,
   SERVICE_LOCATION_COUNT,
+  SERVICE_LOCATION_LABEL,
   US_LOCATION_COUNT,
 } from '@/config/serviceLocations'
 
@@ -25,6 +26,8 @@ describe('SERVICE_LOCATIONS', () => {
 
   it('counts what the section copy quotes', () => {
     assert.equal(SERVICE_LOCATION_COUNT, 53)
+    // The headline rounds down to the ten: "Delivering From 50+ Locations".
+    assert.equal(SERVICE_LOCATION_LABEL, '50+')
     assert.equal(US_LOCATION_COUNT, 44)
     assert.equal(CA_LOCATION_COUNT, 9)
   })

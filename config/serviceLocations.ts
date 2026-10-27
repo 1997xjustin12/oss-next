@@ -80,5 +80,11 @@ export const SERVICE_LOCATIONS: readonly ServiceLocation[] = [
 ]
 
 export const SERVICE_LOCATION_COUNT = SERVICE_LOCATIONS.length
+
+/**
+ * The count as the headline quotes it: rounded down to the ten, plus "+" —
+ * 53 reads "50+". Never overstates, and moves on by itself (60 → "60+").
+ */
+export const SERVICE_LOCATION_LABEL = `${Math.floor(SERVICE_LOCATION_COUNT / 10) * 10}+`
 export const US_LOCATION_COUNT = SERVICE_LOCATIONS.filter((l) => l.country === 'US').length
 export const CA_LOCATION_COUNT = SERVICE_LOCATIONS.filter((l) => l.country === 'CA').length
