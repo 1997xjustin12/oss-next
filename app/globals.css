@@ -55,6 +55,22 @@ body {
   overflow-x: hidden;
 }
 
+/* ─── Page that paints its own background ─────────────────────────────
+   For a page whose outer wrapper sets a background (e.g. one dark-mode
+   colour), put `page-fill` on that wrapper. <main> grows to push the footer
+   to the bottom of a tall window, but a block child does not grow with it, so
+   on a short page the body's light background showed as a band between the
+   page and the footer. This makes <main> a column only when it holds such a
+   page, and lets the page take the rest of it. Opt-in, so no other page's
+   margins change. */
+main:has(> .page-fill) {
+  display: flex;
+  flex-direction: column;
+}
+main > .page-fill {
+  flex: 1 0 auto;
+}
+
 /* ─── Product page's sticky add-to-cart bar ────────────────────────────
    One nudge as the bar arrives, so a control that slides in at the edge of a
    phone screen is noticed rather than read as chrome. Once, not a loop: a bar

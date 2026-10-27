@@ -238,6 +238,13 @@ These rules apply to **every query and every file** — do not wait to be asked.
 ### 13. Scripts
 - `next/script` with `strategy="lazyOnload"` for analytics, chat widgets, and other non-critical third-party scripts.
 
+### 14. Page and section width — every new page
+- **Horizontal gutter: `px-[5%]`, full width.** The navbar, footer and every page use it, so content edges line up with the header at every screen size. Never a page-level `container`, `max-w-*` + `mx-auto` or `px-4 sm:px-6` wrapper.
+- **Each full-width section owns its background and its gutter:** `<section className="bg-… dark:bg-… px-[5%] py-…">`. The background runs edge to edge; the content sits inside the gutter.
+- **Narrower content inside the gutter is fine** where it reads better (a form, a centred heading block): put `max-w-*` on that inner element, never on the page wrapper.
+- **Background in both schemes.** The site's `body` stays light in dark mode, so any section or page that uses `dark:` text colours must set its own `dark:bg-*`, or the text lands on white.
+- **A page that paints one background for its whole content** puts `page-fill` on its outer wrapper (`app/globals.css`): on a short page in a tall window it then reaches the footer instead of leaving a white band above it.
+
 ---
 
 ## Caching Conventions

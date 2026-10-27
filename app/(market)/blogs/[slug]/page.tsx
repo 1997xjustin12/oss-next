@@ -85,7 +85,7 @@ export default function BlogPostPage({ params }: Props) {
   // body stays light in dark mode, so the dark: text classes below used to put
   // white headings on a white page.
   return (
-    <div className="bg-theme-bg text-theme-dark dark:bg-neutral-950 dark:text-neutral-200">
+    <div className="page-fill bg-theme-bg text-theme-dark dark:bg-neutral-950 dark:text-neutral-200">
       <Suspense fallback={<ArticleSkeleton />}>
         <ArticleContent params={params} />
       </Suspense>

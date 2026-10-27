@@ -76,7 +76,7 @@ export default function BlogsPage({ searchParams }: Props) {
   // background in both schemes: the site's body stays light in dark mode, so
   // the dark: text classes below used to put a white heading on a white page.
   return (
-    <div className="bg-theme-bg text-theme-dark dark:bg-neutral-950 dark:text-neutral-200">
+    <div className="page-fill bg-theme-bg text-theme-dark dark:bg-neutral-950 dark:text-neutral-200">
       <div className="px-[5%] py-10 sm:py-14">
         <PageHeadScripts path={ROUTES.BLOGS} />
         <header className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
