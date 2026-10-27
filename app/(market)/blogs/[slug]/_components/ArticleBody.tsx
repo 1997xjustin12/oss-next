@@ -14,20 +14,20 @@ export function ArticleBody({ html }: { html: string }) {
   return (
     <>
       <style>{`
-        .blog-content { color: inherit; line-height: 1.65; font-size: 1.05rem; }
+        .blog-content { color: inherit; line-height: 1.6; font-size: 1.05rem; }
         .blog-content > *:first-child { margin-top: 0; }
-        .blog-content p { margin: 0.7em 0; }
-        .blog-content h2 { font-size: 1.6rem; font-weight: 800; line-height: 1.25; margin: 1.2em 0 0.45em; letter-spacing: -0.01em; }
-        .blog-content h3 { font-size: 1.3rem; font-weight: 700; line-height: 1.3; margin: 1em 0 0.4em; }
-        .blog-content h4 { font-size: 1.1rem; font-weight: 700; margin: 0.9em 0 0.35em; }
+        .blog-content p { margin: 0.5em 0; }
+        .blog-content h2 { font-size: 1.6rem; font-weight: 800; line-height: 1.25; margin: 1em 0 0.35em; letter-spacing: -0.01em; }
+        .blog-content h3 { font-size: 1.3rem; font-weight: 700; line-height: 1.3; margin: 0.85em 0 0.3em; }
+        .blog-content h4 { font-size: 1.1rem; font-weight: 700; margin: 0.75em 0 0.25em; }
         .blog-content a { color: #b3122b; text-decoration: underline; text-underline-offset: 2px; }
-        .blog-content ul, .blog-content ol { margin: 0.7em 0; padding-left: 1.5em; }
+        .blog-content ul, .blog-content ol { margin: 0.5em 0; padding-left: 1.5em; }
         .blog-content ul { list-style: disc; }
         .blog-content ol { list-style: decimal; }
-        .blog-content li { margin: 0.25em 0; }
+        .blog-content li { margin: 0.15em 0; }
         .blog-content li > p { margin: 0; }
-        .blog-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1em 0; }
-        .blog-content figure { margin: 1em 0; }
+        .blog-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 0.75em 0; }
+        .blog-content figure { margin: 0.75em 0; }
         .blog-content figure img { margin: 0; }
         .blog-content figcaption { font-size: 0.85rem; color: #6b7280; text-align: center; margin-top: 0.5em; }
         .blog-content blockquote { border-left: 3px solid #b3122b; padding-left: 1em; margin: 1.5em 0; font-style: italic; color: #4b5563; }
