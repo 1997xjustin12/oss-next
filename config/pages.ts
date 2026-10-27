@@ -34,6 +34,7 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'agents', path: ROUTES.AGENTS, label: 'AI Agent Policy', group: 'Storefront', indexable: true },
   { id: 'where-to-buy', path: ROUTES.WHERE_TO_BUY, label: 'Where to Buy / Locations', group: 'Storefront', indexable: true },
   { id: 'accessory-products', path: ROUTES.ACCESSORY_PRODUCTS, label: 'Container Accessories', group: 'Storefront', indexable: true },
+  { id: 'rent-to-own', path: ROUTES.RENT_TO_OWN, label: 'Rent-To-Own Financing', group: 'Storefront', indexable: true },
 
   { id: 'cart', path: ROUTES.CART, label: 'Cart', group: 'Commerce', indexable: false },
   { id: 'checkout', path: ROUTES.CHECKOUT, label: 'Checkout', group: 'Commerce', indexable: false },

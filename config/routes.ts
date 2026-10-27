@@ -10,6 +10,8 @@ export const ROUTES = {
   PLP_ACCESSORIES: '/sale-shipping-containers?ptype=accessories',
   /** The accessories page, native since 2026-10-26 (was a WordPress page). */
   ACCESSORY_PRODUCTS: '/shipping-container-accessory-products',
+  /** The rent-to-own page, native since 2026-10-27 (was a WordPress page). */
+  RENT_TO_OWN: '/shipping-container-rent-to-own-financing',
   PRODUCT: (handle: string) => `/product/${handle}`,
   BLOGS: '/blogs',
   AGENTS: '/agents',
@@ -98,8 +100,9 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'sale-shipping-containers',
   'agents',
   'order-status',
-  // Migrated from WordPress; nothing of WordPress's lives beneath it.
+  // Migrated from WordPress; nothing of WordPress's lives beneath them.
   'shipping-container-accessory-products',
+  'shipping-container-rent-to-own-financing',
   // Operational and internal routes. Not reachable as WordPress content, but
   // listed so a stray backend row can never claim one of them.
   'maintenance',

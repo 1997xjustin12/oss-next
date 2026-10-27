@@ -68,6 +68,19 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     openGraph: { type: 'website', images: ['/images/home-banners/hero-image.webp'] },
   },
 
+  // Carried over from the WordPress page this replaced. WordPress's title ends in
+  // " | On-Site Storage Solutions", which the site's title template adds.
+  [ROUTES.RENT_TO_OWN]: {
+    title: 'Rent to Own Shipping Container',
+    description:
+      'Rent to Own shipping container no credit check required and everyone qualifies. Call or visit our website for instant pricing!',
+    canonical: ROUTES.RENT_TO_OWN,
+    openGraph: {
+      type: 'website',
+      images: ['https://bbq-spaces.sfo3.cdn.digitaloceanspaces.com/solana/callbuttonpngbv_YmgEPBO.webp'],
+    },
+  },
+
   [ROUTES.BLOGS]: {
     title: 'Blog',
     description:

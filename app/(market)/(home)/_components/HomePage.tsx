@@ -16,7 +16,7 @@ import { Hero } from "./Hero";
 import { HeroBannerPreload } from "./HeroBannerPreload";
 import { RightContainer } from "./RightContainer";
 import { OnsiteDifference } from "./OnsiteDifference";
-import { ReviewsSection } from "./ReviewsSection";
+import { ReviewsSection } from "@/components/shared/ReviewsSection";
 
 /** The homepage A/B/C variants. Variant 1 is the control. */
 export const HOME_VARIANTS = [1, 2, 3] as const;
