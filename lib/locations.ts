@@ -1,4 +1,5 @@
 import { LOCATIONS } from '@/config/locations'
+import { SERVICE_LOCATIONS } from '@/config/serviceLocations'
 import { SITE } from '@/config/site'
 import type { Location, LocationCustom, OpenHours } from '@/types/location'
 import type { LocalBusinessInput } from '@/lib/schema'
@@ -137,11 +138,22 @@ export function findDepotByPath(path: string): Depot | undefined {
  * that link to a depot must use this and check it against the live page list;
  * `depot.path` remains the matching key for the catch-all, which is happy to
  * recognise either family if the /locations pages are ever restored.
+ *
+ * A depot that is also in SERVICE_LOCATIONS takes its URL from there: those
+ * are checked against the live page list, and the records' own slugs are wrong
+ * for three of them (`baltimore-md`, `hafilax-nc`, `lasvegas-nv` 404; the
+ * pages are `baltimore-md-2`, `halifax-dartmouth-ns`, `las-vegas-nv`).
  */
 export function depotPagePath(depot: Depot): string | null {
+  const known = SERVICE_LOCATION_URL_BY_NAME.get(depot.location.title)
+  if (known) return known
   const leaf = depot.path.split('/').filter(Boolean).pop()
   return leaf ? `${WHERE_TO_BUY_PREFIX}/${leaf}` : null
 }
+
+const SERVICE_LOCATION_URL_BY_NAME: ReadonlyMap<string, string> = new Map(
+  SERVICE_LOCATIONS.map(({ name, url }) => [name, url]),
+)
 
 const DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 const DAY_LABEL: Record<(typeof DAY_ORDER)[number], string> = {
