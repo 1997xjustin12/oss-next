@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { AccentText } from '@/components/shared/AccentText';
 import { HOME_HEADING_DEFAULTS } from '@/config/homeContent';
 import { REVIEWS, type Review } from '@/config/reviews';
+import { reviewerInitials } from '@/lib/storeReviews';
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -32,6 +33,26 @@ function GoogleIcon() {
   );
 }
 
+/**
+ * Where a review was posted. REVIEWS.io's mark links to the store's page there,
+ * as the WordPress slider's cards do; Google's stays a plain icon, because the
+ * Google Business Profile URL is not recorded anywhere (see config/reviews.ts).
+ */
+function SourceMark({ review }: { review: Review }) {
+  if (review.source !== 'reviews.io') return <GoogleIcon />;
+  return (
+    <a
+      href={review.url}
+      target="_blank"
+      rel="nofollow noopener noreferrer"
+      aria-label="Read our reviews on REVIEWS.io (opens in a new tab)"
+      className="inline-flex min-h-6 items-center rounded-sm text-[11px] font-extrabold tracking-tight text-gray-600 hover:text-[#C60C29] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C60C29] dark:text-gray-300 dark:hover:text-red-400"
+    >
+      REVIEWS<span className="text-[#C60C29] dark:text-red-400">.io</span>
+    </a>
+  );
+}
+
 function ReviewCard({ review }: { review: Review }) {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -40,22 +61,32 @@ function ReviewCard({ review }: { review: Review }) {
       <div className="bg-white dark:bg-gray-800 rounded-lg p-5 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3 h-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Image
-              src={review.avatar}
-              alt={`${review.name} profile picture`}
-              width={40}
-              height={40}
-              // Google already serves these at 40px (about 1.4 KB); sending them
-              // through the optimizer only added transformations and cache writes.
-              unoptimized
-              className="rounded-full"
-            />
+            {review.avatar ? (
+              <Image
+                src={review.avatar}
+                alt={`${review.name} profile picture`}
+                width={40}
+                height={40}
+                // Google already serves these at 40px (about 1.4 KB); sending them
+                // through the optimizer only added transformations and cache writes.
+                unoptimized
+                className="rounded-full"
+              />
+            ) : (
+              // REVIEWS.io gives no photo, so initials, as the WordPress slider does.
+              <span
+                aria-hidden
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#C60C29] text-sm font-bold text-white"
+              >
+                {reviewerInitials(review.name)}
+              </span>
+            )}
             <div>
               <div className="font-semibold text-sm dark:text-white">{review.name}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">{review.date}</div>
             </div>
           </div>
-          <GoogleIcon />
+          <SourceMark review={review} />
         </div>
         <Stars rating={review.rating} />
         <p className={`text-sm text-gray-700 dark:text-gray-300 leading-relaxed ${expanded ? '' : 'line-clamp-5'}`}>
@@ -63,7 +94,7 @@ function ReviewCard({ review }: { review: Review }) {
         </p>
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="self-start text-xs font-semibold text-[#C60C29] hover:underline"
+          className="self-start text-xs font-semibold text-[#C60C29] hover:underline dark:text-red-400"
         >
           {expanded ? 'Hide' : 'Read More'}
         </button>
@@ -72,11 +103,18 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
-// Client Component — (home)/page.tsx resolves the heading and passes it in.
+/** Past this many positions the dots become a "3 / 21" counter. */
+const MAX_DOTS = 10;
+
+// Client Component — HomePage resolves the heading and the reviews (live
+// REVIEWS.io mixed with the Google list) and passes them in. Without them it
+// shows the Google list alone.
 export function ReviewsSection({
   heading = HOME_HEADING_DEFAULTS['reviews.h2'],
+  reviews = REVIEWS,
 }: {
   heading?: string;
+  reviews?: Review[];
 }) {
   const [requested, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -84,7 +122,7 @@ export function ReviewsSection({
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  const maxIndex = REVIEWS.length - visibleCount;
+  const maxIndex = Math.max(0, reviews.length - visibleCount);
   // Clamped while rendering, so a wider viewport (fewer positions) never leaves
   // the carousel past its last one — without a second render to correct it.
   const current = Math.min(requested, maxIndex);
@@ -124,7 +162,7 @@ export function ReviewsSection({
     <section className="py-10 sm:py-16 bg-[#F7F7F7] dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-5 sm:px-10">
         <h2 className="text-[28px] sm:text-[36px] font-bold text-center mb-8 sm:mb-10 dark:text-white">
-          <AccentText text={heading} accentClassName="text-[#C60C29]" />
+          <AccentText text={heading} accentClassName="text-[#C60C29] dark:text-red-400" />
         </h2>
 
         <div className="relative">
@@ -145,8 +183,8 @@ export function ReviewsSection({
             onMouseLeave={() => setPaused(false)}
           >
             <div ref={trackRef} className="flex snap-x snap-mandatory">
-              {REVIEWS.map((review, i) => (
-                <ReviewCard key={i} review={review} />
+              {reviews.map((review, i) => (
+                <ReviewCard key={review.id ?? `google-${i}`} review={review} />
               ))}
             </div>
           </div>
@@ -163,23 +201,33 @@ export function ReviewsSection({
 
         {/* Each dot sits in a 24px button: the touch-target minimum (WCAG
             2.5.8). The visible dot keeps its size. */}
-        <div className="flex justify-center mt-6 sm:mt-8">
-          {Array.from({ length: maxIndex + 1 }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              aria-label={`Go to review set ${i + 1}`}
-              className="flex h-6 w-6 items-center justify-center"
-            >
-              <span
-                aria-hidden
-                className={`h-2 w-2 rounded-full transition-colors ${
-                  i === current ? 'bg-[#C60C29]' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-              />
-            </button>
-          ))}
-        </div>
+        {maxIndex + 1 > MAX_DOTS ? (
+          // Twenty-odd dots read as noise and crowd a phone screen; a counter
+          // says the same. The arrows above do the moving. Not a live region:
+          // the carousel advances itself every few seconds, and announcing each
+          // step would talk over whatever a screen reader user is reading.
+          <p className="mt-6 text-center text-sm font-semibold text-gray-600 sm:mt-8 dark:text-gray-300">
+            {current + 1} / {maxIndex + 1}
+          </p>
+        ) : (
+          <div className="flex justify-center mt-6 sm:mt-8">
+            {Array.from({ length: maxIndex + 1 }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                aria-label={`Go to review set ${i + 1}`}
+                className="flex h-6 w-6 items-center justify-center"
+              >
+                <span
+                  aria-hidden
+                  className={`h-2 w-2 rounded-full transition-colors ${
+                    i === current ? 'bg-[#C60C29]' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

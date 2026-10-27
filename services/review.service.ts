@@ -1,8 +1,11 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { visitorAuthHeaders } from '@/lib/backendAuth'
 import { rateLimitedFrom } from '@/lib/backendError'
-import { CACHE_TAGS } from '@/config/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import type { ContainerVariantKey } from '@/lib/containerVariant'
+import { toStoreReview } from '@/lib/storeReviews'
+import type { Review } from '@/config/reviews'
+import type { RawStoreReview } from '@/lib/storeReviews'
 import type { ReviewListResponse } from '@/types/review'
 
 const TARGET_SITE = 'https://onsitestorage.com'
@@ -88,6 +91,51 @@ export async function getReviewsByVariant(
       verified:      r.verified === 'Yes',
     })),
     productIds: data.product_ids ?? [],
+  }
+}
+
+// ── Store reviews (REVIEWS.io) — the homepage reviews section ───────────────
+//
+// The WordPress homepage shows these through the WP Review Slider Pro plugin,
+// which has no API to read them from. REVIEWS.io's public merchant endpoint
+// needs no key for published reviews:
+//   GET https://api.reviews.io/merchant/reviews?store=<store>&per_page=<n>&page=<p>
+// Pages count from 0 — page=0 is the newest — so one request for page 0 is
+// enough for the homepage.
+
+const REVIEWS_IO_STORE = 'www.onsitestorage.com'
+const REVIEWS_IO_URL = 'https://api.reviews.io/merchant/reviews'
+
+/**
+ * The newest REVIEWS.io store reviews worth showing (4–5 stars, with text),
+ * newest first, at most `limit`.
+ *
+ * Cached for hours under the reviews tag, so the homepage stays a static page
+ * and this runs at most hourly, not per visit. Empty on any failure — the
+ * section then shows the Google reviews alone — and a failure is cached only
+ * for minutes, so one bad answer does not hide them until the next hour.
+ */
+export async function getStoreReviews(limit = 12): Promise<Review[]> {
+  'use cache'
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.REVIEWS)
+
+  const params = new URLSearchParams({ store: REVIEWS_IO_STORE, per_page: '50', page: '0' })
+  try {
+    const res = await fetch(`${REVIEWS_IO_URL}?${params}`, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = (await res.json()) as { reviews?: RawStoreReview[] }
+    cacheLife('hours')
+    return (data.reviews ?? [])
+      .map(toStoreReview)
+      .filter((review): review is Review => review !== null)
+      .slice(0, limit)
+  } catch (err) {
+    console.error('[reviews] REVIEWS.io store reviews failed:', err)
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return []
   }
 }
 

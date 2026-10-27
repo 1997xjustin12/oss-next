@@ -129,7 +129,7 @@ export function QuoteForm({
               ? "✓ Quote Request Sent — We'll be in touch!"
               : "Get My Free Quote →"}
           </button>
-          <p className="text-center text-[11.5px] text-theme-muted mt-[9px]">
+          <p className="text-center text-[11.5px] text-theme-muted mt-[9px] dark:text-gray-400">
             🔒 Your information is secure and never shared. No spam — ever.
           </p>
         </div>

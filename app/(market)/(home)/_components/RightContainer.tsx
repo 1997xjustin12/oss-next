@@ -29,7 +29,7 @@ function Card({ item }: { item: FeaturedContainer }) {
           <div className="min-h-7 text-lg sm:text-[18px] font-bold dark:text-white">
             <StartingPriceLabel cardKey={item.key} />
           </div>
-          <div className="text-xs text-green-700 font-bold">
+          <div className="text-xs text-green-700 font-bold dark:text-green-400">
             Buy &middot; Rent &middot; Rent-To-Own
           </div>
         </div>

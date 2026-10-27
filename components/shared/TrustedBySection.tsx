@@ -70,7 +70,7 @@ export function TrustedBySection({
 
       <div className="max-w-[1280px] mx-auto px-5 sm:px-10 mb-6 sm:mb-8">
         <h2 className="text-lg sm:text-[20px] font-bold dark:text-white">
-          <AccentText text={heading} accentClassName="text-theme-primary" />
+          <AccentText text={heading} accentClassName="text-theme-primary dark:text-red-400" />
         </h2>
       </div>
 

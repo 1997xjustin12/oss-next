@@ -19,10 +19,17 @@ export const GOOGLE_REVIEW_STATS = {
 
 export type Review = {
   name: string;
+  /** Photo URL; empty when the source has none (the card shows initials). */
   avatar: string;
   rating: number;
   date: string;
   text: string;
+  /** Stable key. Optional: the hand-kept Google list below has none. */
+  id?: string;
+  /** Where it was posted. Absent means Google, as for the list below. */
+  source?: 'google' | 'reviews.io';
+  /** The review on its source, for the card's attribution link. */
+  url?: string;
 };
 
 export const REVIEWS: Review[] = [

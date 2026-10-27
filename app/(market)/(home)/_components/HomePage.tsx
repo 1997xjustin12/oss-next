@@ -4,6 +4,9 @@ import { ROUTES } from "@/config/routes";
 import { SITE } from "@/config/site";
 import { graph, siteNodes, webPageNode } from "@/lib/schema";
 import { resolveAgentSummary } from "@/lib/seo";
+import { mixReviews } from "@/lib/storeReviews";
+import { REVIEWS } from "@/config/reviews";
+import { getStoreReviews } from "@/services/review.service";
 import { getHomeHeadings } from "@/lib/content";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
@@ -67,8 +70,15 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
   // the shell keeps the fetch to a single cached read and lets the three Client
   // Components below receive their copy as props — they can't read Redis
   // themselves. See config/homeContent.ts for the registry.
-  const copy = await getHomeHeadings();
-  const jsonLd = await buildHomeJsonLd();
+  // Both cached reads, run together. The reviews are REVIEWS.io's newest (live,
+  // refreshed hourly) woven in with the Google ones, which have no feed yet;
+  // if REVIEWS.io fails the section shows the Google ones alone.
+  const [copy, jsonLd, storeReviews] = await Promise.all([
+    getHomeHeadings(),
+    buildHomeJsonLd(),
+    getStoreReviews(),
+  ]);
+  const reviews = mixReviews(storeReviews, REVIEWS);
 
   return (
     <>
@@ -102,7 +112,7 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
       />
       <TrustedBySection heading={copy["trustedBy.h2"]} />
       <QuoteForm heading={copy["quoteForm.h2"]} />
-      <ReviewsSection heading={copy["reviews.h2"]} />
+      <ReviewsSection heading={copy["reviews.h2"]} reviews={reviews} />
       <StatesSection heading={copy["states.h2"]} />
     </>
   );
