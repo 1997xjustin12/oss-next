@@ -170,14 +170,11 @@ async function ArticleContent({ params }: Props) {
           <BlogFaq faqs={post.faqs} />
         </article>
 
+        {/* Scrolls with the page, not sticky. */}
         <aside aria-label="More articles" className={SIDEBAR}>
-          {/* Sticky in the two-column layout, so the list stays in view through
-              a long article; below the navbar, which is sticky itself. */}
-          <div className="lg:sticky lg:top-28">
-            <Suspense fallback={<RelatedPostsSkeleton />}>
-              <RelatedPosts currentSlug={post.slug} />
-            </Suspense>
-          </div>
+          <Suspense fallback={<RelatedPostsSkeleton />}>
+            <RelatedPosts currentSlug={post.slug} />
+          </Suspense>
         </aside>
       </div>
     </div>
