@@ -7,8 +7,10 @@ import { altFromImageUrl, blogImage, clampPage, clampPageSize, normalizeOrdering
 import type {
   BackendBlogDetail,
   BackendBlogEnvelope,
+  BackendBlogFaq,
   BackendBlogSeo,
   BackendBlogSummary,
+  BlogFaq,
   BlogList,
   BlogPost,
   BlogSummary,
@@ -79,12 +81,35 @@ function normalizeSeo(seo: BackendBlogSeo | undefined) {
   }
 }
 
+/**
+ * The post's FAQs. Entries missing a question or an answer are dropped: an
+ * accordion row that opens onto nothing, or a FAQPage Question with no answer
+ * (which Google rejects), is worse than no row. The markup goes through the
+ * same processContent as the body, so it is sanitized the same way.
+ */
+function normalizeFaqs(faqs: BackendBlogFaq[] | undefined): BlogFaq[] {
+  if (!Array.isArray(faqs)) return []
+  return faqs.flatMap((faq) => {
+    const question = faq?.question?.trim() ?? ''
+    const answer = faq?.answer?.trim() ?? ''
+    if (!question || !answer) return []
+    const answerHtml = processContent(faq.answer_html?.trim() || `<p>${escapeHtml(answer)}</p>`)
+    return [{ question, answer, answerHtml }]
+  })
+}
+
+/** For an answer that came as plain text only. */
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c)
+}
+
 function normalizePost(post: BackendBlogDetail): BlogPost {
   return {
     ...normalizeSummary(post),
     // `post.html` — never `post.content`, which is a structured block tree.
     contentHtml: processContent(post.html),
     seo: normalizeSeo(post.seo),
+    faqs: normalizeFaqs(post.faqs),
   }
 }
 

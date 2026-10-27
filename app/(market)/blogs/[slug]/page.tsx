@@ -7,9 +7,10 @@ import { getAllBlogSlugs, getCachedBlog } from '@/services/blog.service'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { SITE, absoluteUrl } from '@/config/site'
-import { blogPostingNode, breadcrumbNode, graph, siteNodes } from '@/lib/schema'
+import { blogPostingNode, breadcrumbNode, faqNode, graph, siteNodes } from '@/lib/schema'
 import { formatBlogDate } from '@/lib/blog'
 import { ArticleBody } from './_components/ArticleBody'
+import { BlogFaq } from './_components/BlogFaq'
 import { RelatedPosts, RelatedPostsSkeleton } from './_components/RelatedPosts'
 
 type Props = {
@@ -120,6 +121,8 @@ async function ArticleContent({ params }: Props) {
       author: post.author || undefined,
       keywords: post.seo.keywords,
     }),
+    // From the same list the accordion renders (null when there are none).
+    faqNode(post.faqs),
     breadcrumbNode([
       { name: 'Home', path: ROUTES.HOME },
       { name: 'Blog', path: ROUTES.BLOGS },
@@ -164,6 +167,7 @@ async function ArticleContent({ params }: Props) {
           </div>
 
           <ArticleBody html={post.contentHtml} />
+          <BlogFaq faqs={post.faqs} />
         </article>
 
         <aside aria-label="More articles" className={SIDEBAR}>

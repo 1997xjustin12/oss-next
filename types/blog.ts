@@ -44,6 +44,15 @@ export interface BackendBlogSeo {
   og_image_alt?: string
 }
 
+/** One FAQ entry as the editor wrote it. */
+export interface BackendBlogFaq {
+  question: string
+  /** Plain text — what the FAQPage structured data uses. */
+  answer: string
+  /** The same answer as markup — what the page renders. */
+  answer_html?: string
+}
+
 export interface BackendBlogDetail extends BackendBlogSummary {
   /** The body markup. This is what gets rendered. */
   html: string
@@ -54,6 +63,7 @@ export interface BackendBlogDetail extends BackendBlogSummary {
    */
   content?: unknown
   seo?: BackendBlogSeo
+  faqs?: BackendBlogFaq[]
 }
 
 // ── Normalized shapes the UI consumes ───────────────────────────────────────
@@ -87,10 +97,21 @@ export interface BlogSummary {
   author: string
 }
 
-/** Full article — summary plus the body markup and SEO metadata. */
+/** An FAQ entry, ready to render. */
+export interface BlogFaq {
+  question: string
+  /** Plain text, for the FAQPage structured data. */
+  answer: string
+  /** Sanitized markup, for the page. */
+  answerHtml: string
+}
+
+/** Full article — summary plus the body markup, SEO metadata and FAQs. */
 export interface BlogPost extends BlogSummary {
   contentHtml: string
   seo: BlogSeo
+  /** Empty when the post has none. */
+  faqs: BlogFaq[]
 }
 
 /**
