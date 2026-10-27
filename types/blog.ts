@@ -23,6 +23,10 @@ export interface BackendBlogSummary {
   excerpt: string
   /** Empty string — not null — when unset. See blogImage() in lib/blog.ts. */
   featured_image: string
+  /** Alt text for the featured image. Empty or absent when unset. */
+  featured_image_alt?: string
+  /** The byline, e.g. "Gregg Schoenborn". */
+  author_name?: string
   published_at: string
   updated_at: string
 }
@@ -30,10 +34,14 @@ export interface BackendBlogSummary {
 export interface BackendBlogSeo {
   title?: string
   description?: string
+  /** The editor's focus keyphrase — the post's keywords. */
+  focus_keyphrase?: string
+  /** Empty string when unset: our own URL is then the canonical. */
   canonical_url?: string
   og_title?: string
   og_description?: string
   og_image?: string
+  og_image_alt?: string
 }
 
 export interface BackendBlogDetail extends BackendBlogSummary {
@@ -54,10 +62,12 @@ export interface BackendBlogDetail extends BackendBlogSummary {
 export interface BlogSeo {
   title?: string
   description?: string
+  keywords?: string
   canonicalUrl?: string
   ogTitle?: string
   ogDescription?: string
   ogImage?: string
+  ogImageAlt?: string
 }
 
 /** Card-level fields — everything the list endpoint can supply. */
@@ -73,6 +83,8 @@ export interface BlogSummary {
   /** Never empty: falls back to the default image. */
   imageUrl: string
   imageAlt: string
+  /** The byline. Empty when the backend gives none. */
+  author: string
 }
 
 /** Full article — summary plus the body markup and SEO metadata. */

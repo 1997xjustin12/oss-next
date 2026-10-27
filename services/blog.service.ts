@@ -3,7 +3,7 @@ import { cacheLife, cacheTag } from 'next/cache'
 import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { MAX_PAGE_SIZE, MAX_SITEMAP_PAGES } from '@/config/blog'
 import { STORE_KEY } from '@/config/store'
-import { blogImage, clampPage, clampPageSize, normalizeOrdering } from '@/lib/blog'
+import { altFromImageUrl, blogImage, clampPage, clampPageSize, normalizeOrdering } from '@/lib/blog'
 import type {
   BackendBlogDetail,
   BackendBlogEnvelope,
@@ -32,6 +32,9 @@ const TIMEOUT = 15_000
  *  - Lazy-load and async-decode in-body images that don't already say so. The
  *    article hero is a real next/image; this only touches images inside the
  *    CMS markup.
+ *  - Give in-body images the editor left without alt text one read from their
+ *    file name (see altFromImageUrl). Without it a banner that is a link's
+ *    only content leaves the link with no name.
  */
 function processContent(html: string | undefined): string {
   if (!html) return ''
@@ -41,6 +44,7 @@ function processContent(html: string | undefined): string {
     const img = $(el)
     if (!img.attr('loading')) img.attr('loading', 'lazy')
     if (!img.attr('decoding')) img.attr('decoding', 'async')
+    if (img.attr('alt') === undefined) img.attr('alt', altFromImageUrl(img.attr('src') ?? ''))
   })
   return $.html()
 }
@@ -54,10 +58,11 @@ function normalizeSummary(post: BackendBlogSummary): BlogSummary {
     date: post.published_at ?? '',
     updatedAt: post.updated_at ?? post.published_at ?? '',
     imageUrl: blogImage(post),
-    // The backend carries no alt text for the featured image; the title is a
-    // truthful description of what the image illustrates, and beats an empty
-    // alt on a card that is itself a link.
-    imageAlt: post.title ?? '',
+    // The editor's alt text when there is one. Otherwise the title, a truthful
+    // description of what the image illustrates, which beats an empty alt on a
+    // card that is itself a link.
+    imageAlt: post.featured_image_alt?.trim() || post.title || '',
+    author: post.author_name?.trim() ?? '',
   }
 }
 
@@ -65,10 +70,12 @@ function normalizeSeo(seo: BackendBlogSeo | undefined) {
   return {
     title: seo?.title,
     description: seo?.description,
-    canonicalUrl: seo?.canonical_url,
+    keywords: seo?.focus_keyphrase?.trim() || undefined,
+    canonicalUrl: seo?.canonical_url?.trim() || undefined,
     ogTitle: seo?.og_title,
     ogDescription: seo?.og_description,
     ogImage: seo?.og_image,
+    ogImageAlt: seo?.og_image_alt?.trim() || undefined,
   }
 }
 

@@ -72,25 +72,29 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default function BlogsPage({ searchParams }: Props) {
   // The (market) layout already provides the page's single <main> landmark, so
-  // this is a <div>, not a nested <main>.
+  // this is a <div>, not a nested <main>. The outer one gives the page its own
+  // background in both schemes: the site's body stays light in dark mode, so
+  // the dark: text classes below used to put a white heading on a white page.
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-      <PageHeadScripts path={ROUTES.BLOGS} />
-      <header className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-theme-dark sm:text-4xl dark:text-white">
-            {TITLE}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-theme-muted dark:text-neutral-400">{DESCRIPTION}</p>
-        </div>
-        <Suspense fallback={<div className="h-11 w-full max-w-sm" />}>
-          <SearchBox searchParams={searchParams} />
-        </Suspense>
-      </header>
+    <div className="bg-theme-bg text-theme-dark dark:bg-neutral-950 dark:text-neutral-200">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        <PageHeadScripts path={ROUTES.BLOGS} />
+        <header className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-theme-dark sm:text-4xl dark:text-white">
+              {TITLE}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-theme-muted dark:text-neutral-400">{DESCRIPTION}</p>
+          </div>
+          <Suspense fallback={<div className="h-11 w-full max-w-sm" />}>
+            <SearchBox searchParams={searchParams} />
+          </Suspense>
+        </header>
 
-      <Suspense fallback={<BlogListSkeleton />}>
-        <BlogListContent searchParams={searchParams} />
-      </Suspense>
+        <Suspense fallback={<BlogListSkeleton />}>
+          <BlogListContent searchParams={searchParams} />
+        </Suspense>
+      </div>
     </div>
   )
 }

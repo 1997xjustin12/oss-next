@@ -427,6 +427,9 @@ export type BlogPostingInput = {
   imageUrl?: string
   datePublished?: string
   dateModified?: string
+  /** The byline. The organization stands in as author when there is none. */
+  author?: string
+  keywords?: string
 }
 
 export function blogPostingNode(post: BlogPostingInput): SchemaNode {
@@ -439,8 +442,9 @@ export function blogPostingNode(post: BlogPostingInput): SchemaNode {
     ...(post.datePublished && { datePublished: post.datePublished }),
     ...(post.dateModified && { dateModified: post.dateModified }),
     ...(post.description && { description: post.description }),
+    ...(post.keywords && { keywords: post.keywords }),
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-    author: ref(SCHEMA_ID.organization),
+    author: post.author ? { '@type': 'Person', name: post.author } : ref(SCHEMA_ID.organization),
     publisher: ref(SCHEMA_ID.organization),
     isPartOf: ref(SCHEMA_ID.website),
   }

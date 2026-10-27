@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import { getAllBlogSlugs, getCachedBlog } from '@/services/blog.service'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
+import { SITE, absoluteUrl } from '@/config/site'
 import { blogPostingNode, breadcrumbNode, graph, siteNodes } from '@/lib/schema'
 import { formatBlogDate } from '@/lib/blog'
 import { ArticleBody } from './_components/ArticleBody'
@@ -40,20 +41,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = seo.title || post.title
   const description = seo.description || post.excerpt || undefined
   const ogImage = seo.ogImage?.trim() || post.imageUrl
+  const ogImageAlt = seo.ogImageAlt || post.imageAlt
+  // The backend may pin a canonical (e.g. a post syndicated from elsewhere);
+  // our own URL is the fallback, not an override.
+  const canonical = seo.canonicalUrl || absoluteUrl(ROUTES.BLOG(post.slug))
 
   return {
-    title,
+    // Absolute: the editor writes the whole SEO title in the backend, so the
+    // site-wide " | On-Site Storage Solutions" template is not appended to it.
+    title: { absolute: title },
     description,
-    // The backend may pin a canonical (e.g. a post syndicated from elsewhere);
-    // our own URL is the fallback, not an override.
-    alternates: { canonical: seo.canonicalUrl || ROUTES.BLOG(post.slug) },
+    keywords: seo.keywords,
+    publisher: SITE.name,
+    authors: post.author ? [{ name: post.author }] : undefined,
+    alternates: { canonical },
     openGraph: {
       title: seo.ogTitle || title,
       description: seo.ogDescription || description,
+      // What a share preview identifies the page by. Without it a scraper
+      // follows the canonical, so the two must agree.
+      url: canonical,
+      siteName: SITE.name,
       type: 'article',
       publishedTime: post.date,
       modifiedTime: post.updatedAt || undefined,
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      authors: post.author ? [post.author] : undefined,
+      images: ogImage ? [{ url: ogImage, alt: ogImageAlt }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
@@ -68,10 +81,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function BlogPostPage({ params }: Props) {
+  // The page's own background and text colour, in both schemes. The site's
+  // body stays light in dark mode, so the dark: text classes below used to put
+  // white headings on a white page.
   return (
-    <Suspense fallback={<ArticleSkeleton />}>
-      <ArticleContent params={params} />
-    </Suspense>
+    <div className="bg-theme-bg text-theme-dark dark:bg-neutral-950 dark:text-neutral-200">
+      <Suspense fallback={<ArticleSkeleton />}>
+        <ArticleContent params={params} />
+      </Suspense>
+    </div>
   )
 }
 
@@ -98,6 +116,9 @@ async function ArticleContent({ params }: Props) {
       description: post.seo.description || post.excerpt || undefined,
       imageUrl: post.imageUrl,
       datePublished: post.date,
+      dateModified: post.updatedAt || undefined,
+      author: post.author || undefined,
+      keywords: post.seo.keywords,
     }),
     breadcrumbNode([
       { name: 'Home', path: ROUTES.HOME },
@@ -120,7 +141,7 @@ async function ArticleContent({ params }: Props) {
       <article>
         <header className="mb-6">
           {post.date && (
-            <time dateTime={post.date} className="text-xs font-semibold uppercase tracking-wider text-theme-muted dark:text-neutral-500">
+            <time dateTime={post.date} className="text-xs font-semibold uppercase tracking-wider text-theme-muted dark:text-neutral-400">
               {formatBlogDate(post.date)}
             </time>
           )}

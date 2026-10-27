@@ -12,12 +12,33 @@
 // silently fragments the entity graph across environments, and a BreadcrumbList
 // pointing at localhost is worse than emitting none at all.
 
+/**
+ * An env value as an https origin, whether it was set as a bare domain
+ * (`onsitestorage.com`) or a whole URL (`http://onsitestorage.com/`).
+ *
+ * `NEXT_PUBLIC_STORE_DOMAIN` is the second form on staging, and prefixing it
+ * blindly gave `https://http://onsitestorage.com` — which a URL parser reads as
+ * the host `http`. Every canonical, og:url and JSON-LD `@id` on the site came
+ * out as `https://http/onsitestorage.com/...`, and a share preview that follows
+ * the canonical found nothing there and showed no description.
+ *
+ * Always https: the public site is served over it, and an `http://` canonical
+ * would point crawlers at a redirect. Localhost keeps its own scheme.
+ */
+export function toOrigin(value: string | undefined): string {
+  const raw = value?.trim()
+  if (!raw) return ''
+  const host = raw.replace(/^[a-z]+:\/\//i, '').replace(/\/.*$/, '')
+  if (!host) return ''
+  const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host)
+  return `${local ? 'http' : 'https'}://${host}`
+}
+
 /** Public origin this storefront publishes as, no trailing slash. */
-export const SITE_URL: string = (
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.NEXT_PUBLIC_STORE_DOMAIN ? `https://${process.env.NEXT_PUBLIC_STORE_DOMAIN}` : '') ||
-  'https://onsitestorage.com'
-).replace(/\/+$/, '');
+export const SITE_URL: string =
+  toOrigin(process.env.NEXT_PUBLIC_SITE_URL) ||
+  toOrigin(process.env.NEXT_PUBLIC_STORE_DOMAIN) ||
+  'https://onsitestorage.com';
 
 /** Resolve a site-relative path to an absolute, crawler-safe URL. */
 export function absoluteUrl(path: string): string {

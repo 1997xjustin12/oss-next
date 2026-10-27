@@ -5,23 +5,30 @@ import { EXTERNAL_HTML_ATTR } from '@/lib/linkEnrich'
 // and the app has none, so these styles are what make headings/lists/quotes/
 // images read as an article. Scoped to the wrapper so nothing leaks to the rest
 // of the page.
+//
+// Spacing is deliberately tight (the client asked for less white space between
+// paragraphs and sections). Images come wrapped in <figure>, so the image's own
+// margin is zeroed there: figure and img each adding theirs used to put about
+// 3em above and below every picture.
 export function ArticleBody({ html }: { html: string }) {
   return (
     <>
       <style>{`
-        .blog-content { color: inherit; line-height: 1.75; font-size: 1.05rem; }
+        .blog-content { color: inherit; line-height: 1.65; font-size: 1.05rem; }
         .blog-content > *:first-child { margin-top: 0; }
-        .blog-content p { margin: 1.15em 0; }
-        .blog-content h2 { font-size: 1.6rem; font-weight: 800; line-height: 1.25; margin: 1.8em 0 0.6em; letter-spacing: -0.01em; }
-        .blog-content h3 { font-size: 1.3rem; font-weight: 700; margin: 1.6em 0 0.5em; }
-        .blog-content h4 { font-size: 1.1rem; font-weight: 700; margin: 1.4em 0 0.4em; }
+        .blog-content p { margin: 0.7em 0; }
+        .blog-content h2 { font-size: 1.6rem; font-weight: 800; line-height: 1.25; margin: 1.2em 0 0.45em; letter-spacing: -0.01em; }
+        .blog-content h3 { font-size: 1.3rem; font-weight: 700; line-height: 1.3; margin: 1em 0 0.4em; }
+        .blog-content h4 { font-size: 1.1rem; font-weight: 700; margin: 0.9em 0 0.35em; }
         .blog-content a { color: #b3122b; text-decoration: underline; text-underline-offset: 2px; }
-        .blog-content ul, .blog-content ol { margin: 1.15em 0; padding-left: 1.5em; }
+        .blog-content ul, .blog-content ol { margin: 0.7em 0; padding-left: 1.5em; }
         .blog-content ul { list-style: disc; }
         .blog-content ol { list-style: decimal; }
-        .blog-content li { margin: 0.4em 0; }
-        .blog-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1.5em 0; }
-        .blog-content figure { margin: 1.5em 0; }
+        .blog-content li { margin: 0.25em 0; }
+        .blog-content li > p { margin: 0; }
+        .blog-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1em 0; }
+        .blog-content figure { margin: 1em 0; }
+        .blog-content figure img { margin: 0; }
         .blog-content figcaption { font-size: 0.85rem; color: #6b7280; text-align: center; margin-top: 0.5em; }
         .blog-content blockquote { border-left: 3px solid #b3122b; padding-left: 1em; margin: 1.5em 0; font-style: italic; color: #4b5563; }
         .blog-content table { width: 100%; border-collapse: collapse; margin: 1.5em 0; font-size: 0.95rem; }
@@ -30,6 +37,9 @@ export function ArticleBody({ html }: { html: string }) {
         .blog-content pre { overflow-x: auto; background: #f4f4f5; padding: 1em; border-radius: 0.5rem; margin: 1.5em 0; }
         .blog-content iframe { max-width: 100%; margin: 1.5em 0; }
         @media (prefers-color-scheme: dark) {
+          /* The editor colours headings inline with a dark red that is
+             unreadable on a dark page; lift any inline colour to the light red. */
+          .blog-content [style*="color"] { color: #f87171 !important; }
           .blog-content a { color: #f87171; }
           .blog-content blockquote { color: #9ca3af; }
           .blog-content th, .blog-content td { border-color: #374151; }

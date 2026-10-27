@@ -54,3 +54,25 @@ export function normalizeOrdering(value: unknown): string {
 
   return (BLOG_ORDERING as readonly string[]).includes(field) ? raw : DEFAULT_ORDERING
 }
+
+/**
+ * Alt text for an in-article image the editor left without any, read from its
+ * file name: `why-proper-storage-matters-in-shipping-container-1536x864_x30QiJ2.webp`
+ * becomes "Why proper storage matters in shipping container".
+ *
+ * The uploads are named for what they show, so this describes the picture
+ * rather than leaving it nameless to a screen reader. That matters most where
+ * an image is a link's only content (the article banners), whose link would
+ * otherwise have no name at all. Drops the `-1536x864` size and the `_x30QiJ2`
+ * suffix storage adds to repeated names. Empty when nothing readable is left.
+ */
+export function altFromImageUrl(src: string): string {
+  const file = decodeURIComponent(src.split(/[?#]/)[0].split('/').pop() ?? '')
+  const words = file
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replace(/_[A-Za-z0-9]{7}$/, '')
+    .replace(/-\d+x\d+$/, '')
+    .replace(/[-_]+/g, ' ')
+    .trim()
+  return words ? words[0].toUpperCase() + words.slice(1) : ''
+}

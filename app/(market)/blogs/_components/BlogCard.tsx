@@ -26,7 +26,7 @@ export function BlogCard({ post, priority }: Props) {
         </div>
         <div className="p-5">
           {post.date && (
-            <time dateTime={post.date} className="text-xs font-semibold uppercase tracking-wider text-theme-muted dark:text-neutral-500">
+            <time dateTime={post.date} className="text-xs font-semibold uppercase tracking-wider text-theme-muted dark:text-neutral-400">
               {formatBlogDate(post.date)}
             </time>
           )}
