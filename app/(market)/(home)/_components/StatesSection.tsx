@@ -1,3 +1,4 @@
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 import { CA_LOCATION_COUNT, SERVICE_LOCATIONS, US_LOCATION_COUNT } from "@/config/serviceLocations";
 
@@ -30,21 +31,20 @@ export function StatesSection({
         <p className="text-[15px] text-white/50 leading-[1.65] max-w-[580px] mx-auto mb-[26px]">
           {SUBTEXT}
         </p>
-        <div
-          className="flex flex-wrap gap-2 justify-center"
-          role="list"
-          aria-label="Service locations"
-        >
-          {SERVICE_LOCATIONS.map(({ name }) => (
-            <span
-              key={name}
-              role="listitem"
-              className="bg-white/[.06] border border-white/[.13] text-white/70 px-[13px] py-[6px] rounded-[3px] text-[12.5px] font-medium transition-[background,color,border-color] duration-150 cursor-pointer hover:bg-theme-primary hover:border-theme-primary hover:text-white"
-            >
-              {name}
-            </span>
+        {/* Each chip links to that location's page. The chips always looked
+            clickable (hover colour, pointer) but used to be plain text. */}
+        <ul className="flex flex-wrap gap-2 justify-center" aria-label="Service locations">
+          {SERVICE_LOCATIONS.map(({ name, url }) => (
+            <li key={name} className="flex">
+              <Link
+                href={url}
+                className="inline-flex min-h-8 items-center bg-white/[.06] border border-white/[.13] text-white/70 px-[13px] py-[6px] rounded-[3px] text-[12.5px] font-medium transition-[background,color,border-color] duration-150 hover:bg-theme-primary hover:border-theme-primary hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                {name}
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );
