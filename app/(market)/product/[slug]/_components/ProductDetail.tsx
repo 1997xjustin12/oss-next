@@ -488,7 +488,7 @@ export function ProductDetail({ product, relatedProducts, panelV2 = false }: Pro
         </div>
         <FaqAccordion variant={containerVariant} />
       </section>
-      <StatesSection heading={"Delivering Across All 50 States"} />
+      <StatesSection />
     </div>
   );
 }

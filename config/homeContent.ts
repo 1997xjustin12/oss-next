@@ -1,4 +1,5 @@
 import { ROUTES } from '@/config/routes';
+import { SERVICE_LOCATION_COUNT } from '@/config/serviceLocations';
 import type { HeadingLevel } from '@/types/content';
 
 // Every heading element rendered on the live homepage, with its shipped text.
@@ -113,7 +114,8 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
     section: 'States We Serve',
     label: 'Section Heading',
     element: 'h2',
-    default: 'Delivering Across All 50 States',
+    // The count comes from the location list, so it stays true when the list changes.
+    default: `Delivering From ${SERVICE_LOCATION_COUNT} Locations Across the US & Canada`,
   },
 ];
 
