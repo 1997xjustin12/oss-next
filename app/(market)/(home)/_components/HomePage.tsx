@@ -4,9 +4,7 @@ import { ROUTES } from "@/config/routes";
 import { SITE } from "@/config/site";
 import { graph, siteNodes, webPageNode } from "@/lib/schema";
 import { resolveAgentSummary } from "@/lib/seo";
-import { mixReviews } from "@/lib/storeReviews";
-import { REVIEWS } from "@/config/reviews";
-import { getOnsiteReviews, getStoreReviews } from "@/services/review.service";
+import { getReviews } from "@/services/review.service";
 import { getHomeHeadings } from "@/lib/content";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
@@ -70,17 +68,13 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
   // the shell keeps the fetch to a single cached read and lets the three Client
   // Components below receive their copy as props — they can't read Redis
   // themselves. See config/homeContent.ts for the registry.
-  // Cached reads, run together. The reviews weave three sources: this site's
-  // own (the backend, from customers with an order), REVIEWS.io's newest, both
-  // live and refreshed hourly, and the hand-kept Google ones, which have no
-  // feed. A source that fails or is empty simply drops out of the mix.
-  const [copy, jsonLd, onsiteReviews, storeReviews] = await Promise.all([
+  // Cached reads, run together. getReviews() merges every review source (this
+  // site's own, REVIEWS.io, Google) — see services/review.service.ts.
+  const [copy, jsonLd, reviews] = await Promise.all([
     getHomeHeadings(),
     buildHomeJsonLd(),
-    getOnsiteReviews(),
-    getStoreReviews(),
+    getReviews(),
   ]);
-  const reviews = mixReviews(onsiteReviews, storeReviews, REVIEWS);
 
   return (
     <>

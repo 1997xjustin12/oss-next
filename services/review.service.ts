@@ -3,7 +3,8 @@ import { visitorAuthHeaders } from '@/lib/backendAuth'
 import { rateLimitedFrom } from '@/lib/backendError'
 import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import type { ContainerVariantKey } from '@/lib/containerVariant'
-import { toBackendReview, toStoreReview } from '@/lib/storeReviews'
+import { REVIEWS } from '@/config/reviews'
+import { mixReviews, toBackendReview, toStoreReview } from '@/lib/storeReviews'
 import type { Review } from '@/config/reviews'
 import type { RawBackendReview, RawStoreReview } from '@/lib/storeReviews'
 import type { ReviewListResponse } from '@/types/review'
@@ -186,6 +187,59 @@ export async function getOnsiteReviews(limit = 12): Promise<Review[]> {
     cacheLife(OUTAGE_CACHE_LIFE)
     return []
   }
+}
+
+// ── All store reviews, merged — the one call for any reviews list ───────────
+
+/** Where a review comes from. */
+export type ReviewSource = 'onsite' | 'reviews.io' | 'google'
+
+/** Every source, in the order they are woven: this site's own first. */
+export const REVIEW_SOURCES: readonly ReviewSource[] = ['onsite', 'reviews.io', 'google']
+
+export type GetReviewsOptions = {
+  /**
+   * Which sources, and the order they are woven in. Default: all three, this
+   * site's own first. Pass e.g. `['onsite', 'reviews.io']` for live reviews only.
+   */
+  sources?: readonly ReviewSource[]
+  /** At most this many in total, after merging. Default: all of them. */
+  limit?: number
+}
+
+/**
+ * The store's reviews from every source, merged into one list — for the
+ * homepage section and any reviews component built after it.
+ *
+ *  - 'onsite'     this site's own reviews (Django backend), getOnsiteReviews
+ *  - 'reviews.io' REVIEWS.io's newest, getStoreReviews
+ *  - 'google'     the hand-kept Google list in config/reviews.ts (no feed)
+ *
+ * Every review is already filtered the same way (4–5 stars, with text) and
+ * shaped as one `Review`, with `source` saying where it came from. The
+ * sources are woven one from each in turn, so none fills the first screens.
+ *
+ * Server-only, and cheap to call more than once: the live sources are cached
+ * hourly (`'use cache'`, the reviews tag), so the page that calls it stays
+ * static. A source that fails or is empty drops out. A Client Component
+ * cannot call it — fetch in the Server Component above and pass the list
+ * down as a prop, as HomePage does for ReviewsSection.
+ *
+ * @example
+ *   const reviews = await getReviews()                                  // everything
+ *   const latest  = await getReviews({ limit: 6 })                       // first six of the mix
+ *   const live    = await getReviews({ sources: ['onsite', 'reviews.io'] })
+ */
+export async function getReviews({ sources = REVIEW_SOURCES, limit }: GetReviewsOptions = {}): Promise<Review[]> {
+  const lists = await Promise.all(
+    sources.map((source): Promise<Review[]> | Review[] => {
+      if (source === 'onsite') return getOnsiteReviews()
+      if (source === 'reviews.io') return getStoreReviews()
+      return REVIEWS
+    }),
+  )
+  const mixed = mixReviews(...lists)
+  return limit === undefined ? mixed : mixed.slice(0, Math.max(0, limit))
 }
 
 // ── OSS backend reviews (future source — table is currently empty) ──────────
