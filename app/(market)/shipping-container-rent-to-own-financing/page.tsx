@@ -15,8 +15,11 @@ import {
 } from '@/lib/data/rentToOwnContent'
 import { breadcrumbNode, faqNode, graph, siteNodes, webPageNode } from '@/lib/schema'
 import { resolvePageMetadata } from '@/lib/seo'
+import { DEFAULT_LOCATION } from '@/lib/constants'
+import { getConfiguratorProducts } from '@/services/configurator.service'
 import { getReviews } from '@/services/review.service'
 import { RtoBanner } from './_components/RtoBanner'
+import { RtoConfigurator } from './_components/RtoConfigurator'
 import { RtoHero } from './_components/RtoHero'
 import { RtoProcess } from './_components/RtoProcess'
 import { RtoWhyChoose } from './_components/RtoWhyChoose'
@@ -29,15 +32,19 @@ export function generateMetadata() {
  * Rent-to-own, native since 2026-10-27 at the URL WordPress served it from.
  *
  * Copied from the WordPress page section by section (copy in
- * lib/data/rentToOwnContent.ts). Not yet carried over: its plugin features —
- * the product configurator under the hero and the "see my monthly payment" ZIP
- * boxes — which come next as native features. The reviews are the store's own,
- * REVIEWS.io and Google, through getReviews().
+ * lib/data/rentToOwnContent.ts). The configurator under the hero replaces the
+ * WordPress plugin's. Not yet carried over: the two "see my monthly payment"
+ * ZIP boxes further down. The reviews are the store's own, REVIEWS.io and
+ * Google, through getReviews().
  *
- * Static: the reviews are a cached read, so the page is prerendered.
+ * Static: both reads are cached, so the page is prerendered.
  */
 export default async function RentToOwnPage() {
-  const reviews = await getReviews()
+  const [reviews, initialProducts] = await Promise.all([
+    getReviews(),
+    // A failed search renders the configurator empty; it fetches in the browser.
+    getConfiguratorProducts(DEFAULT_LOCATION, 'rto').catch(() => null),
+  ])
 
   const jsonLd = graph([
     ...siteNodes(),
@@ -59,6 +66,7 @@ export default async function RentToOwnPage() {
       <PageHeadScripts path={ROUTES.RENT_TO_OWN} />
 
       <RtoHero />
+      <RtoConfigurator initial={initialProducts && { location: DEFAULT_LOCATION, products: initialProducts }} />
       <RtoBanner tone="light" ribbon={RTO_OFFER.ribbon} heading={RTO_OFFER.heading} cta={RTO_OFFER.cta} />
       <RtoWhyChoose />
       <RtoProcess />

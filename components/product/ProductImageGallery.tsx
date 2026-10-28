@@ -25,6 +25,12 @@ type Props = {
    * lib/containerVideo.ts.
    */
   video?: ContainerVideo | null
+  /**
+   * Whether the first slide is the page's LCP image, so loads at high priority.
+   * True on the product page; false where the gallery sits below a hero that
+   * is the LCP element, so the two don't compete for bandwidth.
+   */
+  lcp?: boolean
 }
 
 /**
@@ -48,7 +54,7 @@ type Slide =
   | { kind: 'video'; src: string; poster: string; label: string }
   | { kind: 'image'; src: string }
 
-export function ProductImageGallery({ images, title, tag, inStock = true, video }: Props) {
+export function ProductImageGallery({ images, title, tag, inStock = true, video, lcp = true }: Props) {
   const [active, setActive] = useState(0)
   const [lightbox, setLightbox] = useState(false)
   const [zoomed, setZoomed] = useState(false)
@@ -160,7 +166,7 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
                   alt=""
                   fill
                   className="bg-black object-cover"
-                  priority={active === 0}
+                  priority={lcp && active === 0}
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
               ) : (
@@ -181,7 +187,7 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video 
               alt={`${title} — image ${active + 1} of ${total}`}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              priority={active === 0}
+              priority={lcp && active === 0}
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
           ) : null}

@@ -3,12 +3,68 @@
  * from the WordPress page it replaced (2026-10-27). Edit here; the components
  * only lay it out.
  *
- * Not carried over yet: the WordPress page's plugin features — the product
- * configurator under the hero and the two "see my monthly payment" ZIP boxes.
- * They come next, as native features.
+ * Not carried over yet: the two "see my monthly payment" ZIP boxes further
+ * down the WordPress page. They come next, as native features.
  */
 
+import type { ConfiguratorGroup } from '@/lib/configurator'
+
 const CDN = 'https://bbq-spaces.sfo3.cdn.digitaloceanspaces.com/solana'
+
+/**
+ * The configurator under the hero (the WordPress plugin's "rto-tc" block).
+ *
+ * Option values are the spec-file codes (`used`, `20s`, `cw`, …), so a product's
+ * specs, these options and the gallery's `<condition>_<size>_<grade>` files all
+ * use one vocabulary. Groups cascade in this order; the last is the term.
+ */
+export const RTO_CONFIGURATOR = {
+  paymentType: 'rto',
+  groups: [
+    {
+      key: 'size',
+      label: 'Size',
+      options: [
+        { value: '20s', label: '20ft Standard' },
+        { value: '40s', label: '40ft Standard' },
+        { value: '40h', label: '40ft High Cube' },
+      ],
+    },
+    {
+      key: 'condition',
+      label: 'Condition',
+      options: [
+        { value: 'used', label: 'Used' },
+        { value: 'new', label: 'New' },
+      ],
+    },
+    {
+      key: 'grade',
+      label: 'Grade',
+      options: [
+        { value: 'wwt', label: 'Wind & Water Tight (WWT)' },
+        { value: 'cw', label: 'Cargo Worthy (CW)' },
+        { value: 'iicl', label: 'IICL' },
+      ],
+    },
+    {
+      key: 'term',
+      label: 'Payment Terms',
+      options: [
+        { value: '48', label: '48-Month' },
+        { value: '36', label: '36-Month' },
+        { value: '24', label: '24-Month' },
+        { value: '12', label: '12-Month' },
+      ],
+    },
+  ] satisfies readonly ConfiguratorGroup[],
+  defaults: { size: '20s', condition: 'used', grade: 'wwt', term: '48' },
+  /** The term "Pricing Starts at" quotes. */
+  leadTerm: '48',
+  /** Shown when the selected product has no rating of its own. */
+  fallbackRating: 4.8,
+  maxQuantity: 5,
+} as const
 
 /** The page's lead price: a $1,350 container over the 48-month term. */
 export const RTO_STARTING_MONTHLY = '$61.36'
