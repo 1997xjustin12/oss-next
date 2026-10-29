@@ -3,6 +3,7 @@ import { CACHE_TAGS, SHELL_OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { STORE_KEY } from '@/config/store'
 import { getGbpPage as getGbpPageSeed } from '@/lib/data/gbpPages'
 import { GBP_SHARED_DEFAULTS } from '@/lib/data/gbpShared'
+import { GBP_SNAPSHOT } from '@/lib/data/gbpSnapshot'
 import { GBP_TEMPLATE_DEFAULT } from '@/lib/data/gbpTemplate'
 import { conformGbpPage, conformGbpShared, conformGbpTemplate } from '@/lib/gbpValidate'
 import { getRedisClient } from '@/lib/redis'
@@ -13,7 +14,9 @@ import type { PageSeo } from '@/types/seo'
  * The GBP pages' records in Redis: each location page, the shared content and
  * the template, each with a **published** copy (what visitors see) and a
  * **draft** (what the admin is editing). The code files are the seed: with no
- * record, or a malformed field, the page renders from them.
+ * record, or a malformed field, the page renders from them. While Redis is
+ * unreachable, a page renders the records as of the last build
+ * (lib/data/gbpSnapshot.ts), and the seed only where that has none.
  *
  *   oss-next:<store>:gbp:page:<slug>          published
  *   oss-next:<store>:gbp:page:<slug>:draft    draft
@@ -74,9 +77,10 @@ async function getWithRetry(key: string): Promise<unknown> {
 }
 
 /**
- * Never throws: an unreachable Redis renders the code seed, cached only
- * briefly (SHELL_OUTAGE_CACHE_LIFE), so published edits return within 15
- * minutes of Redis recovering.
+ * Never throws: an unreachable Redis renders the record as of the last build
+ * (the snapshot; the code seed if it has none), cached only briefly
+ * (SHELL_OUTAGE_CACHE_LIFE), so edits published since that build return
+ * within 15 minutes of Redis recovering.
  */
 async function readPublished<T>(key: string, label: string, conform: (raw: unknown) => T): Promise<T> {
   try {
@@ -86,7 +90,7 @@ async function readPublished<T>(key: string, label: string, conform: (raw: unkno
   } catch (error) {
     console.error('[gbp] failed reading', label, error)
     cacheLife(SHELL_OUTAGE_CACHE_LIFE)
-    return conform(undefined)
+    return conform(GBP_SNAPSHOT[key])
   }
 }
 

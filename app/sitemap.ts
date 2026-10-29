@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { BASE_URL } from '@/lib/helpers'
 import { fetchProductSitemap, fetchPageSitemap } from '@/services/sitemap.service'
 import { getAllBlogSlugs } from '@/services/blog.service'
-import { ROUTES, isNativePath } from '@/config/routes'
+import { GBP_ROUTE_SEGMENTS, ROUTES, isNativePath } from '@/config/routes'
 
 const origin = BASE_URL.replace(/\/$/, '')
 
@@ -34,6 +34,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // in `pageRoutes` where they belong.
     { url: `${origin}${ROUTES.WHERE_TO_BUY}`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${origin}${ROUTES.ACCESSORY_PRODUCTS}`, changeFrequency: 'weekly', priority: 0.7 },
+    // The GBP location pages, for the same reason: they are native routes, so
+    // `isNativePath` drops their backend rows below.
+    ...GBP_ROUTE_SEGMENTS.map((slug): MetadataRoute.Sitemap[number] => ({
+      url: `${origin}/${slug}`,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    })),
   ]
 
   // The backend's product pattern is multi-brand ({brand_slug}/product/{handle});
