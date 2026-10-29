@@ -4,16 +4,17 @@
  * (lib/data/gbpShared.ts). A new page is a new entry here.
  *
  * Copied from the live pages with their bugs fixed (docs/reference/
- * gbp-subdomain-pages.md, "Content issues on the live pages"): typos, and
- * blog card links (every hand-written card list on WordPress links each card
- * to the next card's post; these link the post each card names). Pages still
- * showing another city's cards or FAQs (Houston, Los Angeles, Wildomar,
- * Oakland) need their own content before they go live.
+ * gbp-subdomain-pages.md, "Content issues on the live pages"): typos, blog
+ * card links (every hand-written card list on WordPress links each card to
+ * the next card's post; these link the post each card names), and other
+ * cities' cards removed (Houston and Los Angeles showed San Diego's, Wildomar
+ * Temecula's, Oakland Newark's; those pages have none until they get their own).
  *
  * Headings mark their red run with [[…]] (AccentText).
  *
- * Meant to seed an admin configurator later (SEO, schema, canonical and the
- * rest editable per page); until then it is the source of truth.
+ * The seed and fallback: since 2026-10-29 the published content lives in
+ * Redis (services/gbp.service.ts), edited in /admin/gbp. A page renders this
+ * only when Redis has no record or a field is invalid.
  */
 
 import type { GbpPage } from '@/types/gbp'
@@ -386,36 +387,7 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'We also offer modifications, parts, accessories, and certified inspections, making it easy to customize containers for offices, workshops, or specialized projects.',
       'With over 60 locations nationwide and local delivery to the Houston area , we ensure quick turnaround and expert support every step of the way.',
     ],
-    blogCards: [
-      {
-        title: 'Complete Guide to Buying Shipping Containers for Sale in San Diego, CA',
-        excerpt: 'Thinking about buying a shipping container in San Diego, CA, but not sure where to start? This guide is your go-to resource for navigating the entire process with confidence. From inspecting container quality and comparing prices to understanding local permits, exploring financing, and ensuring smooth delivery, you’ll get everything you need to make a smart, informed investment.',
-        url: 'https://onsitestorage.com/shipping-containers-for-sale-in-san-diego-ca-complete-guide/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/25081544/Complete-Guide-to-Buying-Shipping-Containers-for-Sale-in-San-Diego-CA.webp',
-        imageAlt: 'Complete Guide to Buying Shipping Containers for Sale in San Diego, CA',
-      },
-      {
-        title: 'Checklist for San Diego Shipping Containers Before Purchase',
-        excerpt: 'San Diego shipping containers are a smart, time-saving investment, especially when you have a reliable inspection process to follow. Our expert blog provides a step-by-step checklist for assessing shipping containers using seller photos. You’ll learn how to spot structural issues, check door functionality, verify CSC plates, and uncover any red flags in a container’s history.',
-        url: 'https://onsitestorage.com/san-diego-shipping-containers-inspection-checklist/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/25081739/Checklist-for-San-Diego-Shipping-Containers-Before-Purchase.webp',
-        imageAlt: 'Checklist for San Diego Shipping Containers Before Purchase',
-      },
-      {
-        title: 'Rent-to-Own & Permit Guide for Shipping Containers in San Diego',
-        excerpt: 'Want to use a shipping container in San Diego but not sure how to get started legally and affordably? This blog breaks down exactly how rent-to-own options work and what you need to know about San Diego’s permitting process so you can launch your project without delays or red tape.',
-        url: 'https://onsitestorage.com/shipping-containers-san-diego-rent-to-own-and-permit-guide/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/25081814/Rent-to-Own-Permit-Guide-for-Shipping-Containers-in-San-Diego.webp',
-        imageAlt: 'Rent-to-Own & Permit Guide for Shipping Containers in San Diego',
-      },
-      {
-        title: 'Shipping Containers San Diego CA: How to Receive Your Delivery the Right Way',
-        excerpt: 'Shipping Containers San Diego CA are a top choice for secure, versatile storage but proper delivery takes planning. This blog offers a step-by-step guide to help you prepare your site, navigate local regulations, and ensure smooth, on-time container placement anywhere in the city.',
-        url: 'https://onsitestorage.com/shipping-containers-san-diego-ca-delivery-guide/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/25081847/Shipping-Containers-San-Diego-CA-How-to-Receive-Your-Delivery-the-Right-Way.webp',
-        imageAlt: 'Shipping Containers San Diego CA: How to Receive Your Delivery the Right Way',
-      },
-    ],
+    blogCards: [],
     faqs: [
       {
         question: 'What is a shipping container?',
@@ -524,36 +496,7 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'We also supply modifications, parts, accessories, and certified inspections, making it easy to customize containers into offices, workshops, or unique project builds.',
       'With 60+ locations nationwide and local delivery to the Wildomar area , we ensure quick turnaround and expert customer support every step of the way.',
     ],
-    blogCards: [
-      {
-        title: 'Storage Containers Temecula, CA: The Ultimate Buyer’s Guide',
-        excerpt: 'Storage containers in Temecula offer flexible, secure, and affordable solutions for homeowners, business owners, and contractors who need extra space fast. In this ultimate buyer’s guide, you’ll learn how to buy or rent the right container, understand local zoning and permit rules, and prepare for smooth delivery right to your property.',
-        url: 'https://onsitestorage.com/storage-containers-temecula-buyers-guide/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/28061824/Storage-Containers-Temecula-1.webp',
-        imageAlt: 'Storage Containers Temecula',
-      },
-      {
-        title: 'Buy or Rent a Storage Container in Temecula?',
-        excerpt: 'Storage container in Temecula buyers and renters can follow this comprehensive step-by-step guide to choose the right unit, compare prices, and prepare for smooth delivery. Covering everything from container types, sizes, and conditions to rental rates, site preparation, and local regulations, it ensures you make an informed decision.',
-        url: 'https://onsitestorage.com/storage-container-temecula-rent-or-buy/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/28061903/Buy-or-Rent-a-Storage-Container-in-Temecula-1.webp',
-        imageAlt: 'Buy or Rent a Storage Container in Temecula',
-      },
-      {
-        title: 'Extra Space Storage Temecula: Preparation & Delivery Tips',
-        excerpt: 'Extra Space Storage in Temecula offers a practical solution for homeowners and businesses needing extra room, and this guide walks you through everything required to receive your delivery smoothly. From preparing the perfect location and timing the arrival to handling weather challenges and ensuring safety, the blog provides step-by-step best practices for a hassle-free experience.',
-        url: 'https://onsitestorage.com/extra-space-storage-temecula-preparation-delivery-tips/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/28061932/Extra-Space-Storage-Temecula-1.webp',
-        imageAlt: 'Extra Space Storage Temecula',
-      },
-      {
-        title: 'Zoning & Permits for Portable Storage in Temecula',
-        excerpt: 'Shipping Containers Temecula, CA are a top choice for secure, versatile storage but proper delivery takes planning. This blog offers a step-by-step guide to help you prepare your site, navigate local regulations, and ensure smooth, on-time container placement anywhere in the city.',
-        url: 'https://onsitestorage.com/portable-storage-temecula-zoning-permits/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/28062008/Zoning-Permits-for-Portable-Storage-in-Temecula-1.webp',
-        imageAlt: 'Zoning & Permits for Portable Storage in Temecula',
-      },
-    ],
+    blogCards: [],
     faqs: [
       {
         question: 'Do I need a permit to put a shipping container on my property in California?',
@@ -812,36 +755,7 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'We also offer modifications, parts, accessories, and certified inspections, making it easy to customize containers for offices, workshops, or specialized projects.',
       'With over 60 locations nationwide and local delivery to the Los Angeles area , we ensure quick turnaround and expert support every step of the way.',
     ],
-    blogCards: [
-      {
-        title: 'Complete Guide to Buying Shipping Containers for Sale in San Diego, CA',
-        excerpt: 'Thinking about buying a shipping container in San Diego, CA, but not sure where to start? This guide is your go-to resource for navigating the entire process with confidence. From inspecting container quality and comparing prices to understanding local permits, exploring financing, and ensuring smooth delivery, you’ll get everything you need to make a smart, informed investment.',
-        url: 'https://onsitestorage.com/shipping-containers-for-sale-in-san-diego-ca-complete-guide/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/25081544/Complete-Guide-to-Buying-Shipping-Containers-for-Sale-in-San-Diego-CA.webp',
-        imageAlt: 'Complete Guide to Buying Shipping Containers for Sale in San Diego, CA',
-      },
-      {
-        title: 'Checklist for San Diego Shipping Containers Before Purchase',
-        excerpt: 'San Diego shipping containers are a smart, time-saving investment, especially when you have a reliable inspection process to follow. Our expert blog provides a step-by-step checklist for assessing shipping containers using seller photos. You’ll learn how to spot structural issues, check door functionality, verify CSC plates, and uncover any red flags in a container’s history.',
-        url: 'https://onsitestorage.com/san-diego-shipping-containers-inspection-checklist/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/25081739/Checklist-for-San-Diego-Shipping-Containers-Before-Purchase.webp',
-        imageAlt: 'Checklist for San Diego Shipping Containers Before Purchase',
-      },
-      {
-        title: 'Rent-to-Own & Permit Guide for Shipping Containers in San Diego',
-        excerpt: 'Want to use a shipping container in San Diego but not sure how to get started legally and affordably? This blog breaks down exactly how rent-to-own options work and what you need to know about San Diego’s permitting process so you can launch your project without delays or red tape.',
-        url: 'https://onsitestorage.com/shipping-containers-san-diego-rent-to-own-and-permit-guide/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/25081814/Rent-to-Own-Permit-Guide-for-Shipping-Containers-in-San-Diego.webp',
-        imageAlt: 'Rent-to-Own & Permit Guide for Shipping Containers in San Diego',
-      },
-      {
-        title: 'Shipping Containers San Diego CA: How to Receive Your Delivery the Right Way',
-        excerpt: 'Shipping Containers San Diego CA are a top choice for secure, versatile storage but proper delivery takes planning. This blog offers a step-by-step guide to help you prepare your site, navigate local regulations, and ensure smooth, on-time container placement anywhere in the city.',
-        url: 'https://onsitestorage.com/shipping-containers-san-diego-ca-delivery-guide/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2025/08/25081847/Shipping-Containers-San-Diego-CA-How-to-Receive-Your-Delivery-the-Right-Way.webp',
-        imageAlt: 'Shipping Containers San Diego CA: How to Receive Your Delivery the Right Way',
-      },
-    ],
+    blogCards: [],
     faqs: [
       {
         question: 'What is a shipping container?',
@@ -1292,36 +1206,7 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'We also offer modifications, parts, accessories, and certified inspections, making it easy to customize containers for offices, workshops, or specialized projects.',
       'With over 60 locations nationwide and local delivery to the Oakland area , we ensure quick turnaround and expert support every step of the way.',
     ],
-    blogCards: [
-      {
-        title: 'Best Storage Container in Newark: Local Buyer’s Guide',
-        excerpt: 'Finding reliable storage containers in Newark is essential for homeowners, contractors, and businesses. When you need extra space for household items, construction equipment, or a temporary workspace, containers offer a durable and versatile solution. Understanding the different types, sizes, and prices helps you make the right choice without overspending. When looking for a storage container, consider factors like condition, delivery, and supplier reliability. New containers provide maximum durability, while used units can save money. Knowing whether a 20ft or 40ft container fits your needs ensures you get the right space for your project. This guide will help you explore options, compare costs, and make an informed decision.',
-        url: 'https://onsitestorage.com/shipping-storage-containers-newark-local-buyers-guide/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2026/02/03070834/best-storage-container-in-newark.webp',
-        imageAlt: 'Best storage container options available in Newark, New Jersey',
-      },
-      {
-        title: 'Prices of Portable Storage Containers in Newark',
-        excerpt: 'When planning a storage solution in Newark, one of the first questions most people ask is about the prices of portable storage containers in Newark. Storage containers provide a secure and flexible way to store personal items, business inventory, or construction equipment. Prices can vary significantly depending on size, condition, and optional features, and understanding these factors ensures you make a smart investment without paying more than necessary. Beyond just the price tag, it’s important to think about how long you’ll use the container, where it will be placed, and whether modifications are needed. Some buyers only focus on upfront pricing and later discover additional fees tied to delivery, permits, or site preparation. When you are buying storage containers in Newark for home or business, it helps you compare options effectively and choose the right unit for your needs.',
-        url: 'https://onsitestorage.com/prices-of-portable-storage-containers-in-newark/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2026/02/02062847/prices-of-portable-storage-containers-in-newark.webp',
-        imageAlt: 'prices of portable storage containers in newark',
-      },
-      {
-        title: '5 Things to Avoid When You Buy Storage Containers in Newark',
-        excerpt: 'When you buy storage containers in Newark, businesses often focus on the immediate need for extra space but overlook important factors that impact cost, usability, and long-term value. Choosing the best storage containers in Newark, NJ, ensures your investment is secure, cost-effective, and aligned with your storage goals. Many companies make the mistake of prioritizing speed over strategy. While getting a container quickly may solve a short-term storage problem, overlooking size, condition, and features can lead to wasted space, higher maintenance costs, and insufficient storage efficiency. Thinking ahead about future expansion helps avoid multiple container purchases later, which can significantly increase overall investment.',
-        url: 'https://onsitestorage.com/buying-storage-containers-newark/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2026/01/26072508/5-things-to-avoid-when-you-buy-storage-containers-in-newark.webp',
-        imageAlt: '5 things to avoid when you buy storage containers in newark',
-      },
-      {
-        title: 'How to Choose the Best Storage Containers in Newark, NJ',
-        excerpt: 'Finding extra space in a busy city like Newark isn’t always easy. When you’re a business owner, contractor, or property manager, storage needs can grow quickly. Choosing the Best Storage Container in Newark, NJ requires more than just finding the lowest price; it means understanding how local conditions, usage needs, and long-term value all come together. Many buyers start by looking for a shipping container for sale, but without fully evaluating size, condition, and local delivery challenges, they risk making costly mistakes. This guide breaks down everything you need to know so you can confidently select a storage container that fits your needs today and still works for you tomorrow.',
-        url: 'https://onsitestorage.com/how-to-choose-the-best-storage-containers-in-newark-nj/',
-        image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2026/01/23024606/how-to-choose-the-best-storage-containers-in-newark-nj.png',
-        imageAlt: 'how to choose the best storage containers in newark nj',
-      },
-    ],
+    blogCards: [],
     faqs: [
       {
         question: 'Is it cheaper to buy or rent a container?',
