@@ -1023,23 +1023,23 @@ export const GBP_PAGES: readonly GbpPage[] = [
     faqs: [
       {
         question: 'What is a shipping container?',
-        answer: '',
+        answer: 'A shipping container is a standardized metal box used to transport goods internationally. It comes in various sizes, typically 20 or 40 feet long, and is designed to be easily loaded onto ships, trucks, and trains. Containers revolutionized global trade by simplifying handling and logistics, ensuring goods’ safety and enabling efficient intermodal transportation.',
       },
       {
         question: 'What is cost of shipping container?',
-        answer: '',
+        answer: 'On average, used shipping containers can range from $1,200 to $8,000, while new or one-trip containers can cost between $2,850 and $7,800. Prices may also be influenced by additional features and specific requirements.',
       },
       {
         question: 'What material are shipping containers made from?',
-        answer: '',
+        answer: 'Shipping are primarily made from a special type of steel called corten steel or weathering steel. Corten steel is known for its durability and resistance to corrosion, making it suitable for withstanding harsh weather conditions during shipping and storage',
       },
       {
         question: 'What is the size of a shipping container?',
-        answer: '',
+        answer: 'Shipping containers are available in various sizes, with the most common being 20 feet and 40 feet long. The width and height of a standard container are around 8 feet and 8 feet 6 inches, respectively. High cube containers have an added foot of height, measuring approximately 9 feet 6 inches tall.',
       },
       {
         question: 'What is the floor of a shipping container made of?',
-        answer: '',
+        answer: 'The floor of a shipping container is commonly a 1-1/8 inch thick marine plywood. This particular type of plywood is specially designed to withstand the harsh conditions of marine environments, ensuring durability and strength. However, it is worth noting that certain containers may feature alternative flooring materials like bamboo, vinyl, or even steel.',
       },
     ],
     mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d361.976606532139!2d-117.16990455203673!3d33.51659374471659!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80db7fe849677edd%3A0xa0aba8b756c32292!2sOn-Site%20Storage%20Solutions%2C%20Inc.!5e0!3m2!1sen!2sph!4v1776824545737!5m2!1sen!2sph',

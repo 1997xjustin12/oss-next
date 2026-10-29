@@ -2,14 +2,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { CircleArrowRight } from 'lucide-react'
 import { AccentText } from '@/components/shared/AccentText'
-import { GBP_ACCENT, GBP_CONTAINER, GBP_H2 } from './gbpStyles'
-import type { GbpBlogCard } from '@/types/gbp'
+import { GBP_ACCENT, GBP_BG_WHITE, GBP_BRAND_TEXT, GBP_CONTAINER, GBP_H2, sectionPadding, sectionVars } from './gbpStyles'
+import type { GbpBlogCard, GbpSectionStyle } from '@/types/gbp'
 
-type Props = { heading: string; cards: readonly GbpBlogCard[] }
+type Props = { heading: string; cards: readonly GbpBlogCard[]; style?: GbpSectionStyle }
 
 /** The post's path, so the link stays on whatever host serves the page (staging included). */
 function postPath(url: string): string {
-  return new URL(url).pathname
+  return new URL(url, 'https://onsitestorage.com').pathname
 }
 
 /**
@@ -17,10 +17,10 @@ function postPath(url: string): string {
  * link (the title's link stretched over it), so the target is the card, not
  * just WordPress's small arrow. A card with no post renders without a link.
  */
-export function GbpResources({ heading, cards }: Props) {
+export function GbpResources({ heading, cards, style }: Props) {
   if (cards.length === 0) return null
   return (
-    <section aria-labelledby="gbp-resources" className="bg-white py-10 sm:py-12 dark:bg-neutral-950">
+    <section aria-labelledby="gbp-resources" className={`${GBP_BG_WHITE} ${sectionPadding(style, 'py-10 sm:py-12')}`} style={sectionVars(style)}>
       <div className={GBP_CONTAINER}>
         <h2 id="gbp-resources" className={GBP_H2}>
           <AccentText text={heading} accentClassName={GBP_ACCENT} />
@@ -38,7 +38,7 @@ export function GbpResources({ heading, cards }: Props) {
                   className="aspect-video h-auto w-full rounded-sm object-cover shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
                 />
                 <div>
-                  <h3 className="text-center text-xl font-bold leading-normal text-[#C60C29] sm:text-left md:text-[25px] dark:text-red-400">
+                  <h3 className={`text-center text-xl font-bold leading-normal sm:text-left md:text-[25px] ${GBP_BRAND_TEXT}`}>
                     {card.url ? (
                       <Link
                         href={postPath(card.url)}
@@ -56,7 +56,7 @@ export function GbpResources({ heading, cards }: Props) {
                 {card.url && (
                   <CircleArrowRight
                     aria-hidden
-                    className="hidden h-9 w-9 fill-[#C60C29] text-white transition-transform group-hover:translate-x-1 sm:block dark:fill-red-500"
+                    className="hidden h-9 w-9 fill-[var(--gbp-brand,#C60C29)] text-white transition-transform group-hover:translate-x-1 sm:block dark:fill-red-500"
                   />
                 )}
               </article>

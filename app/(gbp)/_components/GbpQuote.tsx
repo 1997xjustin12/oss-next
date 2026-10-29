@@ -1,25 +1,27 @@
 import { AccentText } from '@/components/shared/AccentText'
 import { GBP_ZOHO_FORMS } from '@/lib/data/gbpShared'
 import { ZohoQuoteForm } from './ZohoQuoteForm'
-import { GBP_ACCENT, GBP_CONTAINER, GBP_H2 } from './gbpStyles'
+import { GBP_ACCENT, GBP_BG_WHITE, GBP_CONTAINER, GBP_H2, sectionPadding, sectionVars } from './gbpStyles'
+import type { GbpSectionStyle } from '@/types/gbp'
 
-type Props = { mapEmbedUrl: string; city: string }
+type Props = { heading: string; mapEmbedUrl: string; city: string; style?: GbpSectionStyle }
 
 /**
  * "Get the Best Pricing Now!" (`#request_quote`): the page's Google Business
  * listing on a map beside the shared quote form. The map is a lazy iframe, so
  * it costs nothing until the visitor scrolls near it.
  */
-export function GbpQuote({ mapEmbedUrl, city }: Props) {
+export function GbpQuote({ heading, mapEmbedUrl, city, style }: Props) {
   return (
     <section
       id={GBP_ZOHO_FORMS.quote.anchor}
       aria-labelledby="gbp-quote"
-      className="scroll-mt-4 bg-white py-10 sm:py-12 dark:bg-neutral-950"
+      className={`scroll-mt-4 ${GBP_BG_WHITE} ${sectionPadding(style, 'py-10 sm:py-12')}`}
+      style={sectionVars(style)}
     >
       <div className={GBP_CONTAINER}>
         <h2 id="gbp-quote" className={GBP_H2}>
-          <AccentText text={GBP_ZOHO_FORMS.quote.heading} accentClassName={GBP_ACCENT} />
+          <AccentText text={heading} accentClassName={GBP_ACCENT} />
         </h2>
         <div className="mt-8 grid overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.15)] md:grid-cols-2 dark:border-neutral-800 dark:bg-neutral-900">
           <iframe

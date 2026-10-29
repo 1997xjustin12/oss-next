@@ -3,7 +3,7 @@ import { getGbpPage } from '@/lib/data/gbpPages'
 import { GBP_HEAD } from '@/lib/data/gbpShared'
 import { breadcrumbNode, faqNode, graph, ref, siteNodes, webPageNode, type SchemaNode } from '@/lib/schema'
 import type { PageSeoDefaults } from '@/types/seo'
-import type { GbpPage } from '@/types/gbp'
+import type { GbpOpeningHours, GbpPage } from '@/types/gbp'
 
 /**
  * Helpers for the GBP location pages (app/(gbp)). Reference:
@@ -49,6 +49,14 @@ export function gbpSeoDefaults(page: GbpPage): PageSeoDefaults {
   }
 }
 
+/** The listing's name when the GBP SEO screen sets none. */
+export const GBP_LISTING_NAME = `${SITE.name}, Inc.`
+
+/** Hours when the GBP SEO screen sets none: every page shows "M-F 5am-5pm". */
+export const GBP_OPENING_HOURS: GbpOpeningHours[] = [
+  { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '05:00', closes: '17:00' },
+]
+
 /**
  * The GBP listing as one `SelfStorage` node, generated from the page's fields.
  *
@@ -63,7 +71,7 @@ export function gbpLocalBusinessNode(page: GbpPage): SchemaNode {
   return {
     '@type': 'SelfStorage',
     '@id': `${url}#identity`,
-    name: `${SITE.name}, Inc.`,
+    name: page.listing?.name ?? GBP_LISTING_NAME,
     url,
     image: SITE.logo,
     parentOrganization: ref(SCHEMA_ID.organization),
@@ -71,15 +79,12 @@ export function gbpLocalBusinessNode(page: GbpPage): SchemaNode {
     email: contact.email,
     address: { '@type': 'PostalAddress', ...contact.address },
     ...(geo ? { geo: { '@type': 'GeoCoordinates', latitude: geo.lat, longitude: geo.lng } } : {}),
-    // Every page shows "M-F 5am-5pm".
-    openingHoursSpecification: [
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        opens: '05:00',
-        closes: '17:00',
-      },
-    ],
+    openingHoursSpecification: (page.listing?.openingHours?.length ? page.listing.openingHours : GBP_OPENING_HOURS).map((hours) => ({
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: hours.days,
+      opens: hours.opens,
+      closes: hours.closes,
+    })),
     areaServed: areaServed.map((name) => ({ '@type': 'City', name })),
   }
 }
@@ -97,5 +102,7 @@ export function gbpJsonLd(page: GbpPage): SchemaNode {
     breadcrumbNode([{ name: 'Home', path: '/' }, { name: `${page.location.city}, ${page.location.stateCode}` }]),
     gbpLocalBusinessNode(page),
     faqNode(page.faqs),
+    // Extra nodes written in the GBP SEO screen, as entered (validated as JSON objects).
+    ...(page.listing?.extraJsonLd ?? []),
   ])
 }

@@ -8,6 +8,7 @@ export const CACHE_TAGS = {
   PAGES:      'pages',    // Converted WordPress pages from the Django pages API
   SEO:        'seo',      // Per-page SEO overrides from the admin Page Configurator
   CONTENT:    'content',  // Visible on-page copy from the admin Content Editor
+  GBP:        'gbp',      // GBP location pages: their content, shared content and template
   BLOG:       'blog',     // Headless WordPress blog posts (bbq-blog REST API)
   ORDERS:     'orders',
   USERS:      'users',
@@ -77,6 +78,12 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
     tag: CACHE_TAGS.CONTENT,
     label: 'On-Page Copy',
     description: 'Headings and visible copy set in the Content Editor.',
+    lifetime: 'hours — refreshed hourly, kept a day',
+  },
+  {
+    tag: CACHE_TAGS.GBP,
+    label: 'GBP Location Pages',
+    description: 'The published content, shared content and template of the GBP location pages. Publishing in the GBP screens already refreshes them.',
     lifetime: 'hours — refreshed hourly, kept a day',
   },
   {

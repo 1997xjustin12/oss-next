@@ -1,26 +1,15 @@
-import { JsonLd } from '@/components/shared/JsonLd'
-import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
-import { gbpJsonLd, gbpPath, requireGbpPage } from '@/lib/gbp'
-import { gbpMetadata } from '@/lib/gbpMetadata'
-import { getReviews } from '@/services/review.service'
-import { GbpTemplate } from '../_components/GbpTemplate'
+import { GbpLocationPage, gbpLocationMetadata } from '../_components/GbpLocationPage'
 
-// The page's content is its entry in lib/data/gbpPages.ts; this file only
-// names it. A new GBP page is this file with another slug.
-const page = requireGbpPage('shipping-containers-for-sale-in-san-diego-ca')
+// The page's content is its published record (services/gbp.service.ts, over
+// its seed in lib/data/gbpPages.ts); this file only names it. A new GBP page
+// is this file with another slug.
+const SLUG = 'shipping-containers-for-sale-in-san-diego-ca'
 
 export function generateMetadata() {
-  return gbpMetadata(page)
+  return gbpLocationMetadata(SLUG)
 }
 
-/** GBP location page: San Diego, CA. Static; the reviews are a cached read. */
-export default async function Page() {
-  const reviews = await getReviews()
-  return (
-    <>
-      <JsonLd data={gbpJsonLd(page)} />
-      <PageHeadScripts path={gbpPath(page)} />
-      <GbpTemplate page={page} reviews={reviews} />
-    </>
-  )
+/** GBP location page: San Diego, CA. Static; every read is cached. */
+export default function Page() {
+  return <GbpLocationPage slug={SLUG} />
 }

@@ -1,11 +1,10 @@
 import { ChevronDown } from 'lucide-react'
 import { AccentText } from '@/components/shared/AccentText'
 import { YouTubeEmbed } from '@/components/product/YouTubeEmbed'
-import { GBP_FAQ_HEADING } from '@/lib/data/gbpShared'
-import { GBP_ACCENT, GBP_CONTAINER } from './gbpStyles'
-import type { GbpFaq as GbpFaqItem } from '@/types/gbp'
+import { GBP_ACCENT, GBP_BG_WHITE, GBP_CONTAINER, GBP_HEADING, sectionPadding, sectionVars } from './gbpStyles'
+import type { GbpFaq as GbpFaqItem, GbpSectionStyle } from '@/types/gbp'
 
-type Props = { faqs: readonly GbpFaqItem[]; youtubeId: string; city: string }
+type Props = { heading: string; faqs: readonly GbpFaqItem[]; youtubeId: string; city: string; style?: GbpSectionStyle }
 
 /**
  * "Frequently Asked Questions" (`#faqs`): red rows, one open at a time (the
@@ -16,20 +15,25 @@ type Props = { faqs: readonly GbpFaqItem[]; youtubeId: string; city: string }
  * The video is a poster until clicked, so YouTube's player costs nothing on
  * load.
  */
-export function GbpFaq({ faqs, youtubeId, city }: Props) {
+export function GbpFaq({ heading, faqs, youtubeId, city, style }: Props) {
   return (
-    <section id="faqs" aria-labelledby="gbp-faqs" className="scroll-mt-4 bg-white py-10 sm:py-12 dark:bg-neutral-950">
+    <section
+      id="faqs"
+      aria-labelledby="gbp-faqs"
+      className={`scroll-mt-4 ${GBP_BG_WHITE} ${sectionPadding(style, 'py-10 sm:py-12')}`}
+      style={sectionVars(style)}
+    >
       <div className={`${GBP_CONTAINER} grid items-start gap-8 md:grid-cols-2`}>
         <div>
-          <h2 id="gbp-faqs" className="text-center text-2xl font-bold leading-[1.1] text-black md:text-left md:text-[30px] dark:text-white">
-            <AccentText text={GBP_FAQ_HEADING} accentClassName={GBP_ACCENT} />
+          <h2 id="gbp-faqs" className={`text-center text-2xl font-bold leading-[1.1] md:text-left md:text-[30px] ${GBP_HEADING}`}>
+            <AccentText text={heading} accentClassName={GBP_ACCENT} />
           </h2>
           <div className="mt-6 space-y-2">
             {faqs.map((faq) => (
               <details key={faq.question} name="gbp-faq" className="group overflow-hidden rounded-sm">
                 <summary
-                  className="flex cursor-pointer list-none items-center gap-3 bg-[#C60C29] px-4 py-2.5 text-lg font-medium leading-normal text-white
-                             hover:bg-[#a30a22] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white
+                  className="flex cursor-pointer list-none items-center gap-3 bg-[var(--gbp-brand,#C60C29)] px-4 py-2.5 text-lg font-medium leading-normal text-white
+                             hover:brightness-90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white
                              dark:bg-[#9b0a20] [&::-webkit-details-marker]:hidden"
                 >
                   <ChevronDown aria-hidden className="h-4 w-4 shrink-0 -rotate-90 transition-transform group-open:rotate-0" strokeWidth={3} />
