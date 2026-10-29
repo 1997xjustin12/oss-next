@@ -35,7 +35,7 @@ export function GbpHeader({ phone, telHref, content, options }: Props) {
         className="border-b border-neutral-200 bg-[var(--gbp-header-bg)] dark:border-neutral-800 dark:bg-[var(--gbp-header-bg-dark)]"
         style={{ '--gbp-header-bg': options.background, '--gbp-header-bg-dark': options.backgroundDark } as React.CSSProperties}
       >
-        <div className={`${GBP_CONTAINER} flex items-center justify-center py-3 md:justify-between`}>
+        <div className={`${GBP_CONTAINER} flex items-center justify-center gap-6 py-3 md:justify-between`}>
           {/* No prefetch: prefetching the storefront pulls in its fonts (Roboto,
               Anton) on a page that uses only Poppins. The homepage is static, so
               the click is still fast. */}
@@ -46,14 +46,17 @@ export function GbpHeader({ phone, telHref, content, options }: Props) {
               width={content.logo.width}
               height={content.logo.height}
               sizes="180px"
-              className="h-11 w-auto rounded-sm dark:bg-white dark:p-0.5"
+              className="h-11 w-auto rounded-sm md:h-8 xl:h-11 dark:bg-white dark:p-0.5"
             />
           </Link>
 
-          <nav aria-label="On this page" className="hidden md:block">
-            <ul className="flex items-center gap-6 text-base font-semibold text-black lg:gap-8 dark:text-neutral-100">
+          {/* As on WordPress: an item never breaks inside ("About Us" stays one
+              line); when the row runs out of room, whole items wrap to a second
+              centred line. */}
+          <nav aria-label="On this page" className="hidden min-w-0 flex-1 md:block">
+            <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-0 text-base font-semibold text-black xl:gap-x-8 dark:text-neutral-100">
               {content.nav.map((item) => (
-                <li key={item.label}>
+                <li key={item.label} className="whitespace-nowrap">
                   {item.href.startsWith('/') ? (
                     <Link href={item.href} prefetch={false} className="hover:text-[var(--gbp-brand,#C60C29)] dark:hover:text-red-400">
                       {item.label}
