@@ -96,6 +96,16 @@ export const ROUTES = {
  */
 export const GBP_ROUTE_SEGMENTS = [
   'shipping-containers-for-sale-in-san-diego-ca',
+  'shipping-containers-for-sale-in-phoenix-az',
+  'shipping-containers-for-sale-in-houston-tx',
+  'shipping-containers-for-sale-in-wildomar-ca',
+  'shipping-containers-for-sale-in-newark-nj',
+  'shipping-containers-for-sale-in-los-angeles-ca',
+  'shipping-containers-for-sale-in-temecula-ca',
+  'shipping-containers-for-sale-in-las-vegas-nv',
+  'shipping-containers-for-sale-in-oakland-ca',
+  'shipping-containers-for-sale-in-miami-fl',
+  'shipping-containers-for-sale-in-chicago-il',
 ] as const
 
 export const NATIVE_ROUTE_SEGMENTS = [
