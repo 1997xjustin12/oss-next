@@ -70,15 +70,6 @@ export function validateZohoQuote(values: ZohoQuoteValues): string | null {
   return null
 }
 
-/**
- * A ZIP worth looking up: five US digits (ZIP+4 allowed) or a full Canadian
- * postal code. Anything shorter is still being typed.
- */
-export function isCompleteZip(zip: string): boolean {
-  const value = zip.trim().toUpperCase()
-  return /^\d{5}(-\d{4})?$/.test(value) || /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/.test(value)
-}
-
 // ─── Saved in this browser ─────────────────────────────────────────────────
 
 const KEY = 'oss-quote-form'

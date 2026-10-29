@@ -120,7 +120,7 @@ export function GuestLeadModal({
    */
   const form = useZohoQuoteForm({
     active: open,
-    onZipResolved: (place) => onAddressZipChange?.(place.postcode),
+    onZipResolved: (zip) => onAddressZipChange?.(zip),
   })
 
   /**

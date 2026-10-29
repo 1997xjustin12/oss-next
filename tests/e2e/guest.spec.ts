@@ -111,6 +111,12 @@ test.describe('guest', () => {
       await expect(modal.locator('#guest-zip')).toHaveValue(ZIP)
       await expect(modal.locator('#guest-city')).toHaveValue('Atlanta')
       await expect(modal.locator('#guest-state')).toHaveValue('GA')
+      // A different ZIP is a different place: City and State follow it.
+      await modal.locator('#guest-zip').fill('90210')
+      await expect(modal.locator('#guest-city')).toHaveValue('Beverly Hills')
+      await expect(modal.locator('#guest-state')).toHaveValue('CA')
+      await modal.locator('#guest-zip').fill(ZIP)
+      await expect(modal.locator('#guest-city')).toHaveValue('Atlanta')
       await modal.getByRole('button', { name: 'Get Quote' }).click()
       // Both steps stay in the page — the details panel is only slid aside and
       // made inert, so typed details survive a step back. Moving on means that
