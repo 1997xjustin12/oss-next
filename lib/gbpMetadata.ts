@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { GBP_HEAD } from '@/lib/data/gbpShared'
-import { gbpPath } from '@/lib/gbp'
+import { gbpPath, gbpSeoDefaults } from '@/lib/gbp'
 import { resolvePageMetadata } from '@/lib/seo'
 import type { GbpPage } from '@/types/gbp'
 
@@ -13,7 +13,9 @@ import type { GbpPage } from '@/types/gbp'
  * because lib/seo reads the SEO registry, which reads lib/gbp.
  */
 export async function gbpMetadata(page: GbpPage): Promise<Metadata> {
-  const base = await resolvePageMetadata(gbpPath(page))
+  // The defaults are the published record's SEO (edited on the GBP SEO
+  // screen), not the registry's copy of the code seed.
+  const base = await resolvePageMetadata(gbpPath(page), gbpSeoDefaults(page))
   const { seo } = page
 
   return {

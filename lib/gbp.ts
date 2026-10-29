@@ -3,7 +3,8 @@ import { getGbpPage } from '@/lib/data/gbpPages'
 import { GBP_HEAD } from '@/lib/data/gbpShared'
 import { breadcrumbNode, faqNode, graph, ref, siteNodes, webPageNode, type SchemaNode } from '@/lib/schema'
 import type { PageSeoDefaults } from '@/types/seo'
-import type { GbpOpeningHours, GbpPage } from '@/types/gbp'
+import { GBP_LISTING_NAME, GBP_OPENING_HOURS } from '@/lib/gbpDefaults'
+import type { GbpPage } from '@/types/gbp'
 
 /**
  * Helpers for the GBP location pages (app/(gbp)). Reference:
@@ -48,14 +49,6 @@ export function gbpSeoDefaults(page: GbpPage): PageSeoDefaults {
     twitter: { card: 'summary_large_image', site: GBP_HEAD.twitterSite },
   }
 }
-
-/** The listing's name when the GBP SEO screen sets none. */
-export const GBP_LISTING_NAME = `${SITE.name}, Inc.`
-
-/** Hours when the GBP SEO screen sets none: every page shows "M-F 5am-5pm". */
-export const GBP_OPENING_HOURS: GbpOpeningHours[] = [
-  { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '05:00', closes: '17:00' },
-]
 
 /**
  * The GBP listing as one `SelfStorage` node, generated from the page's fields.

@@ -55,7 +55,16 @@ export default async function PageConfiguratorPage() {
       </header>
 
       <div className="space-y-8">
-        {PAGE_GROUPS.map((group) => {
+        {/* GBP location pages are edited on their own screens (one place per location). */}
+        <p className="rounded-lg border border-theme-border bg-theme-bg p-3 text-sm text-theme-mid dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
+          GBP location pages&apos; SEO and scripts are edited in{' '}
+          <Link href={ADMIN_ROUTES.GBP} className="font-semibold text-theme-primary hover:underline">
+            GBP Pages
+          </Link>
+          .
+        </p>
+
+        {PAGE_GROUPS.filter((group) => group !== 'Locations').map((group) => {
           const pages = NATIVE_PAGES.filter((page) => page.group === group);
           if (pages.length === 0) return null;
 

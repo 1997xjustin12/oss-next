@@ -75,7 +75,12 @@ export function isAdminIdentity(...identities: (string | null | undefined)[]): b
  * reason the section lives under a real `/admin` segment rather than a route
  * group. A new admin page can't accidentally ship ungated.
  */
-export const ADMIN_PATHS: readonly string[] = ['/admin'];
+export const ADMIN_PATHS: readonly string[] = [
+  '/admin',
+  // The GBP screens' draft preview: outside /admin only so it gets the GBP
+  // page layout instead of the admin shell. Gated the same way.
+  '/admin-preview',
+];
 
 export function isAdminPath(pathname: string): boolean {
   return ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));

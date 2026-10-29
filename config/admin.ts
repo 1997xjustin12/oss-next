@@ -21,12 +21,20 @@ export const ADMIN_ROUTES = {
   CHAT: '/admin/chat',
   PRODUCT_PANEL: '/admin/product-panel',
   CART_NOTICE: '/admin/cart-notice',
+  // GBP location pages (docs/reference/gbp-subdomain-pages.md, "Admin configurators").
+  GBP: '/admin/gbp',
+  GBP_CONTENT: (slug: string) => `/admin/gbp/${slug}`,
+  GBP_SEO: (slug: string) => `/admin/gbp/${slug}/seo`,
+  GBP_SHARED: '/admin/gbp/shared',
+  GBP_TEMPLATE: '/admin/gbp/template',
+  /** The draft preview: the real GBP layout, so outside /admin (gated via ADMIN_PATHS). */
+  GBP_PREVIEW: (slug: string) => `/admin-preview/gbp/${slug}`,
 } as const;
 
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -46,6 +54,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'Content Editor',
     icon: 'Type',
     hint: 'On-page headings',
+  },
+  {
+    href: ADMIN_ROUTES.GBP,
+    label: 'GBP Pages',
+    icon: 'MapPinned',
+    hint: 'Location pages: content, SEO, template',
   },
   {
     href: ADMIN_ROUTES.AGENT_TRAFFIC,

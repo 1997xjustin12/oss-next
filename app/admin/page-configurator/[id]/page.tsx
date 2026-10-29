@@ -50,6 +50,19 @@ async function Editor({ params, searchParams }: Props) {
   const page = findNativePageById(id);
   if (!page) notFound();
 
+  // GBP location pages have one place to edit: the GBP SEO screen.
+  if (page.group === 'Locations') {
+    return (
+      <p className="text-sm">
+        This is a GBP location page. Edit its SEO and scripts in{' '}
+        <Link href={ADMIN_ROUTES.GBP_SEO(page.path.slice(1))} className="font-semibold text-theme-primary hover:underline">
+          GBP Pages → {page.label} → SEO
+        </Link>
+        .
+      </p>
+    );
+  }
+
   const defaults = PAGE_SEO_DEFAULTS[page.path];
   if (!defaults) notFound();
 

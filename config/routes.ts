@@ -120,6 +120,8 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'maintenance',
   'maintenance-control',
   'admin',
+  // The GBP screens' draft preview (app/(gbp)/admin-preview), gated like /admin.
+  'admin-preview',
   'api',
   // The prebuilt homepage A/B variants, reached only through the proxy's
   // rewrite of `/` (and 404 when requested directly).
