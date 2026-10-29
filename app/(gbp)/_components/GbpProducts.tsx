@@ -66,7 +66,9 @@ export function GbpProducts({ heading, phone, telHref, cards, style }: Props) {
                   </li>
                 ))}
               </ul>
-              <div className="flex justify-center">
+              {/* Pinned to the card's bottom (mt-auto), so the three buttons line up
+                  whatever each card's title and list need. WordPress doesn't do this. */}
+              <div className="mt-auto flex justify-center">
                 <GbpCallButton
                   phone={phone}
                   telHref={telHref}
