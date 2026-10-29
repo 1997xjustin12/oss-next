@@ -28,7 +28,8 @@ export function GbpNewsletter({ content, style }: Props) {
             </h2>
             <p className="mt-5 text-base font-normal leading-normal text-black dark:text-neutral-200">{content.body}</p>
             {content.note && (
-              <p className="mt-1 text-base font-semibold leading-normal text-[var(--gbp-accent,#FF0000)] dark:text-red-400">{content.note}</p>
+              // Brand red, not the heading accent: #FF0000 at 16px on the card's grey is 3.7:1, under AA's 4.5:1.
+              <p className="mt-1 text-base font-semibold leading-normal text-[var(--gbp-brand,#C60C29)] dark:text-red-400">{content.note}</p>
             )}
           </div>
           <div className="rounded-lg bg-white/90 p-4 md:bg-transparent md:p-0 dark:bg-neutral-900/90 md:dark:bg-neutral-900/80 md:dark:p-4">

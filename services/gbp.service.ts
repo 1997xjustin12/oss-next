@@ -58,13 +58,29 @@ function unwrap(raw: unknown): { data: unknown; updatedAt?: string; updatedBy?: 
 // ─── Published reads (the live pages) ────────────────────────────────────────
 
 /**
+ * One more try after a short pause before giving up. Builds prerender every
+ * GBP page in parallel, and a read can hit the client's 3 s timeout under that
+ * load; without this the page was built from the code seed and kept it for
+ * up to 15 minutes, which once Redis has admin edits means stale content after
+ * a deploy.
+ */
+async function getWithRetry(key: string): Promise<unknown> {
+  try {
+    return await getRedisClient().get<unknown>(key)
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 400))
+    return getRedisClient().get<unknown>(key)
+  }
+}
+
+/**
  * Never throws: an unreachable Redis renders the code seed, cached only
  * briefly (SHELL_OUTAGE_CACHE_LIFE), so published edits return within 15
  * minutes of Redis recovering.
  */
 async function readPublished<T>(key: string, label: string, conform: (raw: unknown) => T): Promise<T> {
   try {
-    const record = unwrap(await getRedisClient().get<unknown>(key))
+    const record = unwrap(await getWithRetry(key))
     cacheLife('hours')
     return conform(record?.data)
   } catch (error) {

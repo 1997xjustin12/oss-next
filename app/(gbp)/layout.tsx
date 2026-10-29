@@ -1,11 +1,11 @@
 import { Poppins } from 'next/font/google'
 
-// The GBP pages' face (WordPress uses Poppins throughout, 300 to 800). Loaded
+// The GBP pages' face (WordPress uses Poppins throughout; 300 to 700 are the weights these pages use). Loaded
 // here only, so the storefront never downloads it, and applied with next/font's
 // own class rather than a theme token, so it can't go missing with a stylesheet.
 const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
 })
 
