@@ -126,12 +126,32 @@ const json: V<Record<string, unknown>> = (r) => (isObj(r) ? r : undefined)
 
 const image = shape<GbpImage>({ src: url, alt: str, width: num, height: num })
 
-const manualBlogCard = shape<GbpManualBlogCard>({ title: text, excerpt: str, url: nullable(url), image: url, imageAlt: str })
+const NAMED_ENTITIES: Record<string, string> = { amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', nbsp: ' ', hellip: '…', ndash: '–', mdash: '—', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“' }
+
+/**
+ * Text with HTML entities decoded (`20&#8242;` → `20′`, `&#8230;` → `…`). Copy
+ * extracted from WordPress kept some, and React prints them as typed.
+ */
+export const decodeEntities = (value: string): string =>
+  value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code: string) => {
+    if (code[0] !== '#') return NAMED_ENTITIES[code.toLowerCase()] ?? match
+    const point = code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10)
+    return point > 0 && point <= 0x10ffff ? String.fromCodePoint(point) : match
+  })
+
+/** `text` / `str` for copy shown as text, with entities decoded. */
+const copy: V<string> = (r) => {
+  const value = text(r)
+  return value === undefined ? undefined : decodeEntities(value)
+}
+const copyOrEmpty: V<string> = (r) => (typeof r === 'string' ? decodeEntities(r) : undefined)
+
+const manualBlogCard = shape<GbpManualBlogCard>({ title: copy, excerpt: copyOrEmpty, url: nullable(url), image: url, imageAlt: copyOrEmpty })
 const postSlug: V<string> = (r) => (typeof r === 'string' && /^[a-z0-9][a-z0-9-]*$/i.test(r.trim()) ? r.trim() : undefined)
 const postBlogCard = shape<GbpPostBlogCard>({ post: postSlug })
 /** A post card is told apart by its `post` key; one without a valid slug is dropped. */
 const blogCard: V<GbpBlogCard> = (r) => (isObj(r) && 'post' in r ? postBlogCard(r) : manualBlogCard(r))
-const faq = shape<GbpFaq>({ question: text, answer: text })
+const faq = shape<GbpFaq>({ question: copy, answer: copy })
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const
 const openingHours = shape<GbpOpeningHours>({ days: list(oneOf(...DAYS)), opens: time, closes: time })
@@ -161,7 +181,7 @@ const PAGE_FIELDS: { [K in keyof GbpPage]-?: V<GbpPage[K]> } = {
   geo: nullable(shape({ lat: num, lng: num })),
   areaServed: list(text),
   headings: shape({ hero: text, trustedBy: text, products: text, types: text, resources: text }),
-  about: list(text),
+  about: list(copy),
   blogCards: list(blogCard),
   faqs: list(faq),
   mapEmbedUrl: mapsEmbedUrl,

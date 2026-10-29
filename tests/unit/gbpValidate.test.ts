@@ -2,7 +2,7 @@
 // and what a bad record falls back to.
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { conformGbpPage, conformGbpShared, conformGbpTemplate, hex, mapsEmbedUrl, phoneE164, youtubeId } from '@/lib/gbpValidate'
+import { conformGbpPage, conformGbpShared, conformGbpTemplate, decodeEntities, hex, mapsEmbedUrl, phoneE164, youtubeId } from '@/lib/gbpValidate'
 import { GBP_PAGES } from '@/lib/data/gbpPages'
 import { GBP_SHARED_DEFAULTS } from '@/lib/data/gbpShared'
 import { GBP_TEMPLATE_DEFAULT } from '@/lib/data/gbpTemplate'
@@ -101,5 +101,17 @@ describe('formatted values', () => {
   it('map embeds only from Google Maps', () => {
     assert.ok(mapsEmbedUrl('https://www.google.com/maps/embed?pb=!1m18'))
     assert.equal(mapsEmbedUrl('https://www.google.com/search?q=x'), undefined)
+  })
+})
+
+describe('decodeEntities', () => {
+  it('decodes the entities WordPress copy carried, and leaves other text alone', () => {
+    assert.equal(decodeEntities('20&#8242; x 8&#x2032; &amp; more&#8230;'), '20′ x 8′ & more…')
+    assert.equal(decodeEntities('R&D, &unknown; stays'), 'R&D, &unknown; stays')
+  })
+
+  it('applies to a page’s FAQs as read from Redis', () => {
+    const page = conformGbpPage({ faqs: [{ question: 'Size?', answer: '20&#8242; long' }] }, seed)
+    assert.equal(page.faqs[0].answer, '20′ long')
   })
 })

@@ -28,22 +28,29 @@ export function gbpTelHref(page: GbpPage): string {
   return `tel:${page.contact.phoneE164}`
 }
 
+/** The page's canonical URL as served: the recorded one without a trailing slash. */
+export function gbpCanonical(page: GbpPage): string {
+  return page.seo.canonical.replace(/\/+$/, '')
+}
+
 /**
  * The page's SEO as registry defaults, so the admin Page Configurator can
  * still override any of it (lib/seo.ts resolvePageMetadata).
  *
- * The canonical is the live page's, trailing slash included: WordPress
- * declares `…-ca/`, and so does the catch-all that serves it today.
+ * The canonical is the URL this app serves, without WordPress's trailing
+ * slash: `…-ca/` redirects (308) to `…-ca`, and a canonical that redirects
+ * is a mixed signal.
  */
 export function gbpSeoDefaults(page: GbpPage): PageSeoDefaults {
   const { seo } = page
+  const canonical = gbpCanonical(page)
   return {
     title: seo.title,
     description: seo.description,
-    canonical: seo.canonical,
+    canonical,
     openGraph: {
       type: seo.ogType,
-      url: seo.canonical,
+      url: canonical,
       ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
     },
     twitter: { card: 'summary_large_image', site: GBP_HEAD.twitterSite },
@@ -56,14 +63,15 @@ export function gbpSeoDefaults(page: GbpPage): PageSeoDefaults {
  * Replaces the live page's blocks (kept verbatim in `page.jsonLd`): their logo
  * was the WordPress optimiser's cache URL, and the second block's "Store
  * Hours: 9am–6pm, Sat 10am–4pm" contradicted the 5am–5pm the page shows. The
- * `@id` is the live one, so the entity keeps its identity across the move.
+ * `@id` is the live one, WordPress's slash and all, so the entity keeps its
+ * identity across the move; `url` is the page as served.
  */
 export function gbpLocalBusinessNode(page: GbpPage): SchemaNode {
-  const url = page.seo.canonical
+  const url = gbpCanonical(page)
   const { contact, geo, areaServed } = page
   return {
     '@type': 'SelfStorage',
-    '@id': `${url}#identity`,
+    '@id': `${page.seo.canonical}#identity`,
     name: page.listing?.name ?? GBP_LISTING_NAME,
     url,
     image: SITE.logo,

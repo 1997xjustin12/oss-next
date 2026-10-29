@@ -618,11 +618,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       },
       {
         question: 'How much is a brand new 20 ft container?',
-        answer: 'A used 20 ft container (20&#8242; x 8&#8242; x 8’6&#8243;) costs around $1,325 , while a brand-new 20 ft container of the same size is about $3,100 .',
+        answer: 'A used 20 ft container (20′ x 8′ x 8’6″) costs around $1,325, while a brand-new 20 ft container of the same size is about $3,100.',
       },
       {
         question: 'Are used 20ft containers worth buying?',
-        answer: 'Yes. U sed 20 ft containers are worth buying if you want lower upfront cost and still get a strong, secure storage unit. They’re ideal for storage, site use, or conversion projects. Just inspect for rust, dents, and watertight condition before buying to ensure good value.',
+        answer: 'Yes. Used 20 ft containers are worth buying if you want lower upfront cost and still get a strong, secure storage unit. They’re ideal for storage, site use, or conversion projects. Just inspect for rust, dents, and watertight condition before buying to ensure good value.',
       },
     ],
     mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d572.8002063036679!2d-74.16625060797455!3d40.734354976719004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c2531c4b76acf3%3A0x13862272a2e440d6!2sOn-Site%20Storage%20Solutions%2C%20Inc.!5e0!3m2!1sen!2sph!4v1776829993182!5m2!1sen!2sph',
@@ -1222,11 +1222,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       },
       {
         question: 'How much is a brand new 20 ft container?',
-        answer: 'A used 20 ft container (20&#8242; x 8&#8242; x 8’6&#8243;) costs around $1,325 , while a brand-new 20 ft container of the same size is about $3,100 .',
+        answer: 'A used 20 ft container (20′ x 8′ x 8’6″) costs around $1,325, while a brand-new 20 ft container of the same size is about $3,100.',
       },
       {
         question: 'Are used 20ft containers worth buying?',
-        answer: 'Yes. U sed 20 ft containers are worth buying if you want lower upfront cost and still get a strong, secure storage unit. They’re ideal for storage, site use, or conversion projects. Just inspect for rust, dents, and watertight condition before buying to ensure good value.',
+        answer: 'Yes. Used 20 ft containers are worth buying if you want lower upfront cost and still get a strong, secure storage unit. They’re ideal for storage, site use, or conversion projects. Just inspect for rust, dents, and watertight condition before buying to ensure good value.',
       },
     ],
     mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1576.138567630266!2d-122.2665473709754!3d37.80701682215176!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808f81411cf6654f%3A0xd2aea1ccf39de645!2sOn-Site%20Storage%20Solutions%2C%20Inc.!5e0!3m2!1sen!2sph!4v1776823090343!5m2!1sen!2sph',
@@ -1360,28 +1360,28 @@ export const GBP_PAGES: readonly GbpPage[] = [
     blogCards: [
       {
         title: 'Shipping Container Miami Prices & Buying Guide',
-        excerpt: 'Shipping container Miami pricing reflects a fast-moving market shaped by port activity, demand cycles, and local conditions. Buyers who understand how costs are built can make faster and more confident decisions. This guide breaks down real pricing factors, compares container types, and explains the extra costs that often surprise first-time buyers. Choosing Between 20ft and&#8230;',
+        excerpt: 'Shipping container Miami pricing reflects a fast-moving market shaped by port activity, demand cycles, and local conditions. Buyers who understand how costs are built can make faster and more confident decisions. This guide breaks down real pricing factors, compares container types, and explains the extra costs that often surprise first-time buyers. Choosing Between 20ft and…',
         url: 'https://onsitestorage.com/shipping-container-miami-prices-buying-guide/',
         image: '/images/gbp/blog/shipping-container-miami.webp',
         imageAlt: 'Shipping Container Miami Prices & Buying Guide',
       },
       {
         title: 'Container Transport Miami: Step-by-Step Delivery Guide',
-        excerpt: 'Container transport Miami services are supported by a strong logistics network in South Florida, especially through major port activity in the region. A steady flow of containers is maintained through ocean container shipping from Miami, which helps ensure consistent availability for residential, commercial, and construction needs. In a city like Miami, where access can be&#8230;',
+        excerpt: 'Container transport Miami services are supported by a strong logistics network in South Florida, especially through major port activity in the region. A steady flow of containers is maintained through ocean container shipping from Miami, which helps ensure consistent availability for residential, commercial, and construction needs. In a city like Miami, where access can be…',
         url: 'https://onsitestorage.com/container-transport-miami-delivery-guide/',
         image: '/images/gbp/blog/container-transport-miami.webp',
         imageAlt: 'Container Transport Miami: Step-by-Step Delivery Guide',
       },
       {
         title: 'Ocean Container Shipping from Miami Guide',
-        excerpt: 'Ocean container shipping from Miami plays a key role in how buyers access affordable containers for storage, transport, and construction use. It connects high-volume port activity with steady container availability for both commercial and personal needs. Miami’s strong logistics network and active shipping routes ensure a consistent supply of containers in different sizes and conditions&#8230;.',
+        excerpt: 'Ocean container shipping from Miami plays a key role in how buyers access affordable containers for storage, transport, and construction use. It connects high-volume port activity with steady container availability for both commercial and personal needs. Miami’s strong logistics network and active shipping routes ensure a consistent supply of containers in different sizes and conditions….',
         url: 'https://onsitestorage.com/ocean-container-shipping-from-miami-guide/',
         image: '/images/gbp/blog/ocean-container-shipping-from-miami.webp',
         imageAlt: 'Ocean Container Shipping from Miami Guide',
       },
       {
         title: 'Used Shipping Containers Miami: What to Know First',
-        excerpt: 'If you are searching for used shipping containers Miami, you are likely already close to making a purchase and just need final clarity on condition, pricing, and what actually matters before deciding. In Miami, buying a container is not just about finding the lowest price. The local environment plays a major role in how long&#8230;',
+        excerpt: 'If you are searching for used shipping containers Miami, you are likely already close to making a purchase and just need final clarity on condition, pricing, and what actually matters before deciding. In Miami, buying a container is not just about finding the lowest price. The local environment plays a major role in how long…',
         url: 'https://onsitestorage.com/used-shipping-containers-miami-guide/',
         image: '/images/gbp/blog/used-shipping-containers-miami.webp',
         imageAlt: 'Used Shipping Containers Miami: What to Know First',
@@ -1542,28 +1542,28 @@ export const GBP_PAGES: readonly GbpPage[] = [
     blogCards: [
       {
         title: 'The Market of Shipping Containers for Sale in Chicago',
-        excerpt: 'Chicago, Illinois, known for its iconic skyline and rich industrial history, is rapidly becoming a hub for innovative uses of containers for sale in Chicago. From being converted into homes, office spaces, and storage units to becoming a significant part of temporary event spaces, the demand for shipping containers is growing fast. As businesses and&#8230;',
+        excerpt: 'Chicago, Illinois, known for its iconic skyline and rich industrial history, is rapidly becoming a hub for innovative uses of containers for sale in Chicago. From being converted into homes, office spaces, and storage units to becoming a significant part of temporary event spaces, the demand for shipping containers is growing fast. As businesses and…',
         url: 'https://onsitestorage.com/the-market-of-shipping-containers-for-sale-in-chicago/',
         image: '/images/gbp/blog/The-Market-of-Shipping-Containers-for-Sale-in-Chicago-1024x576.webp',
         imageAlt: 'The Market of Shipping Containers for Sale in Chicago',
       },
       {
         title: 'History and Evolution of Chicago Shipping Container Usage',
-        excerpt: 'Chicago shipping containers have become a pivotal element in modern trade and transportation. Their evolution has played a key role in shaping the city’s growth and integration into the global economy. Chicago, a central hub in the United States, has long been involved in the container shipping industry. This is particularly true through its intermodal&#8230;',
+        excerpt: 'Chicago shipping containers have become a pivotal element in modern trade and transportation. Their evolution has played a key role in shaping the city’s growth and integration into the global economy. Chicago, a central hub in the United States, has long been involved in the container shipping industry. This is particularly true through its intermodal…',
         url: 'https://onsitestorage.com/chicago-shipping-container-history-and-evolution-usage/',
         image: '/images/gbp/blog/History-and-Evolution-of-Chicago-Shipping-Container-Usage-1024x576.webp',
         imageAlt: 'History and Evolution of Chicago Shipping Container Usage',
       },
       {
         title: 'The Role of Shipping Containers in Chicago’s Economic Growth',
-        excerpt: 'When we think of the Chicago economic growth, its iconic skyline, busy streets, and vibrant cultural scene come to mind. Behind the city’s rapid growth lies an often-overlooked but vital contributor: shipping containers. The city is home to a bustling logistics network that relies heavily on these containers to facilitate trade and commerce. Shipping containers&#8230;',
+        excerpt: 'When we think of the Chicago economic growth, its iconic skyline, busy streets, and vibrant cultural scene come to mind. Behind the city’s rapid growth lies an often-overlooked but vital contributor: shipping containers. The city is home to a bustling logistics network that relies heavily on these containers to facilitate trade and commerce. Shipping containers…',
         url: 'https://onsitestorage.com/shipping-containers-chicago-economic-growth/',
         image: '/images/gbp/blog/The-Role-of-Shipping-Containers-in-Chicagos-Economic-Growth.webp',
         imageAlt: 'The Role of Shipping Containers in Chicago’s Economic Growth',
       },
       {
         title: 'Shipping Container Innovation in Chicago’s Urban Landscape',
-        excerpt: 'Chicago, a city known for its deep architectural heritage, is rapidly embracing shipping container innovation. This trend is reshaping its urban landscape. One of the most exciting shifts in recent years has been the rise of shipping container solutions. These include sustainable housing and container-based retail concepts. This trend is driving both urban development and&#8230;',
+        excerpt: 'Chicago, a city known for its deep architectural heritage, is rapidly embracing shipping container innovation. This trend is reshaping its urban landscape. One of the most exciting shifts in recent years has been the rise of shipping container solutions. These include sustainable housing and container-based retail concepts. This trend is driving both urban development and…',
         url: 'https://onsitestorage.com/shipping-container-innovation-chicago/',
         image: '/images/gbp/blog/Shipping-Container-Innovation-in-Chicagos-Urban-Landscape-1024x576.webp',
         imageAlt: 'Shipping Container Innovation in Chicago’s Urban Landscape',

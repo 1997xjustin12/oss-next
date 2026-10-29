@@ -14,7 +14,7 @@ const HINTS: FieldHints = {
   'page.seo': { label: 'Title, description, canonical, sharing image' },
   'page.seo.title': { help: 'The whole <title>; the site name is not appended.' },
   'page.seo.description': { multiline: true },
-  'page.seo.canonical': { help: 'The canonical URL. Keep the trailing slash WordPress used.' },
+  'page.seo.canonical': { help: 'The canonical URL. A trailing slash is dropped on the page (the slashed URL redirects); the structured data id keeps it as typed.' },
   'page.seo.ogType': { label: 'og:type', kind: 'select', options: [{ value: 'article', label: 'article' }, { value: 'website', label: 'website' }] },
   'page.seo.ogImage': { label: 'Sharing image (og:image)', nullable: true, newItem: { url: '', width: 1200, height: 630 } },
   'page.seo.modifiedTime': { label: 'article:modified_time', help: 'ISO date, e.g. 2026-04-21T08:36:38+00:00. Empty for none.' },
