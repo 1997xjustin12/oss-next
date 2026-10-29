@@ -16,8 +16,17 @@ export type GbpPostalAddress = {
   addressCountry: 'US' | 'CA'
 }
 
-/** A card in the "{City} Container Resources" section, linking to a blog post. */
-export type GbpBlogCard = {
+/**
+ * A card in the "{City} Container Resources" section: written by hand, or a
+ * published post from the blogs API, picked by slug and rendered from the post.
+ */
+export type GbpBlogCard = GbpManualBlogCard | GbpPostBlogCard
+
+/** A post from the blogs API. Its title, excerpt and image come from the post; unpublished, it drops out. */
+export type GbpPostBlogCard = { post: string }
+
+/** A card typed in by hand (the WordPress posts, which are not in the blogs API). */
+export type GbpManualBlogCard = {
   title: string
   excerpt: string
   /** The post. Null where the live page links nothing that matches (see the reference doc). */

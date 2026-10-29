@@ -1,11 +1,20 @@
 'use client'
 
 import { EditorShell } from './EditorShell'
+import { GbpBlogPostPicker } from './GbpBlogPostPicker'
 import { ValueEditor, type FieldHints } from './ValueEditor'
 import type { GbpActionResult } from '@/actions/gbp'
 import type { GbpContentModel } from '@/lib/gbpAdmin'
 
 const ACCENT_HELP = 'Mark the red part with [[double brackets]].'
+
+/** A hand-typed blog card, edited on its own (paths start at the card). */
+const MANUAL_CARD_HINTS: FieldHints = {
+  excerpt: { multiline: true },
+  url: { label: 'Post URL', help: 'The post this card opens. Leave empty for no link.' },
+  image: { label: 'Image URL' },
+  imageAlt: { label: 'Image alt text' },
+}
 
 const HINTS: FieldHints = {
   location: { help: 'Used in headings, the map title and the structured data.' },
@@ -22,11 +31,23 @@ const HINTS: FieldHints = {
   'headings.resources': { label: 'Blog cards', help: ACCENT_HELP },
   about: { label: 'About Us paragraphs', itemLabel: 'Paragraph', newItem: '' },
   'about.*': { multiline: true },
-  blogCards: { label: 'Blog cards', itemLabel: 'Card', newItem: { title: '', excerpt: '', url: '', image: '', imageAlt: '' } },
-  'blogCards.*.excerpt': { multiline: true },
-  'blogCards.*.url': { label: 'Post URL', help: 'The post this card opens. Leave empty for no link.' },
-  'blogCards.*.image': { label: 'Image URL' },
-  'blogCards.*.imageAlt': { label: 'Image alt text' },
+  blogCards: {
+    label: 'Blog cards',
+    itemLabel: 'Card',
+    help: 'Pick a published post from the blog list, or type a card in by hand (for posts not in the blog list yet).',
+    addOptions: [
+      { label: 'Add card from blog list', item: { post: '' } },
+      { label: 'Add card (manual)', item: { title: '', excerpt: '', url: '', image: '', imageAlt: '' } },
+    ],
+  },
+  'blogCards.*': {
+    render: ({ value, onChange }) =>
+      value && typeof value === 'object' && 'post' in value ? (
+        <GbpBlogPostPicker value={String(value.post ?? '')} onChange={(post) => onChange({ post })} />
+      ) : (
+        <ValueEditor value={value} onChange={onChange} hints={MANUAL_CARD_HINTS} />
+      ),
+  },
   faqs: { label: 'FAQs', itemLabel: 'FAQ', newItem: { question: '', answer: '' } },
   'faqs.*.answer': { multiline: true },
   mapEmbedUrl: { label: 'Google Maps embed URL', help: 'Google Maps → the listing → Share → Embed a map → the src="…" URL.' },

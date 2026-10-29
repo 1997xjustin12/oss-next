@@ -37,6 +37,12 @@ describe('conformGbpPage', () => {
     assert.deepEqual(page.faqs, [{ question: 'Q?', answer: 'A.' }])
   })
 
+  it('keeps manual and blog-list cards side by side, and drops a post card with no slug', () => {
+    const manual = { title: 'A post', excerpt: 'About it.', url: null, image: '/images/a.webp', imageAlt: 'A' }
+    const page = conformGbpPage({ blogCards: [{ post: 'what-not-to-store' }, manual, { post: '' }, { post: '../admin' }] }, seed)
+    assert.deepEqual(page.blogCards, [{ post: 'what-not-to-store' }, manual])
+  })
+
   it('never lets a record change the slug', () => {
     assert.equal(conformGbpPage({ slug: 'somewhere-else' }, seed).slug, seed.slug)
   })

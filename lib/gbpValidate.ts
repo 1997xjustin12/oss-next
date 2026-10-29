@@ -14,6 +14,8 @@
 import type {
   GbpBlogCard,
   GbpFaq,
+  GbpManualBlogCard,
+  GbpPostBlogCard,
   GbpImage,
   GbpLibraryProps,
   GbpListing,
@@ -124,7 +126,11 @@ const json: V<Record<string, unknown>> = (r) => (isObj(r) ? r : undefined)
 
 const image = shape<GbpImage>({ src: url, alt: str, width: num, height: num })
 
-const blogCard = shape<GbpBlogCard>({ title: text, excerpt: str, url: nullable(url), image: url, imageAlt: str })
+const manualBlogCard = shape<GbpManualBlogCard>({ title: text, excerpt: str, url: nullable(url), image: url, imageAlt: str })
+const postSlug: V<string> = (r) => (typeof r === 'string' && /^[a-z0-9][a-z0-9-]*$/i.test(r.trim()) ? r.trim() : undefined)
+const postBlogCard = shape<GbpPostBlogCard>({ post: postSlug })
+/** A post card is told apart by its `post` key; one without a valid slug is dropped. */
+const blogCard: V<GbpBlogCard> = (r) => (isObj(r) && 'post' in r ? postBlogCard(r) : manualBlogCard(r))
 const faq = shape<GbpFaq>({ question: text, answer: text })
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const

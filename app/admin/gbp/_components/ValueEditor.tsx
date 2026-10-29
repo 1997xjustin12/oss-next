@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 
 /**
@@ -26,6 +26,10 @@ export type FieldHint = {
   itemLabel?: string
   /** For an optional object (e.g. an image): it can be removed, and `newItem` adds it back. */
   nullable?: boolean
+  /** For a list with more than one kind of item: one Add button each, in place of `newItem`'s. */
+  addOptions?: readonly { label: string; item: unknown }[]
+  /** A field with its own editor, in place of the one built from its shape. */
+  render?: (props: { value: unknown; onChange: (value: unknown) => void }) => ReactNode
 }
 export type FieldHints = Record<string, FieldHint>
 
@@ -73,6 +77,7 @@ export function ValueEditor({ value, onChange, hints = {}, path = [], label }: P
   const id = useId()
   const hint = hints[hintKey(path)] ?? {}
   if (hint.kind === 'hidden') return null
+  if (hint.render) return hint.render({ value, onChange })
   const title = hint.label ?? label
 
   if (hint.kind === 'json') return <JsonField value={value} onChange={onChange} label={title} help={hint.help} />
@@ -134,14 +139,19 @@ export function ValueEditor({ value, onChange, hints = {}, path = [], label }: P
             </li>
           ))}
         </ol>
-        <button
-          type="button"
-          onClick={() => onChange([...value, structuredClone(newItem)])}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-theme-border px-3 py-1.5 text-sm font-semibold text-theme-mid hover:bg-theme-subtle dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
-        >
-          <Plus className="h-4 w-4" />
-          Add {hint.itemLabel ?? 'item'}
-        </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(hint.addOptions ?? [{ label: `Add ${hint.itemLabel ?? 'item'}`, item: newItem }]).map((option) => (
+            <button
+              key={option.label}
+              type="button"
+              onClick={() => onChange([...value, structuredClone(option.item)])}
+              className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-theme-border px-3 py-1.5 text-sm font-semibold text-theme-mid hover:bg-theme-subtle dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              <Plus className="h-4 w-4" />
+              {option.label}
+            </button>
+          ))}
+        </div>
       </fieldset>
     )
   }

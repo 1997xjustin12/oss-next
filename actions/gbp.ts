@@ -20,6 +20,7 @@ import {
   saveGbpDraft,
   saveGbpSeoDraft,
 } from '@/services/gbp.service'
+import { getBlog, getBlogs } from '@/services/blog.service'
 import { savePageSeo } from '@/services/seo.service'
 
 // Mutations behind the GBP admin screens (app/admin/gbp). Every action checks
@@ -151,4 +152,27 @@ export async function discardGbpRecordAction(kind: 'shared' | 'template'): Promi
   await admin()
   await discardGbpDraft(kind)
   return ok()
+}
+
+// ─── Blog cards picked from the blogs API ────────────────────────────────────
+
+/** What the blog card picker shows for a post. */
+export type GbpBlogOption = { slug: string; title: string; date: string; imageUrl: string }
+
+/**
+ * Published posts matching `query` (the newest when it is empty), for the
+ * picker. The blogs API lists only this store's published posts, so nothing
+ * else can be picked.
+ */
+export async function searchGbpBlogPostsAction(query: string): Promise<GbpBlogOption[]> {
+  await admin()
+  const { posts } = await getBlogs({ search: query.slice(0, 100), pageSize: 8 })
+  return posts.map(({ slug, title, date, imageUrl }) => ({ slug, title, date, imageUrl }))
+}
+
+/** A picked post, or null when it is no longer published (the page leaves its card out). */
+export async function getGbpBlogPostAction(slug: string): Promise<GbpBlogOption | null> {
+  await admin()
+  const post = await getBlog(slug)
+  return post && { slug: post.slug, title: post.title, date: post.date, imageUrl: post.imageUrl }
 }
