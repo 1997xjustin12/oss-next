@@ -11,7 +11,7 @@ import { LinkEnricher } from "@/components/layout/LinkEnricher";
 import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
 import { DemoResets } from "@/components/layout/DemoResets";
 import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
-import { ROUTES } from "@/config/routes";
+import { GBP_ROUTE_SEGMENTS, ROUTES } from "@/config/routes";
 import { SITE_URL } from "@/config/site";
 import { ADMIN_PATHS } from "@/lib/admin";
 
@@ -89,6 +89,9 @@ export default async function RootLayout({
                   ROUTES.ACCOUNT.ROOT,
                   ROUTES.WISHLIST,
                   ...ADMIN_PATHS,
+                  // GBP location pages: nothing on them depends on the visitor's
+                  // ZIP, so they don't ask for a location.
+                  ...GBP_ROUTE_SEGMENTS.map((slug) => `/${slug}`),
                 ]} />
               </Suspense>
             </WishlistProvider>

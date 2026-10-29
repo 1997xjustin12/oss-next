@@ -88,7 +88,19 @@ export const ROUTES = {
  * (the sitemap's copy omitted the operational routes). A third copy was one
  * feature away.
  */
+/**
+ * GBP location pages that are live as native routes (app/(gbp)/<slug>/). Their
+ * content is lib/data/gbpPages.ts; add a slug here when its route folder
+ * exists, and WordPress stops serving that page. The rest are still WordPress.
+ * Reference: docs/reference/gbp-subdomain-pages.md
+ */
+export const GBP_ROUTE_SEGMENTS = [
+  'shipping-containers-for-sale-in-san-diego-ca',
+] as const
+
 export const NATIVE_ROUTE_SEGMENTS = [
+  // GBP location pages, migrated from WordPress one at a time.
+  ...GBP_ROUTE_SEGMENTS,
   'product',
   'blogs',
   'cart',

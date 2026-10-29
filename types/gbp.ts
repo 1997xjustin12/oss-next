@@ -54,11 +54,10 @@ export type GbpPage = {
   geo: { lat: number; lng: number } | null
   /** Cities the listing serves, for structured data. */
   areaServed: string[]
-  /** Headings the pages word differently. Verbatim from the live pages. */
+  /** Headings the pages word differently. The red run is marked `[[…]]` (AccentText). */
   headings: {
-    /** h1. The city and state at the end are the red accent. */
+    /** h1. */
     hero: string
-    /** "Trusted By" is the red accent. */
     trustedBy: string
     products: string
     types: string
@@ -82,9 +81,10 @@ export type GbpPage = {
     modifiedTime: string | null
   }
   /**
-   * The page's own structured data, verbatim: the `SelfStorage` blocks. The
-   * site-wide WebPage / BreadcrumbList / WebSite / Organization graph is
-   * generated, not stored.
+   * The live page's `SelfStorage` blocks, as WordPress emits them. A record,
+   * not what renders: the page generates one `SelfStorage` node from the
+   * fields above (lib/gbp.ts), which fixes the live blocks' Airlift-cache
+   * logo and the second block's contradicting hours.
    */
   jsonLd: Record<string, unknown>[]
 }

@@ -1,4 +1,5 @@
-import { ROUTES } from '@/config/routes';
+import { GBP_ROUTE_SEGMENTS, ROUTES } from '@/config/routes';
+import { requireGbpPage } from '@/lib/gbp';
 
 // The app's own statically-routed pages — the set the admin Page Configurator
 // can edit. This is a hand-maintained registry rather than a filesystem scan
@@ -14,7 +15,7 @@ import { ROUTES } from '@/config/routes';
 // Adding a page here is the only step needed to expose it in the configurator;
 // the page itself then opts in by calling resolvePageMetadata (see lib/seo.ts).
 
-export type PageGroup = 'Storefront' | 'Commerce' | 'Account';
+export type PageGroup = 'Storefront' | 'Locations' | 'Commerce' | 'Account';
 
 export type NativePage = {
   /** URL-safe id — used as the configurator's route segment. */
@@ -36,6 +37,12 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'accessory-products', path: ROUTES.ACCESSORY_PRODUCTS, label: 'Container Accessories', group: 'Storefront', indexable: true },
   { id: 'rent-to-own', path: ROUTES.RENT_TO_OWN, label: 'Rent-To-Own Financing', group: 'Storefront', indexable: true },
 
+  // GBP location pages (app/(gbp)): one per Google Business Profile listing.
+  ...GBP_ROUTE_SEGMENTS.map((slug): NativePage => {
+    const { location } = requireGbpPage(slug);
+    return { id: slug, path: `/${slug}`, label: `${location.city}, ${location.stateCode}`, group: 'Locations', indexable: true };
+  }),
+
   { id: 'cart', path: ROUTES.CART, label: 'Cart', group: 'Commerce', indexable: false },
   { id: 'checkout', path: ROUTES.CHECKOUT, label: 'Checkout', group: 'Commerce', indexable: false },
   { id: 'wishlist', path: ROUTES.WISHLIST, label: 'Wishlist', group: 'Commerce', indexable: false },
@@ -55,7 +62,7 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'account-reset-password', path: ROUTES.ACCOUNT.RESET_PASSWORD, label: 'Reset Password', group: 'Account', indexable: false },
 ] as const;
 
-export const PAGE_GROUPS: readonly PageGroup[] = ['Storefront', 'Commerce', 'Account'];
+export const PAGE_GROUPS: readonly PageGroup[] = ['Storefront', 'Locations', 'Commerce', 'Account'];
 
 export function findNativePageById(id: string): NativePage | undefined {
   return NATIVE_PAGES.find((page) => page.id === id);

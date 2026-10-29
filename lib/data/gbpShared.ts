@@ -173,9 +173,15 @@ export const GBP_ZOHO_FORMS = {
       },
       { name: 'CONTACTCF30', label: 'Comments', required: false, maxLength: 255 },
     ],
-    /** Zoho's image captcha: the image comes from here, the answer goes in `enterdigest`. */
+    /**
+     * Zoho's image captcha: the image comes from here, the answer goes in
+     * `enterdigest`. Reload appends `&d<timestamp>`, as Zoho's own script does.
+     * Loaded straight from Zoho (never through an image proxy): the answer is
+     * checked against the image the visitor's browser was served.
+     */
     captcha: {
-      imageUrl: 'https://crm.zoho.com/crm/CaptchaServlet?formId=9805cfa7fb65bef5be2e5079ef5722d2473f265ad63883da9080fdea3023c9a1',
+      imageUrl:
+        'https://crm.zoho.com/crm/CaptchaServlet?formId=9805cfa7fb65bef5be2e5079ef5722d2473f265ad63883da9080fdea3023c9a18251f415be3b42febd6b648cdc6e86d4&grpid=ba855d1d474179ecfe2c84a0deca923fe375978a51af4252d4276a7ceab13b7a',
       field: 'enterdigest',
     },
   },

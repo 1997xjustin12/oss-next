@@ -3,12 +3,14 @@
  * pages on 2026-10-29. One entry per page; the template renders the rest
  * (lib/data/gbpShared.ts). A new page is a new entry here.
  *
- * **Verbatim**, typos included: this is the content Google indexes today, so a
- * correction is a deliberate edit, not a side effect of the migration. Known
- * issues are listed in docs/reference/gbp-subdomain-pages.md ("Content issues
- * on the live pages"). The one exception: blog card links are the posts the
- * cards name. Every hand-written card list on WordPress links each card to the
- * next card's post.
+ * Copied from the live pages with their bugs fixed (docs/reference/
+ * gbp-subdomain-pages.md, "Content issues on the live pages"): typos, and
+ * blog card links (every hand-written card list on WordPress links each card
+ * to the next card's post; these link the post each card names). Pages still
+ * showing another city's cards or FAQs (Houston, Los Angeles, Wildomar,
+ * Oakland) need their own content before they go live.
+ *
+ * Headings mark their red run with [[…]] (AccentText).
  *
  * Meant to seed an admin configurator later (SEO, schema, canonical and the
  * rest editable per page); until then it is the source of truth.
@@ -47,11 +49,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'San Diego',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in San Diego, CA',
-      trustedBy: 'Trusted By Organizations Like',
-      products: 'Shipping Containers For Sale in San Diego, CA',
-      types: 'Types of Shipping Containers for Sale in San Diego, CA',
-      resources: 'San Diego Container Resources',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[San Diego, CA]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers For Sale in [[San Diego, CA]]',
+      types: 'Types of Shipping Containers [[for Sale in San Diego, CA]]',
+      resources: '[[San Diego]] Container Resources',
     },
     about: [
       'Since 2002, On-Site Storage Solutions has been a trusted source for shipping containers for sale in San Diego, CA. We offer new and used containers in 10ft, 20ft, and 40ft sizes, available to buy, rent, or rent to own at the guaranteed lowest prices.',
@@ -227,11 +229,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Phoenix',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Phoenix, AZ',
-      trustedBy: 'Trusted By',
-      products: 'Shipping Containers For Sale in Phoenix, AZ',
-      types: 'Types of Shipping Containers for Sale in Phoeniz',
-      resources: 'Phoenix Container Resources',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Phoenix, AZ]]',
+      trustedBy: '[[Trusted By]]',
+      products: 'Shipping Containers For Sale in [[Phoenix, AZ]]',
+      types: 'Types of Shipping Containers [[for Sale in Phoenix, AZ]]',
+      resources: '[[Phoenix]] Container Resources',
     },
     about: [
       'Since 2002, On-Site Storage Solutions has been a trusted provider of shipping containers for sale in Phoenix, AZ. We offer a wide selection of new and used 10ft, 20ft, and 40ft containers, available to buy, rent, or rent-to-own at guaranteed lowest prices.',
@@ -372,10 +374,10 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Houston',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Houston, TX',
-      trustedBy: 'Trusted By Organizations Like',
-      products: 'Shipping Containers For Sale in Houston',
-      types: 'Types of Shipping Containers for Sale in Houston, TX',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Houston, TX]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers For Sale in [[Houston]]',
+      types: 'Types of Shipping Containers [[for Sale in Houston, TX]]',
       resources: 'San Diego Container Resources',
     },
     about: [
@@ -510,10 +512,10 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Wildomar',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Wildomar, CA',
-      trustedBy: 'Trusted By Organization Like',
-      products: 'Shipping Containers for Sale Wildomar, CA',
-      types: 'Types of Shipping Containers for Sale in Wildomar, CA',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Wildomar, CA]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers for Sale [[Wildomar, CA]]',
+      types: 'Types of Shipping Containers [[for Sale in Wildomar, CA]]',
       resources: 'Temecula Container Resources',
     },
     about: [
@@ -616,11 +618,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Newark',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Newark, NJ',
-      trustedBy: 'Trusted By Organizations Like',
-      products: 'Shipping Containers in Newark',
-      types: 'Types of Shipping Containers in Newark, NJ',
-      resources: 'Newark Container Resources',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Newark, NJ]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers in [[Newark]]',
+      types: 'Types of Shipping Containers [[in Newark, NJ]]',
+      resources: '[[Newark]] Container Resources',
     },
     about: [
       'Since 2002, On-Site Storage Solutions has been a trusted source for shipping containers in Newark, NJ . We offer new and used containers in 10ft, 20ft, and 40ft sizes, available to buy, rent, or rent to own at the guaranteed lowest prices.',
@@ -798,11 +800,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Los Angeles',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Los Angeles, CA',
-      trustedBy: 'Trusted By Organizations Like',
-      products: 'Shipping Containers For Sale in Los Angeles, CA',
-      types: 'Types of Shipping Containers for Sale in Los Angeles, CA',
-      resources: 'Los Angeles Container Resources',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Los Angeles, CA]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers For Sale in [[Los Angeles, CA]]',
+      types: 'Types of Shipping Containers [[for Sale in Los Angeles, CA]]',
+      resources: '[[Los Angeles]] Container Resources',
     },
     about: [
       'Since 2002, On-Site Storage Solutions has been a trusted source for shipping containers for sale in Los Angeles, CA . We offer new and used containers in 10ft, 20ft, and 40ft sizes, available to buy, rent, or rent to own at the guaranteed lowest prices.',
@@ -865,8 +867,8 @@ export const GBP_PAGES: readonly GbpPage[] = [
     mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d826.7266813142603!2d-118.41178488727796!3d34.020598100354405!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80c2bbe6440a7f0b%3A0xdf710eb9e8a1db73!2sOn-site%20Storage%20Solutions%2C%20Inc.!5e0!3m2!1sen!2sph!4v1776829092570!5m2!1sen!2sph',
     youtubeId: '_eezA15UXHM',
     seo: {
-      title: 'Shipping Containers For Sale Los Angles, CA | Buy, Rent, or RTO',
-      description: 'Get quality shipping containers for sale in Los Angles, CA. Quick delivery, lowest price guarantee, and easy rent-to-own. Call now to reserve!',
+      title: 'Shipping Containers For Sale Los Angeles, CA | Buy, Rent, or RTO',
+      description: 'Get quality shipping containers for sale in Los Angeles, CA. Quick delivery, lowest price guarantee, and easy rent-to-own. Call now to reserve!',
       canonical: 'https://onsitestorage.com/shipping-containers-for-sale-in-los-angeles-ca/',
       ogType: 'article',
       ogImage: null,
@@ -976,11 +978,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Temecula',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Temecula, CA',
-      trustedBy: 'Trusted By Organization Like',
-      products: 'Shipping Containers for Sale Temecula, CA',
-      types: 'Types of Shipping Containers for Sale in Temecula, CA',
-      resources: 'Temecula Container Resources',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Temecula, CA]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers for Sale [[Temecula, CA]]',
+      types: 'Types of Shipping Containers [[for Sale in Temecula, CA]]',
+      resources: '[[Temecula]] Container Resources',
     },
     about: [
       'Since 2002, On-Site Storage Solutions has been a trusted source for shipping containers for sale in Temecula, CA. We provide new and used 10ft, 20ft, and 40ft containers available to buy, rent, or rent-to-own at the guaranteed lowest prices.',
@@ -1123,11 +1125,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Henderson',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Las Vegas, NV',
-      trustedBy: 'Trusted By',
-      products: 'Shipping Containers For Sale in Las Vegas, NV',
-      types: 'Types of Shipping Containers for Sale in Las Vegas',
-      resources: 'Las Vegas Container Resources',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Las Vegas, NV]]',
+      trustedBy: '[[Trusted By]]',
+      products: 'Shipping Containers For Sale in [[Las Vegas, NV]]',
+      types: 'Types of Shipping Containers [[for Sale in Las Vegas]]',
+      resources: '[[Las Vegas]] Container Resources',
     },
     about: [
       'Since 2002, On-Site Storage Solutions has been a trusted provider of shipping containers for sale in Las Vegas, NV. We offer a wide range of new and used 10ft, 20ft, and 40ft containers, available to buy, rent, or rent-to-own at guaranteed lowest prices.',
@@ -1278,10 +1280,10 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Oakland',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Oakland, CA',
-      trustedBy: 'Trusted By Organizations Like',
-      products: 'Shipping Containers in Oakland',
-      types: 'Types of Shipping Containers in Oakland, CA',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Oakland, CA]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers in [[Oakland]]',
+      types: 'Types of Shipping Containers [[in Oakland, CA]]',
       resources: 'Newark Container Resources',
     },
     about: [
@@ -1458,11 +1460,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Miami',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Miami, FL',
-      trustedBy: 'Trusted By Organizations Like',
-      products: 'Shipping Containers For Sale in Miami, FL',
-      types: 'Types of Shipping Containers for Sale in Miami, FL',
-      resources: 'Miami Container Resources',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Miami, FL]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers For Sale in [[Miami, FL]]',
+      types: 'Types of Shipping Containers [[for Sale in Miami, FL]]',
+      resources: '[[Miami]] Container Resources',
     },
     about: [
       'Since 2002, On-Site Storage Solutions has been a trusted source for shipping containers for sale in Miami, FL. We offer new and used containers in 10ft, 20ft, and 40ft sizes, available to buy, rent, or rent to own at the guaranteed lowest prices.',
@@ -1640,11 +1642,11 @@ export const GBP_PAGES: readonly GbpPage[] = [
       'Chicago',
     ],
     headings: {
-      hero: 'Your #1 Source For Shipping Containers For Sale in Chicago, IL',
-      trustedBy: 'Trusted By Organizations Like',
-      products: 'Shipping Containers For Sale in Chicago, IL',
-      types: 'Types of Shipping Containers for Sale in Chicago, IL',
-      resources: 'Chicago Container Resources',
+      hero: 'Your [[#1]] Source For Shipping Containers For Sale in [[Chicago, IL]]',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: 'Shipping Containers For Sale in [[Chicago, IL]]',
+      types: 'Types of Shipping Containers [[for Sale in Chicago, IL]]',
+      resources: '[[Chicago]] Container Resources',
     },
     about: [
       'Since 2002, On-Site Storage Solutions has been a trusted source for shipping containers for sale in Chicago, IL. We offer new and used containers in 10ft, 20ft, and 40ft sizes, available to buy, rent, or rent to own at the guaranteed lowest prices.',

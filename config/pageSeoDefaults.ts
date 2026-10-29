@@ -1,4 +1,5 @@
-import { ROUTES } from '@/config/routes';
+import { GBP_ROUTE_SEGMENTS, ROUTES } from '@/config/routes';
+import { gbpSeoDefaults, requireGbpPage } from '@/lib/gbp';
 import type { PageSeoDefaults } from '@/types/seo';
 
 // The built-in SEO copy for every page in config/pages.ts, moved out of the
@@ -236,4 +237,7 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     'Create a new password for your On-Site Storage Solutions account.',
     ROUTES.ACCOUNT.RESET_PASSWORD,
   ),
+
+  // GBP location pages: their SEO is part of each page's data (lib/data/gbpPages.ts).
+  ...Object.fromEntries(GBP_ROUTE_SEGMENTS.map((slug) => [`/${slug}`, gbpSeoDefaults(requireGbpPage(slug))])),
 };
