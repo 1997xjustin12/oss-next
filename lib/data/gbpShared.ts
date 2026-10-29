@@ -217,7 +217,10 @@ export const GBP_HEAD = {
  */
 export const GBP_SCRIPTS = {
   gtmId: 'GTM-5X9C5P6',
-  /** Zoho SalesIQ chat widget ("Everyone Qualifies!" bubble). */
+  /**
+   * Zoho SalesIQ chat widget ("Everyone Qualifies!" bubble), as WordPress loads
+   * it. Recorded only: the GBP pages deliberately don't load it (2026-10-29).
+   */
   zohoSalesIq: {
     src: 'https://salesiq.zohopublic.com/widget',
     widgetCode: 'siq5653ae22387671d972ab9ed19491efe5e4478724bfefa2f62964fa5740b75521',
