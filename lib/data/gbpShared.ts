@@ -13,18 +13,14 @@
 
 import type { GbpSharedContent } from '@/types/gbp'
 
-const CDN = 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads'
-/**
- * Images still served by WordPress itself, not the CDN. They break when
- * WordPress is retired, so they move to the CDN before the pages go live (see
- * the reference doc, "Before go-live").
- */
-const WP = 'https://onsitestorage.com/wp-content/uploads'
+// Every image is a local copy in public/images/gbp/ (downloaded from WordPress
+// and its CDNs on 2026-10-29, converted to WebP): nothing here depends on the
+// WordPress media library, which goes away with the headless migration.
 
 export const GBP_SHARED_DEFAULTS: GbpSharedContent = {
   header: {
     announcement: 'Financing available — only $69/month to start! Call now: {phone}',
-    logo: { src: `${CDN}/2021/11/27100041/cropped-OSS-Logo-1.webp`, alt: 'On-Site Storage Solutions', width: 500, height: 138 },
+    logo: { src: '/images/gbp/cropped-OSS-Logo-1.webp', alt: 'On-Site Storage Solutions', width: 500, height: 138 },
     // In-page anchors; "Home" is the site root.
     nav: [
       { label: 'Home', href: '/' },
@@ -38,44 +34,44 @@ export const GBP_SHARED_DEFAULTS: GbpSharedContent = {
     tagline: 'Guaranteed Lowest Price – Fast Delivery – 100% Satisfaction',
     bullets: ['Huge Nationwide Inventory', 'Buy, Rent, or Rent-to-Own Options', 'All Container Sizes & Conditions Available'],
     quoteCtaLabel: 'Request a Quote',
-    background: `${WP}/2025/08/Untitled-design-5.jpg`,
+    background: '/images/gbp/Untitled-design-5.webp',
     badges: [
-      { src: `${WP}/2025/08/1.webp`, alt: 'PayPal Verified', width: 500, height: 500 },
-      { src: `${WP}/2025/08/3.webp`, alt: 'On-Site Storage Satisfaction Guarantee', width: 500, height: 500 },
-      { src: `${WP}/2025/08/Untitled-1080-x-1080-px-1500-x-1000-px-e1748450709728-1024x316.png`, alt: 'Google Trusted Store', width: 800, height: 247 },
-      { src: `${WP}/2025/08/5-e1748450766913.webp`, alt: 'Google Reviews', width: 500, height: 192 },
-      { src: `${WP}/2025/08/4-e1748450748168.webp`, alt: 'BBB Rated', width: 500, height: 191 },
-      { src: `${WP}/2025/08/2-e1748450730818.webp`, alt: 'SiteTrust', width: 500, height: 238 },
+      { src: '/images/gbp/1.webp', alt: 'PayPal Verified', width: 500, height: 500 },
+      { src: '/images/gbp/3.webp', alt: 'On-Site Storage Satisfaction Guarantee', width: 500, height: 500 },
+      { src: '/images/gbp/Untitled-1080-x-1080-px-1500-x-1000-px-e1748450709728-1024x316.png', alt: 'Google Trusted Store', width: 800, height: 247 },
+      { src: '/images/gbp/5-e1748450766913.webp', alt: 'Google Reviews', width: 500, height: 192 },
+      { src: '/images/gbp/4-e1748450748168.webp', alt: 'BBB Rated', width: 500, height: 191 },
+      { src: '/images/gbp/2-e1748450730818.webp', alt: 'SiteTrust', width: 500, height: 238 },
     ],
   },
   // "Trusted By Organizations Like". The heading's wording is per page.
   trustedLogos: [
-    { src: `${CDN}/2025/08/21054023/download-1-150x150-1.webp`, alt: 'Toyota' },
-    { src: `${CDN}/2025/08/21054024/download-3-1-150x150-1.webp`, alt: 'Walt Disney' },
-    { src: `${CDN}/2025/08/21054024/download-2-1-150x150-1.webp`, alt: 'Walmart' },
-    { src: `${CDN}/2025/08/21054025/download-7-150x150-1.webp`, alt: 'Air Liquide' },
-    { src: `${CDN}/2025/08/21054026/download-8-150x150-1.webp`, alt: 'BNSF Railway' },
-    { src: `${CDN}/2025/08/21054027/download-1-1-150x150-1.webp`, alt: 'TruGreen' },
-    { src: `${CDN}/2025/08/21054027/download-6-150x150-1.webp`, alt: 'Advance Auto Parts' },
-    { src: `${CDN}/2025/08/21054028/download-9-150x150-1.webp`, alt: 'Boeing' },
-    { src: `${CDN}/2025/08/21054029/download-10-150x150-1.webp`, alt: 'FedEx' },
+    { src: '/images/gbp/download-1-150x150-1.webp', alt: 'Toyota' },
+    { src: '/images/gbp/download-3-1-150x150-1.webp', alt: 'Walt Disney' },
+    { src: '/images/gbp/download-2-1-150x150-1.webp', alt: 'Walmart' },
+    { src: '/images/gbp/download-7-150x150-1.webp', alt: 'Air Liquide' },
+    { src: '/images/gbp/download-8-150x150-1.webp', alt: 'BNSF Railway' },
+    { src: '/images/gbp/download-1-1-150x150-1.webp', alt: 'TruGreen' },
+    { src: '/images/gbp/download-6-150x150-1.webp', alt: 'Advance Auto Parts' },
+    { src: '/images/gbp/download-9-150x150-1.webp', alt: 'Boeing' },
+    { src: '/images/gbp/download-10-150x150-1.webp', alt: 'FedEx' },
   ],
   // The three cards under the products heading. Each CTA dials the page's number.
   productCards: [
     {
       title: 'Rent a Shipping Container',
       features: ['Lowest Price Rate', 'Free Rent', 'Fast Delivery'],
-      image: { src: `${CDN}/2025/08/25071618/Rent-A-Shipping-Container-1024x533.webp`, alt: 'find shipping containers for rent', width: 1024, height: 533 },
+      image: { src: '/images/gbp/Rent-A-Shipping-Container-1024x533.webp', alt: 'find shipping containers for rent', width: 1024, height: 533 },
     },
     {
       title: 'Buy a Shipping Container',
       features: ['Guaranteed Lowest Price', 'Huge Selection', 'Location Near You'],
-      image: { src: `${CDN}/2025/08/25071725/Buy-A-Shipping-Container.webp`, alt: 'find shipping containers for sale', width: 330, height: 171 },
+      image: { src: '/images/gbp/Buy-A-Shipping-Container.webp', alt: 'find shipping containers for sale', width: 330, height: 171 },
     },
     {
       title: 'Rent-To-Own Shipping Container',
       features: ['Affordable Monthly Payment', 'Huge Selection', 'Everyone Qualifies'],
-      image: { src: `${CDN}/2025/08/25071813/Rent-to-Own-Shipping-Container.webp`, alt: 'find rent to own shipping containers', width: 342, height: 180 },
+      image: { src: '/images/gbp/Rent-to-Own-Shipping-Container.webp', alt: 'find rent to own shipping containers', width: 342, height: 180 },
     },
   ],
   reviewsHeading: "We've Got a Lot of [[Happy Customers]]",
@@ -85,19 +81,19 @@ export const GBP_SHARED_DEFAULTS: GbpSharedContent = {
       accent: 'Dry Van',
       rest: 'Shipping Containers',
       body: 'The most common shipping containers you see on ships, in ports, or being carried by trucks are known as dry van shipping containers. They come in different lengths and heights and they may have different door options such as double doors at one end, double doors at both ends, and open side containers with doors on the side.',
-      image: { src: `${CDN}/2025/08/25080311/Dry-Van-Shipping-Containers-for-sale.webp`, alt: 'Dry Van Shipping Container For Sale', width: 1872, height: 1404 },
+      image: { src: '/images/gbp/Dry-Van-Shipping-Containers-for-sale.webp', alt: 'Dry Van Shipping Container For Sale', width: 1872, height: 1404 },
     },
     {
       accent: 'Refrigerated',
       rest: 'Shipping Containers',
       body: 'Refrigerated ISO shipping containers, also known as Reefers, are insulated shipping containers that are used to transport temperature-sensitive cargo. The refrigeration equipment is part of the bulkhead wall and comes with controls allowing you to manage the interior temperature.',
-      image: { src: `${CDN}/2025/08/25080731/Refrigerated-Shipping-Containers-for-sale-1024x674.webp`, alt: 'Refrigerated Shipping Container For Sale', width: 1024, height: 674 },
+      image: { src: '/images/gbp/Refrigerated-Shipping-Containers-for-sale-1024x674.webp', alt: 'Refrigerated Shipping Container For Sale', width: 1024, height: 674 },
     },
     {
       accent: 'Specialized',
       rest: 'Shipping Containers',
       body: 'Specialized shipping containers are containers that have been adapted to transport unusual cargo that won’t fit inside the typical big metal shipping containers. From transporting oversized machinery to liquids, there’s a special-purpose container for every need.',
-      image: { src: `${CDN}/2025/08/25080911/Specialized-Shipping-Containers-for-Sale-1024x768.webp`, alt: 'Specialized Shipping Containers for sale', width: 1024, height: 768 },
+      image: { src: '/images/gbp/Specialized-Shipping-Containers-for-Sale-1024x768.webp', alt: 'Specialized Shipping Containers for sale', width: 1024, height: 768 },
     },
   ],
   whyChoose: {
@@ -111,7 +107,7 @@ export const GBP_SHARED_DEFAULTS: GbpSharedContent = {
     ],
   },
   about: {
-    image: { src: `${CDN}/2025/08/25082037/Best-Shipping-Container-Store-1024x576.webp`, alt: 'Best Shipping Container Store in USA', width: 1024, height: 576 },
+    image: { src: '/images/gbp/Best-Shipping-Container-Store-1024x576.webp', alt: 'Best Shipping Container Store in USA', width: 1024, height: 576 },
     cta: 'Call Us For Assistance',
   },
   quote: { heading: 'Get the [[Best]] Pricing Now!' },
@@ -119,7 +115,7 @@ export const GBP_SHARED_DEFAULTS: GbpSharedContent = {
     heading: 'Get the Best Deals on Containers – [[Before Anyone Else!]]',
     body: 'Sign up to get insider access to special offers, new container arrivals, and expert tips on container storage and modifications.',
     note: 'We’ll never spam you. Just helpful info and great deals.',
-    background: `${WP}/2025/08/Untitled-design-5-1024x534.jpg`,
+    background: '/images/gbp/Untitled-design-5-1024x534.webp',
   },
   faqHeading: 'Frequently Asked [[Questions]]',
   footer: {

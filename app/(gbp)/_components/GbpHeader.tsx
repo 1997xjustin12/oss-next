@@ -36,7 +36,10 @@ export function GbpHeader({ phone, telHref, content, options }: Props) {
         style={{ '--gbp-header-bg': options.background, '--gbp-header-bg-dark': options.backgroundDark } as React.CSSProperties}
       >
         <div className={`${GBP_CONTAINER} flex items-center justify-center py-3 md:justify-between`}>
-          <Link href="/" aria-label="On-Site Storage Solutions home" className="shrink-0">
+          {/* No prefetch: prefetching the storefront pulls in its fonts (Roboto,
+              Anton) on a page that uses only Poppins. The homepage is static, so
+              the click is still fast. */}
+          <Link href="/" prefetch={false} aria-label="On-Site Storage Solutions home" className="shrink-0">
             <Image
               src={content.logo.src}
               alt={content.logo.alt}
@@ -52,7 +55,7 @@ export function GbpHeader({ phone, telHref, content, options }: Props) {
               {content.nav.map((item) => (
                 <li key={item.label}>
                   {item.href.startsWith('/') ? (
-                    <Link href={item.href} className="hover:text-[var(--gbp-brand,#C60C29)] dark:hover:text-red-400">
+                    <Link href={item.href} prefetch={false} className="hover:text-[var(--gbp-brand,#C60C29)] dark:hover:text-red-400">
                       {item.label}
                     </Link>
                   ) : (

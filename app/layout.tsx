@@ -17,10 +17,19 @@ import { ADMIN_PATHS } from "@/lib/admin";
 
 // The default face for the whole storefront, wired to `--font-primary` (and so
 // to `font-sans`) in globals.css.
+//
+// Defined here so everything outside a route group's layout still has it: the
+// admin, the maintenance page, and portals rendered straight into <body> (the
+// product gallery's lightbox, modals). **Not preloaded here**: each route group
+// preloads the faces it uses. The storefront preloads these from
+// app/(market)/layout.tsx (lib/fonts.ts); the GBP pages use only Poppins, so
+// they download neither Roboto nor Anton. Without a preload a browser fetches a
+// font only when text on the page uses it.
 const roboto = Roboto({
   subsets: ["latin"],
   variable: "--font-roboto",
   display: "swap",
+  preload: false,
 });
 
 // Display face, used via the `font-anton` utility. Anton ships a single weight,
@@ -35,6 +44,7 @@ const anton = Anton({
   weight: "400",
   variable: "--font-anton-src",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

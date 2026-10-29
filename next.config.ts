@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
     // a remote file replaced under the same URL keeps its old optimized copy
     // until this expires, so give a replaced file a new name.
     minimumCacheTTL: 2678400,
+    // AVIF first (roughly 20–30% smaller than WebP at the same quality), WebP
+    // for browsers without it. Chosen per request from the Accept header. AVIF
+    // is slower to encode, but each size is encoded once and then cached for
+    // the TTL above. Applies site-wide.
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: 'onsite-cdn.sfo3.cdn.digitaloceanspaces.com' },
       { protocol: 'https', hostname: 'bbq-spaces.sfo3.cdn.digitaloceanspaces.com' },
