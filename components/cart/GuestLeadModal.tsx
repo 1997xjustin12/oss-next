@@ -2,15 +2,14 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, MapPin, Phone, X } from 'lucide-react'
-import { useGeoapify } from '@/hooks/useGeoapify'
-import type { GeoapifyResult } from '@/hooks/useGeoapify'
+import { ArrowLeft, Loader2, Phone, X } from 'lucide-react'
+import { useZohoQuoteForm } from '@/hooks/useZohoQuoteForm'
 import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { PlpLink } from '@/components/shared/PlpLink'
+import { ZohoQuotePost } from '@/components/shared/ZohoQuotePost'
 import { ROUTES } from '@/config/routes'
 import { CONTACT_NUMBER } from '@/lib/helpers'
-import { getGuestLead } from '@/lib/guestCapture'
-import { readVisitorZip } from '@/lib/visitorZip'
+import { ZOHO_QUOTE_FORM, zohoQuoteToLead } from '@/lib/zohoQuoteForm'
 import type { GuestLead } from '@/lib/guestCapture'
 
 /**
@@ -19,8 +18,9 @@ import type { GuestLead } from '@/lib/guestCapture'
  *
  * Two views on one track:
  *
- *   1. **Details** — name, email, phone, ZIP. One action: Get Quote, which
- *      both records the lead and files the quote.
+ *   1. **Details** — the Zoho "Save Quote Form" (lib/zohoQuoteForm.ts). One
+ *      action: Get Quote, which posts the details to Zoho CRM (where the lead
+ *      is kept; this app stores none) and saves the quote in this browser.
  *   2. **Quote** — the priced selection, and confirmation that the quotation
  *      is coming by email. One state: there is nothing left to press.
  *
@@ -29,9 +29,9 @@ import type { GuestLead } from '@/lib/guestCapture'
  * back is a trade, and it gives the details somewhere to be used rather than
  * just collected.
  *
- * **Placeholder form.** The fields stand in for a Zoho form that will replace
- * them. The surrounding flow — when it opens, the two steps, where the details
- * go — is the part meant to survive that swap.
+ * The form's fields, prefill, ZIP lookup and posting come from
+ * `useZohoQuoteForm`, shared with the other areas that show the same form;
+ * this component brings the look and the two steps.
  */
 
 /** One row of the quote. The caller formats the value; this only lays it out. */
@@ -72,7 +72,7 @@ type Props = {
   /** Close without adding — the X, Escape, or the backdrop. */
   onDismiss: () => void
   /**
-   * Fires when the visitor picks a delivery address, with its bare postcode.
+   * Fires when the ZIP typed in the form resolves to a place, with its bare postcode.
    *
    * Lets the caller re-price delivery for where the container is actually
    * going. Without it the quote on step 2 would still be priced to whatever ZIP
@@ -81,8 +81,6 @@ type Props = {
    */
   onAddressZipChange?: (postcode: string) => void
 }
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const FIELD =
   'w-full rounded-md border border-theme-border bg-theme-bg px-3 py-2.5 text-sm text-theme-dark outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-white transition-colors placeholder:text-theme-muted focus:border-theme-primary focus:ring-2 focus:ring-theme-primary/20'
@@ -107,76 +105,44 @@ export function GuestLeadModal({
   onAddressZipChange,
 }: Props) {
   const [step, setStep] = useState<Step>('details')
-  /**
-   * Seeded from the stored lead, so someone who has given their details once
-   * confirms them rather than typing them again — and can still edit any of
-   * them before submitting.
-   *
-   * Lazy initialisers rather than an effect: this only ever renders in the
-   * browser, behind the caller's `open` flag, so there is no server pass to
-   * mismatch against and no need to wait for one.
-   */
-  const stored = useState(() => getGuestLead())[0]
-  const [fullName, setFullName] = useState(stored?.fullName ?? '')
-  const [email, setEmail] = useState(stored?.email ?? '')
-  const [phone, setPhone] = useState(stored?.phone ?? '')
-  /**
-   * The ZIP, from the lead if we have one and from the browser's own ZIP if
-   * not.
-   *
-   * Nobody reaches this modal without having given a ZIP — the product page
-   * behind it will not price anything until they do — so an empty box here was
-   * the site asking twice for something it had already been told.
-   */
-  const [address, setAddress] = useState(stored?.address || readVisitorZip().postcode || '')
-  const [error, setError] = useState<string | null>(null)
-  const [addressOpen, setAddressOpen] = useState(false)
 
   /**
-   * Re-seed the ZIP each time the dialog opens.
+   * The form, opened with the visitor's saved details (their last submission
+   * here or in the other areas with this form, else the guest lead and the
+   * page's ZIP), so someone who has given them once confirms rather than
+   * retypes. City and State fill from the ZIP.
    *
-   * The panel renders this component on every page load, so the initialiser
-   * above runs before the visitor has typed anything — and typing a ZIP into
-   * the page behind is usually the first thing they do. Seeding only at mount
-   * therefore left the box empty in exactly the case where we knew the answer.
+   * The ZIP lookup runs only while open: the modal is mounted closed on every
+   * product page. A resolved ZIP re-prices delivery behind the modal, so the
+   * quote on step 2 is for where the container is going. Not saved as the
+   * visitor's location and no depot swap: this is a form field, and silently
+   * relocating the page would be a surprising thing for it to do.
+   */
+  const form = useZohoQuoteForm({
+    active: open,
+    onZipResolved: (place) => onAddressZipChange?.(place.postcode),
+  })
+
+  /**
+   * Fill blanks again each time the dialog opens.
+   *
+   * The panel renders this component on every page load, so the form's first
+   * values are read before the visitor has typed anything — and typing a ZIP
+   * into the page behind is usually the first thing they do. Re-reading on open
+   * picks that up, and anything submitted elsewhere since.
    *
    * Adjusted during render rather than from an effect: this is state derived
    * from a prop changing, which is React's own pattern for it, and it avoids a
-   * paint with the wrong value in the box. It only fills a blank, so it never
+   * paint with the wrong value in the box. It only fills blanks, so it never
    * overwrites what the visitor typed here.
    */
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
     setWasOpen(open)
-    if (open) setAddress((current) => current || readVisitorZip().postcode || '')
+    if (open) form.fillBlanks()
   }
 
   const firstFieldRef = useRef<HTMLInputElement>(null)
-
-  // Same postcode lookup the PDP's ZIP field uses, so an address typed here is
-  // resolved the same way as one typed there.
-  const {
-    results: addressResults,
-    loading: addressLoading,
-    error: addressError,
-    clear: clearAddress,
-    // Only while the dialog is open: it is mounted closed on every product
-    // page with the saved ZIP prefilled, which looked that ZIP up on each view.
-  } = useGeoapify(open ? address : '', {
-    type: 'postcode',
-    countries: 'us,ca',
-    debounceMs: 300,
-    limit: 5,
-  })
-
-  function selectAddress(result: GeoapifyResult) {
-    setAddress(result.formatted)
-    setAddressOpen(false)
-    // Deliberately not persisted to localStorage and no depot swap: this is a
-    // form field, and silently relocating the page behind the modal would be a
-    // surprising thing for typing an address to do.
-    onAddressZipChange?.(result.postcode)
-  }
 
   // The latest onDismiss, read by the open/close effect below — and kept OUT of
   // that effect's dependencies on purpose. ProductInfoPanel passes a new
@@ -223,28 +189,19 @@ export function GuestLeadModal({
   }
 
 
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-
-    // All four are required as of the 2026-09-22 design, which marks each with
-    // an asterisk. This reverses an earlier call — "asking for an address and
-    // then blocking on it costs more leads than it captures" — so it is worth
-    // knowing which way it was decided if lead volume drops: the phone and
-    // address checks below are the two to drop.
-    if (!fullName.trim()) return setError('Enter your name so we know who to reach.')
-    if (!phone.trim()) return setError('Enter a phone number we can reach you on.')
-    if (!EMAIL_PATTERN.test(email.trim())) return setError('Enter a valid email address.')
-    if (!address.trim()) return setError('Enter the delivery ZIP so we can price the trucking.')
-
-    setError(null)
-    onSubmit({
-      fullName: fullName.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      address: address.trim(),
-    })
+  /**
+   * The checks and saving are the form's (useZohoQuoteForm). When they pass,
+   * the event is left alone so the browser posts the form to Zoho, in the
+   * hidden frame, while this slides to the quote and the caller files it.
+   */
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const submitted = form.handleSubmit(event)
+    if (!submitted) return
+    onSubmit(zohoQuoteToLead(submitted))
     setStep('quote')
   }
+
+  const field = form.fieldProps
 
   const onQuote = step === 'quote'
 
@@ -311,20 +268,42 @@ export function GuestLeadModal({
                 </span>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-6" noValidate>
+              <form
+                action={ZOHO_QUOTE_FORM.action}
+                method="POST"
+                acceptCharset="UTF-8"
+                target={form.frameName}
+                onSubmit={handleSubmit}
+                className="mt-6"
+                noValidate
+              >
+                <ZohoQuotePost frameName={form.frameName} />
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="guest-name" className={LABEL}>
-                      Full Name <span className="text-theme-primary">*</span>
+                    <label htmlFor="guest-first-name" className={LABEL}>
+                      First Name <span className="text-theme-primary">*</span>
                     </label>
                     <input
                       ref={firstFieldRef}
-                      id="guest-name"
-                      autoComplete="name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Jane Alvarez"
+                      id="guest-first-name"
+                      autoComplete="given-name"
+                      placeholder="Jane"
                       className={FIELD}
+                      {...field('firstName')}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="guest-last-name" className={LABEL}>
+                      Last Name <span className="text-theme-primary">*</span>
+                    </label>
+                    <input
+                      id="guest-last-name"
+                      autoComplete="family-name"
+                      placeholder="Alvarez"
+                      className={FIELD}
+                      {...field('lastName')}
                     />
                   </div>
 
@@ -336,10 +315,9 @@ export function GuestLeadModal({
                       id="guest-phone"
                       type="tel"
                       autoComplete="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
                       placeholder="(555) 123-4567"
                       className={FIELD}
+                      {...field('phone')}
                     />
                   </div>
 
@@ -351,101 +329,80 @@ export function GuestLeadModal({
                       id="guest-email"
                       type="email"
                       autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="jane@company.com"
                       className={FIELD}
+                      {...field('email')}
                     />
                   </div>
 
-                  <div className="relative">
-                    <label htmlFor="guest-address" className={LABEL}>
-                      Delivery Address <span className="text-theme-primary">*</span>
+                  <div className="sm:col-span-2">
+                    <label htmlFor="guest-street" className={LABEL}>
+                      Delivery Street
                     </label>
                     <input
-                      id="guest-address"
-                      autoComplete="postal-code"
-                      inputMode="numeric"
-                      value={address}
-                      onChange={(e) => {
-                        setAddress(e.target.value)
-                        setAddressOpen(true)
-                      }}
-                      onFocus={() => setAddressOpen(true)}
-                      // Deferred so a click on a suggestion lands before the
-                      // list unmounts.
-                      onBlur={() => setTimeout(() => setAddressOpen(false), 150)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          setAddressOpen(false)
-                          clearAddress()
-                        }
-                        if (e.key === 'Enter' && addressResults.length === 1) {
-                          e.preventDefault()
-                          selectAddress(addressResults[0])
-                        }
-                      }}
-                      aria-autocomplete="list"
-                      placeholder="Enter your ZIP code"
+                      id="guest-street"
+                      autoComplete="shipping address-line1"
+                      placeholder="123 Main St"
                       className={FIELD}
+                      {...field('street')}
                     />
+                  </div>
 
-                    {/* Opens upward, capped so the slide track — which clips
-                        overflow — cannot cut it off.
-
-                        This used to drop downward, on the reasoning that
-                        upward lands on the Email input and reads as that
-                        field's suggestions. That is true and it is still the
-                        cost of this. It is the smaller cost: this is the last
-                        field on the form, so Get Quote sits ~16px below it and
-                        a downward list covers the button at any height. On a
-                        phone that made the primary action untappable — a tap
-                        on Get Quote picked a suggestion instead. Measured at
-                        390px: list y 645–703, button y 661–709. */}
-                    {addressOpen &&
-                      (addressResults.length > 0 || addressLoading || !!addressError) && (
-                        <ul
-                          role="listbox"
-                          className="absolute bottom-full left-0 right-0 z-20 mb-1 max-h-52 overflow-y-auto rounded-md border border-theme-border bg-theme-bg shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
-                        >
-                          {addressLoading && addressResults.length === 0 && (
-                            <li className="px-3 py-2.5 text-sm text-theme-muted">Searching…</li>
-                          )}
-                          {addressError && !addressLoading && (
-                            <li className="px-3 py-2.5 text-sm text-theme-primary">
-                              {addressError}
-                            </li>
-                          )}
-                          {addressResults.map((r) => (
-                            <li key={r.placeId} role="option" aria-selected={false}>
-                              <button
-                                type="button"
-                                onMouseDown={() => selectAddress(r)}
-                                className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm transition-colors hover:bg-theme-subtle dark:hover:bg-white/10"
-                              >
-                                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-theme-primary" />
-                                <span>
-                                  <span className="font-semibold text-theme-dark dark:text-white">
-                                    {r.formatted}
-                                  </span>
-                                  <span className="block text-[11px] text-theme-muted">
-                                    {r.country}
-                                  </span>
-                                </span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                  {/* ZIP first: City and State fill in from it. */}
+                  <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-[1fr_1.4fr_1fr]">
+                    <div>
+                      <label htmlFor="guest-zip" className={LABEL}>
+                        Delivery ZIP <span className="text-theme-primary">*</span>
+                      </label>
+                      <input
+                        id="guest-zip"
+                        autoComplete="shipping postal-code"
+                        placeholder="ZIP / postal code"
+                        className={FIELD}
+                        {...field('zip')}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="guest-city" className={LABEL}>
+                        City
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="guest-city"
+                          autoComplete="shipping address-level2"
+                          placeholder={form.zipLooking ? 'Looking up…' : 'From your ZIP'}
+                          className={FIELD}
+                          {...field('city')}
+                        />
+                        {form.zipLooking && (
+                          <Loader2
+                            aria-hidden
+                            className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-theme-muted"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="guest-state" className={LABEL}>
+                        State
+                      </label>
+                      <input
+                        id="guest-state"
+                        autoComplete="shipping address-level1"
+                        placeholder="From your ZIP"
+                        className={FIELD}
+                        {...field('state')}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {error && (
+                {form.error && (
                   <p
                     role="alert"
                     className="mt-4 rounded-md bg-theme-primary-light px-3 py-2 text-sm font-semibold text-theme-primary"
                   >
-                    {error}
+                    {form.error}
                   </p>
                 )}
 

@@ -19,8 +19,9 @@ import {
  *   B. product page → Save Quote → details given → cart → straight to checkout
  *
  * Submitting the quote form in A records a lead in Admin → Quote Requests, so
- * that final step only runs with E2E_ALLOW_LEADS=1. B has no such side effect
- * (the guest-lead modal keeps details in the browser) and always runs to the
+ * that final step only runs with E2E_ALLOW_LEADS=1. B's modal posts to Zoho
+ * CRM, which would create a real Contact: the test answers that request itself
+ * (and checks what was sent), so B has no side effect and always runs to the
  * checkout page — which is never submitted: no test here presses Place Order.
  */
 
@@ -91,22 +92,47 @@ test.describe('guest', () => {
     })
 
     await test.step('Save Quote → give details → see the quote', async () => {
+      // Answered here, never sent: a real post creates a Contact in Zoho CRM.
+      const zohoPosts: string[] = []
+      await page.route('https://crm.zoho.com/**', (route) => {
+        zohoPosts.push(route.request().postData() ?? '')
+        return route.fulfill({ status: 200, contentType: 'text/html', body: '<p>e2e stub</p>' })
+      })
+
       await page.getByRole('button', { name: /Save Quote/ }).first().click()
       const modal = page.locator('[role="dialog"]').filter({ has: page.locator('#guest-lead-title') })
       await expect(modal).toBeVisible()
-      await modal.locator('#guest-name').fill(`${LEAD.first} ${LEAD.last}`)
+      await modal.locator('#guest-first-name').fill(LEAD.first)
+      await modal.locator('#guest-last-name').fill(LEAD.last)
       await modal.locator('#guest-email').fill(LEAD.email)
       await modal.locator('#guest-phone').fill(LEAD.phone)
-      // Required since the 2026-09-22 design marked all four fields with an
-      // asterisk. Typed rather than picked from the suggestions: this step is
-      // about the quote appearing, not about the address lookup.
-      await modal.locator('#guest-address').fill(ZIP)
+      // The ZIP comes from the one given on the page, and City and State fill
+      // in from it.
+      await expect(modal.locator('#guest-zip')).toHaveValue(ZIP)
+      await expect(modal.locator('#guest-city')).toHaveValue('Atlanta')
+      await expect(modal.locator('#guest-state')).toHaveValue('GA')
       await modal.getByRole('button', { name: 'Get Quote' }).click()
       // Both steps stay in the page — the details panel is only slid aside and
       // made inert, so typed details survive a step back. Moving on means that
       // panel has gone inert, not that its fields disappeared.
-      await expect(modal.locator('[inert]').filter({ has: page.locator('#guest-name') })).toHaveCount(1)
+      await expect(modal.locator('[inert]').filter({ has: page.locator('#guest-first-name') })).toHaveCount(1)
       await expectPricesFormatted(page, modal)
+
+      // Posted once, with Zoho's field names, while the page stayed put.
+      await expect.poll(() => zohoPosts.length).toBe(1)
+      const sent = new URLSearchParams(zohoPosts[0])
+      expect(sent.get('First Name')).toBe(LEAD.first)
+      expect(sent.get('Last Name')).toBe(LEAD.last)
+      expect(sent.get('Email')).toBe(LEAD.email)
+      expect(sent.get('CONTACTCF7')).toBe(ZIP)
+      expect(sent.get('CONTACTCF3')).toBe('Atlanta')
+      expect(sent.get('aG9uZXlwb3Q')).toBe('')
+      expect(page.url()).toContain('/product/')
+
+      // Kept in this browser for the next copy of the form.
+      const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('oss-quote-form') ?? 'null'))
+      expect(saved).toMatchObject({ firstName: LEAD.first, email: LEAD.email, zip: ZIP, city: 'Atlanta' })
+
       await page.keyboard.press('Escape')
       await expect(modal).toBeHidden()
     })
