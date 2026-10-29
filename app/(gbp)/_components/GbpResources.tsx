@@ -38,7 +38,7 @@ export function GbpResources({ heading, cards }: Props) {
                   className="aspect-video h-auto w-full rounded-sm object-cover shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
                 />
                 <div>
-                  <h3 className="text-lg font-bold leading-snug text-gbp sm:text-xl dark:text-red-400">
+                  <h3 className="text-center text-xl font-bold leading-normal text-[#C60C29] sm:text-left md:text-[25px] dark:text-red-400">
                     {card.url ? (
                       <Link
                         href={postPath(card.url)}
@@ -51,12 +51,12 @@ export function GbpResources({ heading, cards }: Props) {
                       card.title
                     )}
                   </h3>
-                  <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-black dark:text-neutral-300">{card.excerpt}</p>
+                  <p className="mt-2 text-center text-[15.5px] font-light leading-[1.3] text-black sm:text-left dark:text-neutral-300">{card.excerpt}</p>
                 </div>
                 {card.url && (
                   <CircleArrowRight
                     aria-hidden
-                    className="hidden h-9 w-9 fill-gbp text-white transition-transform group-hover:translate-x-1 sm:block dark:fill-red-500"
+                    className="hidden h-9 w-9 fill-[#C60C29] text-white transition-transform group-hover:translate-x-1 sm:block dark:fill-red-500"
                   />
                 )}
               </article>

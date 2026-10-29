@@ -13,6 +13,7 @@ import { GbpResources } from './GbpResources'
 import { GbpTrustedBy } from './GbpTrustedBy'
 import { GbpTypes } from './GbpTypes'
 import { GbpWhyChoose } from './GbpWhyChoose'
+import { GBP_ACCENT } from './gbpStyles'
 import type { Review } from '@/config/reviews'
 import type { GbpPage } from '@/types/gbp'
 
@@ -35,7 +36,13 @@ export function GbpTemplate({ page, reviews }: Props) {
         <GbpHero heading={headings.hero} {...call} />
         <GbpTrustedBy heading={headings.trustedBy} />
         <GbpProducts heading={headings.products} {...call} />
-        <ReviewsSection heading={GBP_REVIEWS_HEADING} reviews={reviews} />
+        <ReviewsSection
+          heading={GBP_REVIEWS_HEADING}
+          reviews={reviews}
+          className="bg-white dark:bg-neutral-950"
+          headingClassName="text-2xl leading-[1.1] text-black md:text-[30px]"
+          accentClassName={GBP_ACCENT}
+        />
         <GbpTypes heading={headings.types} {...call} />
         <GbpResources heading={headings.resources} cards={page.blogCards} />
         <GbpWhyChoose />

@@ -23,15 +23,16 @@ export function GbpTypes({ heading, phone, telHref }: Props) {
             return (
               <article key={type.accent} className="grid items-center gap-6 md:grid-cols-2 md:gap-10">
                 <div
-                  className={`border-gbp py-4 dark:border-red-500 ${
-                    flipped ? 'border-r-[6px] pr-5 md:order-2 md:text-right' : 'border-l-[6px] pl-5'
+                  className={`border-[#C60C29] py-4 dark:border-red-500 ${
+                    // Centred on phones, as WordPress; to the bar's side from tablets up.
+                    flipped ? 'border-r-[6px] pr-5 text-center md:order-2 md:text-right' : 'border-l-[6px] pl-5 text-center md:text-left'
                   }`}
                 >
-                  <h3 className="text-xl font-semibold text-black sm:text-2xl dark:text-white">
+                  <h3 className="text-2xl font-bold leading-[1.1] text-black md:text-[30px] dark:text-white">
                     <span className={GBP_ACCENT}>{type.accent}</span> {type.rest}
                   </h3>
-                  <p className="mt-4 text-[15px] leading-relaxed text-black dark:text-neutral-200">{type.body}</p>
-                  <GbpCallButton phone={phone} telHref={telHref} className="mt-6 min-w-40" />
+                  <p className="mt-5 text-lg font-normal leading-normal text-black dark:text-neutral-200">{type.body}</p>
+                  <GbpCallButton phone={phone} telHref={telHref} className="mt-6 min-w-44 text-base md:text-xl" />
                 </div>
                 <Image
                   src={type.image.src}

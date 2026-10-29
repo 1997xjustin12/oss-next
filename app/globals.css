@@ -37,24 +37,10 @@
   --color-theme-bg:     #ffffff;
   --color-theme-footer: #111111;
 
-  /* GBP location pages (app/(gbp)): their own palette and face, from the
-     WordPress originals. `bg-gbp`, `text-gbp`, `font-poppins`. Poppins is
-     loaded by app/(gbp)/layout.tsx only. */
-  --color-gbp:        #C60C29;
-  --color-gbp-bright: #EA2342;
-  --font-poppins:     var(--font-poppins-src, 'Poppins', Arial, sans-serif);
-
   /* State */
   --color-theme-success:       #4caf50;
   --color-theme-success-dark:  #2e7d32;
   --color-theme-success-light: #90ee90;
-}
-
-/* The GBP pages' logo strip (app/(gbp)/_components/GbpTrustedBy.tsx): the
-   list twice, so moving by half loops without a seam. */
-@keyframes gbp-marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
 }
 
 /* ─── Base ─────────────────────────────────────────────────────────── */

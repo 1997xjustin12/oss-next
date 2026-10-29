@@ -15,7 +15,7 @@ export function GbpHeader({ phone, telHref }: Props) {
   const [before] = GBP_HEADER.announcement.split('{phone}')
   return (
     <header>
-      <p className="bg-gbp px-4 py-1.5 text-center text-[13px] font-semibold text-white sm:text-sm">
+      <p className="bg-[#C60C29] px-4 py-1.5 text-center text-xs font-semibold leading-normal text-white md:text-base">
         {before}
         <a href={telHref} className="whitespace-nowrap underline-offset-2 hover:underline">
           {phone}
@@ -36,15 +36,15 @@ export function GbpHeader({ phone, telHref }: Props) {
           </Link>
 
           <nav aria-label="On this page" className="hidden md:block">
-            <ul className="flex items-center gap-6 text-sm font-medium text-black dark:text-neutral-100">
+            <ul className="flex items-center gap-6 text-base font-semibold text-black lg:gap-8 dark:text-neutral-100">
               {GBP_HEADER.nav.map((item) => (
                 <li key={item.label}>
                   {item.href === '/' ? (
-                    <Link href="/" className="hover:text-gbp dark:hover:text-red-400">
+                    <Link href="/" className="hover:text-[#C60C29] dark:hover:text-red-400">
                       {item.label}
                     </Link>
                   ) : (
-                    <a href={item.href} className="hover:text-gbp dark:hover:text-red-400">
+                    <a href={item.href} className="hover:text-[#C60C29] dark:hover:text-red-400">
                       {item.label}
                     </a>
                   )}
@@ -55,7 +55,7 @@ export function GbpHeader({ phone, telHref }: Props) {
 
           {/* A wrapper hides it: on the button itself, `hidden` loses to its own `inline-flex`. */}
           <div className="hidden md:block">
-            <GbpCallButton phone={phone} telHref={telHref} icon className="text-lg" />
+            <GbpCallButton phone={phone} telHref={telHref} icon className="text-base" />
           </div>
         </div>
       </div>

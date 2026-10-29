@@ -6,8 +6,20 @@
  */
 export const GBP_CONTAINER = 'mx-auto w-full max-w-[1400px] px-4 sm:px-6'
 
-/** The red of an accented heading run, in both schemes. */
-export const GBP_ACCENT = 'text-gbp dark:text-red-400'
+/*
+ * Colours and type are hex and px values written into each class, measured
+ * from the WordPress pages (Elementor: 30px headings, 24px on phones; tablet
+ * matches desktop). Not theme tokens in globals.css: these pages carry their
+ * own styling, so a stale or shared stylesheet can't drop it.
+ */
 
-/** Section heading: centred, bold, as on WordPress. */
-export const GBP_H2 = 'text-center text-2xl font-semibold leading-tight text-black sm:text-[32px] dark:text-white'
+/** An accented heading run. WordPress writes it as `color: red`, pure #FF0000. */
+export const GBP_ACCENT = 'text-[#FF0000] dark:text-red-400'
+
+/** Section heading: 30px bold (24px on phones), centred. */
+export const GBP_H2 = 'text-center text-2xl font-bold leading-[1.1] text-black md:text-[30px] dark:text-white'
+
+/** The red button's colours (the call buttons, Request a Quote, Submit). */
+export const GBP_BUTTON =
+  'bg-[#C60C29] text-white transition-colors hover:bg-[#a30a22] focus-visible:outline-2 focus-visible:outline-offset-2 ' +
+  'focus-visible:outline-[#C60C29] dark:focus-visible:outline-white'

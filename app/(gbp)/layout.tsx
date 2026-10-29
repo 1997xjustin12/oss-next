@@ -2,12 +2,12 @@ import { Poppins } from 'next/font/google'
 import Script from 'next/script'
 import { GBP_SCRIPTS } from '@/lib/data/gbpShared'
 
-// The GBP pages' face (WordPress used Poppins throughout). Loaded here only, so
-// the storefront never downloads it. Wired to `font-poppins` in globals.css.
+// The GBP pages' face (WordPress uses Poppins throughout, 300 to 800). Loaded
+// here only, so the storefront never downloads it, and applied with next/font's
+// own class rather than a theme token, so it can't go missing with a stylesheet.
 const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-poppins-src',
+  weight: ['300', '400', '500', '600', '700', '800'],
   display: 'swap',
 })
 
@@ -23,7 +23,7 @@ const poppins = Poppins({
 export default function GbpLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { zohoSalesIq } = GBP_SCRIPTS
   return (
-    <div className={`${poppins.variable} flex min-h-screen flex-col bg-white font-poppins text-black dark:bg-neutral-950 dark:text-neutral-100`}>
+    <div className={`${poppins.className} flex min-h-screen flex-col bg-white text-base text-black dark:bg-neutral-950 dark:text-neutral-100`}>
       {children}
       {/* Zoho SalesIQ chat, as on WordPress. After load: it is a bubble in the
           corner, not something the first paint needs. */}

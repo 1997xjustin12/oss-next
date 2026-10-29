@@ -10,7 +10,7 @@ type Props = { contact: GbpPage['contact']; telHref: string }
 export function GbpFooter({ contact, telHref }: Props) {
   const item = 'flex items-center gap-2'
   return (
-    <footer className="bg-gbp py-8 text-white dark:bg-[#7a0718]">
+    <footer className="bg-[#C60C29] py-8 text-white dark:bg-[#7a0718]">
       <div className={`${GBP_CONTAINER} flex flex-col items-center gap-4 text-center`}>
         <a href={GBP_FOOTER.logoHref} aria-label="On-Site Storage Solutions">
           <Image
@@ -22,8 +22,8 @@ export function GbpFooter({ contact, telHref }: Props) {
             className="h-11 w-auto rounded-sm bg-white p-1"
           />
         </a>
-        <p className="text-sm">{GBP_FOOTER.tagline}</p>
-        <address className="flex flex-col items-center gap-x-6 gap-y-2 text-sm not-italic md:flex-row md:flex-wrap md:justify-center">
+        <p className="text-base font-normal">{GBP_FOOTER.tagline}</p>
+        <address className="flex flex-col items-center gap-x-6 gap-y-2 text-base font-medium not-italic md:flex-row md:flex-wrap md:justify-center">
           <a href={telHref} className={`${item} hover:underline`}>
             <Phone aria-hidden className="h-4 w-4 fill-current" />
             {contact.phone}

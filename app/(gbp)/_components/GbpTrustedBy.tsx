@@ -14,6 +14,8 @@ import { GBP_ACCENT, GBP_H2 } from './gbpStyles'
 export function GbpTrustedBy({ heading }: { heading: string }) {
   return (
     <section aria-label="Organizations that trust us" className="hidden bg-white py-10 md:block dark:bg-neutral-950">
+      {/* Here rather than in globals.css, so the page carries its own styling. */}
+      <style>{'@keyframes gbp-marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}'}</style>
       <h2 className={GBP_H2}>
         <AccentText text={heading} accentClassName={GBP_ACCENT} />
       </h2>

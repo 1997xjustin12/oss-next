@@ -23,7 +23,7 @@ function grecaptchaV2(): GrecaptchaV2 | undefined {
 
 const FIELD =
   'h-11 w-full rounded-sm border border-neutral-300 bg-white px-3 text-[15px] text-black outline-none transition-colors ' +
-  'focus:border-gbp focus:ring-2 focus:ring-gbp/15 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white'
+  'focus:border-[#C60C29] focus:ring-2 focus:ring-[#C60C29]/15 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white'
 
 /** One script tag for the page, however many forms ask. */
 function loadRecaptcha(onReady: () => void) {
@@ -104,9 +104,9 @@ export function ZohoNewsletterForm() {
         const fieldId = `${id}-${field.name.replace(/\s/g, '_')}`
         return (
           <div key={field.name}>
-            <label htmlFor={fieldId} className="mb-1 block text-sm font-medium text-black dark:text-neutral-200">
+            <label htmlFor={fieldId} className="mb-1.5 block text-base font-normal leading-none text-black dark:text-neutral-200">
               {field.label}
-              <span className="text-gbp dark:text-red-400"> *</span>
+              <span className="text-[#C60C29] dark:text-red-400"> *</span>
             </label>
             <input
               id={fieldId}
@@ -124,7 +124,7 @@ export function ZohoNewsletterForm() {
       {/* Holds the widget once loaded; sized so it doesn't shift the buttons. */}
       <div ref={boxRef} className="min-h-19.5" />
       {captchaError && (
-        <p role="alert" className="text-sm text-gbp dark:text-red-400">
+        <p role="alert" className="text-sm text-[#C60C29] dark:text-red-400">
           Please confirm you&apos;re not a robot.
         </p>
       )}
@@ -137,8 +137,8 @@ export function ZohoNewsletterForm() {
         />
         <button
           type="submit"
-          className="rounded-sm bg-gbp px-8 py-3 font-semibold text-white transition-colors hover:bg-[#a30a22]
-                     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gbp"
+          className="rounded-sm bg-[#C60C29] px-8 py-3 text-base font-medium text-white transition-colors hover:bg-[#a30a22]
+                     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C60C29]"
         >
           Submit
         </button>

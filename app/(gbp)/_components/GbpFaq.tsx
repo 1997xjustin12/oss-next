@@ -21,21 +21,21 @@ export function GbpFaq({ faqs, youtubeId, city }: Props) {
     <section id="faqs" aria-labelledby="gbp-faqs" className="scroll-mt-4 bg-white py-10 sm:py-12 dark:bg-neutral-950">
       <div className={`${GBP_CONTAINER} grid items-start gap-8 md:grid-cols-2`}>
         <div>
-          <h2 id="gbp-faqs" className="text-2xl font-semibold text-black sm:text-[32px] dark:text-white">
+          <h2 id="gbp-faqs" className="text-center text-2xl font-bold leading-[1.1] text-black md:text-left md:text-[30px] dark:text-white">
             <AccentText text={GBP_FAQ_HEADING} accentClassName={GBP_ACCENT} />
           </h2>
           <div className="mt-6 space-y-2">
             {faqs.map((faq) => (
               <details key={faq.question} name="gbp-faq" className="group overflow-hidden rounded-sm">
                 <summary
-                  className="flex cursor-pointer list-none items-center gap-3 bg-gbp px-4 py-2.5 text-[15px] font-medium text-white
+                  className="flex cursor-pointer list-none items-center gap-3 bg-[#C60C29] px-4 py-2.5 text-lg font-medium leading-normal text-white
                              hover:bg-[#a30a22] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white
                              dark:bg-[#9b0a20] [&::-webkit-details-marker]:hidden"
                 >
                   <ChevronDown aria-hidden className="h-4 w-4 shrink-0 -rotate-90 transition-transform group-open:rotate-0" strokeWidth={3} />
                   <h3>{faq.question}</h3>
                 </summary>
-                <div className="border border-t-0 border-neutral-200 bg-white px-4 py-3 text-[15px] leading-relaxed text-black dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200">
+                <div className="border border-t-0 border-neutral-200 bg-white px-4 py-3 text-base leading-normal text-black dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200">
                   {faq.answer}
                 </div>
               </details>

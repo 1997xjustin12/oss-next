@@ -31,8 +31,8 @@ export function GbpProducts({ heading, phone, telHref }: Props) {
                 // White behind it in dark mode: "RENT"'s letters are cut out of the image.
                 className="h-auto w-full max-w-sm dark:rounded-md dark:bg-white dark:p-2"
               />
-              <h3 className="mt-4 text-xl font-semibold text-black dark:text-white">{card.title}</h3>
-              <ul className="mt-3 space-y-1 text-[15px] text-black dark:text-neutral-200">
+              <h3 className="mt-4 text-[23px] font-bold leading-none text-black dark:text-white">{card.title}</h3>
+              <ul className="mt-4 text-base font-normal leading-normal text-black dark:text-neutral-200">
                 {card.features.map((feature) => (
                   <li key={feature} className="flex items-center justify-center gap-2">
                     <Check aria-hidden className="h-4 w-4 shrink-0" strokeWidth={3} />
@@ -40,7 +40,7 @@ export function GbpProducts({ heading, phone, telHref }: Props) {
                   </li>
                 ))}
               </ul>
-              <GbpCallButton phone={phone} telHref={telHref} className="mt-6 min-w-44 text-lg" />
+              <GbpCallButton phone={phone} telHref={telHref} className="mt-6 min-w-44 text-base md:text-xl" />
             </li>
           ))}
         </ul>

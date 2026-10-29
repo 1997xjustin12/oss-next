@@ -1,4 +1,5 @@
 import { Phone } from 'lucide-react'
+import { GBP_BUTTON } from './gbpStyles'
 
 type Props = {
   phone: string
@@ -19,13 +20,11 @@ export function GbpCallButton({ phone, telHref, label, icon = false, className =
     <a
       href={telHref}
       aria-label={label ? `${label} ${phone}` : `Call ${phone}`}
-      className={`inline-flex items-center justify-center gap-2 rounded-sm bg-gbp px-6 py-3 text-center font-semibold leading-tight text-white
-                  transition-colors hover:bg-[#a30a22] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gbp
-                  dark:focus-visible:outline-white ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-sm px-6 py-3 text-center font-semibold leading-none ${GBP_BUTTON} ${className}`}
     >
       {icon && <Phone aria-hidden className="h-4 w-4 shrink-0 fill-current" />}
       {label ? (
-        <span>
+        <span className="leading-tight">
           {label}
           <br />
           {phone}

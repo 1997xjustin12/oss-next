@@ -123,9 +123,18 @@ const MAX_DOTS = 10;
 export function ReviewsSection({
   heading = HOME_HEADING_DEFAULTS['reviews.h2'],
   reviews = REVIEWS,
+  className = 'bg-[#F7F7F7] dark:bg-gray-900',
+  headingClassName = 'text-[28px] sm:text-[36px]',
+  accentClassName = 'text-[#C60C29] dark:text-red-400',
 }: {
   heading?: string;
   reviews?: Review[];
+  /** The section's background. The GBP pages, for one, sit on white. */
+  className?: string;
+  /** The heading's size; it is always bold and centred. */
+  headingClassName?: string;
+  /** The `[[…]]` run's colour. */
+  accentClassName?: string;
 }) {
   const [requested, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -170,10 +179,10 @@ export function ReviewsSection({
   const goTo = (index: number) => setCurrent(Math.max(0, Math.min(index, maxIndex)));
 
   return (
-    <section className="py-10 sm:py-16 bg-[#F7F7F7] dark:bg-gray-900">
+    <section className={`py-10 sm:py-16 ${className}`}>
       <div className="max-w-7xl mx-auto px-5 sm:px-10">
-        <h2 className="text-[28px] sm:text-[36px] font-bold text-center mb-8 sm:mb-10 dark:text-white">
-          <AccentText text={heading} accentClassName="text-[#C60C29] dark:text-red-400" />
+        <h2 className={`${headingClassName} font-bold text-center mb-8 sm:mb-10 dark:text-white`}>
+          <AccentText text={heading} accentClassName={accentClassName} />
         </h2>
 
         <div className="relative">

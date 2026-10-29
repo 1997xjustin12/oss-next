@@ -18,7 +18,7 @@ const AUTOCOMPLETE: Record<string, string> = {
 
 const FIELD =
   'h-11 w-full rounded-sm border border-neutral-300 bg-white px-3 text-[15px] text-black outline-none transition-colors ' +
-  'focus:border-gbp focus:ring-2 focus:ring-gbp/15 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white'
+  'focus:border-[#C60C29] focus:ring-2 focus:ring-[#C60C29]/15 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white'
 
 /**
  * "Get the Best Pricing Now!": the Zoho CRM web-to-contact form every GBP page
@@ -52,9 +52,9 @@ export function ZohoQuoteForm() {
         const wide = field.name === 'CONTACTCF30'
         return (
           <div key={field.name} className={wide ? 'sm:col-span-2' : undefined}>
-            <label htmlFor={fieldId} className="mb-1 block text-sm font-medium text-black dark:text-neutral-200">
+            <label htmlFor={fieldId} className="mb-1.5 block text-base font-normal leading-none text-black dark:text-neutral-200">
               {field.label}
-              {field.required && <span className="text-gbp dark:text-red-400"> *</span>}
+              {field.required && <span className="text-[#C60C29] dark:text-red-400"> *</span>}
             </label>
             {'options' in field ? (
               <select id={fieldId} name={field.name} required={field.required} defaultValue="" className={FIELD}>
@@ -84,8 +84,8 @@ export function ZohoQuoteForm() {
       })}
 
       <div className="sm:col-span-2">
-        <label htmlFor={`${id}-captcha`} className="mb-1 block text-sm font-medium text-black dark:text-neutral-200">
-          Enter the Captcha<span className="text-gbp dark:text-red-400"> *</span>
+        <label htmlFor={`${id}-captcha`} className="mb-1.5 block text-base font-normal leading-none text-black dark:text-neutral-200">
+          Enter the Captcha<span className="text-[#C60C29] dark:text-red-400"> *</span>
         </label>
         <div className="flex flex-wrap items-center gap-3">
           <input id={`${id}-captcha`} name={FORM.captcha.field} required maxLength={10} autoComplete="off" className={`${FIELD} max-w-56`} />
@@ -103,7 +103,7 @@ export function ZohoQuoteForm() {
           <button
             type="button"
             onClick={() => setCaptchaKey(Date.now())}
-            className="inline-flex items-center gap-1 text-sm font-medium text-gbp hover:underline dark:text-red-400"
+            className="inline-flex items-center gap-1 text-sm font-medium text-[#C60C29] hover:underline dark:text-red-400"
           >
             <RotateCw aria-hidden className="h-4 w-4" />
             Reload
@@ -120,8 +120,8 @@ export function ZohoQuoteForm() {
         <button
           type="submit"
           disabled={sending}
-          className="rounded-sm bg-gbp px-8 py-3 font-semibold text-white transition-colors hover:bg-[#a30a22] disabled:opacity-60
-                     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gbp"
+          className="rounded-sm bg-[#C60C29] px-8 py-3 text-base font-medium text-white transition-colors hover:bg-[#a30a22] disabled:opacity-60
+                     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C60C29]"
         >
           {sending ? 'Sending…' : 'Submit'}
         </button>
