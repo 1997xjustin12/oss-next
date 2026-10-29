@@ -4,16 +4,8 @@ import { Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/shared/GoogleTagManager";
 import "./globals.css";
-import { CartProvider } from "@/context/CartContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { WishlistProvider } from "@/context/WishlistContext";
-import { LinkEnricher } from "@/components/layout/LinkEnricher";
-import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
 import { DemoResets } from "@/components/layout/DemoResets";
-import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
-import { GBP_ROUTE_SEGMENTS, ROUTES } from "@/config/routes";
 import { SITE_URL } from "@/config/site";
-import { ADMIN_PATHS } from "@/lib/admin";
 
 // The default face for the whole storefront, wired to `--font-primary` (and so
 // to `font-sans`) in globals.css.
@@ -83,31 +75,11 @@ export default async function RootLayout({
             spec without being handed the URL. */}
         <link rel="service-desc" type="application/json" href="/openapi.json" title="Agent API description" />
 
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              {children}
-              <Suspense><GuestCartCapture /></Suspense>
-              {/* Inside CartProvider: it will not move a visitor off the depot
-                  their cart was built for, so it has to be able to read the
-                  cart. Rendered outside it, useCart() throws and takes down
-                  every page. */}
-              <Suspense>
-                <ZipAutoDetect excludePaths={[
-                  ROUTES.CHECKOUT,
-                  ROUTES.CART,
-                  ROUTES.ACCOUNT.ROOT,
-                  ROUTES.WISHLIST,
-                  ...ADMIN_PATHS,
-                  // GBP location pages: nothing on them depends on the visitor's
-                  // ZIP, so they don't ask for a location.
-                  ...GBP_ROUTE_SEGMENTS.map((slug) => `/${slug}`),
-                ]} />
-              </Suspense>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
-        <Suspense><LinkEnricher /></Suspense>
+        {/* The account, cart and wishlist providers, the guest-cart capture, ZIP
+            auto-detect and the link enricher live in app/(market)/layout.tsx:
+            only the storefront uses them, and here they loaded their JavaScript
+            on every page (the GBP location pages and the admin included). */}
+        {children}
         {/* Reads ?reset-guest=1 / ?reset-zip=1 / ?reset-all=1 — needs the
             Suspense boundary that useSearchParams requires, like its
             neighbours here. */}
