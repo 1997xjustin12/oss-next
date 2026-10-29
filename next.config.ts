@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { WP_REDIRECTS } from "./config/wpHiddenPages";
 
 const WP_ORIGIN = "https://onsitestorage.com";
 
@@ -99,6 +100,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/sitemap_index.xml", destination: "/sitemap.xml", permanent: true },
       { source: "/:file([a-z_-]+-sitemap\\d*\\.xml)", destination: "/sitemap.xml", permanent: true },
+      // Renamed pages WordPress redirects (config/wpHiddenPages.ts).
+      ...WP_REDIRECTS.map((redirect) => ({ ...redirect, permanent: true })),
     ];
   },
 

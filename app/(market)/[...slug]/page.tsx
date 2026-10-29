@@ -6,6 +6,7 @@ import { findDepotByPath, toLocalBusinessInput } from '@/lib/locations'
 import { breadcrumbFromPath, graph, localBusinessNode, siteNodes, webPageNode } from '@/lib/schema'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { isNativePath } from '@/config/routes'
+import { WP_NOINDEX_PATHS } from '@/config/wpHiddenPages'
 import { EXTERNAL_HTML_ATTR } from '@/lib/linkEnrich'
 
 /**
@@ -64,6 +65,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: page.seo_title ? { absolute: page.seo_title } : page.title,
     description: page.seo_description ?? undefined,
     alternates: page.canonical_url ? { canonical: page.canonical_url } : undefined,
+    // Kept out of search on WordPress; the backend doesn't carry that yet.
+    ...(WP_NOINDEX_PATHS.includes(`/${slug.join('/')}`) ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       title: page.og_title || page.seo_title || page.title,
       description: page.og_description || page.seo_description || undefined,

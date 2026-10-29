@@ -3,6 +3,7 @@ import { BASE_URL } from '@/lib/helpers'
 import { fetchProductSitemap, fetchPageSitemap } from '@/services/sitemap.service'
 import { getAllBlogSlugs } from '@/services/blog.service'
 import { GBP_ROUTE_SEGMENTS, ROUTES, isNativePath } from '@/config/routes'
+import { WP_NOINDEX_PATHS, WP_REDIRECTS } from '@/config/wpHiddenPages'
 
 const origin = BASE_URL.replace(/\/$/, '')
 
@@ -53,8 +54,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
+  // Pages WordPress keeps out of search (noindex, or redirected elsewhere).
+  const hidden = new Set([...WP_NOINDEX_PATHS, ...WP_REDIRECTS.map(({ source }) => source)])
+
   const pageRoutes: MetadataRoute.Sitemap = pages
-    .filter(({ path }) => path && !isNativePath(path))
+    .filter(({ path }) => path && !isNativePath(path) && !hidden.has(path.replace(/\/+$/, '')))
     .map(({ path, lastmod }) => ({
       url: `${origin}${path}`,
       lastModified: lastmod ? new Date(lastmod) : undefined,
