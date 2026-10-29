@@ -72,7 +72,7 @@ export function GbpProducts({ heading, phone, telHref, cards, style }: Props) {
                 <GbpCallButton
                   phone={phone}
                   telHref={telHref}
-                  className="rounded-none! px-[30px]! py-[15px]! text-base leading-[30px]! md:text-xl"
+                  className="px-[30px]! py-[15px]! text-base leading-[30px]! md:text-xl"
                 />
               </div>
             </li>

@@ -20,7 +20,7 @@ export function GbpCallButton({ phone, telHref, label, icon = false, className =
     <a
       href={telHref}
       aria-label={label ? `${label} ${phone}` : `Call ${phone}`}
-      className={`inline-flex items-center justify-center gap-2 rounded-sm px-6 py-3 text-center font-semibold leading-none ${GBP_BUTTON} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-none px-6 py-3 text-center font-semibold leading-none ${GBP_BUTTON} ${className}`}
     >
       {icon && <Phone aria-hidden className="h-4 w-4 shrink-0 fill-current" />}
       {label ? (

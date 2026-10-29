@@ -78,7 +78,7 @@ export function GbpHero({ heading, phone, telHref, content, style }: Props) {
             <GbpCallButton phone={phone} telHref={telHref} icon className="min-w-36 text-xs md:min-w-48 md:text-xl" />
             <a
               href={`#${GBP_ZOHO_FORMS.quote.anchor}`}
-              className={`inline-flex min-w-36 items-center justify-center gap-2 rounded-sm px-6 py-3 text-xs font-semibold leading-none md:min-w-48 md:text-xl ${GBP_BUTTON}`}
+              className={`inline-flex min-w-36 items-center justify-center gap-2 rounded-none px-6 py-3 text-xs font-semibold leading-none md:min-w-48 md:text-xl ${GBP_BUTTON}`}
             >
               <Mail aria-hidden className="h-4 w-4" />
               {content.quoteCtaLabel}

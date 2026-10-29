@@ -137,7 +137,7 @@ export function ZohoNewsletterForm() {
         />
         <button
           type="submit"
-          className="rounded-sm bg-[var(--gbp-brand,#C60C29)] px-8 py-3 text-base font-medium text-white transition-colors hover:brightness-90
+          className="rounded-md bg-[var(--gbp-brand,#C60C29)] px-8 py-3 text-base font-medium text-white transition-colors hover:brightness-90
                      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gbp-brand,#C60C29)]"
         >
           Submit

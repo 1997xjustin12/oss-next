@@ -120,7 +120,7 @@ export function ZohoQuoteForm() {
         <button
           type="submit"
           disabled={sending}
-          className="rounded-sm bg-[var(--gbp-brand,#C60C29)] px-8 py-3 text-base font-medium text-white transition-colors hover:brightness-90 disabled:opacity-60
+          className="rounded-md bg-[var(--gbp-brand,#C60C29)] px-8 py-3 text-base font-medium text-white transition-colors hover:brightness-90 disabled:opacity-60
                      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gbp-brand,#C60C29)]"
         >
           {sending ? 'Sending…' : 'Submit'}

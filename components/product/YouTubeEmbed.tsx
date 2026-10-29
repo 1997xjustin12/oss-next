@@ -18,12 +18,18 @@ import type { ProductVideo } from '@/config/productVideos'
  * The trade is one extra click before playback starts. The poster is the same
  * image YouTube's own player shows first, so the swap is close to invisible.
  */
-export function YouTubeEmbed({ video }: { video: ProductVideo }) {
+type Props = {
+  video: ProductVideo
+  /** Corner radius class. Default 10px; the GBP pages pass `rounded-none`, as WordPress has. */
+  radiusClassName?: string
+}
+
+export function YouTubeEmbed({ video, radiusClassName = 'rounded-[10px]' }: Props) {
   const [playing, setPlaying] = useState(false)
 
   if (playing) {
     return (
-      <div className="relative aspect-video overflow-hidden rounded-[10px] bg-black">
+      <div className={`relative aspect-video overflow-hidden ${radiusClassName} bg-black`}>
         <iframe
           src={youTubeEmbedUrl(video.id)}
           title={video.title}
@@ -43,7 +49,7 @@ export function YouTubeEmbed({ video }: { video: ProductVideo }) {
       type="button"
       onClick={() => setPlaying(true)}
       aria-label={`Play video: ${video.title}`}
-      className="group relative aspect-video w-full overflow-hidden rounded-[10px] bg-stone-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary"
+      className={`group relative aspect-video w-full overflow-hidden ${radiusClassName} bg-stone-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-primary`}
     >
       <Image
         src={youTubePoster(video.id)}

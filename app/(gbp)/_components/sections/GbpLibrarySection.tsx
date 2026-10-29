@@ -71,7 +71,7 @@ export function GbpLibrarySection<T extends GbpLibrarySectionType>({ type, props
           {/* White on the red band, like the band's headings. */}
           <a
             href={telHref}
-            className="mt-6 inline-flex min-w-44 items-center justify-center rounded-sm bg-white px-6 py-3 text-xl font-semibold leading-none text-[var(--gbp-brand,#C60C29)] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="mt-6 inline-flex min-w-44 items-center justify-center rounded-none bg-white px-6 py-3 text-xl font-semibold leading-none text-[var(--gbp-brand,#C60C29)] hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             {page.contact.phone}
           </a>

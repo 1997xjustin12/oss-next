@@ -30,7 +30,7 @@ export function GbpFaq({ heading, faqs, youtubeId, city, style }: Props) {
           </h2>
           <div className="mt-6 space-y-2">
             {faqs.map((faq) => (
-              <details key={faq.question} name="gbp-faq" className="group overflow-hidden rounded-sm">
+              <details key={faq.question} name="gbp-faq" className="group overflow-hidden">
                 <summary
                   className="flex cursor-pointer list-none items-center gap-3 bg-[var(--gbp-brand,#C60C29)] px-4 py-2.5 text-lg font-medium leading-normal text-white
                              hover:brightness-90 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white
@@ -47,7 +47,7 @@ export function GbpFaq({ heading, faqs, youtubeId, city, style }: Props) {
           </div>
         </div>
         <div className="md:pt-14">
-          <YouTubeEmbed video={{ id: youtubeId, title: `On-Site Storage Solutions in ${city}` }} />
+          <YouTubeEmbed video={{ id: youtubeId, title: `On-Site Storage Solutions in ${city}` }} radiusClassName="rounded-none" />
         </div>
       </div>
     </section>
