@@ -109,10 +109,12 @@ export const WP_NOINDEX_PATHS: readonly string[] = [
 ]
 
 /**
- * Old URLs WordPress 301s to a renamed page. The backend still has the old
- * page too, so without these the same content was served at both addresses.
- * Applied in next.config.ts `redirects()`; every destination checked to
- * answer 200 here.
+ * Old URLs WordPress 301s, redirected the same way here, so links and rankings
+ * that point at them keep working after the move. Applied in next.config.ts
+ * `redirects()`; every destination checked to answer 200 here.
+ *
+ * The first group are renamed pages the backend still has under the old URL
+ * too, so without these the same content was served at both addresses.
  */
 export const WP_REDIRECTS: readonly { source: string; destination: string }[] = [
   { source: '/affordable-shipping-containers-for-sale-in-north-alabama', destination: '/north-alabama-containers' },
@@ -131,4 +133,32 @@ export const WP_REDIRECTS: readonly { source: string; destination: string }[] = 
   { source: '/where-to-buy-container-seamless-solutions', destination: '/where-to-buy-a-container' },
   { source: '/where-to-buy-shipping-containers/indianapolis-id', destination: '/where-to-buy-shipping-containers/indianapolis-in' },
   { source: '/where-to-find-shipping-containers-for-sale-in-winnipeg', destination: '/shipping-containers-for-sale-in-winnipeg' },
+  // Old URLs WordPress 301s whose page the backend doesn't have (404 here
+  // without these), found through WordPress's sitemaps on 2026-10-29. Its
+  // /checkout -> /cart (empty cart) and /onsite-wholesale-inventory -> /my-account
+  // (logged out) are temporary and left out.
+  { source: '/blog-test', destination: '/shipping-containers-blogs' },
+  { source: '/cargo-container-seattle', destination: '/where-to-buy-shipping-containers/seattle-wa' },
+  { source: '/cargo-containers-for-sale-louisville-ky', destination: '/where-to-buy-shipping-containers/louisville-ky' },
+  { source: '/cargo-containers-for-sale-new-orleans', destination: '/where-to-buy-shipping-containers/new-orleans-la' },
+  { source: '/cargo-containers-for-sale-portland-oregon', destination: '/where-to-buy-shipping-containers/portland-or' },
+  { source: '/cargo-containers-minneapolis', destination: '/where-to-buy-shipping-containers/minneapolis-mn' },
+  { source: '/cargo-containers-mobile-alabama', destination: '/where-to-buy-shipping-containers/mobile-al' },
+  { source: '/cargo-containers-norfolk', destination: '/where-to-buy-shipping-containers/norfolk-va' },
+  { source: '/cargo-containers-omaha-ne', destination: '/where-to-buy-shipping-containers/omaha-ne' },
+  { source: '/cargo-containers-st-louis', destination: '/where-to-buy-shipping-containers/st-louis-mo' },
+  { source: '/cargo-containers-worcester-boston', destination: '/where-to-buy-shipping-containers/worcester-boston-ma' },
+  { source: '/exploring-40ft-high-cube-container-dimensions', destination: '/40-foot-high-cube-shipping-container-dimensions-guide' },
+  { source: '/new-location-atlanta-sample', destination: '/where-to-buy-shipping-containers/atlanta-ga' },
+  { source: '/new-location-template', destination: '/where-to-buy-shipping-containers/new-york-ny-newark-nj' },
+  { source: '/sea-containers-calgary', destination: '/where-to-buy-shipping-containers/calgary-ab' },
+  { source: '/sea-containers-edmonton', destination: '/where-to-buy-shipping-containers/edmonton-ab' },
+  { source: '/sea-containers-for-sale-newark-nj', destination: '/where-to-buy-shipping-containers/new-york-ny-newark-nj' },
+  // WordPress sends it to the homepage; this app has the accessories page.
+  { source: '/shipping-container-accessories', destination: '/shipping-container-accessory-products' },
+  { source: '/shipping-container-columbus', destination: '/where-to-buy-shipping-containers/columbus-oh' },
+  { source: '/shipping-containers-different-sizes-images/refrigerated-container', destination: '/shipping-container-pictures-by-type/refrigerated-shipping-container' },
+  { source: '/shipping-containers-new-york', destination: '/where-to-buy-shipping-containers/new-york-ny-newark-nj' },
+  { source: '/shipping-containers-newark', destination: '/where-to-buy-shipping-containers/new-york-ny-newark-nj' },
+  { source: '/tacoma-cargo-container', destination: '/where-to-buy-shipping-containers/tacoma-wa' },
 ]
