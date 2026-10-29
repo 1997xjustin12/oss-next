@@ -90,6 +90,18 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // WordPress's sitemaps (Yoast) were an index, /sitemap_index.xml, over
+  // per-type files (/page-sitemap.xml, /product-sitemap3.xml, …). Search
+  // Console and crawlers still ask for them; this app's one sitemap is
+  // /sitemap.xml (app/sitemap.ts). `-sitemap` in the second pattern keeps
+  // /sitemap.xml itself out of it.
+  async redirects() {
+    return [
+      { source: "/sitemap_index.xml", destination: "/sitemap.xml", permanent: true },
+      { source: "/:file([a-z_-]+-sitemap\\d*\\.xml)", destination: "/sitemap.xml", permanent: true },
+    ];
+  },
+
   // Proxy WordPress API paths so AJAX calls from the iframe avoid CORS.
   // The browser hits localhost; Next.js forwards to the live WordPress site.
   async rewrites() {
