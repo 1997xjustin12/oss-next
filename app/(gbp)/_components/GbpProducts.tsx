@@ -29,35 +29,50 @@ export function GbpProducts({ heading, phone, telHref, cards, style }: Props) {
         <h2 id="gbp-products" className={GBP_H2}>
           <AccentText text={heading} accentClassName={GBP_ACCENT} />
         </h2>
-        <ul className="mt-8 grid gap-6 md:grid-cols-3">
+        {/* Measured from WordPress (Elementor), at every width: the row
+            stretches the cards to one height; inside, a fixed 20px between
+            parts, 10px padding, and the image a fixed 170px tall (contained),
+            so the cards keep the same shape as the page narrows. The row sits
+            as far from the edge as there (20px on phones, 10px from tablets
+            up), not the 16/24px gutter. */}
+        <ul className="mx-1 mt-8 grid gap-5 sm:-mx-1 md:-mx-3.5 md:grid-cols-3">
           {cards.map((card, i) => (
             <li
               key={card.title}
-              className="flex flex-col items-center rounded-md border border-red-100 bg-white px-6 pb-7 pt-5 text-center shadow-[0_0_10px_rgba(198,12,41,0.25)]
+              className="flex flex-col gap-5 rounded-[5px] border border-transparent bg-white p-2.5 text-center shadow-[0_0_10px_rgba(233,25,25,0.5)]
                          dark:border-red-950 dark:bg-neutral-900"
             >
-              <Image
-                src={card.image.src}
-                alt={card.image.alt}
-                width={card.image.width}
-                height={card.image.height}
-                // The card's content width: the viewport less gutters and padding on phones.
-                sizes={SIZES}
-                // The first one is the phone LCP: not lazy (its preload is phone-only).
-                loading={i === 0 ? 'eager' : 'lazy'}
-                // White behind it in dark mode: "RENT"'s letters are cut out of the image.
-                className="h-auto w-full max-w-sm dark:rounded-md dark:bg-white dark:p-2"
-              />
-              <h3 className={`mt-4 text-[23px] font-bold leading-none ${GBP_HEADING}`}>{card.title}</h3>
-              <ul className="mt-4 text-base font-normal leading-normal text-black dark:text-neutral-200">
+              <div className="p-2.5">
+                <Image
+                  src={card.image.src}
+                  alt={card.image.alt}
+                  width={card.image.width}
+                  height={card.image.height}
+                  // The card's content width: the viewport less gutters and padding on phones.
+                  sizes={SIZES}
+                  // The first one is the phone LCP: not lazy (its preload is phone-only).
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  // White behind it in dark mode: "RENT"'s letters are cut out of the image.
+                  className="h-[170px] w-full object-contain dark:rounded-md dark:bg-white dark:p-2"
+                />
+              </div>
+              <h3 className={`text-[23px] font-bold leading-none ${GBP_HEADING}`}>{card.title}</h3>
+              {/* One block, centred, its lines left-aligned: the ticks form a column. */}
+              <ul className="self-center text-left text-base font-normal leading-normal text-black dark:text-neutral-200">
                 {card.features.map((feature) => (
-                  <li key={feature} className="flex items-center justify-center gap-2">
+                  <li key={feature} className="flex items-center gap-[5px]">
                     <Check aria-hidden className="h-4 w-4 shrink-0" strokeWidth={3} />
                     {feature}
                   </li>
                 ))}
               </ul>
-              <GbpCallButton phone={phone} telHref={telHref} className="mt-6 min-w-44 text-base md:text-xl" />
+              <div className="flex justify-center">
+                <GbpCallButton
+                  phone={phone}
+                  telHref={telHref}
+                  className="rounded-none! px-[30px]! py-[15px]! text-base leading-[30px]! md:text-xl"
+                />
+              </div>
             </li>
           ))}
         </ul>
