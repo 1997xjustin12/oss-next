@@ -50,6 +50,15 @@ const STORAGE_KEY = 'oss-cart'
 // call instead of firing one per click.
 const SYNC_DEBOUNCE_MS = 800
 
+/**
+ * The cart as stored in this browser. Exported for pages that need it on their
+ * first effect: the provider restores it in its own effect, which runs after
+ * its children's, so on a child's first effect `useCart()` is still empty.
+ */
+export function readStoredCart(): Cart {
+  return loadCart()
+}
+
 function loadCart(): Cart {
   if (typeof window === 'undefined') return EMPTY_CART
   try {

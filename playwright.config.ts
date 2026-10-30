@@ -55,6 +55,8 @@ export default defineConfig({
     // (lib/checkoutGate.ts). The journeys reach checkout on localhost without
     // depending on that shared list; 127.0.0.1, the same server, stays closed,
     // which is how checkout-gate.spec.ts sees the gate.
-    env: { CHECKOUT_OPEN_HOSTS: 'localhost' },
+    // And /cart, which customers are sent past for now (CART_PAGE_GOES_TO_QUOTE
+    // in lib/checkoutRoute.ts), stays the cart here: the journeys test it.
+    env: { CHECKOUT_OPEN_HOSTS: 'localhost', CART_PAGE_OPEN: '1' },
   },
 })
