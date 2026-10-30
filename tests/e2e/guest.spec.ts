@@ -273,6 +273,10 @@ test.describe('guest', () => {
       await page.goto(productUrl)
       await expectNoErrorScreen(page)
       const field = page.locator('#delivery-zip')
+      // The box fills itself with the saved place ("Atlanta, GA 30303") a
+      // moment after load. Cleared before that lands, the prefill comes back
+      // and the ZIP is typed onto the end of it ("…3030360601").
+      await expect(field).toHaveValue(new RegExp(ZIP))
       await field.fill('')
       await field.pressSequentially(OTHER_DEPOT_ZIP, { delay: 60 })
     })

@@ -1,6 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { Client } from '@elastic/elasticsearch'
 import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
+import { PLP_ORDER_MAX_PRODUCTS } from '@/config/plpOrder'
+import { sortByPlpOrder } from '@/lib/plpOrder'
 import { DEFAULT_LOCATION, SHIPPING_CONTAINER_CATEGORIES } from '@/lib/constants'
 import { formatProduct, getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import type { FormattedContainerHit, ProductDetailResponse, ProductHit, ShippingContainerHit } from '@/types/product'
@@ -687,10 +689,21 @@ export async function cachedEsSearch(input: SearchInput) {
   const aggs        = buildAggs(facets)
   const sortClauses = buildSort(sortParam)
 
+  // The container listing's Default order is a rule over each product's own
+  // fields (config/plpOrder.ts), which the index cannot sort on (lib/plpOrder.ts).
+  // So the depot's whole list is fetched, sorted here, and the page cut from
+  // it. Only with no text query: a search keeps its relevance order.
+  const ruleOrder =
+    sortClauses.length === 0 &&
+    !query.trim() &&
+    (productType === 'buy' || productType === 'rental' || productType === 'rto')
+      ? productType
+      : null
+
   const esResponse = await client.search({
     index: INDEX,
-    from:  page * hitsPerPage,
-    size:  hitsPerPage,
+    from:  ruleOrder ? 0 : page * hitsPerPage,
+    size:  ruleOrder ? PLP_ORDER_MAX_PRODUCTS : hitsPerPage,
     query: {
       bool: {
         must: query.trim()
@@ -708,10 +721,17 @@ export async function cachedEsSearch(input: SearchInput) {
       ? esResponse.hits.total
       : (esResponse.hits.total?.value ?? 0)
 
-  const hits = esResponse.hits.hits.map((hit) =>
+  const sources = esResponse.hits.hits.map(
+    (hit): Record<string, unknown> & { _id?: string } => ({ ...(hit._source as Record<string, unknown>), _id: hit._id }),
+  )
+  const rawHits = ruleOrder
+    ? sortByPlpOrder(sources, ruleOrder).slice(page * hitsPerPage, (page + 1) * hitsPerPage)
+    : sources
+
+  const hits = rawHits.map(({ _id, ...source }) =>
     formatProduct({
-      objectID: hit._id ?? '',
-      ...(hit._source as Record<string, unknown>),
+      objectID: _id ?? '',
+      ...source,
     }),
   )
 
