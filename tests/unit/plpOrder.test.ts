@@ -3,7 +3,8 @@
 // live WordPress listing's (docs/reference/plp-product-ordering.md).
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { plpOrderKeys, sortByPlpOrder } from '@/lib/plpOrder'
+import { PLP_DEFAULT_ORDER } from '@/config/plpOrder'
+import { conformPlpOrder, plpOrderKeys, sortByPlpOrder } from '@/lib/plpOrder'
 
 type Spec = { grade: string; condition: string; length: string; height: string; term?: string; price: number; title?: string }
 
@@ -130,5 +131,38 @@ describe('sortByPlpOrder', () => {
     const before = items.map((p) => p.title)
     sortByPlpOrder(items, 'buy')
     assert.deepEqual(items.map((p) => p.title), before)
+  })
+})
+
+describe('an order set in the admin (Admin → Listing Order)', () => {
+  const items = [
+    product({ grade: CW, condition: 'Used', length: '40', height: HC, price: 1 }),
+    product({ grade: WWT, condition: 'Used', length: '20', height: STD, price: 1 }),
+    product({ grade: WWT, condition: 'Used', length: '40', height: HC, price: 1 }),
+  ]
+
+  it('changes the sort: size first, 40′ High Cube leading', () => {
+    const order = conformPlpOrder({ ...PLP_DEFAULT_ORDER, keys: ['size', 'grade', 'term'], size: ['40-hc', '40-std', '20-std'] })
+    assert.deepEqual(sortByPlpOrder(items, 'buy', order).map(label), ['used-wwt 40-hc', 'used-cw 40-hc', 'used-wwt 20-std'])
+  })
+
+  it('keeps a reordering, list by list', () => {
+    const grade = ['used-cw', 'used-wwt', 'new-iicl', 'used-iicl', 'used-as-is']
+    assert.deepEqual(conformPlpOrder({ ...PLP_DEFAULT_ORDER, grade }).grade, grade)
+  })
+
+  it('refuses anything but a reordering, falling back to the default per list', () => {
+    const conformed = conformPlpOrder({
+      keys: ['term', 'grade'], // one dropped
+      term: { rental: ['12', '6', '3', '1'], rto: ['12', '24', '36', '48'] }, // one added; a reordering
+      grade: ['used-wwt', 'used-wwt', 'new-iicl', 'used-iicl', 'used-as-is'], // a repeat
+      size: ['20-std', '40-std', 'mystery'], // one renamed
+    })
+    assert.deepEqual(conformed.keys, PLP_DEFAULT_ORDER.keys)
+    assert.deepEqual(conformed.term.rental, PLP_DEFAULT_ORDER.term.rental)
+    assert.deepEqual(conformed.term.rto, ['12', '24', '36', '48'])
+    assert.deepEqual(conformed.grade, PLP_DEFAULT_ORDER.grade)
+    assert.deepEqual(conformed.size, PLP_DEFAULT_ORDER.size)
+    assert.deepEqual(conformPlpOrder(null), PLP_DEFAULT_ORDER)
   })
 })

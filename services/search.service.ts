@@ -3,6 +3,7 @@ import { Client } from '@elastic/elasticsearch'
 import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { PLP_ORDER_MAX_PRODUCTS } from '@/config/plpOrder'
 import { sortByPlpOrder } from '@/lib/plpOrder'
+import { getPlpOrder } from '@/lib/plpOrderSettings'
 import { DEFAULT_LOCATION, SHIPPING_CONTAINER_CATEGORIES } from '@/lib/constants'
 import { formatProduct, getCustomFieldValue, isContainerHit } from '@/lib/pricing'
 import type { FormattedContainerHit, ProductDetailResponse, ProductHit, ShippingContainerHit } from '@/types/product'
@@ -725,7 +726,7 @@ export async function cachedEsSearch(input: SearchInput) {
     (hit): Record<string, unknown> & { _id?: string } => ({ ...(hit._source as Record<string, unknown>), _id: hit._id }),
   )
   const rawHits = ruleOrder
-    ? sortByPlpOrder(sources, ruleOrder).slice(page * hitsPerPage, (page + 1) * hitsPerPage)
+    ? sortByPlpOrder(sources, ruleOrder, await getPlpOrder()).slice(page * hitsPerPage, (page + 1) * hitsPerPage)
     : sources
 
   const hits = rawHits.map(({ _id, ...source }) =>

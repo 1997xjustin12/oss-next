@@ -7,7 +7,8 @@
  * in `keys` order, by where their value sits in each list. So it orders every
  * depot and every payment type the same way, and a product nobody has heard of
  * still lands in the right place. Changing the order is moving a value in a
- * list.
+ * list: in Admin → Listing Order (stored in Redis, lib/plpOrderSettings.ts),
+ * with this as the default and the fallback.
  *
  * Taken from the live WordPress listing (docs/reference/plp-product-ordering.md,
  * surveyed 2026-10-30) and kept as it is (decided 2026-10-30):
@@ -20,18 +21,50 @@
  * missing a field, fall back to price (lowest first), then title, so the order
  * is the same on every request.
  */
-export const PLP_DEFAULT_ORDER = {
+
+export type PlpOrderKey = 'term' | 'grade' | 'size'
+
+export type PlpOrder = {
+  /** Applied in this order; the first key that differs decides. */
+  keys: readonly PlpOrderKey[]
+  /** `payment_term` values, per payment type (buy has none). */
+  term: { rental: readonly string[]; rto: readonly string[] }
+  /** `condition` + `grade`, as keyed by plpOrderKeys. */
+  grade: readonly string[]
+  /** `length_width` + `height`, as keyed by plpOrderKeys. */
+  size: readonly string[]
+}
+
+export const PLP_DEFAULT_ORDER: PlpOrder = {
   keys: ['term', 'grade', 'size'],
-  /** `payment_term` values, per payment type. */
   term: {
     rental: ['12', '6', '3'],
     rto: ['48', '36', '24', '12'],
   },
-  /** `condition` + `grade`, as keyed by plpOrderKeys. */
   grade: ['used-wwt', 'new-iicl', 'used-iicl', 'used-as-is', 'used-cw'],
-  /** `length_width` + `height`, as keyed by plpOrderKeys. */
   size: ['20-std', '40-std', '40-hc'],
-} as const
+}
+
+/** How each value reads on the admin screen. */
+export const PLP_ORDER_LABELS: Record<string, string> = {
+  term: 'Term',
+  grade: 'Grade',
+  size: 'Size',
+  'used-wwt': 'Used Wind & Water Tight (WWT)',
+  'new-iicl': 'New IICL',
+  'used-iicl': 'Used IICL',
+  'used-as-is': 'Used AS IS',
+  'used-cw': 'Used Cargo Worthy (CW)',
+  '20-std': "20' Standard",
+  '40-std': "40' Standard",
+  '40-hc': "40' High Cube",
+  '3': '3 months',
+  '6': '6 months',
+  '12': '12 months',
+  '24': '24 months',
+  '36': '36 months',
+  '48': '48 months',
+}
 
 /**
  * The most products the rule orders in one list. A depot's whole list is

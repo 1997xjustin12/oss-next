@@ -1,4 +1,4 @@
-import { PLP_DEFAULT_ORDER } from '@/config/plpOrder'
+import { PLP_DEFAULT_ORDER, type PlpOrder } from '@/config/plpOrder'
 
 /**
  * The container listing's Default order: the rule in config/plpOrder.ts,
@@ -76,19 +76,24 @@ function priceOf(product: Product): number {
 
 /**
  * Sort products by the Default rule for this payment type: term, grade, size
- * (config/plpOrder.ts), then price, then title. Returns a new array; stable.
+ * (config/plpOrder.ts, or the admin's, see conformPlpOrder), then price, then
+ * title. Returns a new array; stable.
  */
-export function sortByPlpOrder<T extends Product>(products: readonly T[], paymentType: PlpPaymentType): T[] {
-  const termList: readonly string[] = paymentType === 'buy' ? [] : PLP_DEFAULT_ORDER.term[paymentType]
+export function sortByPlpOrder<T extends Product>(
+  products: readonly T[],
+  paymentType: PlpPaymentType,
+  order: PlpOrder = PLP_DEFAULT_ORDER,
+): T[] {
+  const termList: readonly string[] = paymentType === 'buy' ? [] : order.term[paymentType]
   const lists: Record<keyof PlpOrderKeys, readonly string[]> = {
     term: termList,
-    grade: PLP_DEFAULT_ORDER.grade,
-    size: PLP_DEFAULT_ORDER.size,
+    grade: order.grade,
+    size: order.size,
   }
   const keyed = products.map((product) => ({ product, keys: plpOrderKeys(product) }))
   return keyed
     .sort((a, b) => {
-      for (const key of PLP_DEFAULT_ORDER.keys) {
+      for (const key of order.keys) {
         const diff = rank(lists[key], a.keys[key]) - rank(lists[key], b.keys[key])
         if (diff !== 0) return diff
       }
@@ -97,4 +102,35 @@ export function sortByPlpOrder<T extends Product>(products: readonly T[], paymen
       return String(a.product.title ?? '').localeCompare(String(b.product.title ?? ''))
     })
     .map(({ product }) => product)
+}
+
+/** The same values, in any order, with none missing or repeated. */
+function isReordering(value: unknown, of: readonly string[]): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length === of.length &&
+    value.every((v) => typeof v === 'string' && of.includes(v)) &&
+    new Set(value).size === of.length
+  )
+}
+
+/**
+ * A stored order (Admin → Listing Order), kept only where it is a reordering of
+ * the default: the admin can move values, not add, drop or rename them, so a
+ * bad or outdated record can never lose products from the order. Each list is
+ * checked on its own; one that does not fit falls back to the default's.
+ */
+export function conformPlpOrder(raw: unknown): PlpOrder {
+  const source = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const term = (source.term && typeof source.term === 'object' ? source.term : {}) as Record<string, unknown>
+  const d = PLP_DEFAULT_ORDER
+  return {
+    keys: isReordering(source.keys, d.keys) ? (source.keys as PlpOrder['keys']) : d.keys,
+    term: {
+      rental: isReordering(term.rental, d.term.rental) ? term.rental : d.term.rental,
+      rto: isReordering(term.rto, d.term.rto) ? term.rto : d.term.rto,
+    },
+    grade: isReordering(source.grade, d.grade) ? source.grade : d.grade,
+    size: isReordering(source.size, d.size) ? source.size : d.size,
+  }
 }
