@@ -21,21 +21,22 @@ const FILLED = {
   zip: '30303',
 }
 
-const ACCEPTED = 'https://onsitestorage.com/saved-quotes?zoho=sent'
+// Zoho's thank-you page for this form, as its words, from a real submission on 2026-10-30.
+const THANK_YOU =
+  'Thank you for submitting your response. Your response has been submitted successfully. We will reach out to you soon.'
 
 describe("Zoho's answer", () => {
-  it('a redirect to the returnURL is accepted', () => {
-    assert.equal(zohoAccepted(302, ACCEPTED, ACCEPTED), true)
-    assert.equal(zohoAccepted(301, 'https://OnsiteStorage.com/saved-quotes/?zoho=sent', ACCEPTED), true)
+  it("its thank-you page is an acceptance", () => {
+    assert.equal(zohoAccepted(200, THANK_YOU), true)
   })
 
   it('anything else is a refusal', () => {
-    // Observed 2026-10-30: wrong form keys redirect to the Referer, an empty post to zoho.com.
-    assert.equal(zohoAccepted(302, 'https://onsitestorage.com/', ACCEPTED), false)
-    assert.equal(zohoAccepted(302, 'https://www.zoho.com', ACCEPTED), false)
-    assert.equal(zohoAccepted(302, null, ACCEPTED), false)
-    assert.equal(zohoAccepted(200, ACCEPTED, ACCEPTED), false)
-    assert.equal(zohoAccepted(500, ACCEPTED, ACCEPTED), false)
+    // Observed 2026-10-30: wrong form keys and an empty post are both 302s.
+    assert.equal(zohoAccepted(302, ''), false)
+    // A 200 that says something else (an error page) is not an acceptance.
+    assert.equal(zohoAccepted(200, 'Please enter a valid value for Last Name'), false)
+    assert.equal(zohoAccepted(200, ''), false)
+    assert.equal(zohoAccepted(500, THANK_YOU), false)
   })
 })
 
@@ -52,11 +53,11 @@ describe('the form', () => {
   })
 
   it("posts each field under Zoho's name, trimmed and cut to Zoho's length, with the hidden values", () => {
-    const body = zohoQuoteBody({ ...FILLED, firstName: '  Jane  ', lastName: 'x'.repeat(100) }, ACCEPTED)
+    const body = zohoQuoteBody({ ...FILLED, firstName: '  Jane  ', lastName: 'x'.repeat(100) })
     assert.equal(body.get('First Name'), 'Jane')
     assert.equal(body.get('Last Name'), 'x'.repeat(80))
     assert.equal(body.get('CONTACTCF7'), '30303')
-    assert.equal(body.get('returnURL'), ACCEPTED)
+    assert.equal(body.get('returnURL'), 'null')
     assert.equal(body.get('actionType'), 'Q29udGFjdHM=')
     assert.equal(body.get('aG9uZXlwb3Q'), '')
   })

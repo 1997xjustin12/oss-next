@@ -14,16 +14,14 @@ import type { GuestLead } from '@/lib/guestCapture'
 
 export const ZOHO_QUOTE_FORM = {
   action: 'https://crm.zoho.com/crm/WebToContactForm',
-  /**
-   * Sent as they are: Zoho identifies the form and the record type by them.
-   * `returnURL` is set by the sender (app/api/zoho-quote): where Zoho redirects
-   * is how it tells us the submission was accepted.
-   */
+  /** Sent as they are: Zoho identifies the form and the record type by them. */
   hidden: {
     xnQsjsdp: '3cdebed6dfded11cb5e2868cb69370bb1b380ad9f001cf58579519d1361ca996',
     xmIwtLD: 'f07c8d00119e3fe26f793f0048065cfdcf752fb222d44acf9814cf76f9041489e419b841e83b85476cea1d36748c3961',
     /** "Contacts", base64. */
     actionType: 'Q29udGFjdHM=',
+    /** As in Zoho's embed: Zoho answers with its own thank-you page (see zohoAccepted). */
+    returnURL: 'null',
     zc_gad: '',
     /** Honeypot ("honeypot", base64): must stay empty, or Zoho drops the lead. */
     aG9uZXlwb3Q: '',
@@ -34,11 +32,11 @@ export const ZOHO_QUOTE_FORM = {
 export const ZOHO_HONEYPOT = 'aG9uZXlwb3Q'
 
 /**
- * The body Zoho's form posts: the hidden values, `returnURL`, and each field
- * under Zoho's name, cut to Zoho's length.
+ * The body Zoho's form posts: the hidden values, and each field under Zoho's
+ * name, cut to Zoho's length.
  */
-export function zohoQuoteBody(values: ZohoQuoteValues, returnURL: string): URLSearchParams {
-  const body = new URLSearchParams({ ...ZOHO_QUOTE_FORM.hidden, returnURL })
+export function zohoQuoteBody(values: ZohoQuoteValues): URLSearchParams {
+  const body = new URLSearchParams({ ...ZOHO_QUOTE_FORM.hidden })
   for (const key of Object.keys(ZOHO_QUOTE_FIELDS) as ZohoQuoteField[]) {
     const field = ZOHO_QUOTE_FIELDS[key]
     body.set(field.name, values[key].trim().slice(0, field.maxLength))
@@ -57,22 +55,20 @@ export function pickZohoQuote(input: unknown): ZohoQuoteValues {
 }
 
 /**
- * Whether Zoho accepted a post, from its answer: a redirect to the form's
- * `returnURL` (`acceptedUrl`). A refused post redirects elsewhere (back to the
- * Referer for wrong form keys, to zoho.com for an empty post), and anything
- * that is not a redirect is not an acceptance either.
+ * Whether Zoho accepted a post, from its answer. Observed 2026-10-30 against
+ * this form: an accepted post is HTTP 200 with Zoho's own page, "Thank you for
+ * submitting your response. Your response has been submitted successfully. We
+ * will reach out to you soon." (whatever `returnURL` says); a refused one is a
+ * 302, back to the Referer for wrong form keys or to zoho.com for an empty
+ * post. So it is the success wording that decides, not the status alone: a 200
+ * that says anything else (an error page, say) is not an acceptance.
  */
-export function zohoAccepted(status: number, location: string | null, acceptedUrl: string): boolean {
-  if (status < 300 || status >= 400 || !location) return false
-  const norm = (url: string) => url.trim().replace(/\/+(\?|$)/, '$1').toLowerCase()
-  return norm(location) === norm(acceptedUrl)
+export function zohoAccepted(status: number, pageText: string): boolean {
+  return status === 200 && /submitted successfully/i.test(pageText)
 }
 
 /** The answer from app/api/zoho-quote. */
-export type ZohoQuoteResult =
-  | { ok: true }
-  /** `zoho`: what Zoho answered, for diagnosis (app/api/zoho-quote). */
-  | { ok: false; error: string; zoho?: Record<string, unknown> }
+export type ZohoQuoteResult = { ok: true } | { ok: false; error: string }
 
 /** The form's fields: our key, Zoho's field name, its limit, whether Zoho requires it. */
 export const ZOHO_QUOTE_FIELDS = {
