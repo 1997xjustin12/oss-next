@@ -2,7 +2,7 @@
 // and what a bad record falls back to.
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { conformGbpPage, conformGbpShared, conformGbpTemplate, decodeEntities, hex, mapsEmbedUrl, phoneE164, youtubeId } from '@/lib/gbpValidate'
+import { conformGbpPage, conformGbpShared, conformGbpTemplate, decodeEntities, hex, mapsEmbedUrl, optionalYoutubeId, phoneE164, youtubeId } from '@/lib/gbpValidate'
 import { GBP_PAGES } from '@/lib/data/gbpPages'
 import { GBP_SHARED_DEFAULTS } from '@/lib/data/gbpShared'
 import { GBP_TEMPLATE_DEFAULT } from '@/lib/data/gbpTemplate'
@@ -97,6 +97,13 @@ describe('formatted values', () => {
     assert.equal(youtubeId('https://youtu.be/M8Xidc3_vKY?si=x'), 'M8Xidc3_vKY')
     assert.equal(youtubeId('https://www.youtube.com/watch?v=M8Xidc3_vKY'), 'M8Xidc3_vKY')
     assert.equal(youtubeId('nope'), undefined)
+  })
+  it("a page's FAQ video can be none: '' is kept, not replaced by the seed's", () => {
+    assert.equal(optionalYoutubeId(''), '')
+    assert.equal(optionalYoutubeId('  '), '')
+    assert.equal(optionalYoutubeId('https://youtu.be/M8Xidc3_vKY'), 'M8Xidc3_vKY')
+    assert.equal(optionalYoutubeId('nope'), undefined)
+    assert.equal(conformGbpPage({ youtubeId: '' }, { ...seed, youtubeId: 'M8Xidc3_vKY' }).youtubeId, '')
   })
   it('map embeds only from Google Maps', () => {
     assert.ok(mapsEmbedUrl('https://www.google.com/maps/embed?pb=!1m18'))

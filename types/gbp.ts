@@ -78,7 +78,7 @@ export type GbpPage = {
   faqs: GbpFaq[]
   /** Google Maps embed of the GBP listing, beside the quote form. */
   mapEmbedUrl: string
-  /** The video beside the FAQ. */
+  /** The video beside the FAQ; '' for none (the FAQ then takes the full width). */
   youtubeId: string
   seo: {
     title: string

@@ -23,7 +23,9 @@ export function GbpFaq({ heading, faqs, youtubeId, city, style }: Props) {
       className={`scroll-mt-4 ${GBP_BG_WHITE} ${sectionPadding(style, 'py-10 sm:py-12')}`}
       style={sectionVars(style)}
     >
-      <div className={`${GBP_CONTAINER} grid items-start gap-8 md:grid-cols-2`}>
+      {/* Two columns with a video; without one ('' — Oakland, whose WordPress
+          video was Newark's) the FAQ takes the full width. */}
+      <div className={`${GBP_CONTAINER} grid items-start gap-8 ${youtubeId ? 'md:grid-cols-2' : ''}`}>
         <div>
           <h2 id="gbp-faqs" className={`text-center text-2xl font-bold leading-[1.1] md:text-left md:text-[30px] ${GBP_HEADING}`}>
             <AccentText text={heading} accentClassName={GBP_ACCENT} />
@@ -46,9 +48,11 @@ export function GbpFaq({ heading, faqs, youtubeId, city, style }: Props) {
             ))}
           </div>
         </div>
-        <div className="md:pt-14">
-          <YouTubeEmbed video={{ id: youtubeId, title: `On-Site Storage Solutions in ${city}` }} radiusClassName="rounded-none" />
-        </div>
+        {youtubeId && (
+          <div className="md:pt-14">
+            <YouTubeEmbed video={{ id: youtubeId, title: `On-Site Storage Solutions in ${city}` }} radiusClassName="rounded-none" />
+          </div>
+        )}
       </div>
     </section>
   )

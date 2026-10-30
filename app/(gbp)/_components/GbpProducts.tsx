@@ -39,7 +39,8 @@ export function GbpProducts({ heading, phone, telHref, cards, style }: Props) {
           {cards.map((card, i) => (
             <li
               key={card.title}
-              className="flex flex-col gap-5 rounded-[5px] border border-transparent bg-white p-2.5 text-center shadow-[0_0_10px_rgba(233,25,25,0.5)]
+              // `relative`: the call button's stretched overlay (below) covers the card.
+              className="relative flex flex-col gap-5 rounded-[5px] border border-transparent bg-white p-2.5 text-center shadow-[0_0_10px_rgba(233,25,25,0.5)]
                          dark:border-red-950 dark:bg-neutral-900"
             >
               <div className="p-2.5">
@@ -67,12 +68,18 @@ export function GbpProducts({ heading, phone, telHref, cards, style }: Props) {
                 ))}
               </ul>
               {/* Pinned to the card's bottom (mt-auto), so the three buttons line up
-                  whatever each card's title and list need. WordPress doesn't do this. */}
+                  whatever each card's title and list need. WordPress doesn't do this.
+
+                  The whole card is the link (decided 2026-10-30): the button's
+                  `after:` overlay is stretched over the card (the li is
+                  `relative`), so a tap anywhere on it calls, while the markup
+                  and look stay as they were and the card is still one link for
+                  keyboards and screen readers. */}
               <div className="mt-auto flex justify-center">
                 <GbpCallButton
                   phone={phone}
                   telHref={telHref}
-                  className="px-[30px]! py-[15px]! text-base leading-[30px]! md:text-xl"
+                  className="px-[30px]! py-[15px]! text-base leading-[30px]! md:text-xl after:absolute after:inset-0 after:rounded-[5px] after:content-['']"
                 />
               </div>
             </li>

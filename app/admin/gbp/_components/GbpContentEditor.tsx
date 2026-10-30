@@ -51,7 +51,7 @@ const HINTS: FieldHints = {
   faqs: { label: 'FAQs', itemLabel: 'FAQ', newItem: { question: '', answer: '' } },
   'faqs.*.answer': { multiline: true },
   mapEmbedUrl: { label: 'Google Maps embed URL', help: 'Google Maps → the listing → Share → Embed a map → the src="…" URL.' },
-  youtubeId: { label: 'YouTube video', help: 'The video id, or paste the YouTube link.' },
+  youtubeId: { label: 'YouTube video', help: 'The video id, or paste the YouTube link. Leave empty for no video.' },
 }
 
 type Props = {

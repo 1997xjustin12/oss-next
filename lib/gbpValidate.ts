@@ -108,6 +108,14 @@ export const youtubeId: V<string> = (r) => {
   return /^[\w-]{11}$/.test(id) ? id : undefined
 }
 
+/**
+ * A location page's FAQ video: a YouTube id as above, or '' for none (the FAQ
+ * then takes the section's full width). Empty must be a value of its own here:
+ * otherwise clearing the field failed validation and the page fell back to the
+ * seed's video. (Oakland, 2026-10-30: its video was Newark's.)
+ */
+export const optionalYoutubeId: V<string> = (r) => (typeof r === 'string' && r.trim() === '' ? '' : youtubeId(r))
+
 /** `+1XXXXXXXXXX` from any North American number as typed. */
 export const phoneE164: V<string> = (r) => {
   if (typeof r !== 'string') return undefined
@@ -185,7 +193,7 @@ const PAGE_FIELDS: { [K in keyof GbpPage]-?: V<GbpPage[K]> } = {
   blogCards: list(blogCard),
   faqs: list(faq),
   mapEmbedUrl: mapsEmbedUrl,
-  youtubeId,
+  youtubeId: optionalYoutubeId,
   seo: shape({
     title: text,
     description: text,

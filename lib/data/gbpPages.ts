@@ -1230,7 +1230,8 @@ export const GBP_PAGES: readonly GbpPage[] = [
       },
     ],
     mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1576.138567630266!2d-122.2665473709754!3d37.80701682215176!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808f81411cf6654f%3A0xd2aea1ccf39de645!2sOn-Site%20Storage%20Solutions%2C%20Inc.!5e0!3m2!1sen!2sph!4v1776823090343!5m2!1sen!2sph',
-    youtubeId: 'gGKJ1k--0Wc',
+    // No video (2026-10-30): WordPress's was Newark's (gGKJ1k--0Wc).
+    youtubeId: '',
     seo: {
       title: 'Shipping Container Oakland, CA | Top Quality & Lowest Prices',
       description: 'Get a quality shipping container in Oakland, CA. Quick delivery, lowest price guarantee, and easy rent-to-own. Call us now for a free quote!',
