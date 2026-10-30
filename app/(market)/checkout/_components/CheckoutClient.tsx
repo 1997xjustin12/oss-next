@@ -361,8 +361,8 @@ function OrderComplete({
         <p className="mt-2 text-base font-bold text-theme-dark dark:text-neutral-100">Order #{orderNumber}</p>
       )}
       <p className="mt-2 max-w-sm text-sm text-theme-muted dark:text-neutral-400">
-        Your payment went through and your order has been recorded. We&apos;ve sent a confirmation
-        email with your order details
+        We&apos;ve received your order. Our team will contact you to arrange payment and delivery.
+        We&apos;ve sent a confirmation email with your order details
         {email ? (
           <>
             {' '}to <strong className="font-semibold text-theme-dark dark:text-neutral-200">{email}</strong>
@@ -968,9 +968,10 @@ export function CheckoutClient() {
         return;
       }
 
-      // Recorded, but the backend sent no link. The order is real, so confirm
-      // it rather than failing — the server has already logged the missing
-      // field loudly.
+      // Recorded, and no link to follow: the usual case while the payment page
+      // is off on this domain (Admin → Checkout, lib/paymentRedirect.ts), when
+      // the team takes payment instead; or the backend sent none, which the
+      // server has logged loudly. The order is real either way, so confirm it.
       //
       // This branch DOES clear the cart, unlike the redirect above. Nobody is
       // being sent anywhere to pay: the confirmation screen is the end of the
@@ -1568,7 +1569,10 @@ export function CheckoutClient() {
                 <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-xs text-theme-muted dark:text-neutral-400">
                   <Lock className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   <span>
-                    Once your order is placed, you will be redirected to our secure payment page to complete your purchase.
+                    {/* True whether or not this domain goes on to the payment page
+                        (Admin → Checkout): the page is prerendered, so it cannot ask. */}
+                    Placing your order doesn&apos;t charge your card. We&apos;ll email your order confirmation
+                    with the next steps for payment.
                   </span>
                 </p>
               )}

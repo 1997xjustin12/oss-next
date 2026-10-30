@@ -5,8 +5,8 @@ import type { CartItem } from '@/types/cart'
 /**
  * Temporary (2026-10-30): /cart is not shown. Everyone who opens it, signed in
  * or not, is sent to the delivery-quote form for their cart, the way a guest's
- * Checkout button already goes (deliveryQuoteDestination), while online
- * checkout is closed (Admin → Checkout). Set to false to bring the cart back.
+ * Checkout button already goes (deliveryQuoteDestination). Separate from
+ * Admin → Checkout (lib/paymentRedirect.ts). Set to false to bring the cart back.
  * CART_PAGE_OPEN=1 keeps the cart on one server (the e2e one): app/(market)/cart/page.tsx.
  */
 export const CART_PAGE_GOES_TO_QUOTE = true

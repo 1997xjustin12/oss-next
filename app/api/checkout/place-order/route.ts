@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BackendRefusedError, RateLimitedError } from '@/lib/backendError'
+import { isPaymentRedirectOn, paymentLinkToSend } from '@/lib/paymentRedirect'
 import { isRecaptchaConfigured, verifyRecaptcha } from '@/lib/recaptcha'
 import { ShippingRefusedError } from '@/lib/shippingQuote'
 import { checkoutOrder, getOrderTotal } from '@/services/order.service'
@@ -24,7 +25,10 @@ import type { PlaceOrderRequest, PlaceOrderResponse } from '@/types/order'
  *   2. the order is recorded with `status: 'unpaid'` and
  *      `payment_method: 'card'`, carrying no payment details, because none
  *      have been taken;
- *   3. the backend returns a payment link, which the browser redirects to.
+ *   3. the backend returns a payment link, which the browser redirects to,
+ *      but only on a domain where Admin → Checkout has the payment page on
+ *      (lib/paymentRedirect.ts). Everywhere else the link is left out of the
+ *      answer and the customer sees "Order placed"; the team takes payment.
  *
  * No money moves here any more, which removes the failure this route was
  * built around: there is no charge left to strand when recording fails, and
@@ -213,7 +217,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return reply(200, { ok: true, orderNumber: orderNumberFrom(created), paymentUrl })
+    // The Host header, not nextUrl.hostname: under `next start` that is the
+    // server's own name whatever the visitor asked for. Decided here, not in
+    // the browser, so the link is never sent where it should not be followed.
+    const redirectOn = await isPaymentRedirectOn(request.headers.get('host') ?? '')
+    if (paymentUrl && !redirectOn) {
+      console.info('[/api/checkout/place-order] payment page off on this domain: confirming without the link')
+    }
+
+    return reply(200, { ok: true, orderNumber: orderNumberFrom(created), paymentUrl: paymentLinkToSend(paymentUrl, redirectOn) })
   } catch (err) {
     const limited = rateLimited(err, 'order')
     if (limited) return limited

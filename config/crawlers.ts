@@ -40,8 +40,6 @@ export const DISALLOWED_PATHS: readonly string[] = [
   '/my-account',
   '/cart',
   '/checkout',
-  // Not under /checkout/: the prefix match needs the slash.
-  '/checkout-unavailable',
   '/wishlist',
   // Every URL under here is one guest's private link.
   '/order-status',

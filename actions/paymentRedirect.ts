@@ -3,31 +3,31 @@
 import { notFound, redirect } from 'next/navigation';
 import { ADMIN_ROUTES } from '@/config/admin';
 import { hasAdminAccess } from '@/lib/adminGuard';
-import { normalizeHost, setCheckoutOpen } from '@/lib/checkoutGate';
+import { normalizeHost, setPaymentRedirect } from '@/lib/paymentRedirect';
 
 /**
- * Admin → Checkout: open or close checkout on one domain.
+ * Admin → Checkout: turn the payment-page redirect on or off for one domain.
  *
  * Re-checks admin access for itself: a Server Action is its own endpoint, and
  * the layout gate does not cover its POST target. Same reasoning as
  * `setProductPanelVersionAction` (actions/productPanel.ts).
  *
- * `open` is compared against the literal `'open'`, so any other value, a
- * missing one included, closes: closing is the safe direction for this switch.
+ * `on` is compared against the literal `'on'`, so any other value, a missing
+ * one included, turns it off: off is the safe direction for this switch.
  */
-export async function setCheckoutOpenAction(formData: FormData): Promise<void> {
+export async function setPaymentRedirectAction(formData: FormData): Promise<void> {
   if (!(await hasAdminAccess())) notFound();
 
   const host = normalizeHost(String(formData.get('host') ?? ''));
-  const open = String(formData.get('open') ?? '') === 'open';
+  const on = String(formData.get('on') ?? '') === 'on';
   if (!host) redirect(`${ADMIN_ROUTES.CHECKOUT}?error=host`);
 
   try {
-    await setCheckoutOpen(host, open);
+    await setPaymentRedirect(host, on);
   } catch (err) {
-    console.error('[checkout-gate] save failed:', err);
+    console.error('[payment-redirect] save failed:', err);
     redirect(`${ADMIN_ROUTES.CHECKOUT}?error=save`);
   }
 
-  redirect(`${ADMIN_ROUTES.CHECKOUT}?saved=${encodeURIComponent(host)}&open=${open ? '1' : '0'}`);
+  redirect(`${ADMIN_ROUTES.CHECKOUT}?saved=${encodeURIComponent(host)}&on=${on ? '1' : '0'}`);
 }

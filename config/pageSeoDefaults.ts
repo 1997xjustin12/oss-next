@@ -130,21 +130,6 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     },
   },
 
-  [ROUTES.CHECKOUT_UNAVAILABLE]: {
-    title: "Checkout Isn't Open Yet",
-    description:
-      'Online ordering is switched off for now. Your cart is saved, and our team can place your shipping container order over the phone.',
-    canonical: ROUTES.CHECKOUT_UNAVAILABLE,
-    robots: { index: false, follow: false },
-    openGraph: {
-      title: "Checkout Isn't Open Yet | On-Site Storage Solutions",
-      description: 'Your cart is saved. Call us and our team will place your order over the phone.',
-      type: 'website',
-      url: 'https://onsitestorage.com/checkout-unavailable',
-      images: [ACCOUNT_OG_IMAGE],
-    },
-  },
-
   [ROUTES.SAVED_QUOTES]: {
     title: 'Saved Quotes',
     description:

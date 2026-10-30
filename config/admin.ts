@@ -109,7 +109,7 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     href: ADMIN_ROUTES.CHECKOUT,
     label: 'Checkout',
     icon: 'ShoppingBag',
-    hint: 'Open or closed, per domain',
+    hint: 'Payment page after ordering, per domain',
   },
 ];
 
