@@ -6,10 +6,9 @@ import { ArrowLeft, Loader2, Phone, X } from 'lucide-react'
 import { useZohoQuoteForm } from '@/hooks/useZohoQuoteForm'
 import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { PlpLink } from '@/components/shared/PlpLink'
-import { ZohoQuotePost } from '@/components/shared/ZohoQuotePost'
 import { ROUTES } from '@/config/routes'
 import { CONTACT_NUMBER } from '@/lib/helpers'
-import { ZOHO_QUOTE_FORM, zohoQuoteToLead } from '@/lib/zohoQuoteForm'
+import { ZOHO_HONEYPOT, zohoQuoteToLead } from '@/lib/zohoQuoteForm'
 import type { GuestLead } from '@/lib/guestCapture'
 
 /**
@@ -19,8 +18,10 @@ import type { GuestLead } from '@/lib/guestCapture'
  * Two views on one track:
  *
  *   1. **Details** — the Zoho "Save Quote Form" (lib/zohoQuoteForm.ts). One
- *      action: Get Quote, which posts the details to Zoho CRM (where the lead
- *      is kept; this app stores none) and saves the quote in this browser.
+ *      action: Get Quote, which sends the details to Zoho CRM (where the lead
+ *      is kept; this app stores none) and, once Zoho has accepted them, saves
+ *      the quote in this browser. If Zoho refuses or does not answer, the step
+ *      stays, with the reason, and nothing is saved.
  *   2. **Quote** — the priced selection, and confirmation that the quotation
  *      is coming by email. One state: there is nothing left to press.
  *
@@ -190,12 +191,13 @@ export function GuestLeadModal({
 
 
   /**
-   * The checks and saving are the form's (useZohoQuoteForm). When they pass,
-   * the event is left alone so the browser posts the form to Zoho, in the
-   * hidden frame, while this slides to the quote and the caller files it.
+   * The checks, the send to Zoho and the saving are the form's
+   * (useZohoQuoteForm). Only once Zoho has accepted the details does this
+   * slide to the quote and the caller file it; a refusal stays on this step
+   * with the reason shown, and nothing is saved.
    */
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    const submitted = form.handleSubmit(event)
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const submitted = await form.handleSubmit(event)
     if (!submitted) return
     onSubmit(zohoQuoteToLead(submitted))
     setStep('quote')
@@ -268,16 +270,17 @@ export function GuestLeadModal({
                 </span>
               </div>
 
-              <form
-                action={ZOHO_QUOTE_FORM.action}
-                method="POST"
-                acceptCharset="UTF-8"
-                target={form.frameName}
-                onSubmit={handleSubmit}
-                className="mt-6"
-                noValidate
-              >
-                <ZohoQuotePost frameName={form.frameName} />
+              <form onSubmit={handleSubmit} className="mt-6" noValidate aria-busy={form.sending}>
+                {/* Zoho's honeypot: off screen and out of the tab order, so only
+                    a bot fills it; the server then sends nothing. */}
+                <input
+                  type="text"
+                  name={ZOHO_HONEYPOT}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden
+                  className="sr-only"
+                />
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
@@ -406,8 +409,19 @@ export function GuestLeadModal({
                   </p>
                 )}
 
-                <button type="submit" className={`${PRIMARY_BUTTON} mt-5 h-12 w-full text-base`}>
-                  Get Quote
+                <button
+                  type="submit"
+                  disabled={form.sending}
+                  className={`${PRIMARY_BUTTON} mt-5 h-12 w-full gap-2 text-base disabled:cursor-wait disabled:opacity-70`}
+                >
+                  {form.sending ? (
+                    <>
+                      <Loader2 aria-hidden className="h-5 w-5 animate-spin" />
+                      Sending…
+                    </>
+                  ) : (
+                    'Get Quote'
+                  )}
                 </button>
 
                 {/* Both ways out, side by side and the same weight: leaving
@@ -448,9 +462,12 @@ export function GuestLeadModal({
               {/* One state since 2026-09-23. Get Quote files the quote, so by
                   the time this step is on screen the quotation is already on
                   its way and there is nothing conditional left to say. */}
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
-                Thank you for providing your information. We will send your final
-                quotation to your email address within 24 hours.
+              {/* Only reached once Zoho has accepted the details, so this can say so. */}
+              <p role="status" className="mt-2 max-w-xl text-sm leading-relaxed text-theme-muted">
+                <span className="font-semibold text-theme-dark dark:text-white">
+                  Thank you, your details have been sent.
+                </span>{' '}
+                We will send your final quotation to your email address within 24 hours.
               </p>
 
               <div className="mt-5 overflow-hidden rounded-md border border-theme-border dark:border-neutral-800">

@@ -19,10 +19,11 @@ import {
  *   B. product page → Save Quote → details given → cart → straight to checkout
  *
  * Submitting the quote form in A records a lead in Admin → Quote Requests, so
- * that final step only runs with E2E_ALLOW_LEADS=1. B's modal posts to Zoho
- * CRM, which would create a real Contact: the test answers that request itself
- * (and checks what was sent), so B has no side effect and always runs to the
- * checkout page — which is never submitted: no test here presses Place Order.
+ * that final step only runs with E2E_ALLOW_LEADS=1. B's modal sends to Zoho
+ * CRM (through /api/zoho-quote), which would create a real Contact: the test
+ * answers that request itself (and checks what was sent), so B has no side
+ * effect and always runs to the checkout page — which is never submitted: no
+ * test here presses Place Order.
  */
 
 const ZIP = '30303' // Atlanta: a depot with real stock
@@ -92,11 +93,22 @@ test.describe('guest', () => {
     })
 
     await test.step('Save Quote → give details → see the quote', async () => {
-      // Answered here, never sent: a real post creates a Contact in Zoho CRM.
-      const zohoPosts: string[] = []
-      await page.route('https://crm.zoho.com/**', (route) => {
-        zohoPosts.push(route.request().postData() ?? '')
-        return route.fulfill({ status: 200, contentType: 'text/html', body: '<p>e2e stub</p>' })
+      // Our sender (/api/zoho-quote) is answered here, so nothing reaches Zoho:
+      // a real post creates a Contact in Zoho CRM. The first answer is a
+      // refusal, the second an acceptance.
+      const zohoPosts: Record<string, string>[] = []
+      let refuseNext = true
+      await page.route('**/api/zoho-quote', (route) => {
+        zohoPosts.push(route.request().postDataJSON() as Record<string, string>)
+        const refuse = refuseNext
+        refuseNext = false
+        // 200 even for the refusal: the journey guard fails any 4xx/5xx. The
+        // form reads `ok`, so `{ ok: false }` is refused whatever the status.
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(refuse ? { ok: false, error: 'Zoho refused it (e2e).' } : { ok: true }),
+        })
       })
 
       await page.getByRole('button', { name: /Save Quote/ }).first().click()
@@ -111,33 +123,53 @@ test.describe('guest', () => {
       await expect(modal.locator('#guest-zip')).toHaveValue(ZIP)
       await expect(modal.locator('#guest-city')).toHaveValue('Atlanta')
       await expect(modal.locator('#guest-state')).toHaveValue('GA')
-      // A different ZIP is a different place: City and State follow it.
-      await modal.locator('#guest-zip').fill('90210')
-      await expect(modal.locator('#guest-city')).toHaveValue('Beverly Hills')
-      await expect(modal.locator('#guest-state')).toHaveValue('CA')
+      // A different ZIP is a different place: City and State follow it. Near
+      // enough to Atlanta to be priced (it re-prices delivery behind the modal).
+      await modal.locator('#guest-zip').fill('30030')
+      await expect(modal.locator('#guest-city')).toHaveValue('Decatur')
+      await expect(modal.locator('#guest-state')).toHaveValue('GA')
       await modal.locator('#guest-zip').fill(ZIP)
       await expect(modal.locator('#guest-city')).toHaveValue('Atlanta')
+      const detailsInert = modal.locator('[inert]').filter({ has: page.locator('#guest-first-name') })
+      const stored = () =>
+        page.evaluate(() => ({
+          form: localStorage.getItem('oss-quote-form'),
+          quotes: JSON.parse(localStorage.getItem('oss-saved-quotes') ?? '[]').length as number,
+        }))
+      const before = await stored()
+
+      // Refused: the reason shows, the step stays, and nothing is saved.
       await modal.getByRole('button', { name: 'Get Quote' }).click()
-      // Both steps stay in the page — the details panel is only slid aside and
-      // made inert, so typed details survive a step back. Moving on means that
-      // panel has gone inert, not that its fields disappeared.
-      await expect(modal.locator('[inert]').filter({ has: page.locator('#guest-first-name') })).toHaveCount(1)
+      await expect(modal.getByRole('alert')).toHaveText('Zoho refused it (e2e).')
+      await expect(detailsInert).toHaveCount(0)
+      expect(await stored()).toEqual(before)
+
+      // Accepted: on to the quote. Both steps stay in the page — the details
+      // panel is only slid aside and made inert, so typed details survive a
+      // step back. Moving on means that panel has gone inert, not that its
+      // fields disappeared.
+      await modal.getByRole('button', { name: 'Get Quote' }).click()
+      await expect(detailsInert).toHaveCount(1)
+      await expect(modal.getByRole('status')).toContainText('your details have been sent')
       await expectPricesFormatted(page, modal)
 
-      // Posted once, with Zoho's field names, while the page stayed put.
-      await expect.poll(() => zohoPosts.length).toBe(1)
-      const sent = new URLSearchParams(zohoPosts[0])
-      expect(sent.get('First Name')).toBe(LEAD.first)
-      expect(sent.get('Last Name')).toBe(LEAD.last)
-      expect(sent.get('Email')).toBe(LEAD.email)
-      expect(sent.get('CONTACTCF7')).toBe(ZIP)
-      expect(sent.get('CONTACTCF3')).toBe('Atlanta')
-      expect(sent.get('aG9uZXlwb3Q')).toBe('')
+      // Sent with every field, and the honeypot empty, while the page stayed put.
+      expect(zohoPosts).toHaveLength(2)
+      expect(zohoPosts[1]).toMatchObject({
+        firstName: LEAD.first,
+        lastName: LEAD.last,
+        email: LEAD.email,
+        zip: ZIP,
+        city: 'Atlanta',
+        state: 'GA',
+        aG9uZXlwb3Q: '',
+      })
       expect(page.url()).toContain('/product/')
 
-      // Kept in this browser for the next copy of the form.
-      const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('oss-quote-form') ?? 'null'))
-      expect(saved).toMatchObject({ firstName: LEAD.first, email: LEAD.email, zip: ZIP, city: 'Atlanta' })
+      // Kept in this browser for the next copy of the form, with the quote.
+      const after = await stored()
+      expect(JSON.parse(after.form ?? 'null')).toMatchObject({ firstName: LEAD.first, email: LEAD.email, zip: ZIP, city: 'Atlanta' })
+      expect(after.quotes).toBe(before.quotes + 1)
 
       await page.keyboard.press('Escape')
       await expect(modal).toBeHidden()

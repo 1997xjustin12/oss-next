@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useZipPlace } from '@/hooks/useZipPlace'
 import { getGuestLead, setGuestLead } from '@/lib/guestCapture'
+import { CONTACT_NUMBER } from '@/lib/helpers'
 import { completeZip } from '@/lib/shippingQuote'
 import { readVisitorZip } from '@/lib/visitorZip'
 import {
   EMPTY_ZOHO_QUOTE,
+  ZOHO_HONEYPOT,
   ZOHO_QUOTE_FIELDS,
   initialZohoQuote,
   trimmed,
@@ -14,8 +16,12 @@ import {
   writeZohoQuote,
   zohoQuoteToLead,
   type ZohoQuoteField,
+  type ZohoQuoteResult,
   type ZohoQuoteValues,
 } from '@/lib/zohoQuoteForm'
+
+/** When the send fails with no message from the server (offline, timed out). */
+const SEND_FAILED = `We couldn't send your details just now. Please check your connection and try again, or call us at ${CONTACT_NUMBER}.`
 
 type Options = {
   /**
@@ -37,9 +43,10 @@ type Options = {
  *    site already knows: the guest lead, the visitor's ZIP);
  *  - fills City and State from the ZIP, once a complete one is typed
  *    (zippopotam, via useZipPlace);
- *  - on submit, checks the fields Zoho requires, saves the details to this
- *    browser (and the site-wide guest lead), then lets the browser post the
- *    form to Zoho in a hidden frame, so the visitor stays on the page.
+ *  - on submit, checks the fields Zoho requires and sends them to Zoho
+ *    (app/api/zoho-quote, which reads Zoho's answer); only once Zoho has
+ *    accepted them are they saved to this browser (and the site-wide guest
+ *    lead). A refusal or no answer is an error on the form, and nothing moves on.
  *
  * Reads the browser's storage on first render, so it belongs in a component
  * rendered in the browser only (behind an `open` flag, or `ssr: false`).
@@ -49,10 +56,7 @@ export function useZohoQuoteForm({ active = true, onZipResolved }: Options = {})
     typeof window === 'undefined' ? EMPTY_ZOHO_QUOTE : initialZohoQuote(getGuestLead(), readVisitorZip().postcode || ''),
   )
   const [error, setError] = useState<string | null>(null)
-
-  // The frame Zoho's response loads into. Named per form, so two copies on one
-  // page never post into each other's frame.
-  const frameName = `zoho-quote-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
+  const [sending, setSending] = useState(false)
 
   // City and State from the ZIP, through zippopotam: free and unmetered, the
   // same lookup checkout and the delivery-quote form use (useZipPlace). It
@@ -106,24 +110,41 @@ export function useZohoQuoteForm({ active = true, onZipResolved }: Options = {})
   }
 
   /**
-   * The form's onSubmit. Returns the submitted values when the browser may go
-   * on posting to Zoho, or null when it was stopped (the error is set).
+   * The form's onSubmit: checks the fields, sends them to Zoho through
+   * app/api/zoho-quote, and resolves to the submitted values once Zoho has
+   * accepted them, or to null (the error is set, and nothing is saved). Only
+   * then is anything saved here, so a failed send leaves no trace.
    */
-  function handleSubmit(event: FormEvent<HTMLFormElement>): ZohoQuoteValues | null {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<ZohoQuoteValues | null> {
+    event.preventDefault()
+    if (sending) return null
     const problem = validateZohoQuote(values)
     if (problem) {
-      event.preventDefault()
       setError(problem)
       return null
     }
     setError(null)
+    setSending(true)
     const clean = trimmed(values)
-    // The browser posts what the inputs hold at this moment, so the trimmed
-    // values go into them now, not on the next render.
-    const elements = event.currentTarget.elements
-    for (const field of Object.keys(clean) as ZohoQuoteField[]) {
-      const input = elements.namedItem(ZOHO_QUOTE_FIELDS[field].name)
-      if (input instanceof HTMLInputElement) input.value = clean[field]
+    const honeypot = event.currentTarget.elements.namedItem(ZOHO_HONEYPOT)
+    try {
+      const res = await fetch('/api/zoho-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...clean, [ZOHO_HONEYPOT]: honeypot instanceof HTMLInputElement ? honeypot.value : '' }),
+        signal: AbortSignal.timeout(25_000),
+      })
+      const result = (await res.json().catch(() => null)) as ZohoQuoteResult | null
+      if (!res.ok || !result?.ok) {
+        setError(result && !result.ok ? result.error : SEND_FAILED)
+        return null
+      }
+    } catch {
+      // Offline, or no answer in time.
+      setError(SEND_FAILED)
+      return null
+    } finally {
+      setSending(false)
     }
     setValues(clean)
     writeZohoQuote(clean)
@@ -141,5 +162,5 @@ export function useZohoQuoteForm({ active = true, onZipResolved }: Options = {})
     }
   }
 
-  return { values, setField, fieldProps, error, zipLooking, frameName, handleSubmit, fillBlanks }
+  return { values, setField, fieldProps, error, zipLooking, sending, handleSubmit, fillBlanks }
 }
