@@ -83,7 +83,7 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
   {
     tag: CACHE_TAGS.GBP,
     label: 'GBP Location Pages',
-    description: 'The published content, shared content and template of the GBP location pages. Publishing in the GBP screens already refreshes them.',
+    description: 'The published content, shared content and template of all the GBP location pages. Publishing in the GBP screens already refreshes them; to refresh one location only, use "Purge this page" on its screen in GBP Pages.',
     lifetime: 'hours — refreshed hourly, kept a day',
   },
   {

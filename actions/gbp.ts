@@ -109,6 +109,19 @@ export async function publishGbpLocationAction(slug: string): Promise<GbpActionR
   return ok()
 }
 
+/**
+ * Refresh one location's cached page now, without publishing anything: its
+ * own cache tag only, so the other locations keep theirs (Admin → Cache's
+ * "GBP Location Pages" clears all of them). For when the page shows something
+ * stale; publishing already does this for what it publishes.
+ */
+export async function purgeGbpLocationCacheAction(slug: string): Promise<GbpActionResult> {
+  await admin()
+  if (!(await readGbpPageState(slug))) notFound()
+  updateTag(gbpTag('page', slug))
+  return ok()
+}
+
 export async function discardGbpLocationAction(slug: string): Promise<GbpActionResult> {
   await admin()
   await Promise.all([discardGbpDraft('page', slug), discardGbpSeoDraft(slug)])

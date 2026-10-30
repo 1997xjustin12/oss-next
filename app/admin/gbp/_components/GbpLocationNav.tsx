@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { ADMIN_ROUTES } from '@/config/admin'
+import { PurgeLocationButton } from './PurgeLocationButton'
 
 type Props = { slug: string; label: string; current: 'content' | 'seo'; live: boolean }
 
@@ -24,9 +25,13 @@ export function GbpLocationNav({ slug, label, current, live }: Props) {
         GBP Pages
       </Link>
       <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">{label}</h1>
-      <p className="mt-1 text-sm text-theme-muted dark:text-neutral-400">
-        /{slug} · {live ? 'Live (this app)' : 'Not live yet: still served by WordPress'}
-      </p>
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-theme-muted dark:text-neutral-400">
+          /{slug} · {live ? 'Live (this app)' : 'Not live yet: still served by WordPress'}
+        </p>
+        {/* Only where the page is served by this app: a WordPress page has no cache here. */}
+        {live && <PurgeLocationButton slug={slug} />}
+      </div>
       <nav aria-label="Location screens" className="mt-3 flex gap-2">
         {tab('content', 'Content', ADMIN_ROUTES.GBP_CONTENT(slug))}
         {tab('seo', 'SEO, schema & scripts', ADMIN_ROUTES.GBP_SEO(slug))}
