@@ -69,7 +69,10 @@ export function zohoAccepted(status: number, location: string | null, acceptedUr
 }
 
 /** The answer from app/api/zoho-quote. */
-export type ZohoQuoteResult = { ok: true } | { ok: false; error: string }
+export type ZohoQuoteResult =
+  | { ok: true }
+  /** `zoho`: what Zoho answered, for diagnosis (app/api/zoho-quote). */
+  | { ok: false; error: string; zoho?: Record<string, unknown> }
 
 /** The form's fields: our key, Zoho's field name, its limit, whether Zoho requires it. */
 export const ZOHO_QUOTE_FIELDS = {

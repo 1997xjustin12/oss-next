@@ -33,7 +33,12 @@ import {
  *   200 { ok: true }
  *   400 { ok: false, error }   a required field missing (the form checks first)
  *   429 { ok: false, error }   more than 5 a minute from one visitor (`quote` bucket)
- *   502 { ok: false, error }   Zoho refused it, or did not answer
+ *   200 { ok: false, error, zoho }   Zoho refused it, or did not answer. Not a 5xx:
+ *                              Cloudflare (in front of the site) replaces a 5xx from
+ *                              here with its own error page, and the form then
+ *                              cannot read the reason. `zoho` is what Zoho answered
+ *                              (status, redirect, the start of its page), while the
+ *                              success check is being confirmed against real posts.
  */
 
 /**
@@ -100,9 +105,10 @@ export async function POST(request: Request) {
 
     const body = res.status < 300 ? (await res.text()).replace(/\s+/g, ' ').slice(0, 500) : ''
     console.error('[zoho-quote] not accepted', { status: res.status, location, ms, body })
-    return answer({ ok: false, error: SEND_FAILED }, 502)
+    return answer({ ok: false, error: SEND_FAILED, zoho: { status: res.status, location, ms, body } })
   } catch (error) {
-    console.error('[zoho-quote] no answer from Zoho', { ms: Date.now() - started, error })
-    return answer({ ok: false, error: SEND_FAILED }, 502)
+    const ms = Date.now() - started
+    console.error('[zoho-quote] no answer from Zoho', { ms, error })
+    return answer({ ok: false, error: SEND_FAILED, zoho: { ms, error: String(error).slice(0, 200) } })
   }
 }
