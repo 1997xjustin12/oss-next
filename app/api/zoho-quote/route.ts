@@ -36,6 +36,15 @@ import {
  *   502 { ok: false, error }   Zoho refused it, or did not answer
  */
 
+/**
+ * Room for Zoho to answer. A valid post creates the Contact (and runs any Zoho
+ * workflows) before Zoho replies, which can take far longer than a refusal
+ * (about 1s); cut off by the platform's default limit, the visitor saw an error
+ * for a submission Zoho had in fact taken (2026-10-30).
+ */
+export const maxDuration = 30
+const ZOHO_TIMEOUT_MS = 20_000
+
 /** Where Zoho sends an accepted submission. Never followed: only compared. */
 const ACCEPTED_URL = `${SITE_URL}${ROUTES.SAVED_QUOTES}?zoho=sent`
 
@@ -62,6 +71,7 @@ export async function POST(request: Request) {
   if (problem) return answer({ ok: false, error: problem }, 400)
 
   const ip = await clientIp(request)
+  const started = Date.now()
   try {
     const res = await fetch(ZOHO_QUOTE_FORM.action, {
       method: 'POST',
@@ -77,16 +87,22 @@ export async function POST(request: Request) {
       },
       redirect: 'manual',
       cache: 'no-store',
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(ZOHO_TIMEOUT_MS),
     })
     const location = res.headers.get('location') ?? ''
-    if (zohoAccepted(res.status, location, ACCEPTED_URL)) return answer({ ok: true })
+    const ms = Date.now() - started
+    // Every answer, accepted or not: what Zoho said and how long it took is the
+    // first thing to look at when a submission goes wrong.
+    if (zohoAccepted(res.status, location, ACCEPTED_URL)) {
+      console.info('[zoho-quote] accepted', { status: res.status, ms })
+      return answer({ ok: true })
+    }
 
-    const body = res.status < 300 ? (await res.text()).replace(/\s+/g, ' ').slice(0, 300) : ''
-    console.error('[zoho-quote] not accepted', { status: res.status, location, body })
+    const body = res.status < 300 ? (await res.text()).replace(/\s+/g, ' ').slice(0, 500) : ''
+    console.error('[zoho-quote] not accepted', { status: res.status, location, ms, body })
     return answer({ ok: false, error: SEND_FAILED }, 502)
   } catch (error) {
-    console.error('[zoho-quote] no answer from Zoho', error)
+    console.error('[zoho-quote] no answer from Zoho', { ms: Date.now() - started, error })
     return answer({ ok: false, error: SEND_FAILED }, 502)
   }
 }

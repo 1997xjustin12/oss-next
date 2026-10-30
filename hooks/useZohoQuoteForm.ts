@@ -20,6 +20,15 @@ import {
   type ZohoQuoteValues,
 } from '@/lib/zohoQuoteForm'
 
+function parseResult(text: string): ZohoQuoteResult | null {
+  try {
+    const value = JSON.parse(text) as ZohoQuoteResult
+    return value && typeof value === 'object' && typeof value.ok === 'boolean' ? value : null
+  } catch {
+    return null
+  }
+}
+
 /** When the send fails with no message from the server (offline, timed out). */
 const SEND_FAILED = `We couldn't send your details just now. Please check your connection and try again, or call us at ${CONTACT_NUMBER}.`
 
@@ -149,15 +158,20 @@ export function useZohoQuoteForm({ active = true, onZipResolved, prefer }: Optio
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...clean, [ZOHO_HONEYPOT]: honeypot instanceof HTMLInputElement ? honeypot.value : '' }),
-        signal: AbortSignal.timeout(25_000),
+        // Longer than the server's own limit (30s), so its answer always arrives.
+        signal: AbortSignal.timeout(35_000),
       })
-      const result = (await res.json().catch(() => null)) as ZohoQuoteResult | null
+      const text = await res.text().catch(() => '')
+      const result = parseResult(text)
       if (!res.ok || !result?.ok) {
+        // Not our JSON at all (a platform error page, say): worth seeing in the console.
+        if (!result) console.error('[zoho-quote] unexpected answer', res.status, text.slice(0, 300))
         setError(result && !result.ok ? result.error : SEND_FAILED)
         return null
       }
-    } catch {
+    } catch (error) {
       // Offline, or no answer in time.
+      console.error('[zoho-quote] no answer', error)
       setError(SEND_FAILED)
       return null
     } finally {
