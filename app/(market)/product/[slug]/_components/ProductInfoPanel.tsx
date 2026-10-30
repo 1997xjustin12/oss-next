@@ -655,6 +655,19 @@ export function ProductInfoPanel({
     );
   }, [selection.tab, relatedProducts]);
 
+  /**
+   * The products the option prices are read from: on Rent and Rent-to-Own,
+   * only the selected term's, so a button's "/mo" and "Save $…" compare like
+   * with like (all terms mixed, the cheaper 48-month figure leaked into a
+   * 12-month selection). All of them if that term has none.
+   */
+  const priced = useMemo(() => {
+    if (selection.tab !== "rent" && selection.tab !== "rto") return candidates;
+    const term = selection.tab === "rent" ? selection.rentTerm : selection.rtoTerm;
+    const ofTerm = candidates.filter((p) => termMatch(p, term));
+    return ofTerm.length ? ofTerm : candidates;
+  }, [candidates, selection.tab, selection.rentTerm, selection.rtoTerm]);
+
   // ── cascading availability ──────────────────────────────────────────────────
 
   const availableSizes = useMemo(
@@ -679,7 +692,7 @@ export function ProductInfoPanel({
   const sizePrices = useMemo(
     () =>
       sizes.map((_, i) => {
-        const ofSize = candidates.filter((p) => matchesSize(p, i));
+        const ofSize = priced.filter((p) => matchesSize(p, i));
         if (ofSize.length === 0) return undefined;
 
         const exact = ofSize.find(
@@ -699,7 +712,7 @@ export function ProductInfoPanel({
         const monthly = selection.tab === "rent" || selection.tab === "rto";
         return `${amount}${monthly ? "/mo" : ""}`;
       }),
-    [candidates, selection.condIdx, selection.gradeIdx, selection.tab],
+    [priced, selection.condIdx, selection.gradeIdx, selection.tab],
   );
 
   const availableConditions = useMemo(
@@ -737,7 +750,7 @@ export function ProductInfoPanel({
   const conditionPrices = useMemo(
     () =>
       conditions.map((_, i) => {
-        const matching = candidates.filter(
+        const matching = priced.filter(
           (p) => matchesSize(p, selection.sizeIdx) && matchesCondition(p, i),
         );
         if (matching.length === 0) return undefined;
@@ -745,13 +758,13 @@ export function ProductInfoPanel({
           p.sale_price < cheapest.sale_price ? p : cheapest,
         ).sale_price;
       }),
-    [candidates, selection.sizeIdx],
+    [priced, selection.sizeIdx],
   );
 
   const gradePrices = useMemo(
     () =>
       grades.map((_, i) => {
-        const matching = candidates.filter(
+        const matching = priced.filter(
           (p) =>
             matchesSize(p, selection.sizeIdx) &&
             matchesCondition(p, selection.condIdx) &&
@@ -762,7 +775,7 @@ export function ProductInfoPanel({
           p.sale_price < cheapest.sale_price ? p : cheapest,
         ).sale_price;
       }),
-    [candidates, selection.sizeIdx, selection.condIdx],
+    [priced, selection.sizeIdx, selection.condIdx],
   );
 
   /**
@@ -789,13 +802,15 @@ export function ProductInfoPanel({
       RENT_TERMS.map((term) => ({
         ...term,
         available: rentVariants.some((v) => termMatch(v, term.value)),
-        variant:
-          rentVariants.find(
-            (v) =>
-              termMatch(v, term.value) && matchesSize(v, selection.sizeIdx),
-          ) ?? rentVariants.find((v) => termMatch(v, term.value)),
+        // The price this term would cost for the current size, condition and grade.
+        variant: findBestMatch(
+          rentVariants.filter((v) => termMatch(v, term.value)),
+          selection.sizeIdx,
+          selection.condIdx,
+          selection.gradeIdx,
+        ),
       })),
-    [rentVariants, selection.sizeIdx],
+    [rentVariants, selection.sizeIdx, selection.condIdx, selection.gradeIdx],
   );
 
   const rtoTermOptions = useMemo(
@@ -803,13 +818,15 @@ export function ProductInfoPanel({
       RTO_TERMS.map((term) => ({
         ...term,
         available: rtoVariants.some((v) => termMatch(v, term.value)),
-        variant:
-          rtoVariants.find(
-            (v) =>
-              termMatch(v, term.value) && matchesSize(v, selection.sizeIdx),
-          ) ?? rtoVariants.find((v) => termMatch(v, term.value)),
+        // The price this term would cost for the current size, condition and grade.
+        variant: findBestMatch(
+          rtoVariants.filter((v) => termMatch(v, term.value)),
+          selection.sizeIdx,
+          selection.condIdx,
+          selection.gradeIdx,
+        ),
       })),
-    [rtoVariants, selection.sizeIdx],
+    [rtoVariants, selection.sizeIdx, selection.condIdx, selection.gradeIdx],
   );
 
   // ── unified handler ─────────────────────────────────────────────────────────
@@ -828,31 +845,14 @@ export function ProductInfoPanel({
 
       let match: ProductHit | undefined;
 
-      if (next.tab === "rent") {
+      if (next.tab === "rent" || next.tab === "rto") {
+        // The chosen term first, then the same size → condition → grade match
+        // as Buy. Grade was once left out here, so Used WWT on these tabs
+        // landed on whichever used product came first (often IICL).
+        const term = next.tab === "rent" ? next.rentTerm : next.rtoTerm;
+        const ofTerm = pool.filter((v) => termMatch(v, term));
         match =
-          pool.find(
-            (v) =>
-              termMatch(v, next.rentTerm) &&
-              matchesSize(v, next.sizeIdx) &&
-              matchesCondition(v, next.condIdx),
-          ) ??
-          pool.find(
-            (v) => termMatch(v, next.rentTerm) && matchesSize(v, next.sizeIdx),
-          ) ??
-          pool.find((v) => termMatch(v, next.rentTerm)) ??
-          pool[0];
-      } else if (next.tab === "rto") {
-        match =
-          pool.find(
-            (v) =>
-              termMatch(v, next.rtoTerm) &&
-              matchesSize(v, next.sizeIdx) &&
-              matchesCondition(v, next.condIdx),
-          ) ??
-          pool.find(
-            (v) => termMatch(v, next.rtoTerm) && matchesSize(v, next.sizeIdx),
-          ) ??
-          pool.find((v) => termMatch(v, next.rtoTerm)) ??
+          findBestMatch(ofTerm, next.sizeIdx, next.condIdx, next.gradeIdx) ??
           pool[0];
       } else {
         match = findBestMatch(pool, next.sizeIdx, next.condIdx, next.gradeIdx);
