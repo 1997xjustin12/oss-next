@@ -3,15 +3,6 @@ import { readVisitorZip } from '@/lib/visitorZip'
 import type { CartItem } from '@/types/cart'
 
 /**
- * Temporary (2026-10-30): /cart is not shown. Everyone who opens it, signed in
- * or not, is sent to the delivery-quote form for their cart, the way a guest's
- * Checkout button already goes (deliveryQuoteDestination). Separate from
- * Admin → Checkout (lib/paymentRedirect.ts). Set to false to bring the cart back.
- * CART_PAGE_OPEN=1 keeps the cart on one server (the e2e one): app/(market)/cart/page.tsx.
- */
-export const CART_PAGE_GOES_TO_QUOTE = true
-
-/**
  * Where "Checkout" goes for this visitor.
  *
  * Signed in, straight to checkout. A guest is sent through the delivery-quote
@@ -32,14 +23,7 @@ export const CART_PAGE_GOES_TO_QUOTE = true
  */
 export function checkoutDestination(isAuthenticated: boolean, items: CartItem[]): string {
   if (isAuthenticated) return ROUTES.CHECKOUT
-  return deliveryQuoteDestination(items)
-}
 
-/**
- * The delivery-quote form for this cart: what Checkout opens for a guest, and
- * where /cart sends everyone while CART_PAGE_GOES_TO_QUOTE is on.
- */
-export function deliveryQuoteDestination(items: CartItem[]): string {
   /**
    * A single-container cart carries its handle so the quote page can price
    * delivery straight away. A mixed cart does not: combined delivery is not the

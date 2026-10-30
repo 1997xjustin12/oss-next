@@ -51,8 +51,5 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: true,
     timeout: 600_000,
-    // /cart, which customers are sent past for now (CART_PAGE_GOES_TO_QUOTE
-    // in lib/checkoutRoute.ts), stays the cart here: the journeys test it.
-    env: { CART_PAGE_OPEN: '1' },
   },
 })
