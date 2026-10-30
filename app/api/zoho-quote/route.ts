@@ -103,7 +103,15 @@ export async function POST(request: Request) {
       return answer({ ok: true })
     }
 
-    const body = res.status < 300 ? (await res.text()).replace(/\s+/g, ' ').slice(0, 500) : ''
+    const raw = res.status < 300 ? await res.text() : ''
+    // The page's words, without its markup, styles and scripts: what Zoho told the visitor.
+    const body = raw
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 800)
     console.error('[zoho-quote] not accepted', { status: res.status, location, ms, body })
     return answer({ ok: false, error: SEND_FAILED, zoho: { status: res.status, location, ms, body } })
   } catch (error) {
