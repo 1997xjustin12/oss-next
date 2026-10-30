@@ -18,6 +18,8 @@ export const ROUTES = {
   BLOG: (slug: string) => `/blogs/${slug}`,
   CART: '/cart',
   CHECKOUT: '/checkout',
+  /** Where checkout goes while it is closed on this domain (Admin → Checkout, lib/checkoutGate.ts). */
+  CHECKOUT_UNAVAILABLE: '/checkout-unavailable',
   /**
    * The depot index. This app's page as of 2026-10-13 — the cities beneath it
    * are still WordPress's, which is why it is in NATIVE_EXACT_PATHS below and
@@ -115,6 +117,7 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'blogs',
   'cart',
   'checkout',
+  'checkout-unavailable',
   'wishlist',
   'saved-quotes',
   'get-exact-delivery-quote',

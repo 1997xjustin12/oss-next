@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, type NextFetchEvent } from 'next/server'
 import { isMaintenanceMode } from '@/lib/maintenance'
+import { isCheckoutOpen } from '@/lib/checkoutGate'
 import { isAdminOpenEnv, isAdminPath, isPreviewOrDev } from '@/lib/admin'
 import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/adminSession'
 import { wpPathMayExist } from '@/lib/wpPaths'
@@ -279,6 +280,9 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     // bypass holder — fall through to normal handling below
   }
 
+  const checkoutClosed = await handleCheckoutGate(request)
+  if (checkoutClosed) return checkoutClosed
+
   const toAccountOrders = handleOrderStatusWhileLoggedIn(request)
   if (toAccountOrders) return toAccountOrders
 
@@ -345,6 +349,37 @@ function redactSecretPath(pathname: string): string {
   return pathname.startsWith(`${ROUTES.ORDER_STATUS}/`) ? `${ROUTES.ORDER_STATUS}/[order_uuid]` : pathname
 }
 
+// ── Checkout gate ───────────────────────────────────────────────────────────
+// Checkout is closed on every domain not opened in Admin → Checkout
+// (lib/checkoutGate.ts): the page goes to /checkout-unavailable, and the order
+// API refuses, so an order cannot be placed by calling it directly either.
+
+const CHECKOUT_API_PREFIX = '/api/checkout/'
+
+function isCheckoutPath(pathname: string): boolean {
+  return pathname === ROUTES.CHECKOUT || pathname.startsWith(`${ROUTES.CHECKOUT}/`) || pathname.startsWith(CHECKOUT_API_PREFIX)
+}
+
+async function handleCheckoutGate(request: NextRequest): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl
+  if (!isCheckoutPath(pathname)) return null
+  // The Host header, not nextUrl.hostname: under `next start` that is the
+  // server's own name whatever the visitor asked for. And not X-Forwarded-Host,
+  // which a client can set; the platform routes by Host, so a forged one only
+  // reaches another site.
+  if (await isCheckoutOpen(request.headers.get('host') ?? '')) return null
+
+  const headers = { 'Cache-Control': 'no-store' }
+  if (pathname.startsWith(CHECKOUT_API_PREFIX)) {
+    return NextResponse.json(
+      { ok: false, error: "Checkout isn't open yet. Please call us to place your order." },
+      { status: 403, headers },
+    )
+  }
+  // 307: temporary, so nothing caches the move once checkout opens.
+  return NextResponse.redirect(new URL(ROUTES.CHECKOUT_UNAVAILABLE, request.url), { status: 307, headers })
+}
+
 /**
  * Customers who are logged in see their orders in their account, not on a
  * guest order link.
@@ -392,6 +427,10 @@ export const config = {
     // skipping on it would let anyone step around this layer.
     { source: '/admin' },
     { source: '/admin/:path*' },
+    // And the checkout gate: a prefetched /checkout must not render the page
+    // while checkout is closed on this domain.
+    { source: '/checkout' },
+    { source: '/checkout/:path*' },
     {
       source:
         '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/(?:search|shipping-containers|reviews/list|chat/availability|chat/products|geoapify|products/by-skus|products/by-ids|delivery-rates|cart-notice)(?:/|$)|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|pdf|mp4|webm)$).*)',
