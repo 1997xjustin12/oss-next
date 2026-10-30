@@ -1213,8 +1213,8 @@ export const GBP_PAGES: readonly GbpPage[] = [
         answer: 'Renting a container is cheaper for short-term use, such as temporary storage or projects. Buying a container is more cost-effective for long-term or permanent use, since the upfront cost is higher but eliminates ongoing rental fees.',
       },
       {
-        question: 'Where can I store my shipping container Newark NJ?',
-        answer: 'You can store a shipping container in Newark, NJ at container storage yards, logistics depots near Port Newark, or industrial storage facilities. Some container rental companies also offer off-site storage. If storing on private property, check Newark zoning and permit requirements first.',
+        question: 'Where can I store my shipping container in Oakland, CA?',
+        answer: 'You can store a shipping container in Oakland, CA at container storage yards, logistics depots near the Port of Oakland, or industrial storage facilities. Some container rental companies also offer off-site storage. If storing on private property, check Oakland zoning and permit requirements first.',
       },
       {
         question: 'How do you prepare the ground for a container?',
