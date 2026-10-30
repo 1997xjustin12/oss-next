@@ -32,6 +32,23 @@ type Options = {
   active?: boolean
   /** A typed ZIP that resolved to a place (complete, e.g. "30303"), e.g. to re-price delivery for it. */
   onZipResolved?: (zip: string) => void
+  /**
+   * Values this area knows better than the saved details, e.g. the ZIP a page
+   * is priced to. Applied over them where non-empty; a ZIP that differs from the
+   * saved one also clears the saved city and state, which belong to the old place.
+   */
+  prefer?: Partial<ZohoQuoteValues>
+}
+
+function openingValues(prefer: Partial<ZohoQuoteValues> | undefined): ZohoQuoteValues {
+  const saved = initialZohoQuote(getGuestLead(), readVisitorZip().postcode || '')
+  const zip = prefer?.zip?.trim()
+  const moved = !!zip && completeZip(zip, undefined) !== completeZip(saved.zip, undefined)
+  const values = moved ? { ...saved, city: '', state: '' } : { ...saved }
+  for (const [field, value] of Object.entries(prefer ?? {}) as [ZohoQuoteField, string | undefined][]) {
+    if (value?.trim()) values[field] = value
+  }
+  return values
 }
 
 /**
@@ -51,9 +68,9 @@ type Options = {
  * Reads the browser's storage on first render, so it belongs in a component
  * rendered in the browser only (behind an `open` flag, or `ssr: false`).
  */
-export function useZohoQuoteForm({ active = true, onZipResolved }: Options = {}) {
+export function useZohoQuoteForm({ active = true, onZipResolved, prefer }: Options = {}) {
   const [values, setValues] = useState<ZohoQuoteValues>(() =>
-    typeof window === 'undefined' ? EMPTY_ZOHO_QUOTE : initialZohoQuote(getGuestLead(), readVisitorZip().postcode || ''),
+    typeof window === 'undefined' ? EMPTY_ZOHO_QUOTE : openingValues(prefer),
   )
   const [error, setError] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
@@ -101,7 +118,7 @@ export function useZohoQuoteForm({ active = true, onZipResolved }: Options = {})
    * submission made in another area since shows up here.
    */
   function fillBlanks() {
-    const stored = initialZohoQuote(getGuestLead(), readVisitorZip().postcode || '')
+    const stored = openingValues(prefer)
     setValues((current) => {
       const next = { ...current }
       for (const field of Object.keys(next) as ZohoQuoteField[]) if (!next[field].trim()) next[field] = stored[field]

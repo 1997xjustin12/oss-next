@@ -13,12 +13,12 @@ import type { SearchParams } from './_components/searchParams'
 /**
  * Step 3 of the delivery quote: who to send it to.
  *
- * A Server Component with a Server Action, deliberately. Delivery is priced per
- * address, so this is a real landing target for "delivery cost" searches, and
- * its copy has to render on the server rather than behind a hydration boundary.
- * The only client code on the page is the submit button, which needs
- * `useFormStatus` to stop a double post putting two identical leads into
- * someone's sales queue.
+ * A Server Component, deliberately. Delivery is priced per address, so this is
+ * a real landing target for "delivery cost" searches, and its copy has to
+ * render on the server rather than behind a hydration boundary. The form is a
+ * client component (the Zoho quote form, sent to Zoho CRM; see QuoteForm), and
+ * so is the submit button beside the total, which waits on it so a second
+ * press cannot send the details twice.
  *
  * This shell is static: heading, progress and the reassurance below are the
  * same for everyone and prerender. The form and the summary read the query

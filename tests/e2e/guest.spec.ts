@@ -18,17 +18,36 @@ import {
  *   A. cart → checkout → detoured to the quote form → submit → checkout
  *   B. product page → Save Quote → details given → cart → straight to checkout
  *
- * Submitting the quote form in A records a lead in Admin → Quote Requests, so
- * that final step only runs with E2E_ALLOW_LEADS=1. B's modal sends to Zoho
- * CRM (through /api/zoho-quote), which would create a real Contact: the test
- * answers that request itself (and checks what was sent), so B has no side
- * effect and always runs to the checkout page — which is never submitted: no
- * test here presses Place Order.
+ * Both forms on the way (A's quote page, B's modal) are the Zoho quote form,
+ * which sends to Zoho CRM through /api/zoho-quote and would create a real
+ * Contact. The tests answer that request themselves (and check what was sent),
+ * so neither has a side effect and both always run to the checkout page —
+ * which is never submitted: no test here presses Place Order.
  */
 
 const ZIP = '30303' // Atlanta: a depot with real stock
 const OTHER_DEPOT_ZIP = '60601' // Chicago
 const LEAD = { first: 'E2E', last: 'Test Visitor', email: 'e2e-test@example.com', phone: '(555) 010-0199' }
+
+/**
+ * Answers /api/zoho-quote in place of the server, so nothing reaches Zoho.
+ * Refuses the first `refuse` sends, accepts the rest; returns what was sent.
+ * 200 even for a refusal: the journey guard fails any 4xx/5xx, and the form
+ * reads `ok`, so `{ ok: false }` is refused whatever the status.
+ */
+async function answerZohoQuote(page: import('@playwright/test').Page, refuse = 0) {
+  const posts: Record<string, string>[] = []
+  await page.route('**/api/zoho-quote', (route) => {
+    posts.push(route.request().postDataJSON() as Record<string, string>)
+    const refused = posts.length <= refuse
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(refused ? { ok: false, error: 'Zoho refused it (e2e).' } : { ok: true }),
+    })
+  })
+  return posts
+}
 
 test.describe('guest', () => {
   test('route A — finds a container, and checkout detours to the quote form @mobile', async ({ page }) => {
@@ -55,30 +74,36 @@ test.describe('guest', () => {
       await page.locator('main a[href="/checkout"]').first().click()
       await expect(page).toHaveURL(/\/get-exact-delivery-quote/)
       await expectNoErrorScreen(page)
-      await expect(page.locator('#fullName')).toBeVisible()
+      await expect(page.locator('#firstName')).toBeVisible()
     })
 
-    if (process.env.E2E_ALLOW_LEADS !== '1') {
-      test.info().annotations.push({
-        type: 'stopped early',
-        description: 'Quote form not submitted — that records a lead. Set E2E_ALLOW_LEADS=1 to run it.',
-      })
-      return
-    }
-
-    await test.step('submit the quote form (records a lead)', async () => {
-      await page.locator('#fullName').fill(`${LEAD.first} ${LEAD.last} (automated test, ignore)`)
+    await test.step('submit the quote form: refused, then accepted → checkout, filled in', async () => {
+      const posts = await answerZohoQuote(page, 1)
+      await page.locator('#firstName').fill(LEAD.first)
+      await page.locator('#lastName').fill(LEAD.last)
       await page.locator('#phone').fill(LEAD.phone)
       await page.locator('#email').fill(LEAD.email)
-      // The address is separate fields, and city/state/ZIP arrive filled from
-      // the ZIP already given — only the street is ever blank here.
-      await page.locator('#address1').fill('123 Test Street')
-      // Both required since the 2026-09-23 design, and re-checked in the action.
-      await page.locator('input[name="confirmDelivery"]').check()
-      await page.locator('input[name="agreeTerms"]').check()
-      await page.getByRole('button', { name: /Proceed with checkout/i }).click()
+      await page.locator('#street').fill('123 Test Street')
+      // The ZIP arrives filled from the one already given, and City and State
+      // from the ZIP — only the street is ever blank here.
+      await expect(page.locator('#zip')).toHaveValue(ZIP)
+      await expect(page.locator('#city')).toHaveValue('Atlanta')
+      await expect(page.locator('#state')).toHaveValue('GA')
+
+      // Refused: the reason shows, the page stays, the button works again.
+      const proceed = page.getByRole('button', { name: /Proceed with checkout/i })
+      await proceed.click()
+      // Within the form: Next's route announcer is an alert too.
+      await expect(page.locator('#quote-details-form').getByRole('alert')).toHaveText('Zoho refused it (e2e).')
+      await expect(page).toHaveURL(/\/get-exact-delivery-quote/)
+      await expect(proceed).toBeEnabled()
+
+      // Accepted: on to checkout, which is filled in from what was sent.
+      await proceed.click()
       await expect(page).toHaveURL(/\/checkout/)
-      await expectNoErrorScreen(page)
+      expect(posts).toHaveLength(2)
+      expect(posts[1]).toMatchObject({ firstName: LEAD.first, lastName: LEAD.last, street: '123 Test Street', zip: ZIP, city: 'Atlanta' })
+      await expect(page.getByPlaceholder('First Name').first()).toHaveValue(LEAD.first)
       await expect(page.getByPlaceholder('Email Address').first()).toHaveValue(LEAD.email)
     })
   })
@@ -93,23 +118,8 @@ test.describe('guest', () => {
     })
 
     await test.step('Save Quote → give details → see the quote', async () => {
-      // Our sender (/api/zoho-quote) is answered here, so nothing reaches Zoho:
-      // a real post creates a Contact in Zoho CRM. The first answer is a
-      // refusal, the second an acceptance.
-      const zohoPosts: Record<string, string>[] = []
-      let refuseNext = true
-      await page.route('**/api/zoho-quote', (route) => {
-        zohoPosts.push(route.request().postDataJSON() as Record<string, string>)
-        const refuse = refuseNext
-        refuseNext = false
-        // 200 even for the refusal: the journey guard fails any 4xx/5xx. The
-        // form reads `ok`, so `{ ok: false }` is refused whatever the status.
-        return route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify(refuse ? { ok: false, error: 'Zoho refused it (e2e).' } : { ok: true }),
-        })
-      })
+      // The first send is refused, the second accepted; nothing reaches Zoho.
+      const zohoPosts = await answerZohoQuote(page, 1)
 
       await page.getByRole('button', { name: /Save Quote/ }).first().click()
       const modal = page.locator('[role="dialog"]').filter({ has: page.locator('#guest-lead-title') })
@@ -185,9 +195,12 @@ test.describe('guest', () => {
       await page.locator('main a[href="/checkout"]').first().click()
       await expect(page).toHaveURL(/\/get-exact-delivery-quote/)
       await expectNoErrorScreen(page)
-      await expect(page.locator('#fullName')).toHaveValue(`${LEAD.first} ${LEAD.last}`)
+      // The same form as the modal's, so it opens with what was sent there.
+      await expect(page.locator('#firstName')).toHaveValue(LEAD.first)
+      await expect(page.locator('#lastName')).toHaveValue(LEAD.last)
       await expect(page.locator('#email')).toHaveValue(LEAD.email)
-      await expect(page.locator('#addressZip')).toHaveValue(ZIP)
+      await expect(page.locator('#zip')).toHaveValue(ZIP)
+      await expect(page.locator('#city')).toHaveValue('Atlanta')
     })
 
     await test.step('checkout is filled in from the details they gave', async () => {

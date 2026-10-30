@@ -2,36 +2,30 @@
 
 import { useEffect, useState } from 'react'
 import { ArrowRight, Loader2 } from 'lucide-react'
-import { QUOTE_FORM_ID } from './quoteFormId'
+import { QUOTE_FORM_ID, QUOTE_SENDING_EVENT } from './quoteFormId'
 
 /**
  * "Proceed with checkout" — the summary panel's action, and the only way
  * forward on this page.
  *
  * It submits the contact form beside it through the `form` attribute, so the
- * button can sit in the panel while the fields, their validation and the
- * Server Action all stay where they are. The form's own submit button was
- * removed when this arrived: the 2026-09-29 design puts the action beside the
- * total it commits to.
+ * button can sit in the panel while the fields and their checks stay in the
+ * form. The form's own submit button was removed when this arrived: the
+ * 2026-09-29 design puts the action beside the total it commits to.
  *
- * `useFormStatus` is not available here — that hook only reports for a form in
- * the same React tree, and this deliberately is not. So the pending state comes
- * from listening for the form's own `submit` event, which is equivalent for the
- * one thing it has to prevent: a second press posting a duplicate row into
- * someone's sales queue. The event fires only after the browser's own
- * validation passes, so an incomplete form leaves the button live rather than
- * stranding it disabled.
+ * The pending state comes from the form itself (QUOTE_SENDING_EVENT): it is
+ * true while the details are on their way to Zoho, so a second press cannot
+ * send them twice, and false again if Zoho refuses them — the form then shows
+ * why, and the visitor can correct and press again. After an accepted send the
+ * page is leaving for checkout, so the button stays in its pending state.
  */
 export function QuoteProceedButton() {
   const [pending, setPending] = useState(false)
 
   useEffect(() => {
-    const form = document.getElementById(QUOTE_FORM_ID)
-    if (!form) return
-
-    const onSubmit = () => setPending(true)
-    form.addEventListener('submit', onSubmit)
-    return () => form.removeEventListener('submit', onSubmit)
+    const onSending = (event: Event) => setPending((event as CustomEvent<boolean>).detail === true)
+    document.addEventListener(QUOTE_SENDING_EVENT, onSending)
+    return () => document.removeEventListener(QUOTE_SENDING_EVENT, onSending)
   }, [])
 
   return (
