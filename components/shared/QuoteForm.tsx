@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
+import { ZohoPricingForm, type ZohoPricingFormClasses } from "@/components/shared/ZohoPricingForm";
 
 const POINTS = [
   "No obligation — free pricing always",
@@ -16,15 +16,43 @@ const INPUT_CLS =
 const LABEL_CLS =
   "text-[12px] font-bold text-theme-dark-2 dark:text-gray-300 uppercase tracking-[.04em]";
 
-// Client Component, so it can't read the copy itself — (home)/page.tsx resolves
-// it on the server and passes it in.
+/** Half width beside its neighbour from `sm` up; the rest take the row. */
+const HALF_WIDTH = new Set(["First Name", "Last Name", "CONTACTCF7", "CONTACTCF23"]);
+
+/** This section's look for the shared Zoho pricing form. */
+const HOME_CLASSES: ZohoPricingFormClasses = {
+  form: "grid grid-cols-1 sm:grid-cols-2 gap-[11px]",
+  fieldWrap: (name) => `flex flex-col gap-1 ${HALF_WIDTH.has(name) ? "" : "sm:col-span-2"}`,
+  label: LABEL_CLS,
+  required: "text-theme-primary",
+  field: INPUT_CLS,
+  captchaWrap: "flex flex-col gap-1 sm:col-span-2",
+  captchaInput: `${INPUT_CLS} max-w-[180px]`,
+  captchaImage: "h-[44px] w-auto rounded-[4px] border border-theme-border bg-white",
+  reload: "inline-flex items-center gap-1 text-[13px] font-bold text-theme-primary hover:underline dark:text-red-400",
+  actions: "sm:col-span-2 mt-[2px]",
+  submit:
+    "w-full bg-theme-primary text-white py-[13px] rounded-[5px] text-[16px] font-extrabold uppercase tracking-[.04em] transition-colors hover:bg-theme-primary-dark disabled:opacity-70",
+};
+
+/**
+ * "Get a free quote": the red section on the homepage (and the product page,
+ * with its own heading). Its form is the Zoho CRM pricing form the GBP pages
+ * use (components/shared/ZohoPricingForm.tsx), with Zoho's fields only, in
+ * this section's style: a lead lands in Zoho exactly as one from a GBP page.
+ *
+ * Until 2026-10-30 this form posted nowhere: its button only changed its own
+ * label to "Quote Request Sent". "I Want To" (purchase, rent, rent-to-own) was
+ * dropped with the move to Zoho: the Zoho form has no field for it.
+ *
+ * A Client Component, so it can't read the copy itself — (home)/page.tsx
+ * resolves it on the server and passes it in.
+ */
 export function QuoteForm({
   heading = HOME_HEADING_DEFAULTS["quoteForm.h2"],
 }: {
   heading?: string;
 }) {
-  const [submitted, setSubmitted] = useState(false);
-
   return (
     <section
       id="quote-section"
@@ -34,104 +62,26 @@ export function QuoteForm({
       <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-10 lg:gap-[52px] items-start">
         {/* Form box */}
         <div className="order-2 lg:order-1 bg-white dark:bg-gray-800 rounded-lg p-7">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[11px] mb-[11px]">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="q-fname" className={LABEL_CLS}>
-                First Name
-              </label>
-              <input
-                type="text"
-                id="q-fname"
-                placeholder="John"
-                className={INPUT_CLS}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="q-lname" className={LABEL_CLS}>
-                Last Name
-              </label>
-              <input
-                type="text"
-                id="q-lname"
-                placeholder="Smith"
-                className={INPUT_CLS}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1 mb-[11px]">
-            <label htmlFor="q-email" className={LABEL_CLS}>
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="q-email"
-              placeholder="you@company.com"
-              className={INPUT_CLS}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1 mb-[11px]">
-            <label htmlFor="q-phone" className={LABEL_CLS}>
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              id="q-phone"
-              placeholder="(888) 000-0000"
-              className={INPUT_CLS}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1 mb-[11px]">
-            <label htmlFor="q-zip" className={LABEL_CLS}>
-              Delivery ZIP Code
-            </label>
-            <input
-              type="text"
-              id="q-zip"
-              placeholder="90210"
-              className={INPUT_CLS}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[11px] mb-[11px]">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="q-size" className={LABEL_CLS}>
-                Container Size
-              </label>
-              <select id="q-size" className={INPUT_CLS}>
-                <option>20ft Standard</option>
-                <option>40ft Standard</option>
-                <option>40ft High Cube</option>
-                <option>Refrigerated (Reefer)</option>
-                <option>Other / Not Sure</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="q-type" className={LABEL_CLS}>
-                I Want To
-              </label>
-              <select id="q-type" className={INPUT_CLS}>
-                <option>Purchase</option>
-                <option>Rent</option>
-                <option>Rent-To-Own</option>
-              </select>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setSubmitted(true)}
-            className="w-full bg-theme-primary text-white py-[13px] rounded-[5px] text-[16px] font-extrabold uppercase tracking-[.04em] transition-colors hover:bg-theme-primary-dark"
-          >
-            {submitted
-              ? "✓ Quote Request Sent — We'll be in touch!"
-              : "Get My Free Quote →"}
-          </button>
-          <p className="text-center text-[11.5px] text-theme-muted mt-[9px] dark:text-gray-400">
-            🔒 Your information is secure and never shared. No spam — ever.
-          </p>
+          <ZohoPricingForm
+            classes={HOME_CLASSES}
+            labels={{ Phone: "Phone Number", Email: "Email Address", CONTACTCF7: "Delivery ZIP Code" }}
+            placeholders={{
+              "First Name": "John",
+              "Last Name": "Smith",
+              Phone: "(888) 000-0000",
+              Email: "you@company.com",
+              CONTACTCF7: "90210",
+              CONTACTCF23: "Select a size",
+              CONTACTCF30: "Anything we should know?",
+              enterdigest: "Type the code",
+            }}
+            submitLabel="Get My Free Quote →"
+            footnote={
+              <p className="text-center text-[11.5px] text-theme-muted mt-[9px] dark:text-gray-400">
+                🔒 Your information is secure and never shared. No spam — ever.
+              </p>
+            }
+          />
         </div>
         {/* Right copy */}
         <div className="order-1 lg:order-2 flex flex-col gap-5">
