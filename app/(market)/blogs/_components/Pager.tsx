@@ -1,3 +1,4 @@
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { ROUTES } from '@/config/routes'
 
@@ -42,7 +43,7 @@ export function Pager({ page, totalPages, search }: Props) {
         aria-disabled={page <= 1}
         className={`${base} ${idle} ${page <= 1 ? disabled : ''}`}
       >
-        ← Prev
+        <ArrowLeft className="inline h-4 w-4 align-[-0.125em]" aria-hidden /> Prev
       </Link>
 
       {start > 1 && (
@@ -76,7 +77,7 @@ export function Pager({ page, totalPages, search }: Props) {
         aria-disabled={page >= totalPages}
         className={`${base} ${idle} ${page >= totalPages ? disabled : ''}`}
       >
-        Next →
+        Next <ArrowRight className="inline h-4 w-4 align-[-0.125em]" aria-hidden />
       </Link>
     </nav>
   )

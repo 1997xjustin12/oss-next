@@ -64,3 +64,44 @@ test.describe('SalesIQ chat list', () => {
     await expect(snippet(page)).toHaveCount(1, { timeout: 30_000 })
   })
 })
+
+test.describe('third-party scripts wait for the visitor', () => {
+  test('Zoho loads on the first interaction, not before', async ({ page }) => {
+    await page.goto('/where-to-buy-shipping-containers')
+    await page.waitForLoadState('load')
+    await expect(snippet(page)).toHaveCount(1, { timeout: 30_000 })
+    await expect(page.locator('script#zsiqscript')).toHaveCount(0)
+
+    await page.mouse.wheel(0, 300)
+    await expect(page.locator('script#zsiqscript')).toHaveCount(1, { timeout: 10_000 })
+  })
+
+  test('and on the timer for a visitor who does nothing', async ({ page }) => {
+    await page.goto('/where-to-buy-shipping-containers')
+    await expect(page.locator('script#zsiqscript')).toHaveCount(1, { timeout: 20_000 })
+  })
+})
+
+test.describe('listing results', () => {
+  test('are in the HTML, and the first search needs no request', async ({ page, request }) => {
+    const html = await (await request.get('/sale-shipping-containers')).text()
+    expect(html.match(/<article/g)?.length ?? 0).toBeGreaterThanOrEqual(12)
+
+    const searches: string[] = []
+    page.on('request', (r) => { if (r.url().includes('/api/search')) searches.push(r.url()) })
+    await page.goto('/sale-shipping-containers')
+    await expect(page.locator('article:visible').first()).toBeVisible()
+    await page.waitForLoadState('load')
+    await page.waitForTimeout(2_000)
+    expect(searches).toHaveLength(0)
+  })
+
+  test('still change when the visitor searches', async ({ page }) => {
+    await page.goto('/sale-shipping-containers')
+    await page.waitForLoadState('load')
+    const first = page.locator('article:visible h2').first()
+    const before = await first.innerText()
+    await page.getByPlaceholder(/Search containers/).filter({ visible: true }).first().fill('40ft high cube')
+    await expect(first).not.toHaveText(before, { timeout: 30_000 })
+  })
+})

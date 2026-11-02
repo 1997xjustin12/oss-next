@@ -10,6 +10,7 @@ import {
   useInstantSearch,
   useInstantSearchContext,
   useSearchBox,
+  InstantSearchSSRProvider,
 } from 'react-instantsearch'
 import Image from 'next/image'
 import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
@@ -28,6 +29,7 @@ import type { CustomField, HitData } from './hitData'
 import type { Accessory, BadgeTone } from '@/types/product'
 
 const INDEX         = process.env.NEXT_PUBLIC_SEARCH_INDEX ?? 'onsite_products_index'
+const HITS_PER_PAGE = 12
 // The WordPress promotions page, as the header and footer link it. The old
 // '/on-site-specials' is a dead URL here (404) and redirects to the homepage on
 // onsitestorage.com.
@@ -482,7 +484,8 @@ function ProductHit({ hit }: { hit: HitData }) {
           {badge.label}
         </span>
         {img?.src ? (
-          <Image src={img.src} alt={img.alt || hit.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, 25vw" />
+          // The first card's photo is the page's LCP image on a phone.
+          <Image src={img.src} alt={img.alt || hit.title} fill preload={hit.__position === 1} className="object-cover" sizes="(max-width: 640px) 100vw, 25vw" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">📦</div>
         )}
@@ -721,7 +724,39 @@ function parseMulti(raw: string | null): string[] {
 // here: it changes the H1 and the breadcrumb.
 const CLIENT_ONLY_PARAMS = new Set(['isort', 'q', 'accat', 'size', 'condition', 'grade', 'height', 'type', 'term'])
 
-export function InstantSearchSection() {
+/** The first page of results for this URL, from the server. */
+export type InitialListing = { hits: unknown[]; nbHits: number; nbPages: number }
+
+type InstantSearchSectionProps = { initialListing?: InitialListing | null }
+
+/**
+ * Puts the server's results straight into InstantSearch, so the cards are in the
+ * HTML and the first search needs no request. Without this the page painted a
+ * placeholder until the JavaScript had run and /api/search had answered, which on
+ * a phone made the first photo the slowest thing on the page by seconds.
+ */
+function toInitialResults(listing: InitialListing, query: string) {
+  return {
+    [INDEX]: {
+      state: { index: INDEX, query, hitsPerPage: HITS_PER_PAGE, page: 0 },
+      results: [{
+        hits: listing.hits,
+        nbHits: listing.nbHits,
+        nbPages: listing.nbPages,
+        page: 0,
+        hitsPerPage: HITS_PER_PAGE,
+        processingTimeMS: 0,
+        query,
+        params: '',
+        index: INDEX,
+        facets: {},
+        facets_stats: {},
+      }],
+    },
+  }
+}
+
+export function InstantSearchSection({ initialListing }: InstantSearchSectionProps) {
   const searchParams = useSearchParams()
   const router       = useRouter()
   const pathname     = usePathname()
@@ -859,6 +894,23 @@ export function InstantSearchSection() {
     refreshRef.current = fn
   }, [])
 
+  // Memoized: a new function here is a new component type, which remounted every
+  // card, photo included, on each render of this section.
+  const hitComponent = useMemo(() => {
+    function ListingHit({ hit }: { hit: unknown }) {
+      return selectedType === 'accessories'
+        ? <AccessoryCard product={hitToAccessory(hit as HitData)} />
+        : <ProductHit hit={hit as HitData} />
+    }
+    return ListingHit
+  }, [selectedType])
+
+  // Only for the first mount. They describe the URL the page loaded with, and a
+  // remount (see instanceKey) can happen after the filters have moved on.
+  const [initialResults] = useState(() =>
+    initialListing?.hits.length ? toInitialResults(initialListing, query) : null,
+  )
+
   const selected: Record<FilterParam, string[]> = {
     size:      selectedSizes,
     condition: selectedConditions,
@@ -877,8 +929,7 @@ export function InstantSearchSection() {
     onAccessoryCategory:       handleAccessoryCategory,
   }
 
-  return (
-    <section className="px-4 sm:px-[5%] py-6">
+  const listing = (
       <InstantSearch
         key={instanceKey}
         searchClient={searchClient}
@@ -890,7 +941,7 @@ export function InstantSearchSection() {
         initialUiState={{ [INDEX]: { query } }}
       >
         <SearchRefresher onReady={captureRefresh} />
-        <Configure hitsPerPage={12} />
+        <Configure hitsPerPage={HITS_PER_PAGE} />
 
         <MobileFilters {...sidebarProps} zipcode={zipcode} location={location} />
 
@@ -941,11 +992,7 @@ export function InstantSearchSection() {
             )}
 
             <Hits
-              hitComponent={({ hit }) =>
-                selectedType === 'accessories'
-                  ? <AccessoryCard product={hitToAccessory(hit as unknown as HitData)} />
-                  : <ProductHit hit={hit as unknown as HitData} />
-              }
+              hitComponent={hitComponent}
               classNames={{
                 root: 'mb-6',
                 list: selectedType === 'accessories'
@@ -968,6 +1015,13 @@ export function InstantSearchSection() {
           </div>
         </div>
       </InstantSearch>
+  )
+
+  return (
+    <section className="px-4 sm:px-[5%] py-6">
+      {initialResults && instanceKey === 0 ? (
+        <InstantSearchSSRProvider initialResults={initialResults}>{listing}</InstantSearchSSRProvider>
+      ) : listing}
     </section>
   )
 }

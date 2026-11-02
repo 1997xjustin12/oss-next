@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { ArrowRight } from 'lucide-react'
 import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { ROUTES } from '@/config/routes'
 import { formatBlogDate } from '@/lib/blog'
@@ -39,7 +40,7 @@ export function BlogCard({ post, priority }: Props) {
             </p>
           )}
           <span className="mt-3 inline-block text-sm font-bold text-theme-primary dark:text-red-400">
-            Read more →
+            Read more <ArrowRight className="inline h-4 w-4 align-[-0.125em]" aria-hidden />
           </span>
         </div>
       </Link>

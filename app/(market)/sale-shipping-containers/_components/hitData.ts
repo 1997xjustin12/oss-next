@@ -54,4 +54,6 @@ export type HitData = {
   custom_fields:    CustomField[]
   ratings:          RawRatings
   sale_price:       number
+  /** 1-based place in the results, added by InstantSearch. */
+  __position?:      number
 }

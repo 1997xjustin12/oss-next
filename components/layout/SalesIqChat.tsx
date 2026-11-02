@@ -9,6 +9,7 @@ import {
   SALES_IQ_SCRIPT_SRC,
   SALES_IQ_WIDGET_CODE,
 } from '@/config/salesIq'
+import { runOnEngagement } from '@/lib/deferredScript'
 
 /**
  * Loads the Zoho SalesIQ chat on the storefront, except on the pages listed in
@@ -57,9 +58,9 @@ export function SalesIqChat() {
 
   return (
     <Script id="zsiqchat" strategy="lazyOnload">
-      {`window.$zoho=window.$zoho||{};$zoho.salesiq=$zoho.salesiq||{widgetcode:"${SALES_IQ_WIDGET_CODE}",values:{},ready:function(){}};
+      {runOnEngagement(`window.$zoho=window.$zoho||{};$zoho.salesiq=$zoho.salesiq||{widgetcode:"${SALES_IQ_WIDGET_CODE}",values:{},ready:function(){}};
 var d=document,s=d.createElement("script");s.type="text/javascript";s.id="zsiqscript";s.defer=true;s.src="${SALES_IQ_SCRIPT_SRC}";
-var t=d.getElementsByTagName("script")[0];t.parentNode.insertBefore(s,t);`}
+var t=d.getElementsByTagName("script")[0];t.parentNode.insertBefore(s,t);`)}
     </Script>
   )
 }

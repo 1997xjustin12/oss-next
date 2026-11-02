@@ -11,7 +11,7 @@ import { ROUTES } from '@/config/routes'
 import { breadcrumbNode, graph, itemListNode, siteNodes } from '@/lib/schema'
 import { resolvePageMetadata } from '@/lib/seo'
 import { LocationHeader } from './_components/LocationHeader'
-import { InstantSearchSection } from './_components/InstantSearchSection'
+import { InstantSearchSection, type InitialListing } from './_components/InstantSearchSection'
 import { PageSkeleton, ResultsSkeleton } from './_components/PageSkeleton'
 import type { ProductHit } from '@/types/product'
 
@@ -77,24 +77,33 @@ function parseMulti(raw: string | undefined): string[] {
 }
 
 /**
- * The first page of results, fetched server-side purely so the page can emit an
- * ItemList describing what a visitor actually sees.
- *
- * The results themselves are still rendered by InstantSearch on the client —
- * this does not replace that. It exists because the client-only listing is
- * invisible to any crawler or agent that doesn't execute JavaScript, which
- * includes most of them: without this, the PLP's HTML advertises a shop with no
- * products in it.
+ * The first page of results: rendered straight into InstantSearch, and described
+ * by the ItemList so crawlers that don't execute JavaScript see the same products.
  *
  * Params mirror InstantSearchSection's URL reads one-for-one, and hitsPerPage
- * matches its <Configure hitsPerPage={12} />, so the list describes the same 12
- * items the visitor gets. Failure is non-fatal — a missing ItemList is a much
- * smaller problem than a listing page that won't render.
+ * matches its <Configure />, so these are the same 12 items the visitor's first
+ * search would return. Failure is non-fatal: no results here means the browser runs
+ * that search itself, and a missing ItemList is a much smaller problem than a
+ * listing page that won't render.
  */
-async function fetchListingHits(params: SearchParams): Promise<ProductHit[]> {
+/**
+ * A hit with only what the cards read. These travel inside the page's HTML, where
+ * the description, SEO copy and every field's list of choices were most of the size.
+ */
+function toListingHit(hit: ProductHit) {
+  const without = (item: object, omit: readonly string[]) =>
+    Object.fromEntries(Object.entries(item).filter(([key]) => !omit.includes(key)))
+  const fields = hit.custom_fields as object[] | undefined
+  return {
+    ...without(hit, ['body_html', 'seo', 'desc_title', 'created_at', 'updated_at', 'uploaded_at']),
+    custom_fields: fields?.map((field) => without(field, ['choices'])),
+  }
+}
+
+async function fetchListing(params: SearchParams): Promise<InitialListing & { hits: ProductHit[] }> {
   const isAccessories = params.ptype === 'accessories'
   try {
-    const { hits } = await cachedEsSearch({
+    const { hits, total, nbPages } = await cachedEsSearch({
       // Mirrors the client's ?q= so the ItemList describes the results the
       // visitor is actually looking at, not the unfiltered catalog.
       query: params.q?.trim() ?? '',
@@ -113,10 +122,10 @@ async function fetchListingHits(params: SearchParams): Promise<ProductHit[]> {
       containerTypeFilter: parseMulti(params.type),
       termFilter: parseMulti(params.term),
     })
-    return hits as ProductHit[]
+    return { hits: hits as ProductHit[], nbHits: total, nbPages }
   } catch (err) {
-    console.error('[plp] ItemList search failed, omitting structured data:', err)
-    return []
+    console.error('[plp] first search failed, leaving it to the browser and omitting structured data:', err)
+    return { hits: [], nbHits: 0, nbPages: 0 }
   }
 }
 
@@ -161,7 +170,8 @@ async function SaleContainersContent({ searchParams }: Props) {
   const listingName = isAccessories ? 'Container Accessories' : 'Product Pricing'
   const listingPath = isAccessories ? ROUTES.PLP_ACCESSORIES : ROUTES.PLP
 
-  const hits = await fetchListingHits(params)
+  const initialListing = await fetchListing(params)
+  const { hits } = initialListing
 
   const jsonLd = graph([
     ...siteNodes(),
@@ -192,14 +202,12 @@ async function SaleContainersContent({ searchParams }: Props) {
       <LocationHeader location={location} zipcode={zipcode} ptype={ptype} />
 
       <Suspense fallback={<ResultsSkeleton />}>
-        <InstantSearchSection />
+        <InstantSearchSection initialListing={{ ...initialListing, hits: hits.map(toListingHit) }} />
       </Suspense>
 
-      {/* The results grid above is rendered entirely by InstantSearch on the
-          client, so without JavaScript this page is a shop with no products in
-          it. These are the same `hits` the ItemList structured data describes,
-          as real links a crawler can follow. Dropped by any browser that runs
-          JS, so it costs nothing visually.
+      {/* The same `hits` as plain links, in case the server-rendered results
+          above ever come out empty on a render the browser then has to fill in.
+          Dropped by any browser that runs JS, so it costs nothing visually.
 
           One pre-built HTML string, not JSX children — see noscriptListingHtml. */}
       {hits.length > 0 && (

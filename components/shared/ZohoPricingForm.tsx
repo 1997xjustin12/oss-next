@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import Image from 'next/image'
 import { RotateCw } from 'lucide-react'
 import { ZOHO_PRICING_FORM } from '@/lib/data/zohoForms'
+import type { ReactNode } from 'react'
 
 const FORM = ZOHO_PRICING_FORM
 
@@ -46,7 +47,7 @@ type Props = {
   placeholders?: Partial<Record<FieldName | 'enterdigest', string>>
   /** Label overrides, by Zoho field name (the defaults are Zoho's labels). */
   labels?: Partial<Record<FieldName, string>>
-  submitLabel?: string
+  submitLabel?: ReactNode
   /** Show the form's Reset button, as the GBP pages do. */
   showReset?: boolean
   /** Text after the Submit button, e.g. a reassurance line. */

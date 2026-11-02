@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight, Check, Lock } from "lucide-react";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 import { ZohoPricingForm, type ZohoPricingFormClasses } from "@/components/shared/ZohoPricingForm";
 
@@ -75,10 +76,10 @@ export function QuoteForm({
               CONTACTCF30: "Anything we should know?",
               enterdigest: "Type the code",
             }}
-            submitLabel="Get My Free Quote →"
+            submitLabel={<>Get My Free Quote <ArrowRight className="inline h-4 w-4 align-[-0.125em]" aria-hidden /></>}
             footnote={
               <p className="text-center text-[11.5px] text-theme-muted mt-[9px] dark:text-gray-400">
-                🔒 Your information is secure and never shared. No spam — ever.
+                <Lock className="inline h-3 w-3 align-[-0.125em]" aria-hidden /> Your information is secure and never shared. No spam — ever.
               </p>
             }
           />
@@ -103,7 +104,7 @@ export function QuoteForm({
                 className="flex items-center gap-[10px] text-white/[.88] text-[14px] font-medium capitalize"
               >
                 <div className="w-[21px] h-[21px] rounded-full bg-white/[.2] flex items-center justify-center text-[11.5px] shrink-0 text-white">
-                  ✓
+                  <Check className="h-3 w-3" aria-hidden />
                 </div>
                 {point}
               </div>
