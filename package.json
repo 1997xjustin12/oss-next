@@ -23,6 +23,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@elastic/elasticsearch": "^8.19.1",
     "@upstash/redis": "^1.38.0",
+    "@vercel/blob": "^2.8.2",
     "@vercel/speed-insights": "2.0.0",
     "braintree": "^3.38.0",
     "braintree-web-drop-in": "^1.47.0",

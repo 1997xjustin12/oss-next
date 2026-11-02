@@ -25,7 +25,7 @@ const CURRENCY = 'USD'
 const TITLE_MAX = 150
 const DESC_MAX = 4000
 
-function esc(s: string): string {
+export function esc(s: string): string {
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -34,18 +34,18 @@ function esc(s: string): string {
     .replace(/'/g, '&apos;')
 }
 
-function clean(s: string): string {
+export function clean(s: string): string {
   // Product titles use `||` to join the two halves of the name; make it read
   // as one phrase and collapse whitespace.
   return s.replace(/\s*\|\|\s*/g, ' — ').replace(/\s+/g, ' ').trim()
 }
 
-function truncate(s: string, max: number): string {
+export function truncate(s: string, max: number): string {
   return s.length <= max ? s : s.slice(0, max - 1).trimEnd() + '…'
 }
 
 /** Map the WordPress/ES condition to Google's enum (new | used | refurbished). */
-function mapCondition(raw: string, isContainer: boolean): 'new' | 'used' {
+export function mapCondition(raw: string, isContainer: boolean): 'new' | 'used' {
   if (/new|one[\s-]?trip/i.test(raw)) return 'new'
   if (/used|wwt|wind|cargo|as[\s-]?is/i.test(raw)) return 'used'
   // Accessories with no stated condition are new; containers default to used.

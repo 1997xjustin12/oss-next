@@ -23,6 +23,7 @@ export const ADMIN_ROUTES = {
   CART_NOTICE: '/admin/cart-notice',
   CHECKOUT: '/admin/checkout',
   LISTING_ORDER: '/admin/listing-order',
+  PRODUCT_FEEDS: '/admin/product-feeds',
   // GBP location pages (docs/reference/gbp-subdomain-pages.md, "Admin configurators").
   GBP: '/admin/gbp',
   GBP_CONTENT: (slug: string) => `/admin/gbp/${slug}`,
@@ -36,7 +37,7 @@ export const ADMIN_ROUTES = {
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned' | 'ShoppingBag' | 'ListOrdered';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned' | 'ShoppingBag' | 'ListOrdered' | 'Rss';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -110,6 +111,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'Checkout',
     icon: 'ShoppingBag',
     hint: 'Payment page after ordering, per domain',
+  },
+  {
+    href: ADMIN_ROUTES.PRODUCT_FEEDS,
+    label: 'Product Feeds',
+    icon: 'Rss',
+    hint: 'Google Merchant feeds',
   },
 ];
 

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { MERCHANT_FEED_SOURCES } from "./config/merchantFeeds";
 import { WP_REDIRECTS } from "./config/wpHiddenPages";
 
 const WP_ORIGIN = "https://onsitestorage.com";
@@ -109,6 +110,11 @@ const nextConfig: NextConfig = {
   // The browser hits localhost; Next.js forwards to the live WordPress site.
   async rewrites() {
     return [
+      // The Google Merchant feeds, at the URLs Merchant Center already fetches.
+      ...MERCHANT_FEED_SOURCES.map(({ source, path }) => ({
+        source: path,
+        destination: `/api/feeds/merchant/${source}`,
+      })),
       {
         source: "/wp-json/:path*",
         destination: `${WP_ORIGIN}/wp-json/:path*`,

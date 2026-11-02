@@ -633,6 +633,37 @@ export async function getAllProductsForFeed(): Promise<FormattedContainerHit[]> 
   return out
 }
 
+/**
+ * Every published product, read fresh. For the Google Merchant feed generator
+ * (services/merchantFeed.service.ts), which must see today's prices and runs
+ * outside any render, so unlike getAllProductsForFeed nothing is cached.
+ */
+export async function scanPublishedProducts(): Promise<FormattedContainerHit[]> {
+  const PAGE_SIZE = 1000
+  const out: FormattedContainerHit[] = []
+  let searchAfter: (string | number)[] | undefined
+
+  for (;;) {
+    const esResponse = await client.search({
+      index: INDEX,
+      size: PAGE_SIZE,
+      query: { term: { status: 'publish' } },
+      _source: ['product_id', 'title', 'handle', 'variants', 'images', 'product_category', 'custom_fields.name', 'custom_fields.value', 'seo.focus_keyphrase', 'body_html'],
+      sort: [{ product_id: { order: 'asc' } }],
+      ...(searchAfter ? { search_after: searchAfter } : {}),
+    })
+
+    const hits = esResponse.hits.hits
+    if (hits.length === 0) break
+    for (const hit of hits) {
+      if (hit._source) out.push(formatProduct(hit._source as ShippingContainerHit))
+    }
+    if (hits.length < PAGE_SIZE) break
+    searchAfter = hits[hits.length - 1].sort as (string | number)[]
+  }
+  return out
+}
+
 // Each unique combination of inputs gets its own cache entry.
 // Busted by revalidateTag(CACHE_TAGS.SEARCH) or revalidateTag(CACHE_TAGS.ALL).
 export async function cachedEsSearch(input: SearchInput) {
