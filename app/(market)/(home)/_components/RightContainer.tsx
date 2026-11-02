@@ -7,7 +7,13 @@ import { StartingPriceLabel } from "./StartingPriceLabel";
 
 function Card({ item }: { item: FeaturedContainer }) {
   return (
-    <div className="flex flex-col gap-3">
+    // The whole card is the link, so what looks like a button inside it is a span:
+    // a link can't hold another link.
+    <PlpLink
+      prefetch={false}
+      href={featuredListingHref(item.spec)}
+      className="group flex flex-col gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-theme-primary"
+    >
       <div className="relative aspect-square bg-stone-200 dark:bg-stone-700 overflow-hidden rounded-sm">
         <Image
           src={item.image}
@@ -33,15 +39,11 @@ function Card({ item }: { item: FeaturedContainer }) {
             Buy &middot; Rent &middot; Rent-To-Own
           </div>
         </div>
-        <PlpLink
-          prefetch={false}
-          href={featuredListingHref(item.spec)}
-          className="shrink-0 bg-theme-primary text-center text-white py-2 px-4 text-xs sm:text-sm font-semibold whitespace-nowrap hover:bg-[#a00f24] transition-colors"
-        >
+        <span className="shrink-0 bg-theme-primary text-center text-white py-2 px-4 text-xs sm:text-sm font-semibold whitespace-nowrap group-hover:bg-[#a00f24] transition-colors">
           {item.ctaLabel}
-        </PlpLink>
+        </span>
       </div>
-    </div>
+    </PlpLink>
   );
 }
 
