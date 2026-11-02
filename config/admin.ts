@@ -19,6 +19,7 @@ export const ADMIN_ROUTES = {
   QUOTE_REQUESTS: '/admin/quote-requests',
   CACHE: '/admin/cache',
   CHAT: '/admin/chat',
+  LIVE_CHAT: '/admin/live-chat',
   PRODUCT_PANEL: '/admin/product-panel',
   CART_NOTICE: '/admin/cart-notice',
   CHECKOUT: '/admin/checkout',
@@ -37,7 +38,7 @@ export const ADMIN_ROUTES = {
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned' | 'ShoppingBag' | 'ListOrdered' | 'Rss';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned' | 'ShoppingBag' | 'ListOrdered' | 'Rss' | 'Headset';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -87,6 +88,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'AI Assistant',
     icon: 'MessagesSquare',
     hint: 'Where the chat is offered',
+  },
+  {
+    href: ADMIN_ROUTES.LIVE_CHAT,
+    label: 'Live Chat',
+    icon: 'Headset',
+    hint: 'Pages without the Zoho chat',
   },
   {
     href: ADMIN_ROUTES.PRODUCT_PANEL,

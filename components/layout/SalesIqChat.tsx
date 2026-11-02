@@ -3,32 +3,55 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Script from 'next/script'
-import { isSalesIqExcludedPath, SALES_IQ_SCRIPT_SRC, SALES_IQ_WIDGET_CODE } from '@/config/salesIq'
+import {
+  isSalesIqExcludedPath,
+  SALES_IQ_DEFAULT_EXCLUDED_PATHS,
+  SALES_IQ_SCRIPT_SRC,
+  SALES_IQ_WIDGET_CODE,
+} from '@/config/salesIq'
 
 /**
- * Loads the Zoho SalesIQ chat on the storefront, except on the pages in
- * config/salesIq.ts. The snippet is Zoho's own, as WordPress has it.
+ * Loads the Zoho SalesIQ chat on the storefront, except on the pages listed in
+ * Admin → Live Chat (lib/salesIq.ts). The snippet is Zoho's own, as WordPress has it.
  *
- * Nothing loads until a visitor reaches a page that shows the chat. Zoho's script
- * can't be unloaded after that, and its bubble stays in the page across client-side
- * navigation, so the bubble is shown by `data-salesiq` on <html> (app/globals.css)
- * and this only sets that attribute. Hidden by default, it also goes when the visitor
- * moves on to a page outside this layout.
+ * Nothing loads until the list has answered and the visitor is on a page that shows
+ * the chat. Zoho's script can't be unloaded after that, and its bubble stays in the
+ * page across client-side navigation, so the bubble is shown by `data-salesiq` on
+ * <html> (app/globals.css) and this only sets that attribute. Hidden by default, it
+ * also goes when the visitor moves on to a page outside this layout.
  */
 export function SalesIqChat() {
-  const excluded = isSalesIqExcludedPath(usePathname())
-
-  const [started, setStarted] = useState(!excluded)
-  if (!excluded && !started) setStarted(true)
+  const pathname = usePathname()
+  const [excludedPaths, setExcludedPaths] = useState<readonly string[] | null>(null)
 
   useEffect(() => {
-    if (excluded) return
+    let cancelled = false
+    fetch('/api/live-chat')
+      .then((res) => (res.ok ? (res.json() as Promise<{ excludedPaths?: string[] }>) : null))
+      .then((data) => {
+        if (!cancelled) setExcludedPaths(data?.excludedPaths ?? SALES_IQ_DEFAULT_EXCLUDED_PATHS)
+      })
+      .catch(() => {
+        if (!cancelled) setExcludedPaths(SALES_IQ_DEFAULT_EXCLUDED_PATHS)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const show = excludedPaths !== null && !isSalesIqExcludedPath(pathname, excludedPaths)
+
+  const [started, setStarted] = useState(false)
+  if (show && !started) setStarted(true)
+
+  useEffect(() => {
+    if (!show) return
     const root = document.documentElement
     root.dataset.salesiq = 'on'
     return () => {
       delete root.dataset.salesiq
     }
-  }, [excluded])
+  }, [show])
 
   if (!started) return null
 

@@ -96,7 +96,7 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
     tag: CACHE_TAGS.SETTINGS,
     label: 'Store Settings',
     description:
-      'The switches set from the admin screens: cart notice, product panel and chat regions. Saving a switch already refreshes it.',
+      'The switches set from the admin screens: cart notice, product panel, chat regions and live chat pages. Saving a switch already refreshes it.',
     lifetime: 'hours — refreshed hourly, kept a day',
   },
   {

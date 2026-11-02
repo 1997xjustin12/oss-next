@@ -33,3 +33,34 @@ test.describe('SalesIQ chat', () => {
     await expect(snippet(page)).toHaveCount(0)
   })
 })
+
+test.describe('SalesIQ chat list', () => {
+  test('the list is public and the admin screen is a 404 without an admin session', async ({ request }) => {
+    const res = await request.get('/api/live-chat')
+    expect(res.status()).toBe(200)
+    expect(Array.isArray((await res.json()).excludedPaths)).toBe(true)
+
+    const admin = await request.get('/admin/live-chat', { headers: { host: 'not-local.example.com' } })
+    expect(admin.status()).toBe(404)
+  })
+
+  test('a page added to the list loses the chat', async ({ page }) => {
+    await page.route('**/api/live-chat', (route) => route.fulfill({ json: { excludedPaths: ['/where-to-buy-shipping-containers'] } }))
+    await page.goto('/where-to-buy-shipping-containers')
+    await page.waitForLoadState('load')
+    await page.waitForTimeout(3_000)
+    await expect(snippet(page)).toHaveCount(0)
+    await expect(switchedOn(page)).toHaveCount(0)
+  })
+
+  test('if the list cannot be fetched, the cart still leaves it out and other pages keep it', async ({ page }) => {
+    await page.route('**/api/live-chat', (route) => route.abort())
+    await page.goto('/cart')
+    await page.waitForLoadState('load')
+    await page.waitForTimeout(3_000)
+    await expect(snippet(page)).toHaveCount(0)
+
+    await page.goto('/where-to-buy-shipping-containers')
+    await expect(snippet(page)).toHaveCount(1, { timeout: 30_000 })
+  })
+})
