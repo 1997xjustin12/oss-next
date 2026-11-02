@@ -574,7 +574,8 @@ export function AiChatWidget() {
           // publishing, so a full-width bar at the bottom of a phone screen
           // does not end up underneath this. Zero everywhere else, which is
           // every page that bar is not on — see MobileAddToCartBar.
-          style={{ bottom: 'calc(1.25rem + var(--sticky-cart-h, 0px))' }}
+          // --salesiq-h: the live chat bubble takes this corner where it shows (app/globals.css).
+          style={{ bottom: 'calc(1.25rem + var(--sticky-cart-h, 0px) + var(--salesiq-h, 0px))' }}
           className="fixed right-5 z-9990 flex h-14 w-14 items-center justify-center rounded-full bg-theme-primary text-white shadow-lg transition-[transform,bottom] hover:scale-105 hover:bg-theme-primary-dark focus:outline-none focus:ring-2 focus:ring-theme-primary/50 focus:ring-offset-2"
         >
           <MessageCircle className="h-6 w-6" aria-hidden />

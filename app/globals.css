@@ -92,3 +92,25 @@ main > .page-fill {
 @media (prefers-reduced-motion: reduce) {
   .sticky-cart-nudge { animation: none; }
 }
+
+/* ─── Zoho SalesIQ live chat (components/layout/SalesIqChat.tsx) ───────
+   Hidden unless the current page turned it on, which is how the excluded pages
+   in config/salesIq.ts lose a bubble that is already in the page. Zoho puts the
+   bubble above everything: below the filter sheet and modals here, and clear of
+   the product page's sticky bar. The AI assistant's bubble moves up by
+   --salesiq-h, since both live in the bottom-right corner.
+──────────────────────────────────────────────────────────────────────── */
+html[data-salesiq='on'] {
+  --salesiq-h: 70px;
+}
+
+html:not([data-salesiq='on']) .zsiq_floatmain,
+html:not([data-salesiq='on']) .zls-sptwndw {
+  display: none !important;
+}
+
+/* `html` for specificity: Zoho's own z-index is !important too, and loads later. */
+html .zsiq_floatmain {
+  z-index: 39 !important;
+  bottom: calc(10px + var(--sticky-cart-h, 0px)) !important;
+}

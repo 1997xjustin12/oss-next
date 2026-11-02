@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AiChatWidget } from "@/components/chat/AiChatWidget";
 import { GuestCartCapture } from "@/components/layout/GuestCartCapture";
 import { LinkEnricher } from "@/components/layout/LinkEnricher";
+import { SalesIqChat } from "@/components/layout/SalesIqChat";
 import { ZipAutoDetect } from "@/components/layout/ZipAutoDetect";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
@@ -54,6 +55,9 @@ export default function MarketLayout({
           </Suspense>
           <Suspense>
             <LinkEnricher />
+          </Suspense>
+          <Suspense>
+            <SalesIqChat />
           </Suspense>
         </WishlistProvider>
       </CartProvider>
