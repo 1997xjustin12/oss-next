@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useZipPlace } from '@/hooks/useZipPlace'
 import { getGuestLead, setGuestLead } from '@/lib/guestCapture'
 import { CONTACT_NUMBER } from '@/lib/helpers'
+import { identifySalesIqVisitor } from '@/lib/salesIqVisitor'
 import { completeZip } from '@/lib/shippingQuote'
 import { readVisitorZip } from '@/lib/visitorZip'
 import {
@@ -180,6 +181,7 @@ export function useZohoQuoteForm({ active = true, onZipResolved, prefer }: Optio
     setValues(clean)
     writeZohoQuote(clean)
     setGuestLead(zohoQuoteToLead(clean))
+    identifySalesIqVisitor(clean.firstName, clean.lastName, clean.email)
     return clean
   }
 

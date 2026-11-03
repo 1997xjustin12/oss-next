@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import Image from 'next/image'
 import { RotateCw } from 'lucide-react'
 import { ZOHO_PRICING_FORM } from '@/lib/data/zohoForms'
+import { identifySalesIqVisitor } from '@/lib/salesIqVisitor'
 import type { ReactNode } from 'react'
 
 const FORM = ZOHO_PRICING_FORM
@@ -73,7 +74,17 @@ export function ZohoPricingForm({ classes, placeholders = {}, labels = {}, submi
   const captchaSrc = captchaKey === null ? FORM.captcha.imageUrl : `${FORM.captcha.imageUrl}&d${captchaKey}`
 
   return (
-    <form action={FORM.action} method="POST" acceptCharset="UTF-8" onSubmit={() => setSending(true)} className={classes.form}>
+    <form
+      action={FORM.action}
+      method="POST"
+      acceptCharset="UTF-8"
+      onSubmit={(event) => {
+        setSending(true)
+        const data = new FormData(event.currentTarget)
+        identifySalesIqVisitor(String(data.get('First Name') ?? ''), String(data.get('Last Name') ?? ''), String(data.get('Email') ?? ''))
+      }}
+      className={classes.form}
+    >
       {Object.entries(FORM.hidden).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
