@@ -18,7 +18,6 @@ import { AlertTriangle, ArrowUpRight, ChevronDown, Phone, Search, SlidersHorizon
 import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
 import { useStoredZip } from '@/hooks/useStoredZip'
-import { QuickViewModal } from './QuickViewModal'
 import { TileLink } from './TileLink'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { formatMoney } from '@/lib/formatters'
@@ -438,7 +437,6 @@ function StarRow({ rating }: { rating: number }) {
 }
 
 function ProductHit({ hit }: { hit: HitData }) {
-  const [quickView, setQuickView] = useState(false)
   const { postcode } = useStoredZip()
 
   /**
@@ -459,6 +457,8 @@ function ProductHit({ hit }: { hit: HitData }) {
   const variant  = hit.variants?.[0]
   const price    = hit.sale_price ?? 0
   const location = getCF(hit.custom_fields, 'location')
+  // A reference listing has no depot to deliver from.
+  const deliveryZip = location && location !== DEFAULT_LOCATION ? postcode : ''
   const size     = getCF(hit.custom_fields, 'length_width')
   const height   = getCF(hit.custom_fields, 'height')
   const cond     = getCF(hit.custom_fields, 'condition')
@@ -476,7 +476,6 @@ function ProductHit({ hit }: { hit: HitData }) {
   })()
 
   return (
-    <>
     <article
       className="relative grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-5 rounded-lg border border-theme-border bg-white p-4 sm:p-5 transition-all hover:border-theme-primary/40 hover:shadow-lg"
     >
@@ -561,18 +560,16 @@ function ProductHit({ hit }: { hit: HitData }) {
               where they are actually worked out: the product page and checkout. */}
         </div>
         <div className="flex w-full max-w-45 flex-col gap-2">
-          <button
-            type="button"
-            onClick={() => setQuickView(true)}
+          {/* The product page works out delivery and the total for this ZIP. */}
+          <Link
+            href={deliveryZip ? `${href}?zipcode=${encodeURIComponent(deliveryZip)}` : href}
             // Tall enough for the ZIP line from the start: the ZIP is only read
             // after hydration, and the card should not grow when it arrives.
             className="relative z-10 flex min-h-13 w-full flex-col items-center justify-center rounded-md bg-theme-primary px-3 py-1.5 text-center text-white transition-colors hover:bg-theme-primary-dark"
           >
             <span className="text-sm font-extrabold">See Total Price</span>
-            {postcode && location && location !== DEFAULT_LOCATION && (
-              <span className="text-xs font-semibold">Delivery to {postcode}</span>
-            )}
-          </button>
+            {deliveryZip && <span className="text-xs font-semibold">Delivery to {deliveryZip}</span>}
+          </Link>
           <a
             href="tel:8889779085"
             className="relative z-10 flex w-full items-center justify-center gap-2 rounded-md bg-theme-dark px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-black"
@@ -583,10 +580,6 @@ function ProductHit({ hit }: { hit: HitData }) {
         </div>
       </div>
     </article>
-    {quickView && (
-      <QuickViewModal open={quickView} onClose={() => setQuickView(false)} hit={hit} />
-    )}
-    </>
   )
 }
 
