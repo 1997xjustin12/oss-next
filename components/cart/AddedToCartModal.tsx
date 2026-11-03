@@ -160,10 +160,9 @@ function AccessoryCard({
   )
 }
 
-// Generic accessory upsell row — reuses the same ES-backed /api/search route
-// the PLP's instant search calls, filtered to productType: 'accessories' (any
-// category that isn't Shipping Containers/Generic Product Page). No pairing
-// logic with the item just added — just a basic accessory sampler, per spec.
+// Generic accessory upsell row, in the order set by config/cartUpsell.ts: lock
+// boxes and leveling before anything expensive. No pairing logic with the item
+// just added — the same row for every container, per spec.
 function FrequentlyBought({
   onAdd,
   onNavigate,
@@ -176,17 +175,11 @@ function FrequentlyBought({
   useEffect(() => {
     let cancelled = false
 
-    fetch('/api/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        requests: [{ indexName: 'accessories', params: { productType: 'accessories', hitsPerPage: 8, page: 0 } }],
-      }),
-    })
+    fetch('/api/cart-upsell')
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { results?: { hits?: ProductHit[] }[] } | null) => {
+      .then((data: { products?: ProductHit[] } | null) => {
         if (cancelled) return
-        setProducts(data?.results?.[0]?.hits ?? [])
+        setProducts(data?.products ?? [])
       })
       .catch(() => {
         if (!cancelled) setProducts([])
