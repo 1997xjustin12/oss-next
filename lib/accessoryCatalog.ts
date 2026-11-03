@@ -134,9 +134,9 @@ type RawHit = {
  * The `sales_tags` field, as sales fill it in. Containers carry both "bestseller"
  * and "Bestseller" (2026-11-03); no accessory is marked yet.
  */
-function isBestSeller(hit: RawHit): boolean {
+export function isBestSeller(hit: Pick<RawHit, 'custom_fields'>): boolean {
   const tag = hit.custom_fields?.find((field) => field.name === 'sales_tags')?.value
-  return typeof tag === 'string' && /^best[\s_-]?sellers?$/i.test(tag.replace(/[​-‍﻿]/g, '').trim())
+  return typeof tag === 'string' && /^bestseller$/i.test(tag.replace(/[​-‍﻿]/g, '').trim())
 }
 
 /** A search hit → what a product card shows. */

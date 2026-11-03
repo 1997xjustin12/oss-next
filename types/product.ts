@@ -119,7 +119,7 @@ export interface Accessory {
   permalink?: string
   sku: string
   category: string
-  badge: { label: string; tone: BadgeTone }
+  badge: { label: string; tone: BadgeTone } | null
   rating: number
   reviews: number
 }

@@ -19,6 +19,7 @@ import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
 import { useStoredZip } from '@/hooks/useStoredZip'
 import { TileLink } from './TileLink'
+import { isBestSeller } from '@/lib/accessoryCatalog'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { formatMoney } from '@/lib/formatters'
 import { CONTACT_NUMBER } from '@/lib/helpers'
@@ -393,10 +394,8 @@ function getCF(fields: CustomField[] | undefined, name: string): string {
 
 function hitToAccessory(hit: HitData): Accessory {
   const price    = hit.sale_price ?? 0
-  const promoTag = hit.tags?.find((t) => /best|popular|sale|deal/i.test(t))
-  const tone: BadgeTone = promoTag
-    ? /best|popular/i.test(promoTag) ? 'red' : 'amber'
-    : 'green'
+  const promoTag = isBestSeller(hit) ? 'Best Seller' : hit.tags?.find((t) => /best|popular|sale|deal/i.test(t))
+  const tone: BadgeTone = promoTag && /best|popular/i.test(promoTag) ? 'red' : 'amber'
   return {
     id:           hit.objectID,
     title:        hit.title,
@@ -405,7 +404,7 @@ function hitToAccessory(hit: HitData): Accessory {
     permalink:    `/product/${hit.handle}`,
     sku:          hit.variants?.[0]?.sku ?? '',
     category:     hit.product_category?.[0]?.category_name ?? '',
-    badge:        { label: promoTag ?? 'In Stock', tone },
+    badge:        promoTag ? { label: promoTag, tone } : null,
     // Its own rating when it has one, else the company's Google rating — the
     // same rule the product page uses, so a tile and its page agree.
     rating:       displayRating(hit.ratings).value,

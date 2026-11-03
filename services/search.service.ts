@@ -732,6 +732,15 @@ export async function cachedEsSearch(input: SearchInput) {
       ? productType
       : null
 
+  // The accessories' Default order: best sellers first. Only with no text query
+  // and no chosen sort, so a search keeps its relevance order. custom_fields is
+  // not nested, so this cannot tie the value to the field's name; only sales_tags
+  // holds this value (checked 2026-11-03: 2,325 documents, none anywhere else).
+  const bestSellersFirst =
+    sortClauses.length === 0 && !query.trim() && productType === 'accessories'
+      ? { should: [{ constant_score: { filter: { term: { 'custom_fields.value.keyword': { value: 'bestseller', case_insensitive: true } } } } }] }
+      : {}
+
   const esResponse = await client.search({
     index: INDEX,
     from:  ruleOrder ? 0 : page * hitsPerPage,
@@ -742,6 +751,7 @@ export async function cachedEsSearch(input: SearchInput) {
           ? [{ multi_match: { query, fields: ['title^3', 'tags', 'variants.sku', 'custom_fields.value', 'product_category.category_name'], fuzziness: 'AUTO' } }]
           : [{ match_all: {} }],
         filter: filters,
+        ...bestSellersFirst,
       },
     },
     ...(Object.keys(aggs).length > 0 && { aggs }),

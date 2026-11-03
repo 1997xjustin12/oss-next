@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { Phone, Star } from 'lucide-react'
 import { formatMoney } from '@/lib/formatters'
 import { TileLink } from './TileLink'
-import type { Accessory } from '@/types/product'
+import type { Accessory, BadgeTone } from '@/types/product'
 
 type Props = { product: Accessory }
 
@@ -12,7 +12,7 @@ const BADGE_CLASSES = {
   red:   'bg-theme-primary',
   amber: 'bg-amber-700',
   green: 'bg-green-700',
-} satisfies Record<Accessory['badge']['tone'], string>
+} satisfies Record<BadgeTone, string>
 
 export function AccessoryCard({ product }: Props) {
   const href = product.permalink ?? `/product/${product.sku.toLowerCase()}`
@@ -24,9 +24,11 @@ export function AccessoryCard({ product }: Props) {
     >
       {/* Image */}
       <div className="relative aspect-square bg-theme-subtle dark:bg-neutral-800 overflow-hidden">
-        <span className={`pointer-events-none absolute top-0 left-0 z-10 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white rounded-br-lg ${BADGE_CLASSES[product.badge.tone]}`}>
-          {product.badge.label}
-        </span>
+        {product.badge && (
+          <span className={`pointer-events-none absolute top-0 left-0 z-10 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white rounded-br-lg ${BADGE_CLASSES[product.badge.tone]}`}>
+            {product.badge.label}
+          </span>
+        )}
         {product.thumbnailUrl ? (
           <Image
             src={product.thumbnailUrl}

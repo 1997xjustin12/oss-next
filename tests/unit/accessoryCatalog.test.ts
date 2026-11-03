@@ -107,7 +107,6 @@ describe('hitToAccessoryCard', () => {
     const tagged = (value: unknown, name = 'sales_tags') => hitToAccessoryCard({ ...hit, custom_fields: [{ name, value }] }).bestSeller
     assert.equal(tagged('bestseller'), true)
     assert.equal(tagged('Bestseller'), true)
-    assert.equal(tagged('Best Seller'), true)
     assert.equal(tagged('​bestseller '), true)
     assert.equal(tagged(''), false)
     assert.equal(tagged('top_choice'), false)
