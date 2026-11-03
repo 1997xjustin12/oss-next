@@ -59,7 +59,7 @@ export function AccessoryCard({ product }: Props) {
                 />
               ))}
             </div>
-            <span>({product.reviews})</span>
+            {product.reviews > 0 && <span>({product.reviews})</span>}
           </div>
         )}
 
