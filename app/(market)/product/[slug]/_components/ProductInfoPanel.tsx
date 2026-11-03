@@ -1936,7 +1936,7 @@ export function ProductInfoPanel({
             <button
               type="button"
               onClick={handleSaveQuoteClick}
-              className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-white bg-[#0F3A59] text-[13px] font-semibold text-white shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] transition-colors hover:bg-[#164A70] focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
+              className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-white bg-theme-muted text-[13px] font-semibold text-white shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] transition-colors hover:bg-theme-mid focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
             >
               <QuoteIcon />
               <span className="sm:hidden">Lock in your price &middot; Save Quote</span>
@@ -1949,7 +1949,7 @@ export function ProductInfoPanel({
             <Link
               href={CONTACT_TEL}
               aria-label={`Call ${CONTACT_NUMBER} for the best price`}
-              className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-white bg-[#0F3A59] text-[13px] font-semibold text-white shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] transition-colors hover:bg-[#164A70] focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
+              className="flex h-10 items-center justify-center gap-2 rounded-[10px] border border-white bg-theme-muted text-[13px] font-semibold text-white shadow-[inset_0_-4px_4px_0_rgba(0,0,0,0.30),inset_0_3px_2.9px_0_rgba(255,255,255,0.20),0_4px_14.8px_0_rgba(0,0,0,0.21)] transition-colors hover:bg-theme-mid focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:h-9"
             >
               <PhoneIcon />
               Call for Best Price
