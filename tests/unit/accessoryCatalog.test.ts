@@ -93,7 +93,7 @@ describe('hitToAccessoryCard', () => {
       price: 899,
       imageUrl: 'https://cdn.example/ramp.webp',
       imageAlt: 'A ramp',
-      inStock: true,
+      bestSeller: false,
       category: 'Ramp',
     })
   })
@@ -103,11 +103,16 @@ describe('hitToAccessoryCard', () => {
     assert.equal(hitToAccessoryCard({ ...hit, product_category: [{ category_name: 'Free Shipping' }] }).category, '')
   })
 
-  it('in stock only for a quantity of at least 1 on the first variant', () => {
-    assert.equal(hitToAccessoryCard({ ...hit, variants: [{ qty: null }] }).inStock, false)
-    assert.equal(hitToAccessoryCard({ ...hit, variants: [{ qty: 0 }] }).inStock, false)
-    assert.equal(hitToAccessoryCard({ ...hit, variants: [] }).inStock, false)
-    assert.equal(hitToAccessoryCard({ ...hit, variants: [{ qty: '3' }] }).inStock, true)
+  it('a best seller only when sales_tags says so, whatever its spelling', () => {
+    const tagged = (value: unknown, name = 'sales_tags') => hitToAccessoryCard({ ...hit, custom_fields: [{ name, value }] }).bestSeller
+    assert.equal(tagged('bestseller'), true)
+    assert.equal(tagged('Bestseller'), true)
+    assert.equal(tagged('Best Seller'), true)
+    assert.equal(tagged('​bestseller '), true)
+    assert.equal(tagged(''), false)
+    assert.equal(tagged('top_choice'), false)
+    assert.equal(tagged('bestseller', 'grade'), false)
+    assert.equal(hitToAccessoryCard({ ...hit, custom_fields: [] }).bestSeller, false)
   })
 
   it('survives a hit with missing fields', () => {

@@ -126,8 +126,17 @@ type RawHit = {
   handle?: string
   sale_price?: number | string
   images?: { src?: string; alt?: string }[]
-  variants?: { qty?: number | string | null }[]
   product_category?: { category_name?: string }[]
+  custom_fields?: { name?: string; value?: unknown }[]
+}
+
+/**
+ * The `sales_tags` field, as sales fill it in. Containers carry both "bestseller"
+ * and "Bestseller" (2026-11-03); no accessory is marked yet.
+ */
+function isBestSeller(hit: RawHit): boolean {
+  const tag = hit.custom_fields?.find((field) => field.name === 'sales_tags')?.value
+  return typeof tag === 'string' && /^best[\s_-]?sellers?$/i.test(tag.replace(/[​-‍﻿]/g, '').trim())
 }
 
 /** A search hit → what a product card shows. */
@@ -136,7 +145,6 @@ export function hitToAccessoryCard(hit: RawHit): AccessoryCardData {
   // The specific category reads better than the umbrella "Accessories" most carry.
   const category =
     ACCESSORY_FILTER_CATEGORIES.find((c) => names.includes(c)) ?? (names.includes('Accessories') ? 'Accessories' : '')
-  const qty = Number(hit.variants?.[0]?.qty)
   const image = hit.images?.[0]
 
   return {
@@ -146,7 +154,7 @@ export function hitToAccessoryCard(hit: RawHit): AccessoryCardData {
     price: Number(hit.sale_price) || 0,
     imageUrl: image?.src || undefined,
     imageAlt: image?.alt || hit.title || '',
-    inStock: Number.isFinite(qty) && qty > 0,
+    bestSeller: isBestSeller(hit),
     category,
   }
 }

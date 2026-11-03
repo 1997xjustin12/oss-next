@@ -14,8 +14,8 @@ type Props = {
 };
 
 /**
- * One product: photo, category, title, price, stock, then quantity and
- * "Add to cart". The title's link stretches over the whole card
+ * One product: photo, best-seller tag, category, title, price, then quantity
+ * and "Add to cart". The title's link stretches over the whole card
  * (after:inset-0), so clicking anywhere else on the card opens the product
  * page; the cart controls sit above it.
  */
@@ -23,6 +23,11 @@ export function AccessoryCard({ item, hit }: Props) {
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-theme-border bg-white transition-colors hover:border-theme-primary dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-red-400">
       <div className="relative flex aspect-video items-center justify-center bg-theme-subtle sm:aspect-4/3 dark:bg-neutral-800">
+        {item.bestSeller && (
+          <span className="pointer-events-none absolute top-0 left-0 z-10 rounded-br-md bg-theme-primary px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white">
+            Best Seller
+          </span>
+        )}
         {item.imageUrl ? (
           <Image
             src={item.imageUrl}
@@ -48,12 +53,7 @@ export function AccessoryCard({ item, hit }: Props) {
             {item.title}
           </Link>
         </h3>
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <p className="text-lg font-extrabold text-theme-dark dark:text-gray-100">{formatMoney(item.price)}</p>
-          {/* Only a known quantity is shown: most accessories carry none, and
-              "out of stock" would be a guess. */}
-          {item.inStock && <p className="text-sm font-semibold text-green-700 dark:text-green-400">In stock</p>}
-        </div>
+        <p className="mt-auto pt-2 text-lg font-extrabold text-theme-dark dark:text-gray-100">{formatMoney(item.price)}</p>
         <AccessoryAddToCart hit={hit} title={item.title} />
       </div>
     </article>

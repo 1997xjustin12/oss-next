@@ -8,8 +8,8 @@ export type AccessoryCardData = {
   price: number
   imageUrl?: string
   imageAlt: string
-  /** variants[0].qty of at least 1. */
-  inStock: boolean
+  /** Marked `bestseller` in the product's `sales_tags` field. */
+  bestSeller: boolean
   /** The product's most specific category, for the card's label. */
   category: string
 }

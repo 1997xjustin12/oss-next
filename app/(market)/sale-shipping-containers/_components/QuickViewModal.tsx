@@ -14,6 +14,7 @@ import { formatMoney } from '@/lib/formatters'
 import { getContainerImages } from '@/lib/containerImages'
 import { isContainerHit } from '@/lib/pricing'
 import { ROUTES } from '@/config/routes'
+import { QuickViewTotal } from './QuickViewTotal'
 import type { HitData } from './hitData'
 
 type Props = {
@@ -116,6 +117,8 @@ export function QuickViewModal({ open, onClose, hit }: Props) {
               {isGenericLocation && <span className="text-lg font-bold text-theme-muted mr-1.5">Starts at</span>}
               {formatMoney(price)}{priceSuffix}
             </p>
+
+            <QuickViewTotal handle={hit.handle} price={price} paymentType={paymentType} location={location} />
 
             <p className="flex items-center gap-1.5 text-sm font-semibold text-theme-accent">
               <Phone className="w-3.5 h-3.5" />

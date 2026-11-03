@@ -17,6 +17,7 @@ import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink
 import { AlertTriangle, ArrowUpRight, ChevronDown, Phone, Search, SlidersHorizontal, Star, X } from 'lucide-react'
 import { ZipLookup } from './ZipLookup'
 import { AccessoryCard } from './AccessoryCard'
+import { useStoredZip } from '@/hooks/useStoredZip'
 import { QuickViewModal } from './QuickViewModal'
 import { TileLink } from './TileLink'
 import { DEFAULT_LOCATION } from '@/lib/constants'
@@ -72,7 +73,7 @@ const ACCESSORY_CATEGORY_OPTIONS: Array<{ label: string; value: string | null }>
 type SortOption = { value: string; label: string }
 
 const CONTAINER_SORT_OPTIONS: SortOption[] = [
-  { value: 'default',    label: 'Default' },
+  { value: 'default',    label: 'Most Popular' },
   { value: 'price_asc',  label: 'Price: Low To High' },
   { value: 'price_desc', label: 'Price: High To Low' },
   { value: 'best_rated', label: 'Best Rated' },
@@ -438,6 +439,7 @@ function StarRow({ rating }: { rating: number }) {
 
 function ProductHit({ hit }: { hit: HitData }) {
   const [quickView, setQuickView] = useState(false)
+  const { postcode } = useStoredZip()
 
   /**
    * The curated photograph for this spec, where one exists.
@@ -562,9 +564,14 @@ function ProductHit({ hit }: { hit: HitData }) {
           <button
             type="button"
             onClick={() => setQuickView(true)}
-            className="relative z-10 w-full rounded-md bg-theme-primary px-4 py-2.5 text-sm font-extrabold text-white text-center transition-colors hover:bg-theme-primary-dark"
+            // Tall enough for the ZIP line from the start: the ZIP is only read
+            // after hydration, and the card should not grow when it arrives.
+            className="relative z-10 flex min-h-13 w-full flex-col items-center justify-center rounded-md bg-theme-primary px-3 py-1.5 text-center text-white transition-colors hover:bg-theme-primary-dark"
           >
-            Quick View
+            <span className="text-sm font-extrabold">See Total Price</span>
+            {postcode && location && location !== DEFAULT_LOCATION && (
+              <span className="text-xs font-semibold">Delivery to {postcode}</span>
+            )}
           </button>
           <a
             href="tel:8889779085"
