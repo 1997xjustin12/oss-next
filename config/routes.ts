@@ -4,7 +4,6 @@
 // Privacy, Terms, the quote landing page, the Navbar's mega-menu, etc.) —
 // this app doesn't own those slugs, WordPress does, so encoding them here
 // would misrepresent who's responsible for keeping them correct.
-import { MERCHANT_FEED_SOURCES } from './merchantFeeds'
 
 export const ROUTES = {
   HOME: '/',
@@ -170,8 +169,6 @@ export const NATIVE_ROUTE_SEGMENTS = [
  */
 const NATIVE_EXACT_PATHS: readonly string[] = [
   ROUTES.WHERE_TO_BUY,
-  // The Google Merchant feeds keep their WordPress URLs; next.config.ts rewrites them.
-  ...MERCHANT_FEED_SOURCES.map(({ path }) => path),
 ]
 
 export function isNativePath(path: string): boolean {

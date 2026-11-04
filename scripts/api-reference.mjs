@@ -164,7 +164,6 @@ const SECTIONS = [
       ['GET', '/api/md/[[...slug]]', 'Markdown view of any page. Never linked — proxy.ts rewrites .md requests to it. No in-app caller by design.'],
       ['GET', '/api/feeds/google.xml', 'Google Merchant Center feed, RSS 2.0 with the g: namespace. Cached.'],
       ['GET', '/api/feeds/products.jsonl', 'The whole catalogue as JSON Lines.'],
-      ['GET', '/api/feeds/merchant/{source}', 'A Google Merchant feed as last generated: buy, rental or rent-to-own. Merchant Center reaches it at its old /wp-content/uploads/*-google-shopping.xml URL (next.config.ts).'],
     ],
   },
 
@@ -175,7 +174,6 @@ const SECTIONS = [
       ['POST', '/api/revalidate', 'Bust the cache by tag, by WordPress page ({"tags":["page:/…"]}), or everything ({"tag":"store"}); an empty body is refused. Header: x-revalidate-token.'],
       ['POST', '/api/revalidate-plp', 'Bust the listing cache only. Same header. No in-app caller — it is a webhook.'],
       ['GET/POST', '/api/maintenance', 'Read or flip the maintenance wall. Same header. No redeploy — it sets a Redis flag the proxy reads.'],
-      ['GET/POST', '/api/feeds/generate', 'Start a fresh generation of the Google Merchant feeds, in the background. Bearer CRON_SECRET (Vercel Cron, daily), the same x-revalidate-token, or an admin (POST). Outcome on Admin → Product Feeds.'],
       ['GET', '/api/search-health', 'Connectivity check: counts documents in the index and reports which keys are set, as booleans. No values. No in-app caller — it is for operators.'],
     ],
     after: [
