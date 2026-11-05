@@ -29,7 +29,7 @@ import { formatMoney } from "@/lib/formatters";
 import { useDeliveryRates } from "@/hooks/useDeliveryRates";
 import { useStoredZip } from "@/hooks/useStoredZip";
 import { notifyVisitorZipChange } from "@/lib/visitorZip";
-import { cheapestDeliveryOption } from "@/lib/delivery";
+import { displayedDeliveryOption } from "@/lib/delivery";
 
 // ─── option layer types ───────────────────────────────────────────────────────
 
@@ -1049,7 +1049,7 @@ export function ProductInfoPanel({
   });
 
   const deliveryOption = deliveryRates
-    ? cheapestDeliveryOption(deliveryRates)
+    ? displayedDeliveryOption(deliveryRates)
     : null;
   const deliveryMiles = deliveryRates?.distance_miles ?? null;
   /**

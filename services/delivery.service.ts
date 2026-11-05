@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache'
 import { CACHE_TAGS } from '@/config/cache'
 import { SITE } from '@/config/site'
+import { planDeliveryRate } from '@/lib/delivery'
 import { formatMoney } from '@/lib/formatters'
 import { ShippingRefusedError } from '@/lib/shippingQuote'
 import { getOrderTotal } from '@/services/order.service'
@@ -125,6 +126,9 @@ function toOption(quote: ShippingQuote, option: ShippingOption): DeliveryRateOpt
     call_for_rate: withheld,
     rate_per_mile: card.perMile,
     min_rate: card.min,
+    // Not when the backend refuses the route: a figure it worked out for an
+    // address it will not deliver to is not a rate.
+    plan_rate: quote.can_deliver === false ? null : planDeliveryRate(option),
   }
 }
 
@@ -290,7 +294,7 @@ export async function getDeliveryRates(query: DeliveryRatesQuery, ip: string | n
         if (!result.ok && result.reason === 'unavailable') throw new UncachedResult(result)
         return result
       },
-      ['delivery-rates'],
+      ['delivery-rates-v2'],
       { revalidate: 60 * 60, tags: [CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS] },
     )(normalizeQuery(query))
   } catch (err) {

@@ -31,6 +31,15 @@ export type DeliveryRateOption = {
   call_for_rate: boolean
   rate_per_mile: number | null
   min_rate: number | null
+  /**
+   * What delivery costs on a rental or rent-to-own line, for the product page.
+   *
+   * Separate from `rate` because the backend does not offer these as a shipping
+   * method to select: anything that adds up `rate`, such as the quote page's
+   * total, must keep leaving them out. Null on a purchase, and when the figure
+   * is over the ceiling the customer has to call about.
+   */
+  plan_rate: number | null
 }
 
 export type DeliveryDestination = {

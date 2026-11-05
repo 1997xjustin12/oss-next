@@ -46,3 +46,40 @@ export function quotedDeliveryOptions(rates: DeliveryRates): DeliveryRateOption[
 export function cheapestDeliveryOption(rates: DeliveryRates): DeliveryRateOption | null {
   return quotedDeliveryOptions(rates).find((o) => !isPickup(o)) ?? null
 }
+
+/** The backend's reason for a method it prices but does not offer on these lines. */
+const RENTAL_OR_RENT_TO_OWN = 'rto_rental'
+
+/**
+ * Above this the backend asks for a phone call rather than publishing a rate.
+ *
+ * It says so with `call_for_quote` on a purchase. On a rental or rent-to-own
+ * line `rto_rental` takes that reason's place, so the ceiling is applied here.
+ */
+const PUBLISHED_RATE_CEILING = 1000
+
+/** The rate to show for a rental or rent-to-own line, or null when there is none to show. */
+export function planDeliveryRate(option: {
+  available: boolean
+  hidden_reason?: string
+  cost: number
+}): number | null {
+  if (option.available || option.hidden_reason !== RENTAL_OR_RENT_TO_OWN) return null
+  return option.cost > 0 && option.cost <= PUBLISHED_RATE_CEILING ? option.cost : null
+}
+
+/**
+ * The delivery method the product page shows: a purchase's quotable rate, else
+ * the cheapest rate for a rental or rent-to-own line.
+ *
+ * For display only. Pricing an order uses `cheapestDeliveryOption`.
+ */
+export function displayedDeliveryOption(rates: DeliveryRates): DeliveryRateOption | null {
+  const quoted = cheapestDeliveryOption(rates)
+  if (quoted) return quoted
+
+  const planRates = rates.options
+    .flatMap((o) => (!isPickup(o) && o.plan_rate !== null ? [{ ...o, rate: o.plan_rate }] : []))
+    .sort((a, b) => a.rate - b.rate)
+  return planRates[0] ?? null
+}
