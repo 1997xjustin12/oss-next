@@ -105,7 +105,7 @@ export function LocationFeaturedContainers({ specs }: Props) {
   if (state.status === 'empty') return null
 
   return (
-    <section aria-labelledby="featured-containers" className="w-full px-4 pb-12 sm:px-6">
+    <section aria-labelledby="featured-containers" className="w-full bg-white px-4 pb-12 sm:px-6 dark:bg-neutral-950">
       <h2 id="featured-containers" className="sr-only">
         Shipping containers available near you
       </h2>

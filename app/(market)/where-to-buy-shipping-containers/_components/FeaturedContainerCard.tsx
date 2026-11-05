@@ -86,8 +86,9 @@ export function FeaturedContainerCard({ product }: Props) {
         </h3>
 
         {/* Same fixed box as the option cards, for the same reason: the source
-            photographs differ in size and shape. */}
-        <div className="relative w-full overflow-hidden rounded-md aspect-4/3">
+            photographs differ in size and shape. White in dark mode too: the photos
+            have white backgrounds, which would otherwise show as uneven tiles. */}
+        <div className="relative w-full overflow-hidden rounded-md aspect-4/3 dark:bg-white">
           {image ? (
             <Image
               src={image}
@@ -122,7 +123,7 @@ export function FeaturedContainerCard({ product }: Props) {
           Starting at{' '}
           <span className="font-extrabold text-theme-dark dark:text-neutral-100">{wholeDollars(price)}</span>{' '}
           or Purchase for as low as{' '}
-          <span className="font-extrabold text-theme-primary">{formatPrice(monthly)}</span>/month
+          <span className="font-extrabold text-theme-primary dark:text-red-400">{formatPrice(monthly)}</span>/month
         </p>
 
         {/* `mt-auto` pins this and the rating to the bottom, so they line up
@@ -132,11 +133,12 @@ export function FeaturedContainerCard({ product }: Props) {
           View Container
         </span>
 
-        <p className="flex items-center justify-center gap-1.5 text-xs">
+        {/* A div: Stars renders one, which a <p> can't contain. */}
+        <div className="flex items-center justify-center gap-1.5 text-xs">
           <span className="font-bold text-theme-dark dark:text-neutral-100">{rating.toFixed(1)}</span>
           <Stars count={Math.round(rating)} className="h-3.5 w-3.5" />
-          <span className="text-theme-muted">({reviews})</span>
-        </p>
+          <span className="text-theme-muted dark:text-neutral-400">({reviews})</span>
+        </div>
       </div>
     </Link>
   )

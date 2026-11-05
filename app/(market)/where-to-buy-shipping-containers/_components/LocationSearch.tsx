@@ -194,10 +194,10 @@ export function LocationSearch() {
                        bg-white text-left shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
           >
             {loading && results.length === 0 && (
-              <li className="px-3 py-2.5 text-sm text-theme-muted">Searching…</li>
+              <li className="px-3 py-2.5 text-sm text-theme-muted dark:text-neutral-400">Searching…</li>
             )}
             {error && !loading && (
-              <li className="px-3 py-2.5 text-sm text-theme-primary">{error}</li>
+              <li className="px-3 py-2.5 text-sm text-theme-primary dark:text-red-400">{error}</li>
             )}
             {results.map((r) => (
               <li key={r.placeId} role="option" aria-selected={false}>
@@ -211,10 +211,10 @@ export function LocationSearch() {
                   className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm transition-colors
                              hover:bg-theme-subtle dark:hover:bg-neutral-800"
                 >
-                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-theme-primary" aria-hidden />
+                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-theme-primary dark:text-red-400" aria-hidden />
                   <span>
                     <span className="font-semibold text-theme-dark dark:text-gray-100">{r.formatted}</span>
-                    <span className="block text-[11px] text-theme-muted">{r.country}</span>
+                    <span className="block text-[11px] text-theme-muted dark:text-neutral-400">{r.country}</span>
                   </span>
                 </button>
               </li>

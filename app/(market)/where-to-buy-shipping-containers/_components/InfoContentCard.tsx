@@ -14,15 +14,18 @@ type Props = {
  *
  * Hover matches the WordPress page's cards: a #E92945 border, 20px corners and
  * a 10px shadow. The border is there (transparent) at rest so nothing moves.
+ *
+ * In dark mode a card is darker than the neutral-900 section it sits on, and a
+ * card nested inside one goes back to neutral-900, so each stays visible.
  */
 export function InfoContentCard({ card, horizontal = false, headingLevel = 3 }: Props) {
   const Heading = headingLevel === 3 ? "h3" : "h4";
 
   return (
     <article
-      className={`flex h-full flex-col overflow-hidden rounded-[20px] border-2 border-transparent bg-white transition-[border-color,box-shadow] duration-300 hover:border-[#E92945] hover:shadow-[0_0_10px_0_rgba(0,0,0,0.5)] dark:bg-neutral-900 ${
-        horizontal && card.image ? "md:grid md:grid-cols-[2fr_3fr]" : ""
-      }`}
+      className={`flex h-full flex-col overflow-hidden rounded-[20px] border-2 border-transparent bg-white transition-[border-color,box-shadow] duration-300 hover:border-[#E92945] hover:shadow-[0_0_10px_0_rgba(0,0,0,0.5)] ${
+        headingLevel === 3 ? "dark:bg-neutral-950" : "dark:bg-neutral-900"
+      } ${horizontal && card.image ? "md:grid md:grid-cols-[2fr_3fr]" : ""}`}
     >
       {card.image && (
         <div className="relative aspect-4/3 w-full bg-theme-subtle dark:bg-neutral-800">

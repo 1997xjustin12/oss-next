@@ -20,7 +20,7 @@ type Props = {
  */
 export function SelectContainerType({ types, heading = 'Select An Option Below' }: Props) {
   return (
-    <section aria-labelledby="select-container-type" className="w-full px-4 py-10 sm:px-6 sm:py-12">
+    <section aria-labelledby="select-container-type" className="w-full bg-white px-4 py-10 sm:px-6 sm:py-12 dark:bg-neutral-950">
       <h2
         id="select-container-type"
         className="mb-6 text-center text-lg font-bold text-theme-dark dark:text-neutral-100 sm:mb-8 sm:text-xl"
