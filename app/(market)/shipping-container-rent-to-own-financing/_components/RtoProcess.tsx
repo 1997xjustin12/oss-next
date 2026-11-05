@@ -1,5 +1,6 @@
 import { FilePenLine, Package, ShieldCheck, ShoppingCart } from 'lucide-react'
 import { RTO_PAYMENT_TABLE, RTO_PROCESS, type RtoStepIcon } from '@/lib/data/rentToOwnContent'
+import { RtoPaymentZipBox } from './RtoPaymentZipBox'
 import type { LucideIcon } from 'lucide-react'
 
 const STEP_ICONS: Record<RtoStepIcon, LucideIcon> = {
@@ -13,12 +14,11 @@ const STEP_ICONS: Record<RtoStepIcon, LucideIcon> = {
  * "How It Works": the four steps, each with its red icon disc, and the payment
  * table under the first ("Pick Your Rent-to-Own Payment Plan").
  *
- * An ordered list, since the steps are a sequence. The WordPress section ended
- * with a "Get Instantly Approved" ZIP box (a plugin shortcode); that is a
- * feature still to build.
+ * An ordered list, since the steps are a sequence. The "Get Instantly Approved"
+ * ZIP box closes the section.
  */
 export function RtoProcess() {
-  const { heading, steps } = RTO_PROCESS
+  const { heading, steps, zipCta } = RTO_PROCESS
 
   return (
     <section aria-labelledby="rto-process" className="bg-white px-[5%] pb-12 sm:pb-16 dark:bg-neutral-950">
@@ -46,6 +46,10 @@ export function RtoProcess() {
           )
         })}
       </ol>
+
+      <div className="mx-auto mt-10 max-w-2xl">
+        <RtoPaymentZipBox label={zipCta} />
+      </div>
     </section>
   )
 }

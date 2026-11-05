@@ -2,9 +2,6 @@
  * Copy and media for /shipping-container-rent-to-own-financing, carried over
  * from the WordPress page it replaced (2026-10-27). Edit here; the components
  * only lay it out.
- *
- * Not carried over yet: the two "see my monthly payment" ZIP boxes further
- * down the WordPress page. They come next, as native features.
  */
 
 import type { ConfiguratorGroup } from '@/lib/configurator'
@@ -85,6 +82,7 @@ export const RTO_OFFER = {
 } as const
 
 export const RTO_WHY = {
+  zipCta: 'See My Monthly Payment',
   heading: { rest: 'Why Choose', accent: 'Rent-To-Own' },
   image: { src: `${CDN}/why-rto-1024x576webpbv_resized_desktopwebpbv_rg4ZJmn.webp`, alt: 'On-Site Storage Solutions shipping container on a delivery truck' },
   badge: { src: `${CDN}/early-payoff-discount-available-badgewebpbv.webp`, alt: 'Early payoff discount available' },
@@ -110,6 +108,7 @@ const RTO_STEPS: readonly RtoStep[] = [
 export const RTO_PROCESS = {
   heading: { rest: 'Shipping Container Rent-To-Own Process:', accent: 'How It Works' },
   steps: RTO_STEPS,
+  zipCta: 'Get Instantly Approved',
 } as const
 
 /**
@@ -130,6 +129,31 @@ export const RTO_PAYMENT_TABLE = {
 } as const
 
 export const RTO_REVIEWS_HEADING = "We've Got a Lot of [[Happy Customers]]"
+/**
+ * "Rent-To-Own Shipping Containers Near Me". The twelve containers and their
+ * names and order as on WordPress, which also links the 12-month listing of each.
+ * Each is found in the catalogue by its spec, so the link and photo stay current.
+ */
+export const RTO_NEAR_ME = {
+  heading: { accent: 'Rent-To-Own', rest: 'Shipping Containers', accentEnd: 'Near Me' },
+  intro: 'Choose your rent-to-own payment term on our website: 12, 24, 36, or up to 48 months. No credit check is required; everyone qualifies based on valid public background information. A one-time early payment discount of 33% of the remaining balance is also available for extra savings.',
+  term: '12',
+  items: [
+    { name: 'RTO Used 40 ft Standard Shipping Container – Wind & Water Tight', size: '40s', condition: 'used', grade: 'wwt' },
+    { name: 'RTO Used 40 ft Standard Shipping Container – IICL', size: '40s', condition: 'used', grade: 'iicl' },
+    { name: 'RTO Used 40 ft Standard Shipping Container – Cargo Worthy', size: '40s', condition: 'used', grade: 'cw' },
+    { name: 'RTO Used 40 ft High Cube Shipping Container – Wind & Water Tight', size: '40h', condition: 'used', grade: 'wwt' },
+    { name: 'RTO Used 40 ft High Cube Shipping Container – IICL', size: '40h', condition: 'used', grade: 'iicl' },
+    { name: 'RTO Used 40 ft High Cube Shipping Container – Cargo Worthy', size: '40h', condition: 'used', grade: 'cw' },
+    { name: 'RTO Used 20 ft Standard Shipping Container – Wind & Water Tight', size: '20s', condition: 'used', grade: 'wwt' },
+    { name: 'RTO Used 20 ft Standard Shipping Container – IICL', size: '20s', condition: 'used', grade: 'iicl' },
+    { name: 'RTO Used 20 ft Standard Shipping Container – Cargo Worthy', size: '20s', condition: 'used', grade: 'cw' },
+    { name: 'RTO New 40 ft High Cube Shipping Container – IICL', size: '40h', condition: 'new', grade: 'iicl' },
+    { name: 'RTO New 40 ft Standard Shipping Container – IICL', size: '40s', condition: 'new', grade: 'iicl' },
+    { name: 'RTO New 20 ft Standard Shipping Container – IICL', size: '20s', condition: 'new', grade: 'iicl' },
+  ],
+} as const
+
 export const RTO_TRUSTED_HEADING = '[[Trusted By]] Organizations Like'
 
 export const RTO_OWN_BANNER = {

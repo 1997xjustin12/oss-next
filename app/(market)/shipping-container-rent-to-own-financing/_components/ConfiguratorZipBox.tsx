@@ -1,7 +1,7 @@
 'use client'
 
 import { useId, useRef, useState, useEffect, type Ref } from 'react'
-import { Loader2, LocateFixed, MapPin } from 'lucide-react'
+import { ArrowRight, Loader2, LocateFixed, MapPin } from 'lucide-react'
 import { useZipLookup, type GeoapifyResult } from '@/hooks/useGeoapify'
 
 type Props = {
@@ -11,6 +11,13 @@ type Props = {
   disabled?: boolean
   /** The configurator is loading the new depot's products. */
   busy?: boolean
+  submitLabel?: string
+  /**
+   * Called with a place we deliver to, once it is saved. Given by the boxes
+   * further down the page, which go on to the listing; they are the input and
+   * the button alone, as on WordPress.
+   */
+  onLocated?: (result: GeoapifyResult) => void
 }
 
 /**
@@ -19,9 +26,10 @@ type Props = {
  * Built on useZipLookup like every ZIP box (prefill, typed-only suggestions,
  * the one-depot-per-cart prompt). Unlike the others it never navigates: a pick
  * only saves the location, and the configurator follows the saved location and
- * refetches. So nothing here knows about products.
+ * refetches. So nothing here knows about products. A parent that wants more
+ * than that passes `onLocated`.
  */
-export function ConfiguratorZipBox({ inputRef, disabled = false, busy = false }: Props) {
+export function ConfiguratorZipBox({ inputRef, disabled = false, busy = false, submitLabel = 'Get My Price', onLocated }: Props) {
   const [open, setOpen] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const {
@@ -50,6 +58,7 @@ export function ConfiguratorZipBox({ inputRef, disabled = false, busy = false }:
     if (!selectResult(result, () => handleSelect(result))) return
     showResult(result)
     setNotice(result.nearestLocation ? null : "We don't deliver to that ZIP yet. Call us and we'll help.")
+    if (result.nearestLocation) onLocated?.(result)
   }
 
   // One suggestion left for what the visitor typed: take it, as the other boxes do.
@@ -67,7 +76,8 @@ export function ConfiguratorZipBox({ inputRef, disabled = false, busy = false }:
       setNotice('Enter a valid ZIP or postal code.')
       return
     }
-    if (pickedRef.current !== match.placeId) handleSelect(match)
+    // With onLocated a submit means "go", even for the place already picked.
+    if (onLocated || pickedRef.current !== match.placeId) handleSelect(match)
   }
 
   async function handleLocate() {
@@ -90,7 +100,7 @@ export function ConfiguratorZipBox({ inputRef, disabled = false, busy = false }:
   const working = loading || busy || locating
 
   return (
-    <div className="rounded-sm bg-neutral-200 p-3 sm:p-4 dark:bg-neutral-800">
+    <div className={onLocated ? '' : 'rounded-sm bg-neutral-200 p-3 sm:p-4 dark:bg-neutral-800'}>
       <form
         className="flex flex-col gap-3 sm:flex-row"
         onSubmit={(e) => {
@@ -162,23 +172,26 @@ export function ConfiguratorZipBox({ inputRef, disabled = false, busy = false }:
         <button
           type="submit"
           disabled={disabled}
-          className="h-12 shrink-0 rounded-sm bg-theme-primary px-7 text-base font-semibold text-white transition-colors hover:bg-theme-primary-dark
+          className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-sm bg-theme-primary px-7 text-base font-semibold text-white transition-colors hover:bg-theme-primary-dark
                      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Get My Price
+          {submitLabel}
+          {onLocated && <ArrowRight aria-hidden className="h-5 w-5" />}
         </button>
       </form>
 
-      <button
-        type="button"
-        onClick={handleLocate}
-        disabled={disabled}
-        className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-[#123d5f] text-base font-semibold text-white transition-colors hover:bg-[#0c2c45]
-                   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123d5f] disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <LocateFixed aria-hidden className="h-5 w-5" />
-        Use my current location
-      </button>
+      {!onLocated && (
+        <button
+          type="button"
+          onClick={handleLocate}
+          disabled={disabled}
+          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-[#123d5f] text-base font-semibold text-white transition-colors hover:bg-[#0c2c45]
+                     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123d5f] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <LocateFixed aria-hidden className="h-5 w-5" />
+          Use my current location
+        </button>
+      )}
 
       {notice && (
         <p role="status" className="mt-2 text-sm text-theme-dark dark:text-neutral-200">

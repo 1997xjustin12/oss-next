@@ -26,6 +26,8 @@ export type ConfiguratorGroup = {
  */
 export type ConfiguratorProduct = {
   id: string
+  /** For a link to the product page. */
+  handle: string
   title: string
   /** `sale_price`: monthly for rental and rent-to-own. */
   price: number

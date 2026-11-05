@@ -20,6 +20,7 @@ function toConfiguratorProduct(hit: FormattedContainerHit): ConfiguratorProduct 
 
   return {
     id: product.objectID,
+    handle: String(product.handle ?? ''),
     title: product.title,
     price: product.sale_price,
     sku: product.variants?.[0]?.sku ?? '',

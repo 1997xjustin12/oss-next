@@ -1,15 +1,14 @@
 import Image from 'next/image'
 import { RTO_WHY } from '@/lib/data/rentToOwnContent'
+import { RtoPaymentZipBox } from './RtoPaymentZipBox'
 
 /**
  * "Why Choose Rent-To-Own": the delivery photo, with the early-payoff badge on
- * its corner, beside the four reasons. Stacked on phones, side by side from lg.
- *
- * The WordPress section also held a "See My Monthly Payment" ZIP box (a plugin
- * shortcode); that is a feature still to build.
+ * its corner, beside the four reasons and the "See My Monthly Payment" ZIP box.
+ * Stacked on phones, side by side from lg.
  */
 export function RtoWhyChoose() {
-  const { heading, image, badge, points } = RTO_WHY
+  const { heading, image, badge, points, zipCta } = RTO_WHY
 
   return (
     <section aria-labelledby="rto-why" className="bg-white px-[5%] py-12 sm:py-16 dark:bg-neutral-950">
@@ -39,6 +38,9 @@ export function RtoWhyChoose() {
               </li>
             ))}
           </ul>
+          <div className="mt-6">
+            <RtoPaymentZipBox label={zipCta} />
+          </div>
         </div>
       </div>
     </section>

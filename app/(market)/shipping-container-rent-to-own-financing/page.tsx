@@ -21,6 +21,7 @@ import { getReviews } from '@/services/review.service'
 import { RtoBanner } from './_components/RtoBanner'
 import { RtoConfigurator } from './_components/RtoConfigurator'
 import { RtoHero } from './_components/RtoHero'
+import { RtoNearMe } from './_components/RtoNearMe'
 import { RtoProcess } from './_components/RtoProcess'
 import { RtoWhyChoose } from './_components/RtoWhyChoose'
 
@@ -33,9 +34,8 @@ export function generateMetadata() {
  *
  * Copied from the WordPress page section by section (copy in
  * lib/data/rentToOwnContent.ts). The configurator under the hero replaces the
- * WordPress plugin's. Not yet carried over: the two "see my monthly payment"
- * ZIP boxes further down. The reviews are the store's own, REVIEWS.io and
- * Google, through getReviews().
+ * WordPress plugin's. The reviews are the store's own, REVIEWS.io and Google,
+ * through getReviews().
  *
  * Static: both reads are cached, so the page is prerendered.
  */
@@ -71,6 +71,7 @@ export default async function RentToOwnPage() {
       <RtoWhyChoose />
       <RtoProcess />
       <ReviewsSection heading={RTO_REVIEWS_HEADING} reviews={reviews} />
+      <RtoNearMe products={initialProducts ?? []} />
       <TrustedBySection heading={RTO_TRUSTED_HEADING} />
       <RtoBanner tone="dark" heading={RTO_OWN_BANNER.heading} cta={RTO_OWN_BANNER.cta} sideImage={RTO_OWN_BANNER.image} />
 

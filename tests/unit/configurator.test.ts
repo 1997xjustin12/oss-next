@@ -10,6 +10,7 @@ const { groups, defaults, leadTerm } = RTO_CONFIGURATOR
 function product(size: string, condition: string, grade: string, term: string, price: number): ConfiguratorProduct {
   return {
     id: `${condition}_${size}_${grade}_${term}`,
+    handle: '',
     title: '',
     price,
     sku: '',
