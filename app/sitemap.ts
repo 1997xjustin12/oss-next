@@ -35,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // in `pageRoutes` where they belong.
     { url: `${origin}${ROUTES.WHERE_TO_BUY}`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${origin}${ROUTES.ACCESSORY_PRODUCTS}`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${origin}${ROUTES.TAX_EXEMPTION}`, changeFrequency: 'monthly', priority: 0.5 },
     // The GBP location pages, for the same reason: they are native routes, so
     // `isNativePath` drops their backend rows below.
     ...GBP_ROUTE_SEGMENTS.map((slug): MetadataRoute.Sitemap[number] => ({

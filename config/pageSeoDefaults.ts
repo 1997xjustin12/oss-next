@@ -82,6 +82,16 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     },
   },
 
+  // Carried over from the WordPress page this replaced, including its article
+  // type. It had no social image, so this adds the site's containers one.
+  [ROUTES.TAX_EXEMPTION]: {
+    title: 'Sales Tax Exemption Request',
+    description:
+      'Learn how Onsite Storage Sales Tax Exemption Form saves you money on storage services. Get full details & maximize your savings.',
+    canonical: ROUTES.TAX_EXEMPTION,
+    openGraph: { type: 'article', images: ['/images/og-containers.jpg'] },
+  },
+
   [ROUTES.BLOGS]: {
     title: 'Blog',
     description:

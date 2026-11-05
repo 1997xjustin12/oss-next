@@ -13,6 +13,8 @@ export const ROUTES = {
   ACCESSORY_PRODUCTS: '/shipping-container-accessory-products',
   /** The rent-to-own page, native since 2026-10-27 (was a WordPress page). */
   RENT_TO_OWN: '/shipping-container-rent-to-own-financing',
+  /** The sales tax exemption request, native since 2026-11-05 (was a WordPress page). */
+  TAX_EXEMPTION: '/sales-tax-exemption-request',
   PRODUCT: (handle: string) => `/product/${handle}`,
   BLOGS: '/blogs',
   AGENTS: '/agents',
@@ -126,6 +128,7 @@ export const NATIVE_ROUTE_SEGMENTS = [
   // Migrated from WordPress; nothing of WordPress's lives beneath them.
   'shipping-container-accessory-products',
   'shipping-container-rent-to-own-financing',
+  'sales-tax-exemption-request',
   // Operational and internal routes. Not reachable as WordPress content, but
   // listed so a stray backend row can never claim one of them.
   'maintenance',

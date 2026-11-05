@@ -36,6 +36,7 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'where-to-buy', path: ROUTES.WHERE_TO_BUY, label: 'Where to Buy / Locations', group: 'Storefront', indexable: true },
   { id: 'accessory-products', path: ROUTES.ACCESSORY_PRODUCTS, label: 'Container Accessories', group: 'Storefront', indexable: true },
   { id: 'rent-to-own', path: ROUTES.RENT_TO_OWN, label: 'Rent-To-Own Financing', group: 'Storefront', indexable: true },
+  { id: 'tax-exemption', path: ROUTES.TAX_EXEMPTION, label: 'Sales Tax Exemption Request', group: 'Storefront', indexable: true },
 
   // GBP location pages (app/(gbp)): one per Google Business Profile listing.
   ...GBP_ROUTE_SEGMENTS.map((slug): NativePage => {
