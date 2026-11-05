@@ -33,7 +33,7 @@ export type DeliveryQuoteContext = {
   priceLabel: string | null
   zip: string | null
   quantity: number
-  /** The container price, before delivery. */
+  /** The container price before delivery, with `/mo` on a rental or rent-to-own. */
   subtotal: string | null
   /**
    * Where it is going, in words: "New York, NY 10001".

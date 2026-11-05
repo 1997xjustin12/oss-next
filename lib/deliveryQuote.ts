@@ -1,9 +1,10 @@
 import { cacheLife } from 'next/cache'
-import { fetchProduct } from '@/services/product.service'
+import { getProductByHandle } from '@/services/search.service'
 import { cachedGeoapifyAutocomplete } from '@/services/geoapify.service'
 import { getDeliveryRates } from '@/services/delivery.service'
 import { cheapestDeliveryOption, hasQuotedDelivery } from '@/lib/delivery'
-import { formatMoney, toNumber } from '@/lib/formatters'
+import { formatMoney } from '@/lib/formatters'
+import { toQuoteProduct } from '@/lib/quoteProduct'
 // Shapes live in types/ so the client-side summary panel can import them
 // without pulling in this module's `'use cache'` directive.
 import type { DeliveryQuoteContext, QuoteLine } from '@/types/deliveryQuote'
@@ -82,7 +83,7 @@ function readQuantity(raw: string | undefined): number {
  * so the backend counts the delivery lookup against them.
  *
  * Not cached itself: every part it assembles already is — the product
- * (fetchProduct), the ZIP label (resolveZipLabel) and the delivery quote
+ * (getProductByHandle), the ZIP label (resolveZipLabel) and the delivery quote
  * (getDeliveryRates, shared across visitors). Caching this layer with `use
  * cache` would put `ip` in its key and make the whole quote per visitor.
  */
@@ -98,14 +99,14 @@ export async function resolveDeliveryQuote(
   const zip = params.zip?.trim() || null
   const quantity = readQuantity(params.qty)
 
-  const response = handle ? await fetchProduct(handle) : null
-  const product = response?.product ?? null
+  const found = handle ? await getProductByHandle(handle) : null
+  const product = found?.product ? toQuoteProduct(found.product) : null
 
-  // `toNumber`, not `parseFloat`: the catalogue sends prices as formatted
-  // strings, and `parseFloat('1,399.00')` is 1 — a wrong number that looks like
-  // a real one, which is the worst kind to put in a quote.
-  const unitPrice = toNumber(product?.product_price) ?? 0
+  const unitPrice = product?.unitPrice ?? 0
   const hasPrice = unitPrice > 0
+  // Rental and rent-to-own quote a monthly payment. They never carry a quoted
+  // delivery or tax below, so this suffix stays true of the total as well.
+  const suffix = product?.priceSuffix ?? ''
 
   const lines: QuoteLine[] = []
   let runningTotal = hasPrice ? unitPrice * quantity : 0
@@ -115,18 +116,11 @@ export async function resolveDeliveryQuote(
   let salesTax: string | null = null
 
   if (hasPrice) {
-    // A rent-to-own row's price is the contract total, not a purchase price.
-    // Saying so on the label is the difference between an accurate quote and a
-    // number the customer reads as something else entirely.
-    const isRto = String(product?.payment_type ?? '').toLowerCase() === 'rto'
-    const term = product?.payment_term?.[0]
-    const base = isRto
-      ? `Container (rent-to-own${term ? `, ${term} months` : ''})`
-      : 'Container'
+    const base = product?.label ?? 'Container'
     lines.push({
       label: quantity > 1 ? `${base} x ${quantity}` : base,
-      value: formatMoney(unitPrice * quantity),
-      image: product?.thumbnail_url ?? null,
+      value: `${formatMoney(unitPrice * quantity)}${suffix}`,
+      image: product?.image ?? null,
     })
   }
 
@@ -189,18 +183,18 @@ export async function resolveDeliveryQuote(
 
   return {
     handle,
-    productTitle: product?.container_title ?? FALLBACK_TITLE,
-    productImage: product?.thumbnail_url ?? null,
-    priceLabel: hasPrice ? formatMoney(unitPrice) : null,
+    productTitle: product?.title || FALLBACK_TITLE,
+    productImage: product?.image ?? null,
+    priceLabel: hasPrice ? `${formatMoney(unitPrice)}${suffix}` : null,
     zip,
     quantity,
-    subtotal: hasPrice ? formatMoney(unitPrice * quantity) : null,
+    subtotal: hasPrice ? `${formatMoney(unitPrice * quantity)}${suffix}` : null,
     deliveryLabel,
     deliveryCharge,
     deliveryPending,
     salesTax,
     lines,
-    total: runningTotal > 0 ? formatMoney(runningTotal) : null,
+    total: runningTotal > 0 ? `${formatMoney(runningTotal)}${suffix}` : null,
     backHref: handle ? `/product/${handle}` : '/sale-shipping-containers',
     resolved: product !== null,
   }
