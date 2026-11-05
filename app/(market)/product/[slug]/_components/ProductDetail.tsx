@@ -18,7 +18,6 @@ import { TrustedBySection } from "@/components/shared/TrustedBySection";
 // WordPress-sourced reviews (previous PDP source) — kept in place, easy to
 // restore by swapping the import + JSX below, if ReviewsCarousel needs to be
 // rolled back before the OSS reviews table has enough approved data.
-// import { CustomerReviews } from './CustomerReviews'
 // import { ReviewsCarousel } from "./ReviewsCarousel"
 import { YouMayAlsoNeed } from "./YouMayAlsoNeed";
 import { MobileSpecialistBanner } from "./MobileSpecialistBanner";
@@ -464,7 +463,6 @@ export function ProductDetail({ product, relatedProducts, panelV2 = false }: Pro
             is only exposed from Order History (delivered orders), per
             docs/reference/REVIEWS_FLOW.md's purchase-gating recommendation.
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-6">Customer Reviews</h2>
-        <CustomerReviews variant={containerVariant} />
         <ReviewsCarousel productId={activeProduct.product_id as string | number} />
       </section> */}
 

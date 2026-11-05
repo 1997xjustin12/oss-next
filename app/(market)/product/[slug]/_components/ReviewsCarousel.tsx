@@ -10,9 +10,9 @@ type Props = { productId: string | number }
 // Same carousel structure/behavior as the homepage's ReviewsSection.tsx
 // (auto-advance, snap-scroll track, prev/next + dot pagination), but sourced
 // from our own backend (GET /api/reviews/list?product_id=...) instead of
-// WordPress or hardcoded data. Meant to eventually replace CustomerReviews.tsx
-// on the PDP once the OSS reviews table has enough approved reviews to be
-// worth switching to — see ProductDetail.tsx for the current wiring.
+// hardcoded data. Meant for the PDP once the OSS reviews table has enough
+// approved reviews to be worth switching to — see ProductDetail.tsx for the
+// current wiring.
 const AVATAR_COLORS = ['bg-theme-primary', 'bg-theme-dark', 'bg-theme-accent']
 
 function initials(name: string): string {
@@ -105,7 +105,7 @@ function RatingDistribution({ reviews }: { reviews: Review[] }) {
 export function ReviewsCarousel({ productId }: Props) {
   // `loaded.productId` tracks which product `reviews` belongs to — `loading`
   // is derived from the two being out of sync, rather than a separate reset
-  // call inside the fetch effect (same pattern as CustomerReviews.tsx).
+  // call inside the fetch effect.
   const [loaded, setLoaded] = useState<{ productId: Props['productId']; reviews: Review[] } | null>(null)
   const [current, setCurrent] = useState(0)
   const [paused, setPaused] = useState(false)

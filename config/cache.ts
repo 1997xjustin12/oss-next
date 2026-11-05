@@ -9,7 +9,7 @@ export const CACHE_TAGS = {
   SEO:        'seo',      // Per-page SEO overrides from the admin Page Configurator
   CONTENT:    'content',  // Visible on-page copy from the admin Content Editor
   GBP:        'gbp',      // GBP location pages: their content, shared content and template
-  BLOG:       'blog',     // Headless WordPress blog posts (bbq-blog REST API)
+  BLOG:       'blog',     // Blog posts from the Django blogs API
   ORDERS:     'orders',
   USERS:      'users',
   REVIEWS:    'reviews',

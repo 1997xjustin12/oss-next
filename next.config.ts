@@ -1,8 +1,6 @@
 import type { NextConfig } from "next";
 import { WP_REDIRECTS } from "./config/wpHiddenPages";
 
-const WP_ORIGIN = "https://onsitestorage.com";
-
 const nextConfig: NextConfig = {
   cacheComponents: true,
 
@@ -102,21 +100,6 @@ const nextConfig: NextConfig = {
       { source: "/:file([a-z_-]+-sitemap\\d*\\.xml)", destination: "/sitemap.xml", permanent: true },
       // Renamed pages WordPress redirects (config/wpHiddenPages.ts).
       ...WP_REDIRECTS.map((redirect) => ({ ...redirect, permanent: true })),
-    ];
-  },
-
-  // Proxy WordPress API paths so AJAX calls from the iframe avoid CORS.
-  // The browser hits localhost; Next.js forwards to the live WordPress site.
-  async rewrites() {
-    return [
-      {
-        source: "/wp-json/:path*",
-        destination: `${WP_ORIGIN}/wp-json/:path*`,
-      },
-      {
-        source: "/wp-admin/:path*",
-        destination: `${WP_ORIGIN}/wp-admin/:path*`,
-      },
     ];
   },
 };

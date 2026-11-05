@@ -84,7 +84,6 @@ const SECTIONS = [
     note: 'The page itself is server-rendered from getProductByHandle. These are the routes its client components call afterwards.',
     endpoints: [
       ['GET', '/api/delivery-rates', 'A delivery quote for one product and ZIP. Resolves the product, then asks the backend for an order total — so the PDP quote and the checkout total come from the same calculation.'],
-      ['GET', '/api/reviews', 'Reviews for a container size — ?variant=20S|40S|40H&limit=15. Keyed by size, not by product, so every product of a size shows the same set. Rejects anything else with a 400.'],
       ['GET', '/api/reviews/list', 'Reviews for one product — ?product_id=…&page=1. The per-product list, where the route above is the per-size one.'],
       ['POST', '/api/reviews/create', 'Submit a review.'],
       ['PUT', '/api/reviews/update', 'Edit a review the customer already left.'],

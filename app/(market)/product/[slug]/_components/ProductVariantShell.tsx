@@ -42,11 +42,7 @@ const PAYMENT_OPTIONS: { items: string[]; href: string }[] = [
       "Option 1 Rent-To-Own (RTO)",
       "Everyone Qualifies No Credit Check Required",
     ],
-    // NOTE: this currently 301s to the homepage — every `?page_id=` on
-    // onsitestorage.com does, including page_id=1, so the query form no longer
-    // resolves to a page. Swap it for a real path such as
-    // /rent-to-own-containers before relying on it.
-    href: "https://onsitestorage.com/?page_id=288960",
+    href: ROUTES.RENT_TO_OWN,
   },
   {
     items: [

@@ -1,18 +1,3 @@
-/**
- * Shapes returned by the WordPress delivery-rates endpoint.
- *
- *   GET https://onsitestorage.com/wp-json/custom/v1/delivery-rates
- *
- * A headless wrapper around the legacy `calculated_rates` admin-ajax action the
- * old single-product page fired from JS. Pricing logic stays in WordPress; this
- * app only reads the result.
- *
- * **Temporary.** This is a bridge while delivery pricing still lives in
- * WordPress. Everything here is typed from observed responses against the live
- * endpoint, not from a published schema, so treat unfamiliar fields as
- * possibly-absent rather than guaranteed.
- */
-
 /** One delivery method and its quoted price. */
 export type DeliveryRateOption = {
   /** Stable identifier — `do-tilt-bed`, `do-flat-bed`, `pick-up`. */
