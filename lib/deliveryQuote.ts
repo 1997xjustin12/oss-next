@@ -116,7 +116,7 @@ export async function resolveDeliveryQuote(
   let salesTax: string | null = null
 
   if (hasPrice) {
-    const base = product?.label ?? 'Container'
+    const base = product?.label ?? 'Item'
     lines.push({
       label: quantity > 1 ? `${base} x ${quantity}` : base,
       value: `${formatMoney(unitPrice * quantity)}${suffix}`,

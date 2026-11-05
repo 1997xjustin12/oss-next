@@ -28,8 +28,10 @@ export function toQuoteProduct(product: ProductHit): QuoteProduct {
   const term = getCustomFieldValue(product, 'payment_term').match(/\d+/)?.[0]
   const terms = term ? `, ${term} months` : ''
 
-  const label =
-    paymentType === 'rto'
+  const isContainer = isContainerHit(product)
+  const label = !isContainer
+    ? 'Accessory'
+    : paymentType === 'rto'
       ? `Container (rent-to-own${terms})`
       : paymentType === 'rental'
         ? `Container (rental${terms})`
@@ -37,7 +39,7 @@ export function toQuoteProduct(product: ProductHit): QuoteProduct {
 
   // Guarded because the spec lookup falls back to a container's specs for a
   // product carrying none, which would give an accessory a container's photo.
-  const curated = isContainerHit(product) ? getContainerImages(product) : []
+  const curated = isContainer ? getContainerImages(product) : []
   const price = Number(product.sale_price)
 
   return {
