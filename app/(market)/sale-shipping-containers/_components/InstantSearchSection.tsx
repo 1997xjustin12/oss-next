@@ -429,7 +429,7 @@ function StarRow({ rating }: { rating: number }) {
         <Star
           key={n}
           size={13}
-          className={n <= full ? 'fill-theme-primary text-theme-primary' : 'fill-gray-200 text-gray-200'}
+          className={n <= full ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'}
         />
       ))}
     </div>
@@ -568,7 +568,7 @@ function ProductHit({ hit }: { hit: HitData }) {
             className="relative z-10 flex min-h-13 w-full flex-col items-center justify-center rounded-md bg-theme-primary px-3 py-1.5 text-center text-white transition-colors hover:bg-theme-primary-dark"
           >
             <span className="text-sm font-extrabold">See Total Price</span>
-            {deliveryZip && <span className="text-xs font-semibold">Delivery to {deliveryZip}</span>}
+            {deliveryZip && <span className="text-xs font-normal">Delivery to {deliveryZip}</span>}
           </Link>
           <a
             href="tel:8889779085"

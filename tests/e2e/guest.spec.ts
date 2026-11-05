@@ -91,7 +91,7 @@ test.describe('guest', () => {
       await expect(page.locator('#state')).toHaveValue('GA')
 
       // Refused: the reason shows, the page stays, the button works again.
-      const proceed = page.getByRole('button', { name: /Proceed with checkout/i })
+      const proceed = page.getByRole('button', { name: /Proceed with payment/i })
       await proceed.click()
       // Within the form: Next's route announcer is an alert too.
       await expect(page.locator('#quote-details-form').getByRole('alert')).toHaveText('Zoho refused it (e2e).')

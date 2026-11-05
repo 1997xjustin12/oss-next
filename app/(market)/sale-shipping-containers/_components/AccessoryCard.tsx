@@ -55,7 +55,7 @@ export function AccessoryCard({ product }: Props) {
                 <Star
                   key={n}
                   size={10}
-                  className={n <= full ? 'fill-theme-primary text-theme-primary' : 'fill-gray-200 text-gray-200'}
+                  className={n <= full ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'}
                 />
               ))}
             </div>

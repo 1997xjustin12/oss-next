@@ -5,7 +5,7 @@ import { ArrowRight, Loader2 } from 'lucide-react'
 import { QUOTE_FORM_ID, QUOTE_SENDING_EVENT } from './quoteFormId'
 
 /**
- * "Proceed with checkout" — the summary panel's action, and the only way
+ * "Proceed with payment" — the summary panel's action, and the only way
  * forward on this page.
  *
  * It submits the contact form beside it through the `form` attribute, so the
@@ -42,7 +42,7 @@ export function QuoteProceedButton() {
         </>
       ) : (
         <>
-          Proceed with checkout
+          Proceed with payment
           <ArrowRight className="h-5 w-5" aria-hidden />
         </>
       )}

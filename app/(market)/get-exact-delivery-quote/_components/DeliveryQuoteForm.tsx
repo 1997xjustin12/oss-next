@@ -20,7 +20,7 @@ import { QUOTE_FORM_ID, QUOTE_SENDING_EVENT } from './quoteFormId'
  * beside it is priced to, and an accepted submission continues to checkout,
  * which fills itself in from the details just saved.
  *
- * Submitted by the summary panel's "Proceed with checkout" (QuoteProceedButton),
+ * Submitted by the summary panel's "Proceed with payment" (QuoteProceedButton),
  * which sits outside this tree: it names this form, and this form tells it when
  * a send starts and ends (QUOTE_SENDING_EVENT), so it can show the wait and
  * come back to life after a refusal.
@@ -52,7 +52,7 @@ export function DeliveryQuoteForm({ quotedZip, children }: Props) {
   const [leaving, setLeaving] = useState(false)
   const busy = form.sending || leaving
 
-  // Tell "Proceed with checkout" when a send starts and ends.
+  // Tell "Proceed with payment" when a send starts and ends.
   useEffect(() => {
     document.dispatchEvent(new CustomEvent(QUOTE_SENDING_EVENT, { detail: busy }))
   }, [busy])
@@ -73,7 +73,7 @@ export function DeliveryQuoteForm({ quotedZip, children }: Props) {
 
   return (
     <form
-      // Named so the summary panel's "Proceed with checkout" can submit it from
+      // Named so the summary panel's "Proceed with payment" can submit it from
       // outside this tree — see QuoteProceedButton.
       id={QUOTE_FORM_ID}
       onSubmit={handleSubmit}
