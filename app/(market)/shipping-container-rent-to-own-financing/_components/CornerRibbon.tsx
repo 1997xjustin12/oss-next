@@ -11,8 +11,8 @@ type Props = { text: string }
 export function CornerRibbon({ text }: Props) {
   return (
     <p
-      className="pointer-events-none absolute -left-18 top-9 z-10 w-72 rotate-[-25deg] bg-[#FBEE45] py-1.5 pl-6 text-center
-                 text-sm font-extrabold text-theme-dark shadow-md sm:-left-19 sm:top-11 sm:w-80 sm:text-base"
+      className="pointer-events-none absolute -left-18 top-5 z-10 w-72 rotate-[-25deg] bg-[#FBEE45] py-1.5 pl-6 text-center
+                 text-sm font-extrabold text-theme-dark shadow-md sm:-left-19 sm:top-9 sm:w-80 sm:text-base"
     >
       {text}
     </p>

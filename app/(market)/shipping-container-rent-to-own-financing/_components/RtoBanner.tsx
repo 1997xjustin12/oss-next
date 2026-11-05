@@ -14,6 +14,8 @@ type Props = {
   ribbon?: string
   /** The cut-out picture on the left (truck, workers). Hidden on phones. */
   sideImage?: { src: string; alt: string }
+  /** Where the side image sits vertically: centred (default) or on the section's bottom edge. */
+  sideImageAlign?: 'center' | 'bottom'
 }
 
 /**
@@ -23,12 +25,13 @@ type Props = {
  * the colour scheme: in dark mode the light banners take a dark wash and light
  * text, like every other section here.
  */
-export function RtoBanner({ heading, cta, tone, ribbon, sideImage }: Props) {
+export function RtoBanner({ heading, cta, tone, ribbon, sideImage, sideImageAlign = 'center' }: Props) {
   const dark = tone === 'dark'
+  const alignBottom = sideImageAlign === 'bottom'
 
   return (
     // A banner with a ribbon starts lower on phones, so the heading clears it.
-    <section className={`relative isolate overflow-hidden px-[5%] pb-12 sm:py-14 ${ribbon ? 'pt-24' : 'pt-12'}`}>
+    <section className={`relative isolate px-[5%] pb-2 sm:py-4 ${ribbon ? 'overflow-hidden pt-14' : 'pt-2'}`}>
       <Image src={RTO_BANNER_BACKGROUND.src} alt="" fill sizes="100vw" className="-z-20 object-cover" />
       <div
         aria-hidden
@@ -37,13 +40,22 @@ export function RtoBanner({ heading, cta, tone, ribbon, sideImage }: Props) {
 
       {ribbon && <CornerRibbon text={ribbon} />}
 
-      <div className={`flex flex-col items-center gap-6 ${sideImage ? 'lg:flex-row lg:items-center lg:gap-10' : ''}`}>
+      <div className={`relative flex flex-col items-center gap-6 ${sideImage ? 'lg:flex-row lg:items-center lg:gap-10' : ''}`}>
         {sideImage && (
-          <div className="relative hidden aspect-[4/3] w-full max-w-sm shrink-0 lg:block">
-            <Image src={sideImage.src} alt={sideImage.alt} fill sizes="384px" className="object-contain" />
+          <div className={`absolute hidden aspect-[4/3] w-full max-w-sm shrink-0 lg:block ${alignBottom ? '-bottom-4' : ''}`}>
+            <Image
+              src={sideImage.src}
+              alt={sideImage.alt}
+              fill
+              sizes="384px"
+              className={`object-contain ${alignBottom ? 'object-bottom' : ''}`}
+            />
           </div>
         )}
-        <div className="flex flex-1 flex-col items-center gap-5 text-center">
+        {/* relative: keeps the text in front of the side image, which it overlaps.
+            The padding: below xl the centred text would run across the image's
+            darkest part and be lost, so it starts further over. */}
+        <div className={`relative flex flex-1 flex-col items-center gap-5 text-center ${sideImage ? 'lg:pl-72 xl:pl-0' : ''}`}>
           <h2
             className={`max-w-4xl text-2xl font-extrabold leading-tight sm:text-4xl ${
               dark ? 'text-white' : 'text-theme-dark dark:text-white'

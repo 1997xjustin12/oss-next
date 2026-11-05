@@ -75,7 +75,8 @@ export default async function RentToOwnPage() {
       <TrustedBySection heading={RTO_TRUSTED_HEADING} />
       <RtoBanner tone="dark" heading={RTO_OWN_BANNER.heading} cta={RTO_OWN_BANNER.cta} sideImage={RTO_OWN_BANNER.image} />
 
-      <div className="bg-white px-[5%] py-12 sm:py-16 dark:bg-neutral-950">
+      {/* lg:pb-32: room for the banner below, whose side image stands above its band. */}
+      <div className="bg-white px-[5%] py-12 sm:py-16 lg:pb-32 dark:bg-neutral-950">
         <FaqAccordion
           id="rto-faq"
           heading="Frequently Asked Questions"
@@ -83,7 +84,7 @@ export default async function RentToOwnPage() {
         />
       </div>
 
-      <RtoBanner tone="light" heading={RTO_READY_BANNER.heading} cta={RTO_READY_BANNER.cta} sideImage={RTO_READY_BANNER.image} />
+      <RtoBanner tone="light" heading={RTO_READY_BANNER.heading} cta={RTO_READY_BANNER.cta} sideImage={RTO_READY_BANNER.image} sideImageAlign="bottom" />
     </div>
   )
 }
