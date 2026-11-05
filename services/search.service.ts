@@ -278,12 +278,13 @@ export async function getShippingContainersByLocation(location: string) {
 }
 
 /**
- * The four containers a depot page leads with.
+ * The containers a depot page leads with, one per requested spec.
  *
- * One each of: 20ft standard used WWT, 40ft standard used WWT, 40ft high cube
- * used WWT, and 20ft standard new IICL — all for sale rather than rent. Fewer
- * than four come back when a depot does not stock one; the caller gets what
- * exists rather than a padded list or an error.
+ * By default four: 20ft standard used WWT, 40ft standard used WWT, 40ft high
+ * cube used WWT, and 20ft standard new IICL — all for sale rather than rent.
+ * Pass spec keys to load only those, in that order. Fewer come back when a
+ * depot does not stock one; the caller gets what exists rather than a padded
+ * list or an error.
  *
  * ## Why the matching happens here and not in Elasticsearch
  *
@@ -309,9 +310,11 @@ export async function getShippingContainersByLocation(location: string) {
  * which reads the real `{ name, value }` pair. Correct whatever the mapping
  * does, and cheap at this size.
  */
+export type DepotFeaturedKey = 'used_20s_wwt' | 'used_40s_wwt' | 'used_40h_wwt' | 'new_20s_iicl'
+
 export type DepotFeaturedSpec = {
-  /** Stable key for the slot, so a caller can tell which one is missing. */
-  key: 'used-20-standard-wwt' | 'used-40-standard-wwt' | 'used-40-high-cube-wwt' | 'new-20-standard-iicl'
+  /** Stable key for the slot, so a caller can ask for it and tell which one is missing. */
+  key: DepotFeaturedKey
   label: string
   size: '20' | '40'
   /** Matched as a substring of `height`, which reads `8' 6" Standard`. */
@@ -322,11 +325,23 @@ export type DepotFeaturedSpec = {
 }
 
 export const DEPOT_FEATURED_SPECS: readonly DepotFeaturedSpec[] = [
-  { key: 'used-20-standard-wwt',  label: '20ft Standard — Used WWT',   size: '20', height: 'Standard',  condition: 'Used', grade: 'WWT' },
-  { key: 'used-40-standard-wwt',  label: '40ft Standard — Used WWT',   size: '40', height: 'Standard',  condition: 'Used', grade: 'WWT' },
-  { key: 'used-40-high-cube-wwt', label: '40ft High Cube — Used WWT',  size: '40', height: 'High Cube', condition: 'Used', grade: 'WWT' },
-  { key: 'new-20-standard-iicl',  label: '20ft Standard — New IICL',   size: '20', height: 'Standard',  condition: 'New',  grade: 'IICL' },
+  { key: 'used_20s_wwt', label: '20ft Standard — Used WWT',  size: '20', height: 'Standard',  condition: 'Used', grade: 'WWT' },
+  { key: 'used_40s_wwt', label: '40ft Standard — Used WWT',  size: '40', height: 'Standard',  condition: 'Used', grade: 'WWT' },
+  { key: 'used_40h_wwt', label: '40ft High Cube — Used WWT', size: '40', height: 'High Cube', condition: 'Used', grade: 'WWT' },
+  { key: 'new_20s_iicl', label: '20ft Standard — New IICL',  size: '20', height: 'Standard',  condition: 'New',  grade: 'IICL' },
 ]
+
+/** What a caller gets when it does not choose. Its own list, so adding a spec above does not change every page. */
+export const DEFAULT_DEPOT_FEATURED_KEYS: readonly DepotFeaturedKey[] = [
+  'used_20s_wwt',
+  'used_40s_wwt',
+  'used_40h_wwt',
+  'new_20s_iicl',
+]
+
+export function isDepotFeaturedKey(value: string): value is DepotFeaturedKey {
+  return DEPOT_FEATURED_SPECS.some((spec) => spec.key === value)
+}
 
 /** Case-insensitive "contains", for the fields whose values carry punctuation. */
 function has(value: string, needle: string): boolean {
@@ -354,6 +369,7 @@ export type DepotFeaturedContainer = {
 
 export async function getDepotFeaturedContainers(
   depot: string,
+  specKeys: readonly DepotFeaturedKey[] = DEFAULT_DEPOT_FEATURED_KEYS,
 ): Promise<DepotFeaturedContainer[]> {
   const trimmed = depot.trim()
   if (!trimmed) return []
@@ -367,10 +383,11 @@ export async function getDepotFeaturedContainers(
     (product) => getCustomFieldValue(product, 'location').trim().toLowerCase() === trimmed.toLowerCase(),
   )
 
-  return DEPOT_FEATURED_SPECS.map((spec) => {
-    const product = atDepot.find((candidate) => matchesSpec(candidate, spec))
-    return product ? { spec, product } : null
-  }).filter((entry): entry is DepotFeaturedContainer => entry !== null)
+  return specKeys.flatMap((key) => {
+    const spec = DEPOT_FEATURED_SPECS.find((candidate) => candidate.key === key)
+    const product = spec && atDepot.find((candidate) => matchesSpec(candidate, spec))
+    return spec && product ? [{ spec, product }] : []
+  })
 }
 
 // Single product lookup for the PDP (/product/[slug]). Accessories are

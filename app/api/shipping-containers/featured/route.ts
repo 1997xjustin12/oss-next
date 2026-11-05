@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDepotFeaturedContainers } from '@/services/search.service'
+import {
+  DEFAULT_DEPOT_FEATURED_KEYS,
+  getDepotFeaturedContainers,
+  isDepotFeaturedKey,
+} from '@/services/search.service'
 
 /**
  * GET /api/shipping-containers/featured?depot=Atlanta,%20GA
+ * GET /api/shipping-containers/featured?depot=Atlanta,%20GA&specs=used_20s_wwt,used_40h_wwt
  *
- * The four containers a depot leads with — see `getDepotFeaturedContainers`
- * for which four and why the matching cannot be left to Elasticsearch.
+ * The containers a depot leads with — see `getDepotFeaturedContainers` for
+ * which ones and why the matching cannot be left to Elasticsearch. Without
+ * `specs` it answers the default four. With it, only those, in that order; an
+ * unknown key is a 400, so a typo cannot pass as "this depot has none".
  *
  * Exists because the component that wants this is a Client Component: it reads
  * the visitor's depot out of their browser's storage, which no server render
  * can see.
  *
- * Fewer than four come back when a depot does not stock one. That is a normal
+ * Fewer than requested come back when a depot does not stock one. That is a normal
  * answer, not an error — `found` and `requested` are in the response so a
  * caller can tell "this depot has three" from "something went wrong".
  */
@@ -22,12 +29,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'depot is required' }, { status: 400 })
   }
 
+  const specsParam = request.nextUrl.searchParams.get('specs')
+  const requested = specsParam === null
+    ? DEFAULT_DEPOT_FEATURED_KEYS
+    : [...new Set(specsParam.split(',').map((key) => key.trim()))]
+
+  const validKeys = requested.filter(isDepotFeaturedKey)
+  if (validKeys.length !== requested.length) {
+    return NextResponse.json({ error: 'specs has an unknown key' }, { status: 400 })
+  }
+
   try {
-    const results = await getDepotFeaturedContainers(depot)
+    const results = await getDepotFeaturedContainers(depot, validKeys)
 
     return NextResponse.json({
       depot,
-      requested: 4,
+      requested: validKeys.length,
       found: results.length,
       containers: results.map(({ spec, product }) => ({ spec, product })),
     })

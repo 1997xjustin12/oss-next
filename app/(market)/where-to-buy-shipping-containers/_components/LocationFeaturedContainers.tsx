@@ -4,10 +4,16 @@ import { useEffect, useState } from 'react'
 import { useStoredZip } from '@/hooks/useStoredZip'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { FeaturedContainerCard, FeaturedContainerCardSkeleton } from './FeaturedContainerCard'
+import type { DepotFeaturedKey } from '@/services/search.service'
 import type { ProductHit } from '@/types/product'
 
-/** How many the lookup asks for, and so how many skeletons to show. */
-const SLOTS = 4
+/** How many the lookup answers with when no `specs` are given, and so how many skeletons to show. */
+const DEFAULT_SLOTS = 4
+
+type Props = {
+  /** Which containers to load, in this order. Leave out for the default four. */
+  specs?: readonly DepotFeaturedKey[]
+}
 
 type FeaturedResponse = {
   depot: string
@@ -22,24 +28,26 @@ type State =
   | { status: 'empty' }
 
 /**
- * The four containers for whichever depot this visitor resolved to.
+ * The featured containers for whichever depot this visitor resolved to.
  *
  * A Client Component because the depot lives in their browser's storage, which
  * no server render can see — so the fetch happens after mount, through
  * `/api/shipping-containers/featured`.
  *
  * Follows the saved location through `useStoredZip`, so when any ZIP box on
- * the page saves a new one the four cards refetch for that depot. The same
- * four specs come back for every depot, keyed the same, so the titles stay put
+ * the page saves a new one the cards refetch for that depot. The same specs
+ * come back for every depot, keyed the same, so the titles stay put
  * and only each card's price, monthly figure and link change. The previous
  * cards stay up while the next depot's load; the skeleton is first load only.
  *
  * Renders nothing at all when the lookup finds none or fails: a heading over an
  * empty row says less than no row.
  */
-export function LocationFeaturedContainers() {
+export function LocationFeaturedContainers({ specs }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' })
   const { depot: stored, resolved } = useStoredZip()
+  // A string, so a parent passing a fresh array with the same keys does not refetch.
+  const specsParam = specs?.join(',')
 
   useEffect(() => {
     // Wait for storage to be read, or every visitor with a saved depot would
@@ -66,10 +74,10 @@ export function LocationFeaturedContainers() {
 
     void (async () => {
       try {
-        const res = await fetch(
-          `/api/shipping-containers/featured?depot=${encodeURIComponent(depot)}`,
-          { signal: abort.signal },
-        )
+        const query = new URLSearchParams({ depot })
+        if (specsParam !== undefined) query.set('specs', specsParam)
+
+        const res = await fetch(`/api/shipping-containers/featured?${query}`, { signal: abort.signal })
         if (!res.ok) {
           console.error('[LocationFeaturedContainers] request failed — depot, status:', depot, res.status)
           setState({ status: 'empty' })
@@ -92,7 +100,7 @@ export function LocationFeaturedContainers() {
     // Also aborts a lookup a newer location has overtaken, so a slow answer
     // for the old depot can never land on top of the new one.
     return () => abort.abort()
-  }, [resolved, stored])
+  }, [resolved, stored, specsParam])
 
   if (state.status === 'empty') return null
 
@@ -114,7 +122,7 @@ export function LocationFeaturedContainers() {
         aria-busy={state.status === 'loading'}
       >
         {state.status === 'loading'
-          ? Array.from({ length: SLOTS }).map((_, i) => (
+          ? Array.from({ length: specs?.length ?? DEFAULT_SLOTS }).map((_, i) => (
               <li key={`skeleton-${i}`} className="flex">
                 <FeaturedContainerCardSkeleton />
               </li>
