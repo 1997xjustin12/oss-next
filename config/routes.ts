@@ -15,6 +15,8 @@ export const ROUTES = {
   RENT_TO_OWN: '/shipping-container-rent-to-own-financing',
   /** The sales tax exemption request, native since 2026-11-05 (was a WordPress page). */
   TAX_EXEMPTION: '/sales-tax-exemption-request',
+  /** Where Zoho sends a visitor after that form (TAX_EXEMPTION_FORM.hidden.returnURL). */
+  TAX_EXEMPTION_THANK_YOU: '/sales-tax-exemption-request-thank-you',
   PRODUCT: (handle: string) => `/product/${handle}`,
   BLOGS: '/blogs',
   AGENTS: '/agents',
@@ -129,6 +131,7 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'shipping-container-accessory-products',
   'shipping-container-rent-to-own-financing',
   'sales-tax-exemption-request',
+  'sales-tax-exemption-request-thank-you',
   // Operational and internal routes. Not reachable as WordPress content, but
   // listed so a stray backend row can never claim one of them.
   'maintenance',

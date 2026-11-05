@@ -27,6 +27,25 @@ export const TAX_EXEMPTION_SELLER = {
 export const TAX_EXEMPTION_CLOSING = 'We look forward to reviewing your application and helping you save money on your next purchase.'
 
 /**
+ * The thank-you page Zoho sends a visitor to after the form. `heading` and the
+ * two messages are WordPress's wording, unchanged: the support address follows
+ * `message`. The steps restate that message as a timeline.
+ */
+export const TAX_EXEMPTION_THANK_YOU = {
+  heading: { accent: 'Thank You', rest: 'for Your Sales Tax Exemption Request!' },
+  message: 'We have received your sales tax exemption request. Our team is currently reviewing it and we will notify you once a decision has been made. If you have any questions or need further assistance, please contact our support team at',
+  closing: 'Thank you for choosing On-Site Storage. We value your business and appreciate your cooperation.',
+  stepsHeading: 'What Happens Next',
+  steps: [
+    { title: 'Request received', body: 'We have your request.', state: 'done' },
+    { title: 'Under review', body: 'Our team is reviewing it now.', state: 'current' },
+    { title: 'Decision', body: 'We will notify you once a decision has been made.', state: 'upcoming' },
+  ],
+  primaryCta: 'Browse Shipping Containers',
+  secondaryCta: 'Back to Homepage',
+} as const
+
+/**
  * The form itself, which posts straight from the browser to Zoho CRM, as it did
  * on WordPress. The certificates never pass through this app.
  *

@@ -92,6 +92,17 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     openGraph: { type: 'article', images: ['/images/og-containers.jpg'] },
   },
 
+  // Only meaningful straight after the form, so unlike WordPress's copy it stays
+  // out of search results, as the other post-action pages here do.
+  [ROUTES.TAX_EXEMPTION_THANK_YOU]: {
+    title: 'Sales Tax Exemption Request Thank You',
+    description:
+      'Thank You for Your Sales Tax Exemption Request! We have received your sales tax exemption request. Our team is currently reviewing it and we will notify you once a decision has been made.',
+    canonical: ROUTES.TAX_EXEMPTION_THANK_YOU,
+    robots: { index: false, follow: true },
+    openGraph: { type: 'article', images: ['/images/og-containers.jpg'] },
+  },
+
   [ROUTES.BLOGS]: {
     title: 'Blog',
     description:
