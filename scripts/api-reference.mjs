@@ -74,7 +74,7 @@ const SECTIONS = [
       ['POST', '/api/search', 'As above. The listing\'s primary data source for both containers and accessories.'],
       ['GET', '/api/shipping-containers', 'General filtered catalogue query, paginated. Reserved params are page, pageSize, product_category and all; any other param is treated as a custom_fields name and matched against its value. Repeat a key or comma-separate to match several values. all=true returns everything up to ALL_RESULTS_CAP and sets pagination.truncated past it.'],
       ['GET', '/api/shipping-containers/by-location', 'Containers stocked at one depot. Returns a uniform 72 published containers per depot.'],
-      ['GET', '/api/shipping-containers/starting-prices', 'The "from" price per featured container, for the homepage and category tiles.'],
+      ['GET', '/api/shipping-containers/featured', 'One chosen container per spec at a depot, for the homepage and location cards.'],
       ['GET', '/api/geoapify', 'ZIP and address autocomplete for the location filter. Proxied so the Geoapify key stays server-side, and rate-limited per visitor against a daily budget.'],
     ],
   },

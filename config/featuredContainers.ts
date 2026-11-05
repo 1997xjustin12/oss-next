@@ -1,5 +1,6 @@
 import { ROUTES } from '@/config/routes'
 import type { PriceSpec } from '@/lib/pricing'
+import type { DepotFeaturedKey } from '@/services/search.service'
 
 /**
  * The four containers featured on the homepage and under "You may also need" on
@@ -18,6 +19,8 @@ export type FeaturedContainer = {
   desc: string
   ctaLabel: string
   spec: PriceSpec
+  /** The listing whose photo and price the homepage card shows. */
+  depotSpec: DepotFeaturedKey
 }
 
 export const FEATURED_CONTAINERS: FeaturedContainer[] = [
@@ -28,6 +31,7 @@ export const FEATURED_CONTAINERS: FeaturedContainer[] = [
     desc: 'Perfect for residential, small business, and construction site storage. Fits most driveways.',
     ctaLabel: 'Get Free Quote',
     spec: { paymentType: 'buy', size: "20'", height: 'standard', condition: 'Used' },
+    depotSpec: 'used_20s_wwt',
   },
   {
     key: 'used-40ft-standard',
@@ -36,6 +40,7 @@ export const FEATURED_CONTAINERS: FeaturedContainer[] = [
     desc: 'Double capacity for farms, retail, contractors, and industrial storage needs nationwide.',
     ctaLabel: 'Get Free Quote',
     spec: { paymentType: 'buy', size: "40'", height: 'standard', condition: 'Used' },
+    depotSpec: 'used_40s_wwt',
   },
   {
     key: 'used-40ft-hc',
@@ -44,6 +49,7 @@ export const FEATURED_CONTAINERS: FeaturedContainer[] = [
     desc: 'Extra headroom for tall equipment, workshop setups, and high-volume inventory storage.',
     ctaLabel: 'Get Free Quote',
     spec: { paymentType: 'buy', size: "40'", height: 'high-cube', condition: 'Used' },
+    depotSpec: 'used_40h_wwt',
   },
   {
     key: 'new-40ft-hc',
@@ -52,6 +58,7 @@ export const FEATURED_CONTAINERS: FeaturedContainer[] = [
     desc: 'Brand-new one-trip containers for maximum longevity, custom builds, and premium storage.',
     ctaLabel: 'Get Free Quote',
     spec: { paymentType: 'buy', size: "40'", height: 'high-cube', condition: 'New' },
+    depotSpec: 'new_40h_iicl',
   },
 ]
 

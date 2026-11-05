@@ -42,12 +42,16 @@ export async function GET(request: NextRequest) {
   try {
     const results = await getDepotFeaturedContainers(depot, validKeys)
 
-    return NextResponse.json({
-      depot,
-      requested: validKeys.length,
-      found: results.length,
-      containers: results.map(({ spec, product }) => ({ spec, product })),
-    })
+    return NextResponse.json(
+      {
+        depot,
+        requested: validKeys.length,
+        found: results.length,
+        containers: results.map(({ spec, product }) => ({ spec, product })),
+      },
+      // Prices are cached for minutes upstream; let a CDN hold the answer as long.
+      { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } },
+    )
   } catch (err) {
     console.error('[/api/shipping-containers/featured] lookup failed for depot:', depot, err)
     return NextResponse.json({ error: 'Could not load containers for this depot.' }, { status: 502 })

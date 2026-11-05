@@ -310,7 +310,7 @@ export async function getShippingContainersByLocation(location: string) {
  * which reads the real `{ name, value }` pair. Correct whatever the mapping
  * does, and cheap at this size.
  */
-export type DepotFeaturedKey = 'used_20s_wwt' | 'used_40s_wwt' | 'used_40h_wwt' | 'new_20s_iicl'
+export type DepotFeaturedKey = 'used_20s_wwt' | 'used_40s_wwt' | 'used_40h_wwt' | 'new_20s_iicl' | 'new_40h_iicl'
 
 export type DepotFeaturedSpec = {
   /** Stable key for the slot, so a caller can ask for it and tell which one is missing. */
@@ -329,6 +329,7 @@ export const DEPOT_FEATURED_SPECS: readonly DepotFeaturedSpec[] = [
   { key: 'used_40s_wwt', label: '40ft Standard — Used WWT',  size: '40', height: 'Standard',  condition: 'Used', grade: 'WWT' },
   { key: 'used_40h_wwt', label: '40ft High Cube — Used WWT', size: '40', height: 'High Cube', condition: 'Used', grade: 'WWT' },
   { key: 'new_20s_iicl', label: '20ft Standard — New IICL',  size: '20', height: 'Standard',  condition: 'New',  grade: 'IICL' },
+  { key: 'new_40h_iicl', label: '40ft High Cube — New IICL', size: '40', height: 'High Cube', condition: 'New',  grade: 'IICL' },
 ]
 
 /** What a caller gets when it does not choose. Its own list, so adding a spec above does not change every page. */
@@ -388,6 +389,24 @@ export async function getDepotFeaturedContainers(
     const product = spec && atDepot.find((candidate) => matchesSpec(candidate, spec))
     return spec && product ? [{ spec, product }] : []
   })
+}
+
+/**
+ * The national listings' featured containers, for prebuilt pages.
+ *
+ * Its own cache life because the lookup underneath is cached for minutes, and a
+ * page inherits the shortest life inside it: without this the homepage would
+ * regenerate every minute rather than every hour. A price change still reaches
+ * it at once through the products tag.
+ */
+export async function getNationalFeaturedContainers(
+  specKeys: readonly DepotFeaturedKey[],
+): Promise<DepotFeaturedContainer[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.HOMEPAGE)
+
+  return getDepotFeaturedContainers(DEFAULT_LOCATION, specKeys)
 }
 
 // Single product lookup for the PDP (/product/[slug]). Accessories are
