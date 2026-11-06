@@ -81,6 +81,9 @@ function ReviewCard({ review }: { review: Review }) {
                 // Google already serves these at 40px (about 1.4 KB); sending them
                 // through the optimizer only added transformations and cache writes.
                 unoptimized
+                // Google refuses these (429) to a request that names another site as
+                // its referrer: hotlink protection. Without one it serves them.
+                referrerPolicy="no-referrer"
                 className="rounded-full"
               />
             ) : (
@@ -190,7 +193,7 @@ export function ReviewsSection({
             onClick={() => goTo(current - 1)}
             disabled={current === 0}
             aria-label="Previous reviews"
-            className="absolute -left-4 sm:-left-6 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white dark:bg-gray-700 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-xl disabled:opacity-30 transition-opacity"
+            className="absolute -left-4 sm:-left-6 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white dark:bg-gray-700 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-xl text-theme-dark dark:text-white disabled:opacity-30 transition-opacity"
           >
             ‹
           </button>
@@ -213,7 +216,7 @@ export function ReviewsSection({
             onClick={() => goTo(current + 1)}
             disabled={current >= maxIndex}
             aria-label="Next reviews"
-            className="absolute -right-4 sm:-right-6 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white dark:bg-gray-700 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-xl disabled:opacity-30 transition-opacity"
+            className="absolute -right-4 sm:-right-6 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white dark:bg-gray-700 rounded-full shadow-md border border-gray-200 dark:border-gray-600 text-xl text-theme-dark dark:text-white disabled:opacity-30 transition-opacity"
           >
             ›
           </button>

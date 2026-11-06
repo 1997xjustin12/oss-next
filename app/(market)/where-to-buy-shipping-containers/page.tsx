@@ -8,7 +8,7 @@ import { breadcrumbNode, faqNode, graph, siteNodes, webPageNode } from "@/lib/sc
 import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
 import { resolvePageMetadata } from "@/lib/seo";
-import { LocationSearch } from "./_components/LocationSearch";
+import { LocationSearch } from "@/components/shared/LocationSearch";
 import { SectionTagline2 } from "@/components/shared/SectionTagline2";
 import { SelectContainerType } from "./_components/SelectContainerType";
 import { LocationFeaturedContainers } from "./_components/LocationFeaturedContainers";

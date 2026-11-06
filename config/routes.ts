@@ -22,6 +22,11 @@ export const ROUTES = {
   CONTAINER_CONDITIONS: '/shipping-container-conditions',
   SPECIAL_PROMOTIONS: '/special-promotions',
   WHY_ONSITE: '/why-onsite-storage',
+  /** Native since 2026-11-06: missing from the backend's import, so they 404'd. */
+  REFURBISHED_CONTAINERS: '/refurbished-shipping-container',
+  CARGO_WORTHY_CONTAINERS: '/cargo-worthy-shipping-container',
+  /** A WordPress blog post at the root, kept at its URL as a fixed article. */
+  CONTAINER_DIMENSIONS: '/shipping-container-dimensions',
   /** Where Zoho sends a visitor after that form (TAX_EXEMPTION_FORM.hidden.returnURL). */
   TAX_EXEMPTION_THANK_YOU: '/sales-tax-exemption-request-thank-you',
   PRODUCT: (handle: string) => `/product/${handle}`,
@@ -144,6 +149,9 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'shipping-container-conditions',
   'special-promotions',
   'why-onsite-storage',
+  'refurbished-shipping-container',
+  'cargo-worthy-shipping-container',
+  'shipping-container-dimensions',
   // Operational and internal routes. Not reachable as WordPress content, but
   // listed so a stray backend row can never claim one of them.
   'maintenance',

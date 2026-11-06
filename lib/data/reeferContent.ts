@@ -4,7 +4,8 @@
  * word for word. Edit here; the components only lay it out.
  *
  * Corrected from WordPress (2026-11-06): the rental card showed (888) 632-9390
- * while dialling (888) 977-9085, and "6, 12 18" lacked its comma.
+ * while dialling (888) 977-9085; "6, 12 18" lacked its comma; "month(some areas
+ * may require sale tax)" lacked a space and an s.
  *
  * Still as WordPress has it, for the content owner: "Wide Temperature Range"
  * repeats the humidity paragraph.
@@ -103,7 +104,7 @@ export const REEFER_OPTIONS = {
   heading: 'LOW-COST ON-SITE STORAGE SOLUTIONS',
   rental: {
     title: 'RENTAL',
-    before: 'On-Site Storage Solutions is a leader in providing rental shipping containers for temporary or long-term needs at the lowest rates available. Rental rates start as low as $99 a month(some areas may require sale tax), just give us a call at',
+    before: 'On-Site Storage Solutions is a leader in providing rental shipping containers for temporary or long-term needs at the lowest rates available. Rental rates start as low as $99 a month (some areas may require sales tax), just give us a call at',
     phoneText: '(888) 977-9085',
     after: ', and we’ll walk you through the container rental process',
   },

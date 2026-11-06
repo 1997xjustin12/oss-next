@@ -9,9 +9,9 @@ import { ROUTES } from '@/config/routes'
 import { SITE, absoluteUrl } from '@/config/site'
 import { blogPostingNode, breadcrumbNode, faqNode, graph, siteNodes } from '@/lib/schema'
 import { formatBlogDate } from '@/lib/blog'
-import { ArticleBody } from './_components/ArticleBody'
-import { BlogFaq } from './_components/BlogFaq'
-import { RelatedPosts, RelatedPostsSkeleton } from './_components/RelatedPosts'
+import { ArticleBody } from '@/components/blog/ArticleBody'
+import { BlogFaq } from '@/components/blog/BlogFaq'
+import { RelatedPosts, RelatedPostsSkeleton } from '@/components/blog/RelatedPosts'
 
 type Props = {
   params: Promise<{ slug: string }>

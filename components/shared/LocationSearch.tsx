@@ -16,6 +16,10 @@ import { ROUTES } from '@/config/routes'
  * they type, resolves a submit without a pick, and handles "use my current
  * location". What is particular to this box is only where a pick leads: the
  * listing for that ZIP and depot.
+ *
+ * Shared since the refurbished and cargo-worthy pages, where it stands in for
+ * WordPress's store-locator shortcode. Made for a dark or photo background:
+ * "Use my current location" is white.
  */
 export function LocationSearch() {
   const router = useRouter()

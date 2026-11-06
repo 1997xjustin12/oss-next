@@ -82,6 +82,35 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     },
   },
 
+  // The next three: carried over from WordPress, whose titles have no site
+  // ending (absoluteTitle). og:image is the same file from the CDN.
+  [ROUTES.REFURBISHED_CONTAINERS]: {
+    title: 'Refurbished Shipping Container | Lowest Price Guaranteed',
+    absoluteTitle: true,
+    description:
+      'A refurbished Shipping Container is a used Wind and Water container or better that has been prepped, primed and repainted. Read more here.',
+    canonical: ROUTES.REFURBISHED_CONTAINERS,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2023/08/16064053/refurbished-shipping-containers-for-sale.webp'] },
+  },
+
+  [ROUTES.CARGO_WORTHY_CONTAINERS]: {
+    title: 'Cargo Worthy Shipping Container | Lowest Price Guaranteed',
+    absoluteTitle: true,
+    description:
+      'Buy cargo worthy shipping container. Best pricing. Sturdy and reliable containers. Delivered in 2-7 business days. Call us now!',
+    canonical: ROUTES.CARGO_WORTHY_CONTAINERS,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2023/11/28071532/cw-sample-1-65658e58ae5ed.webp'] },
+  },
+
+  [ROUTES.CONTAINER_DIMENSIONS]: {
+    title: 'Shipping Container Dimensions Guide: All Sizes Compared',
+    absoluteTitle: true,
+    description:
+      'Compare shipping container dimensions for 10, 20, and 40 foot shipping containers side by side. Find the right size before you buy or rent.',
+    canonical: ROUTES.CONTAINER_DIMENSIONS,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2022/08/27100145/Header-2.png'] },
+  },
+
   // The next four: carried over from the WordPress pages they replaced. Their
   // titles have no site ending there, so they are kept whole (absoluteTitle);
   // og:image is the same file from the CDN (special promotions' WordPress
