@@ -1,6 +1,5 @@
 import { SITE_URL } from '@/config/site'
 import { ZOHO_FORMS } from '@/lib/data/zohoForms'
-import { zohoAccepted } from '@/lib/zohoQuoteForm'
 
 const FORM = ZOHO_FORMS.newsletter
 const ZOHO_TIMEOUT_MS = 20_000
@@ -27,6 +26,32 @@ export type ZohoNewsletterSignup = {
   ip?: string | null
 }
 
+/**
+ * Whether Zoho refused a newsletter post, from its answer. Only what is known to
+ * be a refusal counts as one; anything else is taken as accepted.
+ *
+ * The other way round (accepted only on the quote form's "submitted
+ * successfully" wording) refused every signup on 2026-11-06, while Zoho was
+ * creating the Contact: this form answers differently. Known refusals, from the
+ * quote form (2026-10-30): a redirect back to the Referer (wrong form keys) or
+ * to zoho.com (nothing posted). Plus a page that says the captcha, or the
+ * submission, was not valid.
+ */
+export function zohoNewsletterRefused(status: number, location: string, text: string): boolean {
+  if (status >= 300 && status < 400) {
+    let target: URL | null = null
+    try {
+      target = new URL(location, SITE_URL)
+    } catch {
+      return true
+    }
+    const backToReferer = target.origin === new URL(SITE_URL).origin && (target.pathname === '/' || target.pathname === '')
+    return backToReferer || /(^|.)zoho.com$/i.test(target.hostname)
+  }
+  if (status === 200) return /captcha|not valid|invalid|went wrong/i.test(text)
+  return true
+}
+
 /** The words of an HTML page, without its markup. */
 function pageText(html: string): string {
   return html
@@ -41,11 +66,9 @@ function pageText(html: string): string {
  * server, as the form on the WordPress pages did from the browser: the same
  * form keys, "Full Name" as Zoho's Last Name, and the visitor's captcha token.
  *
- * `returnURL` goes as `null` so Zoho answers with its own confirmation page,
- * which is how the quote form tells an accepted post from a refused one
- * (`zohoAccepted`, observed on that form on 2026-10-30). That this form answers
- * the same way is not yet confirmed with a real signup: every answer is logged
- * so the first one shows it.
+ * `returnURL` goes as `null` so Zoho answers with its own page rather than a
+ * redirect to WordPress's thank-you page. How the answer is read:
+ * `zohoNewsletterRefused`. Every answer is logged.
  */
 export async function sendZohoNewsletter(signup: ZohoNewsletterSignup): Promise<ZohoNewsletterAnswer> {
   const body = new URLSearchParams({ ...FORM.hidden, returnURL: 'null' })
@@ -75,12 +98,18 @@ export async function sendZohoNewsletter(signup: ZohoNewsletterSignup): Promise<
     const text = res.status === 200 ? pageText(await res.text()) : ''
     const ms = Date.now() - started
     const location = res.headers.get('location') ?? ''
-    if (zohoAccepted(res.status, text)) {
-      console.info('[zoho-newsletter] accepted', { ms })
-      return { outcome: 'accepted', status: res.status, location, excerpt: '' }
+    if (res.status >= 500) {
+      console.error('[zoho-newsletter] Zoho error', { status: res.status, ms })
+      return { outcome: 'unavailable', status: res.status, location, excerpt: '' }
     }
-    console.error('[zoho-newsletter] not accepted', { status: res.status, location, ms, text: text.slice(0, 500) })
-    return { outcome: res.status >= 500 ? 'unavailable' : 'refused', status: res.status, location, excerpt: text.slice(0, 200) }
+    if (zohoNewsletterRefused(res.status, location, text)) {
+      console.error('[zoho-newsletter] refused', { status: res.status, location, ms, text: text.slice(0, 500) })
+      return { outcome: 'refused', status: res.status, location, excerpt: text.slice(0, 200) }
+    }
+    // Logged in full while this form's answers are new: the first ones show
+    // what an acceptance looks like.
+    console.info('[zoho-newsletter] accepted', { status: res.status, location, ms, text: text.slice(0, 300) })
+    return { outcome: 'accepted', status: res.status, location, excerpt: '' }
   } catch (error) {
     console.error('[zoho-newsletter] no answer from Zoho', { ms: Date.now() - started, error })
     return { outcome: 'unavailable', status: null, location: '', excerpt: error instanceof Error ? error.message.slice(0, 200) : '' }
