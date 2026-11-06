@@ -22,7 +22,7 @@ describe('zohoNewsletterRefused', () => {
   it('takes a redirect anywhere else (a thank-you page) as accepted', () => {
     assert.equal(zohoNewsletterRefused(302, 'https://onsitestorage.com/thank-you-newsletter', ''), false)
     // Only zoho.com itself: a host that merely contains the letters is not it.
-    assert.equal(zohoNewsletterRefused(302, 'https://notzohoxcom.example/', ''), false)
+    assert.equal(zohoNewsletterRefused(302, 'https://xzohoxcom/', ''), false)
   })
 
   it('refuses any other status', () => {
