@@ -30,9 +30,13 @@ function wholeDollars(value: number): string {
   return formatted.endsWith('.00') ? formatted.slice(0, -3) : formatted
 }
 
-type Props = { product: ProductHit }
+type Props = {
+  product: ProductHit
+  /** `rental`: the product is a rental listing, whose `sale_price` is already the monthly rent. */
+  paymentType?: 'buy' | 'rental'
+}
 
-export function FeaturedContainerCard({ product }: Props) {
+export function FeaturedContainerCard({ product, paymentType = 'buy' }: Props) {
   // `desc_title` is the clean derived name — "Used WWT 20ft Shipping Container
   // for Sale". The raw `title` is two names joined by `||`, which is a known
   // data problem rather than something to render.
@@ -41,7 +45,7 @@ export function FeaturedContainerCard({ product }: Props) {
   const image = product.images?.[0]?.src ?? ''
   const price = Number(product.sale_price) || 0
   const monthly =
-    price > 0
+    price > 0 && paymentType === 'buy'
       ? calculateProductPrice({ price, paymentType: 'rto', paymentTerm: RTO_QUOTE_TERM, size: '', height: '' })
       : 0
 
@@ -121,10 +125,20 @@ export function FeaturedContainerCard({ product }: Props) {
 
         {/* Two lines tall whatever it wraps to, as the skeleton is: no shift when it lands. */}
         <p className="min-h-10 text-center text-xs leading-relaxed text-theme-mid sm:min-h-[2.875rem] sm:text-sm dark:text-neutral-300">
-          Starting at{' '}
-          <span className="font-extrabold text-theme-dark dark:text-neutral-100">{wholeDollars(price)}</span>{' '}
-          or Purchase for as low as{' '}
-          <span className="font-extrabold text-theme-primary dark:text-red-400">{formatPrice(monthly)}</span>/month
+          {paymentType === 'rental' ? (
+            // As WordPress's rental row reads it: "Starting at $95/month".
+            <>
+              Starting at{' '}
+              <span className="font-extrabold text-theme-primary dark:text-red-400">{wholeDollars(price)}</span>/month
+            </>
+          ) : (
+            <>
+              Starting at{' '}
+              <span className="font-extrabold text-theme-dark dark:text-neutral-100">{wholeDollars(price)}</span>{' '}
+              or Purchase for as low as{' '}
+              <span className="font-extrabold text-theme-primary dark:text-red-400">{formatPrice(monthly)}</span>/month
+            </>
+          )}
         </p>
 
         {/* `mt-auto` pins this and the rating to the bottom, so they line up

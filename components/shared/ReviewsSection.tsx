@@ -129,8 +129,11 @@ export function ReviewsSection({
   className = 'bg-[#F7F7F7] dark:bg-gray-900',
   headingClassName = 'text-[28px] sm:text-[36px]',
   accentClassName = 'text-[#C60C29] dark:text-red-400',
+  headingHidden = false,
 }: {
   heading?: string;
+  /** Keep the heading for screen readers only, where the page shows none (the for-sale and rental pages' slider). */
+  headingHidden?: boolean;
   reviews?: Review[];
   /** The section's background. The GBP pages, for one, sit on white. */
   className?: string;
@@ -184,7 +187,7 @@ export function ReviewsSection({
   return (
     <section className={`py-10 sm:py-16 ${className}`}>
       <div className="max-w-7xl mx-auto px-5 sm:px-10">
-        <h2 className={`${headingClassName} font-bold text-center mb-8 sm:mb-10 dark:text-white`}>
+        <h2 className={headingHidden ? 'sr-only' : `${headingClassName} font-bold text-center mb-8 sm:mb-10 dark:text-white`}>
           <AccentText text={heading} accentClassName={accentClassName} />
         </h2>
 

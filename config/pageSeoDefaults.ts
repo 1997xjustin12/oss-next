@@ -84,6 +84,23 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
 
   // Carried over from the WordPress page (title kept whole; og:image the same
   // banner from the CDN, at full size rather than WordPress's 300px thumbnail).
+  // Carried over from WordPress (titles without a site ending, so absoluteTitle).
+  // Both declared the same og:image, here from the CDN.
+  [ROUTES.FOR_SALE]: {
+    title: 'Shipping Containers for Sale | Shop Now for Quality and Value',
+    absoluteTitle: true,
+    description: 'Get high-quality shipping containers for sale at unbeatable prices. Buy now and secure your storage solution!',
+    canonical: ROUTES.FOR_SALE,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2024/05/14063436/google-reviews.webp'] },
+  },
+  [ROUTES.RENTAL]: {
+    title: 'Shipping Container for Rent | From $95 + 6 Months Free',
+    absoluteTitle: true,
+    description: 'Rent a shipping container starting at just $95 and enjoy 6 months of free rent! Get affordable, secure storage for your home or job site.',
+    canonical: ROUTES.RENTAL,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2024/05/14063436/google-reviews.webp'] },
+  },
+
   [ROUTES.FAQS]: {
     title: 'How Much Is A Shipping Container | Frequently Asked Questions',
     absoluteTitle: true,

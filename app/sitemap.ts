@@ -45,6 +45,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}${ROUTES.CARGO_WORTHY_CONTAINERS}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${origin}${ROUTES.CONTAINER_DIMENSIONS}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${origin}${ROUTES.FAQS}`, changeFrequency: 'monthly', priority: 0.7 },
+    // The two main landing pages: as high as the listing itself.
+    { url: `${origin}${ROUTES.FOR_SALE}`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${origin}${ROUTES.RENTAL}`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${origin}${ROUTES.TAX_EXEMPTION}`, changeFrequency: 'monthly', priority: 0.5 },
     // The GBP location pages, for the same reason: they are native routes, so
     // `isNativePath` drops their backend rows below.

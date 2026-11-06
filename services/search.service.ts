@@ -349,11 +349,18 @@ function has(value: string, needle: string): boolean {
   return value.toLowerCase().includes(needle.toLowerCase())
 }
 
-function matchesSpec(product: FormattedContainerHit, spec: DepotFeaturedSpec): boolean {
+/** Which listings a featured row shows: to buy outright, or to rent by the month. */
+export type FeaturedPaymentType = 'buy' | 'rental'
+
+export function isFeaturedPaymentType(value: string): value is FeaturedPaymentType {
+  return value === 'buy' || value === 'rental'
+}
+
+function matchesSpec(product: FormattedContainerHit, spec: DepotFeaturedSpec, paymentType: FeaturedPaymentType): boolean {
   const field = (name: string) => getCustomFieldValue(product, name)
 
   return (
-    field('payment_type').toLowerCase() === 'buy' &&
+    field('payment_type').toLowerCase() === paymentType &&
     // `length_width` reads `20'` / `40'`, so a substring test rather than
     // equality — and "20" cannot be confused with "40" or "10".
     has(field('length_width'), spec.size) &&
@@ -371,6 +378,7 @@ export type DepotFeaturedContainer = {
 export async function getDepotFeaturedContainers(
   depot: string,
   specKeys: readonly DepotFeaturedKey[] = DEFAULT_DEPOT_FEATURED_KEYS,
+  paymentType: FeaturedPaymentType = 'buy',
 ): Promise<DepotFeaturedContainer[]> {
   const trimmed = depot.trim()
   if (!trimmed) return []
@@ -386,8 +394,21 @@ export async function getDepotFeaturedContainers(
 
   return specKeys.flatMap((key) => {
     const spec = DEPOT_FEATURED_SPECS.find((candidate) => candidate.key === key)
-    const product = spec && atDepot.find((candidate) => matchesSpec(candidate, spec))
-    return spec && product ? [{ spec, product }] : []
+    if (!spec) return []
+    const matches = atDepot.filter((candidate) => matchesSpec(candidate, spec, paymentType))
+    // A depot lists each rental once per term (3, 6 and 12 months) and the row
+    // quotes "Starting at …/month", so the cheapest term is the one shown, as
+    // on WordPress ($95 for a 20 ft is the 12-month rate). A buy listing is one
+    // per spec, so its first match is the only one.
+    const product =
+      paymentType === 'rental'
+        ? matches.reduce<FormattedContainerHit | undefined>(
+            (cheapest, candidate) =>
+              candidate.sale_price > 0 && (!cheapest || candidate.sale_price < cheapest.sale_price) ? candidate : cheapest,
+            undefined,
+          )
+        : matches[0]
+    return product ? [{ spec, product }] : []
   })
 }
 
@@ -401,12 +422,13 @@ export async function getDepotFeaturedContainers(
  */
 export async function getNationalFeaturedContainers(
   specKeys: readonly DepotFeaturedKey[],
+  paymentType: FeaturedPaymentType = 'buy',
 ): Promise<DepotFeaturedContainer[]> {
   'use cache'
   cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.HOMEPAGE)
 
-  return getDepotFeaturedContainers(DEFAULT_LOCATION, specKeys)
+  return getDepotFeaturedContainers(DEFAULT_LOCATION, specKeys, paymentType)
 }
 
 // Single product lookup for the PDP (/product/[slug]). Accessories are

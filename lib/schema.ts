@@ -6,6 +6,7 @@ import { normaliseRating } from '@/lib/ratings'
 import { getTareWeightLbs } from '@/lib/data/pdpShippingContainers'
 import { getContainerVideo } from '@/lib/containerVideo'
 import type { ProductHit } from '@/types/product'
+import { GOOGLE_REVIEW_STATS } from '@/config/reviews'
 import type { FaqItem } from '@/lib/data/pdpShippingContainers'
 
 /**
@@ -531,6 +532,43 @@ export function localBusinessNode(location: LocalBusinessInput): SchemaNode {
  * bulk of the converted WordPress set. Cheap, and it gives the breadcrumb and
  * the site something to hang off.
  */
+/**
+ * A Product standing for a range of listings, priced as an AggregateOffer from
+ * their lowest to their highest price, rated with the site's Google rating.
+ * The rental page's node: WordPress declared one (its 20 ft rental, $95 to
+ * $150, 4.8 stars); here the range is the listings' live prices and the rating
+ * is the same figure the badge shows. Null when there are no priced listings,
+ * so no price is ever invented.
+ */
+export function aggregateOfferProductNode(input: {
+  name: string
+  products: readonly { sale_price?: number | string; images?: readonly { src?: string }[] }[]
+}): SchemaNode | null {
+  const prices = input.products.map((product) => Number(product.sale_price)).filter((price) => price > 0)
+  if (prices.length === 0) return null
+  const images = [...new Set(input.products.map((product) => product.images?.[0]?.src).filter((src): src is string => !!src))]
+  return {
+    '@type': 'Product',
+    name: input.name,
+    ...(images.length ? { image: images } : {}),
+    brand: { '@type': 'Brand', name: SITE.name },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: GOOGLE_REVIEW_STATS.rating,
+      ratingCount: GOOGLE_REVIEW_STATS.count,
+    },
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: Math.min(...prices).toFixed(2),
+      highPrice: Math.max(...prices).toFixed(2),
+      priceCurrency: 'USD',
+      offerCount: prices.length,
+      availability: 'https://schema.org/InStock',
+      seller: ref(SCHEMA_ID.organization),
+    },
+  }
+}
+
 export function webPageNode(input: {
   path: string
   name: string

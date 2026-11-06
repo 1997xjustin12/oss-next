@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useStoredZip } from '@/hooks/useStoredZip'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { FeaturedContainerCard, FeaturedContainerCardSkeleton } from './FeaturedContainerCard'
-import type { DepotFeaturedKey } from '@/services/search.service'
+import type { DepotFeaturedKey, FeaturedPaymentType } from '@/services/search.service'
 import type { ProductHit } from '@/types/product'
 
 /** How many the lookup answers with when no `specs` are given, and so how many skeletons to show. */
@@ -15,7 +15,16 @@ type Props = {
   specs?: readonly DepotFeaturedKey[]
   /** The section's vertical spacing, which each page sets for its own layout. */
   className?: string
+  /** `rental` shows the same specs as monthly rentals (the rental page's row). Default `buy`. */
+  paymentType?: FeaturedPaymentType
 }
+
+/**
+ * Columns from `lg` up, by how many cards the row holds, so three cards fill
+ * the width instead of leaving a fourth slot empty. A lookup, not a template
+ * literal, so Tailwind sees each class.
+ */
+const LG_COLUMNS: Record<number, string> = { 1: 'lg:grid-cols-1', 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3' }
 
 type FeaturedResponse = {
   depot: string
@@ -45,7 +54,7 @@ type State =
  * Renders nothing at all when the lookup finds none or fails: a heading over an
  * empty row says less than no row.
  */
-export function LocationFeaturedContainers({ specs, className = 'pb-12' }: Props) {
+export function LocationFeaturedContainers({ specs, className = 'pb-12', paymentType = 'buy' }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' })
   const { depot: stored, resolved } = useStoredZip()
   // A string, so a parent passing a fresh array with the same keys does not refetch.
@@ -78,6 +87,7 @@ export function LocationFeaturedContainers({ specs, className = 'pb-12' }: Props
       try {
         const query = new URLSearchParams({ depot })
         if (specsParam !== undefined) query.set('specs', specsParam)
+        if (paymentType !== 'buy') query.set('ptype', paymentType)
 
         const res = await fetch(`/api/shipping-containers/featured?${query}`, { signal: abort.signal })
         if (!res.ok) {
@@ -102,7 +112,7 @@ export function LocationFeaturedContainers({ specs, className = 'pb-12' }: Props
     // Also aborts a lookup a newer location has overtaken, so a slow answer
     // for the old depot can never land on top of the new one.
     return () => abort.abort()
-  }, [resolved, stored, specsParam])
+  }, [resolved, stored, specsParam, paymentType])
 
   if (state.status === 'empty') return null
 
@@ -118,7 +128,7 @@ export function LocationFeaturedContainers({ specs, className = 'pb-12' }: Props
         the longest title would otherwise make one card taller than the rest.
       */}
       <ul
-        className="grid auto-rows-fr grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4"
+        className={`grid auto-rows-fr grid-cols-1 items-stretch gap-5 sm:grid-cols-2 ${LG_COLUMNS[specs?.length ?? DEFAULT_SLOTS] ?? 'lg:grid-cols-4'}`}
         // So a screen reader waits for the real cards rather than announcing
         // four placeholder rows as they appear.
         aria-busy={state.status === 'loading'}
@@ -131,7 +141,7 @@ export function LocationFeaturedContainers({ specs, className = 'pb-12' }: Props
             ))
           : state.containers.map(({ spec, product }) => (
               <li key={spec.key} className="flex">
-                <FeaturedContainerCard product={product} />
+                <FeaturedContainerCard product={product} paymentType={paymentType} />
               </li>
             ))}
       </ul>

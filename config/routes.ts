@@ -29,6 +29,9 @@ export const ROUTES = {
   CONTAINER_DIMENSIONS: '/shipping-container-dimensions',
   /** The FAQ page, native since 2026-11-06 (was a WordPress page). */
   FAQS: '/shipping-container-faqs',
+  /** The buy and rental landing pages, native since 2026-11-06 (were WordPress pages). */
+  FOR_SALE: '/shipping-containers-for-sale',
+  RENTAL: '/shipping-container-rental',
   /** Where Zoho sends a visitor after that form (TAX_EXEMPTION_FORM.hidden.returnURL). */
   TAX_EXEMPTION_THANK_YOU: '/sales-tax-exemption-request-thank-you',
   PRODUCT: (handle: string) => `/product/${handle}`,
@@ -155,6 +158,8 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'cargo-worthy-shipping-container',
   'shipping-container-dimensions',
   'shipping-container-faqs',
+  'shipping-containers-for-sale',
+  'shipping-container-rental',
   // Operational and internal routes. Not reachable as WordPress content, but
   // listed so a stray backend row can never claim one of them.
   'maintenance',

@@ -3,16 +3,21 @@ import {
   DEFAULT_DEPOT_FEATURED_KEYS,
   getDepotFeaturedContainers,
   isDepotFeaturedKey,
+  isFeaturedPaymentType,
 } from '@/services/search.service'
 
 /**
  * GET /api/shipping-containers/featured?depot=Atlanta,%20GA
  * GET /api/shipping-containers/featured?depot=Atlanta,%20GA&specs=used_20s_wwt,used_40h_wwt
+ * GET /api/shipping-containers/featured?depot=Atlanta,%20GA&ptype=rental
  *
  * The containers a depot leads with — see `getDepotFeaturedContainers` for
  * which ones and why the matching cannot be left to Elasticsearch. Without
  * `specs` it answers the default four. With it, only those, in that order; an
  * unknown key is a 400, so a typo cannot pass as "this depot has none".
+ *
+ * `ptype` is `buy` (the default) or `rental`: the same specs, as monthly
+ * rentals, each at its cheapest term. Anything else is a 400.
  *
  * Exists because the component that wants this is a Client Component: it reads
  * the visitor's depot out of their browser's storage, which no server render
@@ -39,8 +44,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'specs has an unknown key' }, { status: 400 })
   }
 
+  const ptype = request.nextUrl.searchParams.get('ptype') ?? 'buy'
+  if (!isFeaturedPaymentType(ptype)) {
+    return NextResponse.json({ error: 'ptype must be buy or rental' }, { status: 400 })
+  }
+
   try {
-    const results = await getDepotFeaturedContainers(depot, validKeys)
+    const results = await getDepotFeaturedContainers(depot, validKeys, ptype)
 
     return NextResponse.json(
       {

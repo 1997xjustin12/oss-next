@@ -18,10 +18,21 @@ import { ROUTES } from '@/config/routes'
  * listing for that ZIP and depot.
  *
  * Shared since the refurbished and cargo-worthy pages, where it stands in for
- * WordPress's store-locator shortcode. Made for a dark or photo background:
- * "Use my current location" is white.
+ * WordPress's store-locator shortcode; on the for-sale and rental pages, for
+ * their "instant pricing" ZIP boxes (`ptype`, `submitLabel`). `tone` decides
+ * "Use my current location": white on a dark or photo band, red on white.
  */
-export function LocationSearch() {
+type Props = {
+  /** Which listing a pick opens: buy (the default) or rental. */
+  ptype?: 'buy' | 'rental'
+  /** `onDark` (the default) for a dark or photo band; `onLight` for a white section. */
+  tone?: 'onDark' | 'onLight'
+  /** A worded submit button, as some WordPress boxes have ("Get Instant Local Pricing"). Without it, the icon alone. */
+  submitLabel?: string
+  placeholder?: string
+}
+
+export function LocationSearch({ ptype = 'buy', tone = 'onDark', submitLabel, placeholder = 'Enter your Zip/Postal Code' }: Props = {}) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -44,6 +55,9 @@ export function LocationSearch() {
     locating,
   } = useZipLookup({ type: 'postcode', countries: 'us,ca', debounceMs: 300, limit: 5 })
 
+  // Ids from useId, so two boxes on one page (the rental and for-sale pages
+  // have one in a band and one beside the steps) never share one.
+  const inputId = useId()
   const listboxId = useId()
   const noticeId = useId()
   const showDropdown = open && (results.length > 0 || loading || !!error)
@@ -70,7 +84,7 @@ export function LocationSearch() {
   }, [results])
 
   function goToListing(postcode: string, depot: string) {
-    const params = new URLSearchParams({ zipcode: postcode, location: depot, ptype: 'buy' })
+    const params = new URLSearchParams({ zipcode: postcode, location: depot, ptype })
     router.push(`${ROUTES.PLP}?${params}`)
   }
 
@@ -129,19 +143,19 @@ export function LocationSearch() {
           e.preventDefault()
           void handleSubmit()
         }}
-        className="relative flex w-full items-stretch rounded-md bg-white shadow-lg dark:bg-neutral-100"
+        className={`relative flex w-full items-stretch rounded-md bg-white dark:bg-neutral-100 ${tone === 'onLight' ? 'border border-neutral-300 shadow-sm dark:border-transparent' : 'shadow-lg'}`}
       >
         {/*
           A label, not a placeholder standing in for one. Placeholder text
           disappears the moment someone types, which leaves anyone who looks
           away mid-entry — and every screen reader — with an unlabelled box.
         */}
-        <label htmlFor="depot-location" className="sr-only">
+        <label htmlFor={inputId} className="sr-only">
           ZIP or postal code
         </label>
 
         <input
-          id="depot-location"
+          id={inputId}
           name="location"
           value={zip}
           onChange={(e) => {
@@ -163,7 +177,7 @@ export function LocationSearch() {
           inputMode="numeric"
           maxLength={10}
           autoComplete="postal-code"
-          placeholder="Enter your Zip/Postal Code"
+          placeholder={placeholder}
           role="combobox"
           aria-autocomplete="list"
           aria-expanded={showDropdown}
@@ -178,7 +192,7 @@ export function LocationSearch() {
           disabled={busy || locating}
           // The icon is the whole control, so the name has to come from
           // somewhere a pointer user never sees.
-          aria-label="Search this location"
+          aria-label={submitLabel ? undefined : 'Search this location'}
           className="flex shrink-0 items-center justify-center rounded-r-md bg-theme-primary px-4 text-white
                      transition-colors hover:bg-theme-primary-dark disabled:cursor-not-allowed disabled:opacity-80
                      focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white"
@@ -188,6 +202,8 @@ export function LocationSearch() {
           ) : (
             <CircleArrowRight className="h-6 w-6" aria-hidden />
           )}
+          {submitLabel && <span className="ml-2 hidden text-sm font-bold sm:inline">{submitLabel}</span>}
+          {submitLabel && <span className="sr-only sm:hidden">{submitLabel}</span>}
         </button>
 
         {showDropdown && (
@@ -251,12 +267,12 @@ export function LocationSearch() {
           type="button"
           onClick={() => void handleUseMyLocation()}
           disabled={busy || locating}
-          className="inline-flex items-center gap-2 rounded-full border border-white/70 px-4 py-2
-                     text-xs font-semibold text-white backdrop-blur-[2px]
-                     transition-colors hover:border-white hover:bg-white/10
-                     disabled:cursor-not-allowed disabled:opacity-70
-                     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white
-                     sm:text-sm"
+          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-colors
+                      disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 sm:text-sm ${
+                        tone === 'onLight'
+                          ? 'border-theme-primary text-theme-primary hover:bg-theme-primary/5 focus-visible:outline-theme-primary dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400/10'
+                          : 'border-white/70 text-white backdrop-blur-[2px] hover:border-white hover:bg-white/10 focus-visible:outline-white'
+                      }`}
         >
           <LocateFixed className="h-4 w-4 shrink-0" aria-hidden />
           Use my current location
