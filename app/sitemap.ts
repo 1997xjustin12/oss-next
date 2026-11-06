@@ -37,6 +37,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}${ROUTES.ACCESSORY_PRODUCTS}`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${origin}${ROUTES.RENT_TO_OWN}`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${origin}${ROUTES.REEFER}`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${origin}${ROUTES.CONTAINER_TYPES}`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${origin}${ROUTES.CONTAINER_CONDITIONS}`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${origin}${ROUTES.SPECIAL_PROMOTIONS}`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${origin}${ROUTES.WHY_ONSITE}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${origin}${ROUTES.TAX_EXEMPTION}`, changeFrequency: 'monthly', priority: 0.5 },
     // The GBP location pages, for the same reason: they are native routes, so
     // `isNativePath` drops their backend rows below.

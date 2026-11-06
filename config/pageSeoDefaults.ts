@@ -82,6 +82,46 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     },
   },
 
+  // The next four: carried over from the WordPress pages they replaced. Their
+  // titles have no site ending there, so they are kept whole (absoluteTitle);
+  // og:image is the same file from the CDN (special promotions' WordPress
+  // banner has no CDN copy, so it takes the site default).
+  [ROUTES.CONTAINER_TYPES]: {
+    title: 'Different Types Of Shipping Containers | Container Guide & Uses',
+    absoluteTitle: true,
+    description:
+      'Learn more about the different types of the shipping containers: dry van, refrigerated, flat rack, open side container, and more.',
+    canonical: ROUTES.CONTAINER_TYPES,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2023/08/17055329/who-invented-the-shipping-container.webp'] },
+  },
+
+  [ROUTES.CONTAINER_CONDITIONS]: {
+    title: 'Shipping Container Conditions | Differences & Advantages',
+    absoluteTitle: true,
+    description:
+      'There is a variety of shipping containers conditions: new, used, refurbished, one trip & as is. They are classified based on their condition.',
+    canonical: ROUTES.CONTAINER_CONDITIONS,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2023/08/23063201/one-trip-shipping-containers-for-sale-1-e1708320972146.webp'] },
+  },
+
+  [ROUTES.SPECIAL_PROMOTIONS]: {
+    title: 'Container Promotion | Quality Shipping Containers & Best Prices',
+    absoluteTitle: true,
+    description:
+      'Check out our special shipping container promotions! Choose from a variety of sizes & customization options. Call us now!',
+    canonical: ROUTES.SPECIAL_PROMOTIONS,
+    openGraph: { type: 'article', images: ['/images/og-containers.jpg'] },
+  },
+
+  [ROUTES.WHY_ONSITE]: {
+    title: 'Onsite Storage Solutions | Leading Shipping Container Wholesaler',
+    absoluteTitle: true,
+    description:
+      'Onsite storage has been selling and renting new and used shipping containers throughout America since 2002. Learn more about us here.',
+    canonical: ROUTES.WHY_ONSITE,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2023/08/18050108/buy-shipping-container.webp'] },
+  },
+
   // Carried over from the WordPress page this replaced: its title has no site
   // ending there, so it is kept whole (absoluteTitle). Its social image is the
   // same banner, from the CDN rather than the WordPress media library.

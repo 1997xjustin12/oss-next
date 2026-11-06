@@ -4,7 +4,7 @@ import { ROUTES } from "@/config/routes";
 import { FEATURED_CONTAINERS } from "@/config/featuredContainers";
 import { toFeaturedCards } from "@/lib/featuredCards";
 import { getNationalFeaturedContainers } from "@/services/search.service";
-import { ContainerCardGrid } from "./ContainerCardGrid";
+import { ContainerCardGrid } from "@/components/product/ContainerCardGrid";
 
 // Headings default to their shipped copy, so this still renders standalone;
 // (home)/page.tsx passes the admin-authored text in. See config/homeContent.ts.

@@ -37,6 +37,10 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'accessory-products', path: ROUTES.ACCESSORY_PRODUCTS, label: 'Container Accessories', group: 'Storefront', indexable: true },
   { id: 'rent-to-own', path: ROUTES.RENT_TO_OWN, label: 'Rent-To-Own Financing', group: 'Storefront', indexable: true },
   { id: 'reefer', path: ROUTES.REEFER, label: 'Reefer Refrigerated Containers', group: 'Storefront', indexable: true },
+  { id: 'container-types', path: ROUTES.CONTAINER_TYPES, label: 'Types of Shipping Containers', group: 'Storefront', indexable: true },
+  { id: 'container-conditions', path: ROUTES.CONTAINER_CONDITIONS, label: 'Shipping Container Conditions', group: 'Storefront', indexable: true },
+  { id: 'special-promotions', path: ROUTES.SPECIAL_PROMOTIONS, label: 'Special Promotions', group: 'Storefront', indexable: true },
+  { id: 'why-onsite', path: ROUTES.WHY_ONSITE, label: 'Why On-Site Storage', group: 'Storefront', indexable: true },
   { id: 'tax-exemption', path: ROUTES.TAX_EXEMPTION, label: 'Sales Tax Exemption Request', group: 'Storefront', indexable: true },
   { id: 'tax-exemption-thank-you', path: ROUTES.TAX_EXEMPTION_THANK_YOU, label: 'Sales Tax Exemption — Thank You', group: 'Storefront', indexable: false },
 

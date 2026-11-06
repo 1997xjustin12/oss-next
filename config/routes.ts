@@ -17,6 +17,11 @@ export const ROUTES = {
   TAX_EXEMPTION: '/sales-tax-exemption-request',
   /** The refrigerated container page, native since 2026-11-06 (was a WordPress page). */
   REEFER: '/reefer-refrigerated-container',
+  /** Four content pages, native since 2026-11-06 (were WordPress pages). */
+  CONTAINER_TYPES: '/types-of-shipping-containers',
+  CONTAINER_CONDITIONS: '/shipping-container-conditions',
+  SPECIAL_PROMOTIONS: '/special-promotions',
+  WHY_ONSITE: '/why-onsite-storage',
   /** Where Zoho sends a visitor after that form (TAX_EXEMPTION_FORM.hidden.returnURL). */
   TAX_EXEMPTION_THANK_YOU: '/sales-tax-exemption-request-thank-you',
   PRODUCT: (handle: string) => `/product/${handle}`,
@@ -135,6 +140,10 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'sales-tax-exemption-request',
   'sales-tax-exemption-request-thank-you',
   'reefer-refrigerated-container',
+  'types-of-shipping-containers',
+  'shipping-container-conditions',
+  'special-promotions',
+  'why-onsite-storage',
   // Operational and internal routes. Not reachable as WordPress content, but
   // listed so a stray backend row can never claim one of them.
   'maintenance',
