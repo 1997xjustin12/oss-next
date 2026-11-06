@@ -19,6 +19,7 @@ const BLOCKED_ROUTES = [
   '**/api/abandoned-carts/**', // abandoned-cart records and their emails
   '**/api/checkout/place-order**', // the charge and the order — never reached, this is a backstop
   '**/api/subscribers/subscribe**', // newsletter sign-up
+  '**/api/zoho-quote-request**', // the FAQ page's quote request, a Zoho CRM lead
   '**/api/auth/register**', // creating accounts
 ]
 

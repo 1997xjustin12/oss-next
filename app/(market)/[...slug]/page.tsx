@@ -38,11 +38,9 @@ export const prefetch = 'partial'
  * ('days', busted by the `pages` tag) rather than rendered per view.
  */
 const PRERENDERED_WP_PATHS = [
-  'shipping-container-faqs',
-  'types-of-shipping-containers',
+  // The other four that were here are native pages now (2026-11-06); this
+  // route would only have answered Not Found for them.
   'complete-shipping-container-delivery-guide',
-  'why-onsite-storage',
-  'special-promotions',
 ]
 
 export function generateStaticParams() {

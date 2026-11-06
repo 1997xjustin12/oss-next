@@ -82,6 +82,17 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     },
   },
 
+  // Carried over from the WordPress page (title kept whole; og:image the same
+  // banner from the CDN, at full size rather than WordPress's 300px thumbnail).
+  [ROUTES.FAQS]: {
+    title: 'How Much Is A Shipping Container | Frequently Asked Questions',
+    absoluteTitle: true,
+    description:
+      'Wondering how much is a shipping container? Check out these frequently asked questions for your quick guide.',
+    canonical: ROUTES.FAQS,
+    openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2022/01/27100828/onsite-container-banner-size.png'] },
+  },
+
   // The next three: carried over from WordPress, whose titles have no site
   // ending (absoluteTitle). og:image is the same file from the CDN.
   [ROUTES.REFURBISHED_CONTAINERS]: {

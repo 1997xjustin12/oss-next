@@ -44,6 +44,7 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'refurbished-containers', path: ROUTES.REFURBISHED_CONTAINERS, label: 'Refurbished Shipping Containers', group: 'Storefront', indexable: true },
   { id: 'cargo-worthy-containers', path: ROUTES.CARGO_WORTHY_CONTAINERS, label: 'Cargo Worthy Shipping Containers', group: 'Storefront', indexable: true },
   { id: 'container-dimensions', path: ROUTES.CONTAINER_DIMENSIONS, label: 'Shipping Container Dimensions (article)', group: 'Storefront', indexable: true },
+  { id: 'faqs', path: ROUTES.FAQS, label: 'Shipping Container FAQs', group: 'Storefront', indexable: true },
   { id: 'tax-exemption', path: ROUTES.TAX_EXEMPTION, label: 'Sales Tax Exemption Request', group: 'Storefront', indexable: true },
   { id: 'tax-exemption-thank-you', path: ROUTES.TAX_EXEMPTION_THANK_YOU, label: 'Sales Tax Exemption — Thank You', group: 'Storefront', indexable: false },
 
