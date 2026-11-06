@@ -9,7 +9,7 @@ import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
 import { resolvePageMetadata } from "@/lib/seo";
 import { LocationSearch } from "./_components/LocationSearch";
-import { SectionTagline2 } from "./_components/SectionTagline2";
+import { SectionTagline2 } from "@/components/shared/SectionTagline2";
 import { SelectContainerType } from "./_components/SelectContainerType";
 import { LocationFeaturedContainers } from "./_components/LocationFeaturedContainers";
 import { InstantPricingSection } from "./_components/InstantPricingSection";
@@ -17,7 +17,7 @@ import { ShippingRatesSection } from "./_components/ShippingRatesSection";
 import { ContainerTypesSection } from "./_components/ContainerTypesSection";
 import { ContainerConditionsSection } from "./_components/ContainerConditionsSection";
 import { WhereToBuyFaq } from "./_components/WhereToBuyFaq";
-import { CustomerTestimonials } from "./_components/CustomerTestimonials";
+import { CustomerTestimonials } from "@/components/shared/CustomerTestimonials";
 import { NewsletterSignup } from "./_components/NewsletterSignup";
 import type { ContainerType } from "./_components/ContainerTypeCardLink";
 

@@ -72,7 +72,7 @@ export async function resolvePageMetadata(
   const images = ogImage ? [ogImage] : (defaults.openGraph?.images ?? [FALLBACK_OG_IMAGE]);
 
   return {
-    title,
+    title: defaults.absoluteTitle ? { absolute: title } : title,
     description,
     ...(keywords?.length ? { keywords } : {}),
     alternates: { canonical },

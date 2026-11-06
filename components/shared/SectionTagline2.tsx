@@ -32,10 +32,7 @@ const BACKGROUNDS: Record<SectionTaglineBg, string> = {
  * Not a Client Component: it renders text and has no interaction, so there is
  * nothing here worth shipping JavaScript for.
  *
- * Co-located with this route because it has one consumer. The project's rule
- * is that `components/` is for what two or more routes share — move it there
- * the moment a second page wants it, which the props now make a move rather
- * than a rewrite.
+ * Shared since the reefer page became its second user.
  */
 export function SectionTagline2({ text, bg = 'red' }: Props) {
   return (

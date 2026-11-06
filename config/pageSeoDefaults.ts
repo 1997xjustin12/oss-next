@@ -82,6 +82,21 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     },
   },
 
+  // Carried over from the WordPress page this replaced: its title has no site
+  // ending there, so it is kept whole (absoluteTitle). Its social image is the
+  // same banner, from the CDN rather than the WordPress media library.
+  [ROUTES.REEFER]: {
+    title: 'Reefer Refrigerated Container | Fast, Reliable Cold Storage',
+    absoluteTitle: true,
+    description:
+      'Buy or rent reefer refrigerated containers with fast delivery, 24/7 support & the best prices. Ideal for food, pharma, events & more!',
+    canonical: ROUTES.REEFER,
+    openGraph: {
+      type: 'article',
+      images: [{ url: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2023/11/21055609/banner-reefer-655c44c1ba35a.webp', width: 800, height: 481 }],
+    },
+  },
+
   // Carried over from the WordPress page this replaced, including its article
   // type. It had no social image, so this adds the site's containers one.
   [ROUTES.TAX_EXEMPTION]: {

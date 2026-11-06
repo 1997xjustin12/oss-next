@@ -75,6 +75,12 @@ export type PageSeoDefaults = {
   description: string;
   /** Built-in agent summary; see PageSeo.agentSummary. */
   agentSummary?: string;
+  /**
+   * Use the title exactly as written, without the site template's
+   * " | On-Site Storage Solutions": for a page whose WordPress title had no
+   * such ending and is kept as it was.
+   */
+  absoluteTitle?: boolean;
   /** Root-relative path, e.g. ROUTES.CART. Resolved against metadataBase. */
   canonical: string;
   keywords?: string[];

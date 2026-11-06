@@ -3,15 +3,21 @@ import { ALL_REVIEWS_PATH, TESTIMONIALS } from "@/lib/data/whereToBuyContent";
 import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 
 /**
- * Four customer quotes and a link to every review. The button's hover is the
- * WordPress one: it turns white with red text and a red border.
+ * Four customer quotes and a link to every review, as the WordPress pages show
+ * them (where-to-buy, reefer). The button's hover is the WordPress one: it turns
+ * white with red text and a red border.
  */
-export function CustomerTestimonials() {
+type Props = {
+  /** Each page's own wording of the heading. */
+  heading?: string;
+};
+
+export function CustomerTestimonials({ heading = "We’ve Got A Lot of Happy Customers" }: Props) {
   return (
     <section aria-labelledby="testimonials-heading" className="bg-theme-subtle px-4 py-12 sm:px-[5%] sm:py-16 dark:bg-neutral-900">
       <div className="mx-auto max-w-7xl text-center">
         <h2 id="testimonials-heading" className="text-2xl font-extrabold text-theme-dark sm:text-3xl dark:text-gray-100">
-          We&apos;ve Got A Lot of Happy Customers
+          {heading}
         </h2>
         <ul className="mt-8 grid gap-6 text-left sm:grid-cols-2 lg:grid-cols-4">
           {TESTIMONIALS.map((t) => (
