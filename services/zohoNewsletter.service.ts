@@ -46,7 +46,7 @@ export function zohoNewsletterRefused(status: number, location: string, text: st
       return true
     }
     const backToReferer = target.origin === new URL(SITE_URL).origin && (target.pathname === '/' || target.pathname === '')
-    return backToReferer || /(^|.)zoho.com$/i.test(target.hostname)
+    return backToReferer || /(^|\.)zoho\.com$/i.test(target.hostname)
   }
   if (status === 200) return /captcha|not valid|invalid|went wrong/i.test(text)
   return true
