@@ -1,17 +1,33 @@
-// Client-safe utility functions for any future newsletter UI (footer widget,
-// account dashboard toggle, unsubscribe page — none exist yet) to call
-// without each one re-implementing the fetch/error-handling boilerplate.
-// These call our own Next.js routes, not the Django backend directly — see
-// services/subscriber.service.ts for that side, used only by the route
-// handlers below.
+// The newsletter, from the browser. Every newsletter UI calls these, so a
+// signup reaches every list it belongs on without each form knowing which.
+// They call our own route (app/api/subscribers), which sends to Zoho CRM and
+// the Django backend; services/subscriber.service.ts is the backend side.
 export type NewsletterResult = { ok: true } | { ok: false; error: string }
 
-export async function subscribeToNewsletter(email: string, recaptchaToken?: string | null): Promise<NewsletterResult> {
+export type NewsletterSignup = {
+  email: string
+  /** "Full Name", which Zoho's newsletter form requires. */
+  name?: string
+  /**
+   * The reCAPTCHA v2 token from the form's "I'm not a robot" box. With it, the
+   * signup also goes to Zoho CRM, which checks it. Without it, Django only.
+   */
+  zohoCaptchaToken?: string | null
+  /** The app's own reCAPTCHA v3 token, for a signup without the checkbox. */
+  recaptchaToken?: string | null
+}
+
+/**
+ * Subscribe someone to the newsletter: Zoho CRM and the Django backend when the
+ * form carries Zoho's captcha (`NewsletterForm` does), the backend only when it
+ * does not (the account page's toggle). Use this, never a direct post to Zoho.
+ */
+export async function subscribeToNewsletter(signup: NewsletterSignup): Promise<NewsletterResult> {
   try {
     const res = await fetch('/api/subscribers/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, recaptchaToken }),
+      body: JSON.stringify(signup),
     })
     const data = await res.json().catch(() => null)
 
@@ -24,6 +40,7 @@ export async function subscribeToNewsletter(email: string, recaptchaToken?: stri
   }
 }
 
+/** Django only: a Zoho web form cannot unsubscribe anyone. */
 export async function unsubscribeFromNewsletter(email: string): Promise<NewsletterResult> {
   try {
     const res = await fetch('/api/subscribers/unsubscribe', {

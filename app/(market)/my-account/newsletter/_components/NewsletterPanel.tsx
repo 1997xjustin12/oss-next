@@ -31,7 +31,7 @@ export function NewsletterPanel() {
     setFlash(null)
 
     const result = next
-      ? await subscribeToNewsletter(email)
+      ? await subscribeToNewsletter({ email })
       : await unsubscribeFromNewsletter(email)
 
     if (result.ok) {
