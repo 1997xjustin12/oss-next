@@ -72,11 +72,17 @@ export async function POST(request: NextRequest) {
     userAgent: request.headers.get('user-agent'),
     ip: await clientIp(request),
   })
-  if (zoho === 'refused') {
-    return NextResponse.json({ error: 'We could not verify that you’re not a robot. Please tick the box again.' }, { status: 400 })
+  if (zoho.outcome === 'refused') {
+    // Zoho's answer goes back too, under its own key: the visitor sees only the
+    // sentence, and the Network tab shows what Zoho said.
+    const { status, location, excerpt } = zoho
+    return NextResponse.json(
+      { error: 'We could not verify that you’re not a robot. Please tick the box again.', zoho: { status, location, excerpt } },
+      { status: 400 },
+    )
   }
 
   const backend = await subscribeBackend(email)
-  if (zoho === 'accepted' || backend.ok) return NextResponse.json({ ok: true })
+  if (zoho.outcome === 'accepted' || backend.ok) return NextResponse.json({ ok: true })
   return backend.reply ?? NextResponse.json({ error: FAILED }, { status: 400 })
 }

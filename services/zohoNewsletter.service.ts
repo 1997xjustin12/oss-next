@@ -11,6 +11,13 @@ const ZOHO_TIMEOUT_MS = 20_000
  */
 export type ZohoNewsletterOutcome = 'accepted' | 'refused' | 'unavailable'
 
+/**
+ * What Zoho answered, in brief: the status, where a redirect pointed, and the
+ * start of the page's text. Logged, and returned to the browser with a refusal
+ * so a failed signup can be diagnosed from the Network tab.
+ */
+export type ZohoNewsletterAnswer = { outcome: ZohoNewsletterOutcome; status: number | null; location: string; excerpt: string }
+
 export type ZohoNewsletterSignup = {
   name: string
   email: string
@@ -40,7 +47,7 @@ function pageText(html: string): string {
  * the same way is not yet confirmed with a real signup: every answer is logged
  * so the first one shows it.
  */
-export async function sendZohoNewsletter(signup: ZohoNewsletterSignup): Promise<ZohoNewsletterOutcome> {
+export async function sendZohoNewsletter(signup: ZohoNewsletterSignup): Promise<ZohoNewsletterAnswer> {
   const body = new URLSearchParams({ ...FORM.hidden, returnURL: 'null' })
   const [nameField, emailField] = FORM.fields
   body.set(nameField.name, signup.name.trim().slice(0, nameField.maxLength))
@@ -67,19 +74,15 @@ export async function sendZohoNewsletter(signup: ZohoNewsletterSignup): Promise<
     })
     const text = res.status === 200 ? pageText(await res.text()) : ''
     const ms = Date.now() - started
+    const location = res.headers.get('location') ?? ''
     if (zohoAccepted(res.status, text)) {
       console.info('[zoho-newsletter] accepted', { ms })
-      return 'accepted'
+      return { outcome: 'accepted', status: res.status, location, excerpt: '' }
     }
-    console.error('[zoho-newsletter] not accepted', {
-      status: res.status,
-      location: res.headers.get('location') ?? '',
-      ms,
-      text: text.slice(0, 500),
-    })
-    return res.status >= 500 ? 'unavailable' : 'refused'
+    console.error('[zoho-newsletter] not accepted', { status: res.status, location, ms, text: text.slice(0, 500) })
+    return { outcome: res.status >= 500 ? 'unavailable' : 'refused', status: res.status, location, excerpt: text.slice(0, 200) }
   } catch (error) {
     console.error('[zoho-newsletter] no answer from Zoho', { ms: Date.now() - started, error })
-    return 'unavailable'
+    return { outcome: 'unavailable', status: null, location: '', excerpt: error instanceof Error ? error.message.slice(0, 200) : '' }
   }
 }

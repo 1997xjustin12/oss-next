@@ -17,7 +17,7 @@ mock.module('@/services/zohoNewsletter.service', {
   namedExports: {
     sendZohoNewsletter: async (signup: { name: string; email: string; captchaToken: string }) => {
       calls.push(`zoho:${signup.name}:${signup.email}:${signup.captchaToken}`)
-      return zohoOutcome
+      return { outcome: zohoOutcome, status: zohoOutcome === 'refused' ? 302 : 200, location: zohoOutcome === 'refused' ? 'https://onsitestorage.com/' : '', excerpt: '' }
     },
   },
 })
@@ -34,7 +34,7 @@ const { POST } = await import('@/app/api/subscribers/subscribe/route')
 
 async function post(body: Record<string, unknown>) {
   const res = await POST(new Request('https://site.test/api/subscribers/subscribe', { method: 'POST', body: JSON.stringify(body) }) as never)
-  return { status: res.status, body: (await res.json()) as { ok?: boolean; error?: string } }
+  return { status: res.status, body: (await res.json()) as { ok?: boolean; error?: string; zoho?: { status: number } } }
 }
 
 const signup = { email: 'ann@example.com', name: 'Ann Lee', zohoCaptchaToken: 'tok' }
@@ -58,6 +58,7 @@ describe('newsletter signup with the Zoho captcha (NewsletterForm)', () => {
     const res = await post(signup)
     assert.equal(res.status, 400)
     assert.match(res.body.error ?? '', /robot/)
+    assert.equal(res.body.zoho?.status, 302)
     assert.deepEqual(calls, ['zoho:Ann Lee:ann@example.com:tok'])
   })
 
