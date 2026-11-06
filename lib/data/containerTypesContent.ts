@@ -3,9 +3,9 @@
  * WordPress page it replaced (2026-11-06): its visible sections, in its order,
  * word for word. Edit here; the components only lay it out.
  *
- * Kept as WordPress has it, though it looks wrong: the rental card shows
- * (888) 997-9085 but dials (888) 977-9085, and the reefer FAQ answer gives
- * "-15°F to -60°F" where the reefer copy elsewhere says -15°F to 60°F. One
+ * Corrected from WordPress (2026-11-06): the rental card showed (888) 997-9085
+ * while dialling (888) 977-9085; the reefer FAQ answer said "-15°F to -60°F"
+ * where the page says -15°F to 60°F; "6, 12 18" lacked its comma. One
  * reason WordPress split over two bullets ("Huge inventory of New, Used and" /
  * "Refurbished Containers") is shown as the one bullet it reads as.
  *
@@ -166,7 +166,7 @@ export const CONTAINER_TYPES_OPTIONS = [
     href: CONTAINER_TYPES_LINKS.rental,
     image: `${CDN}/2023/04/06154246/Rental-Image.png`,
     before: 'On-Site Storage Solutions is a leader in providing rental shipping containers for temporary or long-term needs, at the lowest rates available. Rental rates start as low as $99 a month (some areas may require sales tax), just give us a call at',
-    phoneText: '(888) 997-9085',
+    phoneText: '(888) 977-9085',
     after: ', and we’ll walk you through the container rental process.',
   },
   {
@@ -175,7 +175,7 @@ export const CONTAINER_TYPES_OPTIONS = [
     image: `${CDN}/2023/04/06154254/RTO-Image.png`,
     before: 'On-Site Storage Solutions is proud to present a Rent-To-Own Option in partnership with My Container Rental. Call us at',
     phoneText: '(888) 977-9085',
-    after: ' or select from our website the payment plans that suit you best – including 6, 12 18, and 24 Months, as well as long-term programs.',
+    after: ' or select from our website the payment plans that suit you best – including 6, 12, 18, and 24 Months, as well as long-term programs.',
   },
 ] as const satisfies readonly { title: string; href: string; image: string; before: string; phoneText?: string; after?: string }[]
 
@@ -212,7 +212,7 @@ export const CONTAINER_TYPES_FAQS = [
   },
   {
     question: 'What is a reefer container?',
-    answer: 'A reefer container is a specialized shipping container with an integrated cooling system. It transports perishable goods that need temperature control during transit. The temperature inside can be adjusted for items like fresh produce, frozen food, pharmaceuticals, and chemicals. Reefer containers are available in different sizes and can maintain temperatures from (-15°F to -60°F), depending on the model.',
+    answer: 'A reefer container is a specialized shipping container with an integrated cooling system. It transports perishable goods that need temperature control during transit. The temperature inside can be adjusted for items like fresh produce, frozen food, pharmaceuticals, and chemicals. Reefer containers are available in different sizes and can maintain temperatures from (-15°F to 60°F), depending on the model.',
   },
   {
     question: 'What is an open top container?',

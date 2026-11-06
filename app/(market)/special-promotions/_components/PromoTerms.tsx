@@ -23,7 +23,7 @@ export function PromoTerms() {
           <p>{release}</p>
           <p>
             {contactBefore}{' '}
-            <a href={telHref(PROMO_PHONES.other)} className="font-semibold text-theme-primary underline underline-offset-2 hover:no-underline dark:text-red-400">
+            <a href={telHref(PROMO_PHONES.main)} className="font-semibold text-theme-primary underline underline-offset-2 hover:no-underline dark:text-red-400">
               {PROMO_PHONES.main}
             </a>
             {contactAfter}

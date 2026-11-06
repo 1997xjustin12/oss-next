@@ -3,9 +3,8 @@
  * it replaced (2026-11-06): its visible sections, in its order, word for word.
  * Edit here; the components only lay it out.
  *
- * Kept as WordPress has it, though it looks wrong: "Experienced Staff" ends
- * "simple and stress-free. guarantee it!" (a word seems to be missing). Content
- * owner to decide.
+ * Corrected from WordPress (2026-11-06): "Experienced Staff" ended its last
+ * sentence with "guarantee it!", a word missing.
  *
  * Not carried over: the "Container FAQs" section, which WordPress hides on
  * every device. See docs/reference/wordpress-to-next-pages.md.
@@ -59,7 +58,7 @@ export const WHY_REASONS_BAND = 'Here are the reasons why you’ll not be disapp
 
 export const WHY_STAFF = {
   heading: 'Experienced Staff',
-  body: 'On-Site Storage Solutions was founded in 2002. Our experienced senior staff many of whom started with the company have over 75 years of combined industry experience. This experience and commitment to customer service have enabled the company to grow into a leader in the industry. You can rest assured that when working with On-Site Storage Solutions you will have a superior customer experience. We take care of all aspects related to ordering containers, from helping you choose the right type and condition to ensuring successful delivery. Our goal is to make your container-buying or renting experience simple and stress-free. guarantee it!',
+  body: 'On-Site Storage Solutions was founded in 2002. Our experienced senior staff many of whom started with the company have over 75 years of combined industry experience. This experience and commitment to customer service have enabled the company to grow into a leader in the industry. You can rest assured that when working with On-Site Storage Solutions you will have a superior customer experience. We take care of all aspects related to ordering containers, from helping you choose the right type and condition to ensuring successful delivery. Our goal is to make your container-buying or renting experience simple and stress-free. We guarantee it!',
 } as const
 
 export const WHY_SATISFACTION = {

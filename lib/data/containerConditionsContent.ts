@@ -3,9 +3,12 @@
  * WordPress page it replaced (2026-11-06): its visible sections, in its order,
  * word for word. Edit here; the components only lay it out.
  *
- * Kept as WordPress has it, though it looks wrong: the rental card shows
- * (888) 997-9085 but dials (888) 977-9085, and the intro's "click here" links to
- * this same page. Content owner to decide.
+ * Corrected from WordPress (2026-11-06): the rental card showed (888) 997-9085
+ * while dialling (888) 977-9085; "extend its lifespan of the container",
+ * "guaranteed not to leak condition" and "6, 12 18" read as typos.
+ *
+ * Still as WordPress has it, for the content owner: the intro's "click here"
+ * links to this same page.
  */
 
 import { ROUTES } from '@/config/routes'
@@ -87,7 +90,7 @@ export const CONDITIONS_CARDS: readonly ConditionsCard[] = [
     paragraphs: [
       [
         { text: 'Refurbished containers', href: CONDITIONS_LINKS.refurbished },
-        ' are used Wind and Water Tight (WWT) containers that have been prepped, primed, and repainted. Refurbishing gives a shipping container a new lease on life and can extend its lifespan of the container. We offer three levels of refurbishment on a Used Wind and Water Tight container:',
+        ' are used Wind and Water Tight (WWT) containers that have been prepped, primed, and repainted. Refurbishing gives a shipping container a new lease on life and can extend the lifespan of the container. We offer three levels of refurbishment on a Used Wind and Water Tight container:',
       ],
     ],
     list: [
@@ -180,7 +183,7 @@ export const CONDITIONS_OPTIONS: readonly { title: string; href: string; before:
     title: 'RENTAL',
     href: CONDITIONS_LINKS.rental,
     before: 'On-Site Storage Solutions is a leader in providing rental shipping containers for temporary or long-term needs, at the lowest rates available. Rental rates start as low as $99 a month (some areas may require sales tax), just give us a call at',
-    phoneText: '(888) 997-9085',
+    phoneText: '(888) 977-9085',
     after: ', and we’ll walk you through the container rental process.',
   },
   {
@@ -188,7 +191,7 @@ export const CONDITIONS_OPTIONS: readonly { title: string; href: string; before:
     href: ROUTES.RENT_TO_OWN,
     before: 'On-Site Storage Solutions is proud to present a Rent-To-Own Option in partnership with My Container Rental. Call us at',
     phoneText: '(888) 977-9085',
-    after: ' or select from our website the payment plans that suit you best – including 6, 12 18, and 24 Months, as well as long-term programs.',
+    after: ' or select from our website the payment plans that suit you best – including 6, 12, 18, and 24 Months, as well as long-term programs.',
   },
 ]
 
@@ -200,7 +203,7 @@ export const CONDITIONS_FAQS = [
   { question: 'How long do shipping containers last?', answer: 'Shipping containers typically have a lifespan of approximately 25 years, but with careful maintenance and attention, their usability can be extended beyond this period. Regular inspections, rust prevention measures, and repairs all play a vital role in prolonging their durability and functionality.' },
   { question: 'How much are old shipping containers?', answer: 'The cost of old shipping container typically falls within the range of $1,350 to $3,000 and can be influenced by factors such as condition, age, size, and location. Additionally, the price may fluctuate based on any modifications made to the container.' },
   { question: 'How much is a new shipping container?', answer: 'A new shipping container typically costs around $2,850 to $7,800. However, it’s important to note that prices differ based on factors such as container size and location. Fluctuations in supply and demand also impact stock availability and costs.' },
-  { question: 'What is WWT shipping container?', answer: 'A WWT shipping container, which stands for wind and watertight container, is a type of container that is guaranteed not to leak condition. It refers to containers that are devoid of any holes or cracks, ensuring effective protection against wind and water infiltration when used correctly. These containers offer reliability and are ideal for storage needs.' },
+  { question: 'What is WWT shipping container?', answer: 'A WWT shipping container, which stands for wind and watertight container, is a type of container that is guaranteed not to leak. It refers to containers that are devoid of any holes or cracks, ensuring effective protection against wind and water infiltration when used correctly. These containers offer reliability and are ideal for storage needs.' },
   { question: 'What is a cargo worthy container?', answer: 'A CW container, also recognized as a cargo-worthy container, is a shipping container that meets specific standards set by international organizations to ensure its structural integrity and appropriateness for the safe transportation of goods.' },
 ] as const
 

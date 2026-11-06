@@ -3,13 +3,14 @@
  * it replaced (2026-11-06): its visible sections, in its order, word for word.
  * Edit here; the components only lay it out.
  *
- * Kept as WordPress has it, though it looks wrong (content owner to decide):
- * - "GIVEWAYS" (for "giveaways");
+ * Corrected from WordPress (2026-11-06): "GIVEWAYS" (for "giveaways"); the
+ * rentals paragraph showed and dialled (888) 997-9085, and the terms showed
+ * (888) 977-9085 but dialled 997: both are the sales line, (888) 977-9085.
+ *
+ * Still as WordPress has it (content owner to decide):
  * - the first giveaway names no item, only "$89.99 $75.00 17% Discount";
  * - "131.82/month" on the New 20 ft card lacks its "$" (the featured cards are
  *   now the shared ones, so that text is no longer shown);
- * - the rentals paragraph shows and dials (888) 997-9085, the terms show
- *   (888) 977-9085 but dial (888) 997-9085;
  * - "Huge inventory of New, Used and" / "Refurbished Containers" is one reason
  *   split over two bullets;
  * - the 40 ft and 45 ft high cube tiles reuse the 10 ft and 20 ft photos.
@@ -36,11 +37,9 @@ export const PROMO_LINKS = {
   moneyBack: '/money-back-guarantee',
 } as const
 
-/** The two phone numbers the WordPress copy uses. */
+/** The phone number the copy shows: the sales line. */
 export const PROMO_PHONES = {
   main: '(888) 977-9085',
-  /** Shown in the rentals paragraph, and dialled from the terms' "(888) 977-9085". */
-  other: '(888) 997-9085',
 } as const
 
 export const PROMO_HEADING = 'STORAGE CONTAINERS ON SALE'
@@ -48,7 +47,7 @@ export const PROMO_HEADING = 'STORAGE CONTAINERS ON SALE'
 export type Giveaway = { was?: string; amount: string; note: string; tone: 'red' | 'white' }
 
 export const PROMO_GIVEAWAYS = {
-  heading: 'EXCLUSIVE GIVEWAYS - LIMITED TIME OFFER!',
+  heading: 'EXCLUSIVE GIVEAWAYS - LIMITED TIME OFFER!',
   items: [
     { was: '$89.99', amount: '$75.00', note: '17% Discount', tone: 'red' },
     { amount: '$100 OFF', note: 'Container Upgrade. Upgrade from a Wind and Water Tight Container to Cargo worthy for $100', tone: 'white' },

@@ -45,8 +45,8 @@ export function PromoOptions() {
             <h2 className={H2}><Link href={PROMO_LINKS.rental} className="hover:underline">{rentals.heading}</Link></h2>
             <p className={`mt-4 ${BODY}`}>
               {rentals.before}{' '}
-              <a href={telHref(PROMO_PHONES.other)} className="font-bold text-[#0F3A59] underline underline-offset-2 hover:no-underline dark:text-sky-300">
-                {PROMO_PHONES.other}
+              <a href={telHref(PROMO_PHONES.main)} className="font-bold text-[#0F3A59] underline underline-offset-2 hover:no-underline dark:text-sky-300">
+                {PROMO_PHONES.main}
               </a>
               {rentals.after}
             </p>
