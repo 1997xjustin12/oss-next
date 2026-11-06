@@ -12,6 +12,7 @@
  */
 
 import { ROUTES } from '@/config/routes'
+import type { DepotFeaturedKey } from '@/services/search.service'
 
 const CDN = 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads'
 
@@ -216,3 +217,10 @@ export const CONDITIONS_HELP = {
 export const CONDITIONS_TESTIMONIALS_HEADING = 'We’ve Got A lot of Happy Customers'
 
 export const CONDITIONS_NEWSLETTER_HEADING = 'SUBSCRIBE TO OUR NEWSLETTER TO RECEIVE THE LATEST NEWS AND EXCLUSIVE OFFERS'
+
+/**
+ * The featured container row: the four containers WordPress featured here (Used
+ * 20 ft Standard WWT, Used 40 ft Standard WWT, Used 40 ft High Cube WWT, New 20 ft
+ * Standard IICL), at the visitor's depot. Rendered by LocationFeaturedContainers.
+ */
+export const CONDITIONS_FEATURED_SPECS = ['used_20s_wwt', 'used_40s_wwt', 'used_40h_wwt', 'new_20s_iicl'] as const satisfies readonly DepotFeaturedKey[]

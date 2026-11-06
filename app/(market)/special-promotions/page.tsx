@@ -1,11 +1,11 @@
-import { FeaturedContainerCards } from '@/components/product/FeaturedContainerCards'
+import { LocationFeaturedContainers } from '@/components/product/LocationFeaturedContainers'
 import { CustomerTestimonials } from '@/components/shared/CustomerTestimonials'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { NewsletterForm } from '@/components/shared/NewsletterForm'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { PAGE_SEO_DEFAULTS } from '@/config/pageSeoDefaults'
 import { ROUTES } from '@/config/routes'
-import { PROMO_HEADING, PROMO_NEWSLETTER_HEADING, PROMO_TESTIMONIALS_HEADING } from '@/lib/data/specialPromotionsContent'
+import { PROMO_FEATURED_SPECS, PROMO_HEADING, PROMO_NEWSLETTER_HEADING, PROMO_TESTIMONIALS_HEADING } from '@/lib/data/specialPromotionsContent'
 import { breadcrumbNode, graph, siteNodes, webPageNode } from '@/lib/schema'
 import { resolvePageMetadata } from '@/lib/seo'
 import { PromoContainerTypes } from './_components/PromoContainerTypes'
@@ -48,9 +48,7 @@ export default function SpecialPromotionsPage() {
         <h1 className="text-center text-[32px] font-bold uppercase leading-tight text-white">{PROMO_HEADING}</h1>
       </section>
 
-      <section aria-label="Featured containers" className="bg-white px-[5%] dark:bg-neutral-950">
-        <FeaturedContainerCards />
-      </section>
+      <LocationFeaturedContainers specs={PROMO_FEATURED_SPECS} className="py-8" />
 
       <PromoGiveaways />
       <PromoRentalDeals />

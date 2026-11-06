@@ -11,7 +11,7 @@ import { resolvePageMetadata } from "@/lib/seo";
 import { LocationSearch } from "@/components/shared/LocationSearch";
 import { SectionTagline2 } from "@/components/shared/SectionTagline2";
 import { SelectContainerType } from "./_components/SelectContainerType";
-import { LocationFeaturedContainers } from "./_components/LocationFeaturedContainers";
+import { LocationFeaturedContainers } from "@/components/product/LocationFeaturedContainers";
 import { InstantPricingSection } from "./_components/InstantPricingSection";
 import { ShippingRatesSection } from "./_components/ShippingRatesSection";
 import { ContainerTypesSection } from "./_components/ContainerTypesSection";

@@ -119,7 +119,8 @@ export function FeaturedContainerCard({ product }: Props) {
           </span>
         </div>
 
-        <p className="text-center text-xs leading-relaxed text-theme-mid dark:text-neutral-300 sm:text-sm">
+        {/* Two lines tall whatever it wraps to, as the skeleton is: no shift when it lands. */}
+        <p className="min-h-10 text-center text-xs leading-relaxed text-theme-mid sm:min-h-[2.875rem] sm:text-sm dark:text-neutral-300">
           Starting at{' '}
           <span className="font-extrabold text-theme-dark dark:text-neutral-100">{wholeDollars(price)}</span>{' '}
           or Purchase for as low as{' '}
@@ -169,11 +170,14 @@ export function FeaturedContainerCardSkeleton() {
 
         <div className="w-full animate-pulse rounded-md bg-theme-border aspect-4/3 dark:bg-neutral-800" />
 
-        <div className="mx-auto h-4 w-4/5 animate-pulse rounded bg-theme-border dark:bg-neutral-800" />
+        <div className="flex min-h-10 flex-col items-center justify-center gap-1.5 sm:min-h-[2.875rem]">
+          <div className="h-4 w-4/5 animate-pulse rounded bg-theme-border dark:bg-neutral-800" />
+          <div className="h-4 w-1/2 animate-pulse rounded bg-theme-border dark:bg-neutral-800" />
+        </div>
 
-        <div className="mt-auto mx-auto h-8 w-32 animate-pulse rounded-sm bg-theme-border dark:bg-neutral-800" />
+        <div className="mt-auto mx-auto h-8 w-32 animate-pulse rounded-sm bg-theme-border sm:h-9 dark:bg-neutral-800" />
 
-        <div className="mx-auto h-3.5 w-24 animate-pulse rounded bg-theme-border dark:bg-neutral-800" />
+        <div className="mx-auto h-4 w-24 animate-pulse rounded bg-theme-border dark:bg-neutral-800" />
       </div>
     </div>
   )

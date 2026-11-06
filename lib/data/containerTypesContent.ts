@@ -9,11 +9,12 @@
  * reason WordPress split over two bullets ("Huge inventory of New, Used and" /
  * "Refurbished Containers") is shown as the one bullet it reads as.
  *
- * WordPress's row of four product cards is replaced by the shared featured
- * cards (FeaturedContainerCards), as the migration doc asks.
+ * WordPress's row of four product cards is LocationFeaturedContainers, with the
+ * same four containers (TYPES_FEATURED_SPECS), as the migration doc asks.
  */
 
 import { ROUTES } from '@/config/routes'
+import type { DepotFeaturedKey } from '@/services/search.service'
 
 const CDN = 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads'
 
@@ -227,3 +228,10 @@ export const CONTAINER_TYPES_FAQS = [
 export const CONTAINER_TYPES_TESTIMONIALS_HEADING = 'We’ve Got A lot of Happy Customers'
 
 export const CONTAINER_TYPES_NEWSLETTER_HEADING = 'SUBSCRIBE TO OUR NEWSLETTER TO RECEIVE THE LATEST NEWS AND EXCLUSIVE OFFERS'
+
+/**
+ * The featured container row: the four containers WordPress featured here (Used
+ * 20 ft Standard WWT, Used 40 ft Standard WWT, Used 40 ft High Cube WWT, New 20 ft
+ * Standard IICL), at the visitor's depot. Rendered by LocationFeaturedContainers.
+ */
+export const TYPES_FEATURED_SPECS = ['used_20s_wwt', 'used_40s_wwt', 'used_40h_wwt', 'new_20s_iicl'] as const satisfies readonly DepotFeaturedKey[]

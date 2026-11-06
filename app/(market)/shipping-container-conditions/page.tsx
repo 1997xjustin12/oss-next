@@ -1,4 +1,4 @@
-import { FeaturedContainerCards } from '@/components/product/FeaturedContainerCards'
+import { LocationFeaturedContainers } from '@/components/product/LocationFeaturedContainers'
 import { CustomerTestimonials } from '@/components/shared/CustomerTestimonials'
 import { FaqAccordion } from '@/components/shared/FaqAccordion'
 import { JsonLd } from '@/components/shared/JsonLd'
@@ -12,6 +12,7 @@ import {
   CONDITIONS_CARDS,
   CONDITIONS_FAQ_HEADING,
   CONDITIONS_FAQS,
+  CONDITIONS_FEATURED_SPECS,
   CONDITIONS_INTRO,
   CONDITIONS_NEWSLETTER_HEADING,
   CONDITIONS_TESTIMONIALS_HEADING,
@@ -70,9 +71,7 @@ export default function ContainerConditionsPage() {
         </div>
       </section>
 
-      <section aria-label="Featured containers" className="bg-white px-[5%] pb-12 dark:bg-neutral-950">
-        <FeaturedContainerCards />
-      </section>
+      <LocationFeaturedContainers specs={CONDITIONS_FEATURED_SPECS} className="pb-12" />
 
       <SectionTagline2 bg="blue" text={CONDITIONS_BAND} />
       <ConditionsCardGrid cards={CONDITIONS_CARDS} columns={3} label="Container conditions" />

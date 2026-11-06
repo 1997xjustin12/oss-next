@@ -11,8 +11,10 @@ import type { ProductHit } from '@/types/product'
 const DEFAULT_SLOTS = 4
 
 type Props = {
-  /** Which containers to load, in this order. Leave out for the default four. */
+  /** Which containers to load, in this order: the ones the page's original features. Leave out for the default four. */
   specs?: readonly DepotFeaturedKey[]
+  /** The section's vertical spacing, which each page sets for its own layout. */
+  className?: string
 }
 
 type FeaturedResponse = {
@@ -43,7 +45,7 @@ type State =
  * Renders nothing at all when the lookup finds none or fails: a heading over an
  * empty row says less than no row.
  */
-export function LocationFeaturedContainers({ specs }: Props) {
+export function LocationFeaturedContainers({ specs, className = 'pb-12' }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' })
   const { depot: stored, resolved } = useStoredZip()
   // A string, so a parent passing a fresh array with the same keys does not refetch.
@@ -105,7 +107,7 @@ export function LocationFeaturedContainers({ specs }: Props) {
   if (state.status === 'empty') return null
 
   return (
-    <section aria-labelledby="featured-containers" className="w-full bg-white px-4 pb-12 sm:px-6 dark:bg-neutral-950">
+    <section aria-labelledby="featured-containers" className={`w-full bg-white px-[5%] dark:bg-neutral-950 ${className}`}>
       <h2 id="featured-containers" className="sr-only">
         Shipping containers available near you
       </h2>
@@ -116,7 +118,7 @@ export function LocationFeaturedContainers({ specs }: Props) {
         the longest title would otherwise make one card taller than the rest.
       */}
       <ul
-        className="container mx-auto grid auto-rows-fr grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid auto-rows-fr grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-4"
         // So a screen reader waits for the real cards rather than announcing
         // four placeholder rows as they appear.
         aria-busy={state.status === 'loading'}

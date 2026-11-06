@@ -9,14 +9,14 @@
  *
  * Still as WordPress has it (content owner to decide):
  * - the first giveaway names no item, only "$89.99 $75.00 17% Discount";
- * - "131.82/month" on the New 20 ft card lacks its "$" (the featured cards are
- *   now the shared ones, so that text is no longer shown);
  * - "Huge inventory of New, Used and" / "Refurbished Containers" is one reason
  *   split over two bullets;
  * - the 40 ft and 45 ft high cube tiles reuse the 10 ft and 20 ft photos.
  *
  * Not carried over: the "SHIPPING CONTAINERS" section, hidden on every device.
  */
+
+import type { DepotFeaturedKey } from '@/services/search.service'
 
 const CDN = 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads'
 
@@ -215,3 +215,10 @@ export const PROMO_TERMS = {
 } as const
 
 export const PROMO_NEWSLETTER_HEADING = 'SUBSCRIBE TO OUR NEWSLETTER TO RECEIVE THE LATEST NEWS AND EXCLUSIVE OFFERS'
+
+/**
+ * The featured container row: the four containers WordPress featured here (Used
+ * 20 ft Standard WWT, Used 40 ft Standard WWT, Used 40 ft High Cube WWT, New 20 ft
+ * Standard IICL), at the visitor's depot. Rendered by LocationFeaturedContainers.
+ */
+export const PROMO_FEATURED_SPECS = ['used_20s_wwt', 'used_40s_wwt', 'used_40h_wwt', 'new_20s_iicl'] as const satisfies readonly DepotFeaturedKey[]

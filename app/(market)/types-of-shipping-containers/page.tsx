@@ -1,4 +1,4 @@
-import { FeaturedContainerCards } from '@/components/product/FeaturedContainerCards'
+import { LocationFeaturedContainers } from '@/components/product/LocationFeaturedContainers'
 import { CustomerTestimonials } from '@/components/shared/CustomerTestimonials'
 import { FaqAccordion } from '@/components/shared/FaqAccordion'
 import { JsonLd } from '@/components/shared/JsonLd'
@@ -15,6 +15,7 @@ import {
   CONTAINER_TYPES_NEWSLETTER_HEADING,
   CONTAINER_TYPES_TESTIMONIALS_HEADING,
   CONTAINER_TYPES_WHY_BAND,
+  TYPES_FEATURED_SPECS,
 } from '@/lib/data/containerTypesContent'
 import { breadcrumbNode, faqNode, graph, siteNodes, webPageNode } from '@/lib/schema'
 import { resolvePageMetadata } from '@/lib/seo'
@@ -60,9 +61,7 @@ export default function ContainerTypesPage() {
       <TypesIntro />
       <SectionTagline2 bg="blue" text={CONTAINER_TYPES_BAND} />
 
-      <section aria-label="Featured shipping containers" className="bg-white px-[5%] pb-4 pt-2 dark:bg-neutral-950">
-        <FeaturedContainerCards />
-      </section>
+      <LocationFeaturedContainers specs={TYPES_FEATURED_SPECS} className="pb-4 pt-2" />
 
       {CONTAINER_TYPE_CATEGORIES.map((category, index) => (
         <TypesCategory key={category.id} category={category} shaded={index % 2 === 0} />
