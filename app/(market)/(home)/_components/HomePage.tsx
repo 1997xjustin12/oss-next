@@ -1,9 +1,10 @@
+import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache";
 import { ROUTES } from "@/config/routes";
 import { SITE } from "@/config/site";
 import { graph, siteNodes, webPageNode } from "@/lib/schema";
-import { resolveAgentSummary } from "@/lib/seo";
+import { resolveAgentSummary, resolvePageMetadata } from "@/lib/seo";
 import { getReviews } from "@/services/review.service";
 import { getHomeHeadings } from "@/lib/content";
 import { JsonLd } from "@/components/shared/JsonLd";
@@ -24,6 +25,16 @@ export type HomeVariant = (typeof HOME_VARIANTS)[number];
 
 /** `window.ossHomeVariant`: the variant on the page (1, 2 or 3), for PageSense targeting. */
 export const HOME_VARIANT_GLOBAL = "ossHomeVariant";
+
+/**
+ * Metadata for a public variant preview (/version2, /version3): the homepage's
+ * own, with `/` as the canonical, and kept out of search. Those addresses used
+ * to be indexable duplicates of the homepage; this way they can be shared
+ * without competing with `/`. They are not in the sitemap either (app/sitemap.ts).
+ */
+export async function homePreviewMetadata(): Promise<Metadata> {
+  return { ...(await resolvePageMetadata(ROUTES.HOME)), robots: { index: false, follow: true } };
+}
 
 export function parseHomeVariant(raw: string | undefined): HomeVariant | null {
   const n = Number(raw);
@@ -64,7 +75,17 @@ async function getHomeData() {
  * behind a Suspense boundary, which made it stream at the very end of the HTML
  * (byte ~195,000 of ~198,000) and put a function render on every home view.
  */
-export async function HomePage({ variant }: { variant: HomeVariant }) {
+type Props = {
+  variant: HomeVariant;
+  /**
+   * A public look at one variant (/version2, /version3) rather than the A/B
+   * test itself: the page does not announce its variant, so client and team
+   * visits stay out of the test's analytics and PageSense heatmaps.
+   */
+  preview?: boolean;
+};
+
+export async function HomePage({ variant, preview = false }: Props) {
   await getHomeData();
 
   // Every heading on the page, resolved once here and passed down. Doing it in
@@ -86,11 +107,13 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
           JS variable (or the ab-home-variant cookie), and Tag Manager gets a
           `home_variant` event to split analytics by. Static per variant page,
           inline so it runs before any of those scripts load. */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.${HOME_VARIANT_GLOBAL}=${variant};(window.dataLayer=window.dataLayer||[]).push({event:'home_variant',home_variant:'${variant}'});`,
-        }}
-      />
+      {!preview && (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.${HOME_VARIANT_GLOBAL}=${variant};(window.dataLayer=window.dataLayer||[]).push({event:'home_variant',home_variant:'${variant}'});`,
+          }}
+        />
+      )}
       <JsonLd data={jsonLd} />
       <PageHeadScripts path={ROUTES.HOME} />
       {/* <TrustStrip /> */}

@@ -36,7 +36,9 @@ const RETRY_AFTER = '3600'
 // /home-variant/<n>, keeping the URL. Each variant is a static page served from
 // the CDN; nothing on the page reads the request.
 // The three Hero designs used to be the /version2 and /version3 routes; they
-// now live as branches inside (home)/_components/Hero.tsx.
+// now live as branches inside (home)/_components/Hero.tsx. /version2 and
+// /version3 are back (2026-11-09) only as public looks for the client: noindex,
+// canonical `/`, not in the sitemap, and outside the test (HomePage `preview`).
 const VARIANT_COOKIE = 'ab-home-variant'
 const VARIANT_PARAM = 'variant'
 const VARIANTS = ['1', '2', '3']
