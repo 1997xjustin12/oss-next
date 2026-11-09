@@ -48,6 +48,13 @@ describe('resolveLocationText', () => {
     assert.equal(text.budgetBand, 'BANDS')
   })
 
+  it('quotes the rental from the catalogue, never a typed-in price', () => {
+    assert.ok(LOCATION_TEMPLATE_DEFAULT.text.rental.body.includes('{lowestRent}'))
+    assert.ok(!/\$\d/.test(LOCATION_TEMPLATE_DEFAULT.text.rental.body))
+    const text = resolveLocationText(LOCATION_TEMPLATE_DEFAULT, atlanta, { lowestRent: '$95.00' })
+    assert.ok(text.rental.body.includes('starting as low as $95.00 a month'))
+  })
+
   it('shows an unknown placeholder as written rather than dropping it', () => {
     assert.equal(fillPlaceholders('in {citty}', { city: 'Atlanta' }), 'in {citty}')
   })

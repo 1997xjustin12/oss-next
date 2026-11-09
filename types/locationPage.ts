@@ -4,7 +4,8 @@
  *
  * Template text may carry placeholders, filled per page (lib/locationPage.ts):
  * `{city}`, `{region}` (GA), `{regionName}` (Georgia), `{cityRegion}`
- * (Atlanta, GA), `{phone}`. `[[…]]` marks the red accent run; in body text,
+ * (Atlanta, GA), `{phone}`, `{lowestRent}` (the depot's cheapest rental from
+ * the catalogue, e.g. $95.00). `[[…]]` marks the red accent run; in body text,
  * `[label](/path)` is a link and `{phone}` a call link.
  *
  * Reference: docs/reference/location-pages.md ("Plan: native location pages")

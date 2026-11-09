@@ -8,11 +8,13 @@ import type { LocationImage, LocationTemplate } from '@/types/locationPage'
  * and photos, and may replace any wording here.
  *
  * Placeholders are filled per page: {city}, {region}, {regionName},
- * {cityRegion}, {phone}. [[…]] is the red accent; [label](/path) a link.
+ * {cityRegion}, {phone}, and {lowestRent} (the depot's cheapest rental, live).
+ * [[…]] is the red accent; [label](/path) a link.
  *
  * Copy corrections (owner approved for migrated pages): phones are the sales
- * line, "glad you dia" is "did", "explore all you" is "your". Kept for the
- * owner: the rental's "as low as $99 a month" (the catalogue's lowest is $95).
+ * line, "glad you dia" is "did", "explore all you" is "your". The rental's
+ * "as low as $99 a month" is the depot's lowest rent from the catalogue
+ * ({lowestRent}), as the owner asked (2026-11-09).
  */
 
 /** The backend's copy of the WordPress media, where most of these pages' images live. */
@@ -192,7 +194,7 @@ export const LOCATION_TEMPLATE_DEFAULT: LocationTemplate = {
     },
     rental: {
       heading: 'Shipping Container Rental',
-      body: 'Looking for flexible storage solutions? On-Site Storage Solutions offers shipping container rental in [[{city}]] at the lowest rates, starting as low as $99 a month. Some areas may require sales tax. Give us a call at {phone} during business days to discuss your temporary or long-term rental needs, and we’ll guide you through the container rental process.',
+      body: 'Looking for flexible storage solutions? On-Site Storage Solutions offers shipping container rental in [[{city}]] at the lowest rates, starting as low as {lowestRent} a month. Some areas may require sales tax. Give us a call at {phone} during business days to discuss your temporary or long-term rental needs, and we’ll guide you through the container rental process.',
       cta: 'Rent A Container',
     },
     rto: {

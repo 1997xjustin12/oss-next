@@ -5,11 +5,13 @@ import { LandingHero } from '@/components/shared/LandingHero'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { SectionTagline2 } from '@/components/shared/SectionTagline2'
 import { ROUTES } from '@/config/routes'
+import { formatPrice } from '@/lib/formatters'
 import { findDepotByPath, toLocalBusinessInput } from '@/lib/locations'
 import { locationListingHref, locationPath, resolveLocationText } from '@/lib/locationPage'
 import { breadcrumbNode, graph, localBusinessNode, siteNodes, webPageNode } from '@/lib/schema'
 import { getLocationTemplate } from '@/services/locationPage.service'
 import { getReviews } from '@/services/review.service'
+import { getDepotLowestRent } from '@/services/search.service'
 import { LocationBand } from './LocationBand'
 import { LocationBlock } from './LocationBlock'
 import { LocationBuy } from './LocationBuy'
@@ -30,8 +32,11 @@ type Props = { page: LocationPage }
  * reads, and the review slider, the photo row and the video are the client code.
  */
 export async function LocationNativePage({ page }: Props) {
-  const [template, reviews] = await Promise.all([getLocationTemplate(), getReviews()])
-  const text = resolveLocationText(template, page)
+  const [template, reviews, lowestRent] = await Promise.all([getLocationTemplate(), getReviews(), getDepotLowestRent(page.depot)])
+  const text = resolveLocationText(template, page, lowestRent !== null ? { lowestRent: `$${formatPrice(lowestRent)}` } : {})
+  // No rental anywhere in the catalogue: drop the price clause rather than show
+  // an unfilled placeholder or a figure nobody can get.
+  if (lowestRent === null) text.rental.body = text.rental.body.replace(/,? starting as low as \{lowestRent\} a month/, '')
   const path = locationPath(page.slug)
   const name = `${page.place.city}, ${page.place.region}`
   const depot = findDepotByPath(path)

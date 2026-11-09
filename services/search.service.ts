@@ -444,6 +444,38 @@ export async function getNationalFeaturedContainers(
 }
 
 /**
+ * The lowest monthly rent among a depot's published rental listings, or null
+ * when it has none. A $0 listing is a price nobody entered, so it is skipped.
+ */
+function lowestRentAt(pool: FormattedContainerHit[], depot: string): number | null {
+  const rents = pool
+    .filter(
+      (product) =>
+        getCustomFieldValue(product, 'payment_type').toLowerCase() === 'rental' &&
+        getCustomFieldValue(product, 'location').trim().toLowerCase() === depot.trim().toLowerCase(),
+    )
+    .map((product) => Number(product.sale_price))
+    .filter((price) => price > 0)
+  return rents.length ? Math.min(...rents) : null
+}
+
+/**
+ * "Starting as low as …a month" on a depot's page: its cheapest rental, or the
+ * national pool's when the depot rents none, so the figure is always one a
+ * visitor can actually get. Null only when neither has a rental. Cached for
+ * hours; a price change reaches it through the products tag.
+ */
+export async function getDepotLowestRent(depot: string): Promise<number | null> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  const own = lowestRentAt(await getShippingContainersByLocation(depot), depot)
+  if (own !== null) return own
+  return lowestRentAt(await getShippingContainersByLocation(DEFAULT_LOCATION), DEFAULT_LOCATION)
+}
+
+/**
  * One named depot's featured containers, for a page that is about that depot
  * (the /where-to-buy-shipping-containers/[location] pages), so its row is in
  * the server HTML rather than fetched after load. Cached like the national

@@ -45,7 +45,12 @@ function fillDeep<T>(value: T, vars: Record<string, string>): T {
  * placeholders filled. `{phone}` is left in place: the renderer turns it into
  * a call link (LocationRichText), so it is filled there.
  */
-export function resolveLocationText(template: LocationTemplate, page: LocationPage): LocationTemplateText {
+export function resolveLocationText(
+  template: LocationTemplate,
+  page: LocationPage,
+  /** Values read at render time, e.g. `{ lowestRent: '$95.00' }`. */
+  live: Record<string, string> = {},
+): LocationTemplateText {
   const merged = Object.fromEntries(
     (Object.keys(template.text) as (keyof LocationTemplateText)[]).map((key) => {
       const base = template.text[key]
@@ -64,7 +69,7 @@ export function resolveLocationText(template: LocationTemplate, page: LocationPa
     }),
   ) as LocationTemplateText
 
-  return fillDeep(merged, { ...locationVars(page), phone: '{phone}' })
+  return fillDeep(merged, { ...locationVars(page), ...live, phone: '{phone}' })
 }
 
 /** The listing for the page's depot: buy, rental or rent-to-own. */
