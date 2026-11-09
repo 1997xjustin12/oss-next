@@ -2,19 +2,25 @@ import { FaqAccordion } from '@/components/shared/FaqAccordion'
 import { LandingRichText } from '@/components/shared/LandingRichText'
 import { LANDING_FAQ_HEADING, type LandingFaq } from '@/lib/data/containerLandingContent'
 
-type Props = { faqs: readonly LandingFaq[] }
+type Props = {
+  faqs: readonly LandingFaq[]
+  /** Default "FREQUENTLY ASKED QUESTIONS". `[[…]]` accent markers are dropped: the bar is one colour. */
+  heading?: string
+  /** Without its own section padding and background, for a parent that lays it out (the location pages' FAQ beside a video). */
+  bare?: boolean
+}
 
 /**
  * The for-sale and rental pages' FAQ: the shared accordion, each answer's
  * paragraphs and lists with their links. Every answer is in the HTML; the page
  * emits FAQPage from the same list (landingFaqText).
  */
-export function LandingFaqSection({ faqs }: Props) {
+export function LandingFaqSection({ faqs, heading = LANDING_FAQ_HEADING, bare = false }: Props) {
   return (
-    <div className="bg-white px-[5%] py-12 sm:py-16 dark:bg-neutral-950">
+    <div className={bare ? 'min-w-0' : 'bg-white px-[5%] py-12 sm:py-16 dark:bg-neutral-950'}>
       <FaqAccordion
         id="landing-faq"
-        heading={LANDING_FAQ_HEADING}
+        heading={heading.replace(/\[\[|\]\]/g, '')}
         items={faqs.map((faq) => ({
           question: faq.question,
           answer: (

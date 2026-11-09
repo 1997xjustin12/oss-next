@@ -1,4 +1,5 @@
 import { CDN } from './containerLandingContent'
+import { FOR_SALE_FAQS } from './forSaleContent'
 import type { LocationImage, LocationTemplate } from '@/types/locationPage'
 
 /**
@@ -155,6 +156,10 @@ export const LOCATION_TEMPLATE_DEFAULT: LocationTemplate = {
     { id: 'rental', enabled: true },
     { id: 'rto', enabled: true },
     { id: 'closingBand', enabled: true },
+    { id: 'resources', enabled: false },
+    { id: 'pricingForm', enabled: false },
+    { id: 'newsletter', enabled: false },
+    { id: 'faq', enabled: false },
   ],
   text: {
     hero: {
@@ -170,9 +175,12 @@ export const LOCATION_TEMPLATE_DEFAULT: LocationTemplate = {
       cta: 'Shop All Products - {cityRegion}',
     },
     buy: {
-      heading: 'Buy A Shipping Container In [[{regionName}]] At the best price',
+      // 51 of the 52 WordPress location pages name the city here; Atlanta, the
+      // one that names the state, keeps it through its own override.
+      heading: 'Buy A Shipping Container In [[{cityRegion}]] At the best price',
       body: 'Looking to buy a shipping container in {regionName} at an unbeatable price? [On-Site Storage Solutions](/) has got you covered. We offer containers in sizes from 10ft to 40ft, including high cube containers. You can choose from new, used, or refurbished options. Discover unbeatable value and fast delivery for all your container needs. Contact us today to learn more about our special offers!',
       cta: 'See All Container Prices',
+      citiesHeading: '',
     },
     delivered: { heading: 'Shipping Containers Delivered' },
     satisfaction: {
@@ -185,7 +193,7 @@ export const LOCATION_TEMPLATE_DEFAULT: LocationTemplate = {
     video: { title: 'Find Shipping Containers Near You with On-Site Storage Solutions!' },
     overview: {
       heading: 'Portable Storage Containers [[For Sale, Rent & Rent-To-Own in {city}]]',
-      body: 'On-Site Storage Solutions offers top-quality portable storage containers in [[{city}, {regionName}]], perfect for residential, commercial, or industrial use. Choose from new and used steel containers to suit your needs at unbeatable prices. Safely store inventory, construction materials, or furniture during a remodel with peace of mind. Call us at {phone} to get started today!',
+      body: 'On-Site Storage Solutions offers top-quality portable storage containers in [[{cityRegion}]], perfect for residential, commercial, or industrial use. Choose from new and used steel containers to suit your needs at unbeatable prices. Safely store inventory, construction materials, or furniture during a remodel with peace of mind. Call us at {phone} to get started today!',
     },
     purchase: {
       heading: 'Purchase Your Storage Containers',
@@ -203,6 +211,14 @@ export const LOCATION_TEMPLATE_DEFAULT: LocationTemplate = {
       cta: 'Rent-to-own A Container',
     },
     closingBand: 'Ready to purchase? Call now for more [[discounts!]]',
+    resources: { heading: '[[{city}]] Container Resources' },
+    pricingForm: { heading: 'Get the [[Best]] Pricing Now!' },
+    newsletter: {
+      heading: 'Get the Best Deals on Containers – [[Before Anyone Else!]]',
+      body: 'Sign up to get insider access to special offers, new container arrivals, and expert tips on container storage and modifications.',
+      note: 'We’ll never spam you. Just helpful info and great deals.',
+    },
+    faq: { heading: 'Frequently Asked [[Questions]]' },
   },
   media: {
     heroBackground: `${CDN}/2024/08/22033247/new_homepage_banner.webp`,
@@ -236,4 +252,6 @@ export const LOCATION_TEMPLATE_DEFAULT: LocationTemplate = {
   },
   productSpecs: ['used_20s_asis', 'used_20s_wwt', 'used_20s_cw', 'used_40s_asis'],
   deliveredPhotos: DELIVERED.map(([file, city]) => locationDeliveryPhoto(file, city)),
+  // The five the Los Angeles page shows: the for-sale page's, less "What is a conex box?".
+  faqs: FOR_SALE_FAQS.filter((faq) => faq.question !== 'What is a conex box?'),
 }

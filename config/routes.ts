@@ -5,7 +5,7 @@
 // this app doesn't own those slugs, WordPress does, so encoding them here
 // would misrepresent who's responsible for keeping them correct.
 
-import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPages'
+import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 
 export const ROUTES = {
   HOME: '/',

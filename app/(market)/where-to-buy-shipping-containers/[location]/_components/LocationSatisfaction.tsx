@@ -31,7 +31,11 @@ export function LocationSatisfaction({ text, seal, reviews }: Props) {
               <GoogleReviewsBadge showRating size="sm" className="mt-2 justify-center sm:justify-start" />
             </div>
           </div>
-          <p className="mt-5 text-base leading-relaxed text-theme-mid dark:text-neutral-300">{text.body}</p>
+          {text.body.split(/\n\s*\n/).map((paragraph) => (
+            <p key={paragraph.slice(0, 40)} className="mt-5 text-base leading-relaxed text-theme-mid dark:text-neutral-300">
+              {paragraph.trim()}
+            </p>
+          ))}
           <PillLink href={REVIEWS_PAGE} className="mt-6">
             {text.cta}
           </PillLink>

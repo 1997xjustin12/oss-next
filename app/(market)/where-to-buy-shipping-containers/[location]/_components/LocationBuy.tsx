@@ -2,31 +2,39 @@ import Image from 'next/image'
 import { AccentText } from '@/components/shared/AccentText'
 import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink'
 import { PillLink } from '@/components/shared/PillLink'
-import { locationListingHref } from '@/lib/locationPage'
-import { LocationRichText } from './LocationRichText'
+import { LocationParagraphs } from './LocationParagraphs'
 import type { LocationPage, LocationTemplateText } from '@/types/locationPage'
 
 type Props = {
   text: LocationTemplateText['buy']
   page: LocationPage
+  href: string
+  phone: string
 }
 
-/** "Buy A Shipping Container In {Region}": the paragraph, the nearby cities and the map. */
-export function LocationBuy({ text, page }: Props) {
+/**
+ * "Buy A Shipping Container In {Place}": the paragraphs, the nearby cities and
+ * the map. Without a map (Bakersfield, Las Vegas, Temecula, Indianapolis) the
+ * text takes the full width.
+ */
+export function LocationBuy({ text, page, href, phone }: Props) {
+  const { mapImage } = page
+
   return (
     <section aria-labelledby="location-buy" className="bg-white px-[5%] py-12 sm:py-16 dark:bg-neutral-950">
-      <div className="grid items-center gap-10 lg:grid-cols-[3fr_2fr]">
+      <div className={`grid items-center gap-10 ${mapImage ? 'lg:grid-cols-[3fr_2fr]' : ''}`}>
         <div>
           <h2 id="location-buy" className="text-3xl font-semibold leading-tight text-theme-dark sm:text-4xl dark:text-white">
             <AccentText text={text.heading} accentClassName="text-theme-primary dark:text-red-400" />
           </h2>
-          <p className="mt-5 text-base leading-relaxed text-theme-mid sm:text-lg dark:text-neutral-300">
-            <LocationRichText text={text.body} />
-          </p>
+          <div className="mt-5">
+            <LocationParagraphs text={text.body} phone={phone} />
+          </div>
 
           {page.nearbyCities.length > 0 && (
-            <nav aria-label={`Cities near ${page.place.city}`} className="mt-6">
-              <ul className="grid grid-cols-2 gap-x-6 gap-y-1.5 sm:grid-cols-4">
+            <nav aria-label={text.citiesHeading || `Cities near ${page.place.city}`} className="mt-6">
+              {text.citiesHeading && <h3 className="mb-3 text-lg font-semibold text-theme-primary dark:text-red-400">{text.citiesHeading}</h3>}
+              <ul className={`grid grid-cols-2 gap-x-6 gap-y-1.5 sm:grid-cols-3 ${mapImage ? 'lg:grid-cols-4' : 'lg:grid-cols-6'}`}>
                 {page.nearbyCities.map((city) => (
                   <li key={city.href}>
                     <Link
@@ -41,19 +49,21 @@ export function LocationBuy({ text, page }: Props) {
             </nav>
           )}
 
-          <PillLink href={locationListingHref(page.depot)} className="mt-8">
+          <PillLink href={href} className="mt-8">
             {text.cta}
           </PillLink>
         </div>
 
-        <Image
-          src={page.mapImage.src}
-          alt={page.mapImage.alt}
-          width={page.mapImage.width}
-          height={page.mapImage.height}
-          sizes="(max-width: 1024px) 90vw, 35vw"
-          className="mx-auto h-auto w-full max-w-md rounded-xl shadow-md"
-        />
+        {mapImage && (
+          <Image
+            src={mapImage.src}
+            alt={mapImage.alt}
+            width={mapImage.width}
+            height={mapImage.height}
+            sizes="(max-width: 1024px) 90vw, 35vw"
+            className="mx-auto h-auto w-full max-w-md rounded-xl shadow-md"
+          />
+        )}
       </div>
     </section>
   )

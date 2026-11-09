@@ -1,7 +1,6 @@
 import { FeaturedContainerCard } from '@/components/product/FeaturedContainerCard'
 import { AccentText } from '@/components/shared/AccentText'
 import { PillLink } from '@/components/shared/PillLink'
-import { locationListingHref } from '@/lib/locationPage'
 import { getCachedDepotFeaturedContainers, type DepotFeaturedKey } from '@/services/search.service'
 import type { LocationTemplateText } from '@/types/locationPage'
 import type { ProductHit } from '@/types/product'
@@ -10,6 +9,8 @@ type Props = {
   text: LocationTemplateText['products']
   depot: string
   specs: readonly DepotFeaturedKey[]
+  /** "Shop All Products": the depot's listing, unless the location says otherwise. */
+  href: string
 }
 
 /**
@@ -18,7 +19,7 @@ type Props = {
  * page is about this depot, whatever the visitor's saved location). A spec the
  * depot does not stock is left out; with none, the row is too.
  */
-export async function LocationProducts({ text, depot, specs }: Props) {
+export async function LocationProducts({ text, depot, specs, href }: Props) {
   const containers = await getCachedDepotFeaturedContainers(depot, specs)
 
   return (
@@ -43,7 +44,7 @@ export async function LocationProducts({ text, depot, specs }: Props) {
       )}
 
       <div className="mt-8 text-center">
-        <PillLink href={locationListingHref(depot)}>{text.cta}</PillLink>
+        <PillLink href={href}>{text.cta}</PillLink>
       </div>
     </section>
   )

@@ -2,6 +2,7 @@ import { LocationRichText } from './LocationRichText'
 
 type Props = {
   text: string
+  phone: string
   /** `call`: the mid-page "Ready to Buy…" band (yellow accent). `closing`: the last band (accent on a red tape). */
   variant: 'call' | 'closing'
 }
@@ -25,12 +26,12 @@ const STYLES = {
  * A full-width blue band with one line. WordPress's closing band was a picture
  * of its words; here they are text.
  */
-export function LocationBand({ text, variant }: Props) {
+export function LocationBand({ text, variant, phone }: Props) {
   const style = STYLES[variant]
   return (
     <section className={style.section}>
       <h2 className={style.heading}>
-        <LocationRichText text={text} accentClassName={style.accent} linkClassName={style.link} />
+        <LocationRichText text={text} accentClassName={style.accent} linkClassName={style.link} phone={phone} />
       </h2>
     </section>
   )

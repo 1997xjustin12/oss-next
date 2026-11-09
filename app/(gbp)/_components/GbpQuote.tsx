@@ -1,6 +1,6 @@
 import { AccentText } from '@/components/shared/AccentText'
 import { GBP_ZOHO_FORMS } from '@/lib/data/gbpShared'
-import { ZohoQuoteForm } from './ZohoQuoteForm'
+import { ZohoQuoteForm } from '@/components/shared/ZohoQuoteForm'
 import { GBP_ACCENT, GBP_BG_WHITE, GBP_CONTAINER, GBP_H2, sectionPadding, sectionVars } from './gbpStyles'
 import type { GbpSectionStyle } from '@/types/gbp'
 

@@ -320,6 +320,8 @@ export type DepotFeaturedKey =
   | 'used_20s_asis'
   | 'used_20s_cw'
   | 'used_40s_asis'
+  // Indianapolis's fourth card.
+  | 'used_20s_iicl'
 
 export type DepotFeaturedSpec = {
   /** Stable key for the slot, so a caller can ask for it and tell which one is missing. */
@@ -342,6 +344,7 @@ export const DEPOT_FEATURED_SPECS: readonly DepotFeaturedSpec[] = [
   { key: 'used_20s_asis', label: '20ft Standard — Used As-Is', size: '20', height: 'Standard', condition: 'Used', grade: 'AS IS' },
   { key: 'used_20s_cw',   label: '20ft Standard — Used Cargo Worthy', size: '20', height: 'Standard', condition: 'Used', grade: 'CW' },
   { key: 'used_40s_asis', label: '40ft Standard — Used As-Is', size: '40', height: 'Standard', condition: 'Used', grade: 'AS IS' },
+  { key: 'used_20s_iicl', label: '20ft Standard — Used IICL', size: '20', height: 'Standard', condition: 'Used', grade: 'IICL' },
 ]
 
 /** What a caller gets when it does not choose. Its own list, so adding a spec above does not change every page. */

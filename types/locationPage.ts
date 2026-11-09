@@ -12,6 +12,7 @@
  * Seeds: lib/data/locationTemplate.ts, lib/data/locationPages.ts
  */
 
+import type { LandingFaq } from '@/lib/data/containerLandingContent'
 import type { DepotFeaturedKey } from '@/services/search.service'
 
 export type LocationImage = { src: string; alt: string; width: number; height: number }
@@ -34,6 +35,12 @@ export type LocationSectionId =
   | 'rental'
   | 'rto'
   | 'closingBand'
+  // Off in the template; a location turns them on in its own `sections`
+  // (Los Angeles: its resources, the pricing form, the newsletter, the FAQ).
+  | 'resources'
+  | 'pricingForm'
+  | 'newsletter'
+  | 'faq'
 
 export type LocationOptionCard = {
   image: LocationImage
@@ -51,7 +58,8 @@ export type LocationTemplateText = {
   budgetBand: string
   options: { heading: string; cta: string }
   products: { heading: string; intro: string; cta: string }
-  buy: { heading: string; body: string; cta: string }
+  /** `body` may hold several paragraphs, separated by a blank line. `citiesHeading` is shown over the city list when set. */
+  buy: { heading: string; body: string; cta: string; citiesHeading: string }
   delivered: { heading: string }
   satisfaction: { heading: string; body: string; cta: string }
   callBand: string
@@ -62,6 +70,10 @@ export type LocationTemplateText = {
   rental: LocationBlockText
   rto: LocationBlockText
   closingBand: string
+  resources: { heading: string }
+  pricingForm: { heading: string }
+  newsletter: { heading: string; body: string; note: string }
+  faq: { heading: string }
 }
 
 export type LocationTemplate = {
@@ -80,9 +92,17 @@ export type LocationTemplate = {
   productSpecs: DepotFeaturedKey[]
   /** The delivery carousel, after each page's own lead photos. */
   deliveredPhotos: LocationImage[]
+  /** The FAQ section's questions, for a location that shows it. */
+  faqs: LandingFaq[]
 }
 
 export type LocationStory = { title: string; paragraphs: string[]; image: LocationImage }
+
+/** A card in the "{City} Container Resources" section: an article on this site. */
+export type LocationResource = { title: string; paragraphs: string[]; image: LocationImage; href: string }
+
+/** The buttons whose target a location may change (default: the depot's listing, buy / rental / rent-to-own). */
+export type LocationLinkKey = 'products' | 'buy' | 'purchase' | 'rental' | 'rto'
 
 /** Deep-partial template text: what one location words differently. */
 export type LocationTextOverrides = {
@@ -102,15 +122,31 @@ export type LocationPage = {
     region: string
     /** In full: `Georgia`, `Alberta`. */
     regionName: string
+    /** The place as the page names it in full, `{cityRegion}`: `Atlanta, GA`, `New York, NY / Newark, NJ`, `Salt Lake City`. */
+    label: string
   }
+  /** The number this page shows and dials (`{phone}`), when the location has its own. Default: the sales line. */
+  phone?: string
+  /** This page's sections and their order, when it differs from the template's. */
+  sections?: { id: LocationSectionId; enabled: boolean }[]
+  /** This page's product row, when it differs from the template's. */
+  productSpecs?: DepotFeaturedKey[]
+  /** Button targets that differ from the depot's listing; `tel:` dials the page's phone. */
+  links?: Partial<Record<LocationLinkKey, string>>
   /** The "Buy" section's city links, in WordPress's order. */
   nearbyCities: { name: string; href: string }[]
-  mapImage: LocationImage
-  featured: LocationStory
-  news: LocationStory
+  /** The picture beside the Buy section. Null: the section takes the full width. */
+  mapImage: LocationImage | null
+  /** Null: the section is left out (some pages have no stories). */
+  featured: LocationStory | null
+  news: LocationStory | null
   /** This place's own delivery photos, shown before the template's. */
   deliveredLead: LocationImage[]
   text?: LocationTextOverrides
+  /** The resources section's cards, for a location that shows it. */
+  resources?: LocationResource[]
+  /** The video beside the FAQ, for a location that shows one. */
+  faqYoutubeId?: string
   /** Defaults for the Page Configurator, carried over from WordPress. */
   seo: { title: string; description: string; ogImage: string }
 }

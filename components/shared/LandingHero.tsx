@@ -12,6 +12,8 @@ type Props = {
   tagline?: string
   /** The photo behind it. Default: the container yard. */
   background?: string
+  /** The call button's number. Default: the sales line. */
+  phone?: string
 }
 
 /**
@@ -22,7 +24,7 @@ type Props = {
  * WordPress's rating linked to a Google search; the badge here is not a link,
  * because the Google Business Profile URL is not recorded (config/reviews.ts).
  */
-export function LandingHero({ heading, tagline = LANDING_TAGLINE, background = LANDING_HERO_BACKGROUND.src }: Props) {
+export function LandingHero({ heading, tagline = LANDING_TAGLINE, background = LANDING_HERO_BACKGROUND.src, phone = CONTACT_NUMBER }: Props) {
   return (
     <section className="relative isolate overflow-hidden bg-neutral-900 px-[5%] pb-10 pt-6 sm:pb-14 sm:pt-8">
       <Image
@@ -47,15 +49,15 @@ export function LandingHero({ heading, tagline = LANDING_TAGLINE, background = L
         <p className="mx-auto mt-4 max-w-3xl text-base text-white text-shadow-lg sm:text-xl">{tagline}</p>
 
         <a
-          href={telHref(CONTACT_NUMBER)}
-          aria-label={`Call ${CONTACT_NUMBER}`}
+          href={telHref(phone)}
+          aria-label={`Call ${phone}`}
           className="mt-6 inline-flex min-h-14 items-center gap-3 rounded-full bg-white py-1.5 pl-1.5 pr-6 text-2xl font-extrabold text-theme-primary shadow-lg
                      transition-colors hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:text-3xl"
         >
           <span aria-hidden className="flex h-11 w-11 items-center justify-center rounded-full bg-theme-primary text-white sm:h-12 sm:w-12">
             <Phone className="h-6 w-6" />
           </span>
-          {CONTACT_NUMBER}
+          {phone}
         </a>
       </div>
     </section>

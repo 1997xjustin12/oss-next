@@ -62,7 +62,7 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   ...LOCATION_PAGES.map((page): NativePage => ({
     id: `location-${page.slug}`,
     path: locationPath(page.slug),
-    label: `Where to Buy — ${page.place.city}, ${page.place.region}`,
+    label: `Where to Buy — ${page.place.label}`,
     group: 'Locations',
     indexable: true,
   })),

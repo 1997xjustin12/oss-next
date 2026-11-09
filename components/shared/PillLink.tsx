@@ -21,8 +21,8 @@ const TONES = {
 /**
  * The rounded button with a circled arrow that the WordPress landing pages use
  * for their calls to action. A link to the listing carries the visitor's ZIP
- * (PlpLink); another page of this site prefetches on hover; an off-site link
- * is a plain anchor.
+ * (PlpLink); another page of this site prefetches on hover; a call or email
+ * link is a plain anchor; an off-site link opens in a new tab.
  */
 export function PillLink({ href, children, tone = 'red', className = '' }: Props) {
   const classes = `inline-flex min-h-11 items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold shadow-md transition-colors
@@ -36,6 +36,7 @@ export function PillLink({ href, children, tone = 'red', className = '' }: Props
 
   if (href.startsWith(ROUTES.PLP)) return <PlpLink href={href} className={classes}>{content}</PlpLink>
   if (href.startsWith('/')) return <Link href={href} className={classes}>{content}</Link>
+  if (/^(tel|mailto):/.test(href)) return <a href={href} className={classes}>{content}</a>
   return (
     <a href={href} target="_blank" rel="noopener" className={classes}>
       {content}

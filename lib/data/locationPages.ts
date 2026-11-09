@@ -1,3 +1,4 @@
+import { LOCATION_PAGE_RECORDS } from './locationPageRecords'
 import { LOCATION_MEDIA, locationDeliveryPhoto } from './locationTemplate'
 import type { LocationPage } from '@/types/locationPage'
 
@@ -12,11 +13,19 @@ import type { LocationPage } from '@/types/locationPage'
 
 const OG_IMAGE = 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2024/05/14063436/google-reviews.webp'
 
-export const LOCATION_PAGES: readonly LocationPage[] = [
+/** Atlanta, written by hand as the first record; the other locations are generated (locationPageRecords.ts). */
+const ATLANTA: readonly LocationPage[] = [
   {
     slug: 'atlanta-ga',
     depot: 'Atlanta, GA',
-    place: { city: 'Atlanta', region: 'GA', regionName: 'Georgia' },
+    place: { city: 'Atlanta', region: 'GA', regionName: 'Georgia', label: 'Atlanta, GA' },
+    // Atlanta's own wording where the other locations share the template's.
+    text: {
+      buy: { heading: 'Buy A Shipping Container In [[{regionName}]] At the best price' },
+      overview: {
+        body: 'On-Site Storage Solutions offers top-quality portable storage containers in [[{city}, {regionName}]], perfect for residential, commercial, or industrial use. Choose from new and used steel containers to suit your needs at unbeatable prices. Safely store inventory, construction materials, or furniture during a remodel with peace of mind. Call us at {phone} to get started today!',
+      },
+    },
     nearbyCities: [
       { name: 'Albany', href: '/storage-albany-ga' },
       { name: 'Alpharetta', href: '/extra-space-storage-alpharetta-georgia' },
@@ -78,8 +87,8 @@ export const LOCATION_PAGES: readonly LocationPage[] = [
   },
 ]
 
-/** The native location slugs: the route prebuilds them and config/routes.ts claims their paths. */
-export const LOCATION_PAGE_SLUGS: readonly string[] = LOCATION_PAGES.map((page) => page.slug)
+/** Every native location, by slug. Their paths are claimed from lib/data/locationPageSlugs.ts, kept equal to this by a test. */
+export const LOCATION_PAGES: readonly LocationPage[] = [...ATLANTA, ...LOCATION_PAGE_RECORDS].sort((a, b) => a.slug.localeCompare(b.slug))
 
 export function getLocationPageSeed(slug: string): LocationPage | undefined {
   return LOCATION_PAGES.find((page) => page.slug === slug)

@@ -130,6 +130,16 @@ export function findDepotByPath(path: string): Depot | undefined {
 }
 
 /**
+ * A depot by its record's title ("Atlanta, GA"), for a page that names its
+ * depot: the location pages' records do, and a title survives a record whose
+ * `local_specials` path is wrong (Indianapolis's says `indianapolis-id`).
+ */
+export function findDepotByTitle(title: string): Depot | undefined {
+  const wanted = title.trim().toLowerCase()
+  return DEPOTS.find((depot) => depot.location.title.trim().toLowerCase() === wanted)
+}
+
+/**
  * The depot's real, live page path.
  *
  * NOT `depot.path` — that comes from the records' `local_specials` field, which

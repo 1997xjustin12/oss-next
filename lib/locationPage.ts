@@ -1,7 +1,8 @@
 import { ROUTES } from '@/config/routes'
-import { CONTACT_NUMBER } from '@/lib/helpers'
+import { CONTACT_NUMBER, telHref } from '@/lib/helpers'
 import type { PageSeoDefaults } from '@/types/seo'
-import type { LocationPage, LocationTemplate, LocationTemplateText } from '@/types/locationPage'
+import type { DepotFeaturedKey } from '@/services/search.service'
+import type { LocationLinkKey, LocationPage, LocationSectionId, LocationTemplate, LocationTemplateText } from '@/types/locationPage'
 
 /**
  * Pure helpers for the /where-to-buy-shipping-containers/[location] pages: the
@@ -13,16 +14,46 @@ export function locationPath(slug: string): string {
   return `${ROUTES.WHERE_TO_BUY}/${slug}`
 }
 
+/** The number the page shows and dials: the location's own, or the sales line. */
+export function locationPhone(page: LocationPage): string {
+  return page.phone || CONTACT_NUMBER
+}
+
 /** What `{…}` placeholders become on one page. */
 export function locationVars(page: LocationPage): Record<string, string> {
-  const { city, region, regionName } = page.place
+  const { city, region, regionName, label } = page.place
   return {
     city,
     region,
     regionName,
-    cityRegion: `${city}, ${region}`,
-    phone: CONTACT_NUMBER,
+    cityRegion: label,
+    phone: locationPhone(page),
   }
+}
+
+/** The page's sections in order, enabled only: its own list, or the template's. */
+export function locationSections(template: LocationTemplate, page: LocationPage): LocationSectionId[] {
+  return (page.sections ?? template.sections).filter((section) => section.enabled).map((section) => section.id)
+}
+
+/** The page's product row: its own specs, or the template's. */
+export function locationProductSpecs(template: LocationTemplate, page: LocationPage): readonly DepotFeaturedKey[] {
+  return page.productSpecs?.length ? page.productSpecs : template.productSpecs
+}
+
+const DEFAULT_LINK_PTYPE: Record<LocationLinkKey, 'buy' | 'rental' | 'rto'> = {
+  products: 'buy',
+  buy: 'buy',
+  purchase: 'buy',
+  rental: 'rental',
+  rto: 'rto',
+}
+
+/** A button's target: the location's own, or the depot's listing. `tel:` alone dials the page's phone. */
+export function locationLink(page: LocationPage, key: LocationLinkKey): string {
+  const own = page.links?.[key]
+  if (own === 'tel:') return telHref(locationPhone(page))
+  return own || locationListingHref(page.depot, DEFAULT_LINK_PTYPE[key])
 }
 
 /** Fills `{name}` placeholders; an unknown one is left as written, so a typo shows rather than vanishing. */

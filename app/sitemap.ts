@@ -3,7 +3,7 @@ import { BASE_URL } from '@/lib/helpers'
 import { fetchProductSitemap, fetchPageSitemap } from '@/services/sitemap.service'
 import { getAllBlogSlugs } from '@/services/blog.service'
 import { GBP_ROUTE_SEGMENTS, ROUTES, isNativePath } from '@/config/routes'
-import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPages'
+import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 import { WP_NOINDEX_PATHS, WP_REDIRECTS } from '@/config/wpHiddenPages'
 
 const origin = BASE_URL.replace(/\/$/, '')

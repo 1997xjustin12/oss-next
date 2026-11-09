@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { WordPressPage } from '@/components/wp/WordPressPage'
-import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPages'
+import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 import { locationPath } from '@/lib/locationPage'
 import { resolvePageMetadata } from '@/lib/seo'
 import { wordPressPageMetadata } from '@/lib/wpPageMetadata'

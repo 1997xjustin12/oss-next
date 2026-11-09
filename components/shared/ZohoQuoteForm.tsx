@@ -28,7 +28,7 @@ const GBP_CLASSES: ZohoPricingFormClasses = {
 }
 
 /**
- * "Get the Best Pricing Now!": the Zoho CRM pricing form every GBP page
+ * "Get the Best Pricing Now!": the Zoho CRM pricing form every GBP page (and the location pages that show one)
  * shares, in the GBP pages' look. The form itself (fields, captcha, posting to
  * Zoho) is components/shared/ZohoPricingForm.tsx, shared with the homepage.
  */

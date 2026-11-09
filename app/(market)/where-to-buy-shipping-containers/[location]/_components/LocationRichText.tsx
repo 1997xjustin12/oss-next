@@ -9,6 +9,8 @@ type Props = {
   accentClassName?: string
   /** `[label](/path)` links and the `{phone}` call link. */
   linkClassName?: string
+  /** What `{phone}` shows and dials. Default: the sales line. */
+  phone?: string
 }
 
 const ACCENT = 'font-bold text-theme-primary dark:text-red-400'
@@ -17,7 +19,7 @@ const LINK = 'font-bold text-theme-primary underline-offset-2 hover:underline da
 // One token at a time: an accent run, a link, or the phone placeholder.
 const TOKEN = /\[\[(.+?)\]\]|\[([^\]]+)\]\(([^)\s]+)\)|\{phone\}/g
 
-function render(text: string, accentClassName: string, linkClassName: string, keyPrefix: string): ReactNode[] {
+function render(text: string, accentClassName: string, linkClassName: string, phone: string, keyPrefix: string): ReactNode[] {
   const out: ReactNode[] = []
   let last = 0
   for (const match of text.matchAll(TOKEN)) {
@@ -28,7 +30,7 @@ function render(text: string, accentClassName: string, linkClassName: string, ke
       // An accent run may itself hold the phone ("[[Call {phone} for more savings!]]").
       out.push(
         <span key={key} className={accentClassName}>
-          {render(match[1], accentClassName, linkClassName, `${key}-`)}
+          {render(match[1], accentClassName, linkClassName, phone, `${key}-`)}
         </span>,
       )
     } else if (match[2] !== undefined) {
@@ -46,8 +48,8 @@ function render(text: string, accentClassName: string, linkClassName: string, ke
       )
     } else {
       out.push(
-        <a key={key} href={telHref(CONTACT_NUMBER)} className={`whitespace-nowrap ${linkClassName}`}>
-          {CONTACT_NUMBER}
+        <a key={key} href={telHref(phone)} className={`whitespace-nowrap ${linkClassName}`}>
+          {phone}
         </a>,
       )
     }
@@ -61,6 +63,6 @@ function render(text: string, accentClassName: string, linkClassName: string, ke
  * The location template's text syntax, rendered: `[[…]]` is the accent run,
  * `[label](/path)` a link, `{phone}` a call link to the sales line.
  */
-export function LocationRichText({ text, accentClassName = ACCENT, linkClassName = LINK }: Props) {
-  return <Fragment>{render(text, accentClassName, linkClassName, 'r')}</Fragment>
+export function LocationRichText({ text, accentClassName = ACCENT, linkClassName = LINK, phone = CONTACT_NUMBER }: Props) {
+  return <Fragment>{render(text, accentClassName, linkClassName, phone, 'r')}</Fragment>
 }
