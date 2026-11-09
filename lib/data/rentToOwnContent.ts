@@ -4,6 +4,7 @@
  * only lay it out.
  */
 
+import { GOOGLE_REVIEW_STATS } from '@/config/reviews'
 import type { ConfiguratorGroup } from '@/lib/configurator'
 
 const CDN = 'https://bbq-spaces.sfo3.cdn.digitaloceanspaces.com/solana'
@@ -58,8 +59,8 @@ export const RTO_CONFIGURATOR = {
   defaults: { size: '20s', condition: 'used', grade: 'wwt', term: '48' },
   /** The term "Pricing Starts at" quotes. */
   leadTerm: '48',
-  /** Shown when the selected product has no rating of its own. */
-  fallbackRating: 4.8,
+  /** Shown when the selected product has no rating of its own: the company's Google rating, as every other card shows. */
+  fallbackRating: GOOGLE_REVIEW_STATS.rating,
   maxQuantity: 5,
 } as const
 

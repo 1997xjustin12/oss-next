@@ -7,14 +7,21 @@
  * drifting as separate copies.
  */
 
-/** Aggregate shown beside the star badge. Update alongside the list below. */
+/**
+ * The company's Google rating and review count: the one place they are set.
+ * Read by every Google-reviews surface — the rating badge (homepage banner,
+ * product page, the for-sale and rental heroes), the product page's trust
+ * strip, the structured data, and the cards of products with no rating of
+ * their own (lib/ratings.ts, the rent-to-own configurator). Copied by hand
+ * from the Google Business Profile; update both numbers together.
+ */
 export const GOOGLE_REVIEW_STATS = {
-  rating: 4.8,
+  rating: 4.9,
   // Links to Google itself are deliberately absent: the site's Google Business
   // Profile URL is not recorded anywhere in this repo, and a wrong Google link
   // sends people to another business. The product page's count scrolls to the
   // on-page reviews section (#reviews) instead.
-  count: 151,
+  count: 229,
 } as const
 
 export type Review = {
