@@ -4,7 +4,7 @@ import { HoverPrefetchLink as Link } from '@/components/shared/HoverPrefetchLink
 import { ROUTES } from '@/config/routes'
 import { cheapestMatch, type ConfiguratorProduct } from '@/lib/configurator'
 import { RTO_CONFIGURATOR, RTO_NEAR_ME } from '@/lib/data/rentToOwnContent'
-import { RtoNearMeCarousel } from './RtoNearMeCarousel'
+import { SnapCarousel } from '@/components/shared/SnapCarousel'
 
 type Props = {
   /** The generic listing's rent-to-own products, which the page has already read. */
@@ -40,7 +40,7 @@ export function RtoNearMe({ products }: Props) {
         {intro}
       </p>
 
-      <RtoNearMeCarousel label="Rent-to-own shipping containers">
+      <SnapCarousel label="Rent-to-own shipping containers">
         {cards.map(({ name, product }) => {
           const rating = product.rating.value > 0 ? product.rating.value : RTO_CONFIGURATOR.fallbackRating
           return (
@@ -85,7 +85,7 @@ export function RtoNearMe({ products }: Props) {
             </li>
           )
         })}
-      </RtoNearMeCarousel>
+      </SnapCarousel>
     </section>
   )
 }

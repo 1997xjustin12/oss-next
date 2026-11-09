@@ -8,21 +8,25 @@ import { CONTACT_NUMBER, telHref } from '@/lib/helpers'
 type Props = {
   /** The page's h1; `[[…]]` runs are yellow, as on WordPress. */
   heading: string
+  /** The line under the h1. Default: the for-sale and rental pages' tagline. */
+  tagline?: string
+  /** The photo behind it. Default: the container yard. */
+  background?: string
 }
 
 /**
- * The for-sale and rental pages' hero: the container-yard photo under a dark
+ * The for-sale, rental and location pages' hero: the container-yard photo under a dark
  * wash, the Google rating, the h1, the tagline and the call button. The photo
  * is the LCP element, so it is preloaded.
  *
  * WordPress's rating linked to a Google search; the badge here is not a link,
  * because the Google Business Profile URL is not recorded (config/reviews.ts).
  */
-export function LandingHero({ heading }: Props) {
+export function LandingHero({ heading, tagline = LANDING_TAGLINE, background = LANDING_HERO_BACKGROUND.src }: Props) {
   return (
     <section className="relative isolate overflow-hidden bg-neutral-900 px-[5%] pb-10 pt-6 sm:pb-14 sm:pt-8">
       <Image
-        src={LANDING_HERO_BACKGROUND.src}
+        src={background}
         alt={LANDING_HERO_BACKGROUND.alt}
         fill
         preload
@@ -40,7 +44,7 @@ export function LandingHero({ heading }: Props) {
         <h1 className="font-anton text-4xl leading-tight tracking-wide text-white text-shadow-lg sm:text-5xl lg:text-6xl">
           <AccentText text={heading} accentClassName="text-yellow-300" />
         </h1>
-        <p className="mx-auto mt-4 max-w-3xl text-base text-white text-shadow-lg sm:text-xl">{LANDING_TAGLINE}</p>
+        <p className="mx-auto mt-4 max-w-3xl text-base text-white text-shadow-lg sm:text-xl">{tagline}</p>
 
         <a
           href={telHref(CONTACT_NUMBER)}

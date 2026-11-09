@@ -187,9 +187,11 @@ export function toOpeningHours(rawOpenHours: string): string[] {
 
   const out: string[] = []
   let runStart = 0
-  for (let i = 0; i <= DAY_ORDER.length; i++) {
+  // From day 1: day 0 only opens the first run. Starting at 0 closed an empty
+  // run there, which came out as "Mo-undefined 06:00-17:00" on every depot.
+  for (let i = 1; i <= DAY_ORDER.length; i++) {
     const current = i < DAY_ORDER.length ? perDay[i] : null
-    if (i > 0 && current === perDay[runStart]) continue
+    if (current === perDay[runStart]) continue
 
     const value = perDay[runStart]
     if (value) {

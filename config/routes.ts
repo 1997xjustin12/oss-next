@@ -5,6 +5,8 @@
 // this app doesn't own those slugs, WordPress does, so encoding them here
 // would misrepresent who's responsible for keeping them correct.
 
+import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPages'
+
 export const ROUTES = {
   HOME: '/',
   PLP: '/sale-shipping-containers',
@@ -203,6 +205,10 @@ export const NATIVE_ROUTE_SEGMENTS = [
  */
 const NATIVE_EXACT_PATHS: readonly string[] = [
   ROUTES.WHERE_TO_BUY,
+  // The location pages that are native so far (lib/data/locationPages.ts).
+  // Each is claimed by its exact path, so the cities not yet native keep their
+  // backend check and their real 404.
+  ...LOCATION_PAGE_SLUGS.map((slug) => `${ROUTES.WHERE_TO_BUY}/${slug}`),
 ]
 
 export function isNativePath(path: string): boolean {

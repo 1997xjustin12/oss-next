@@ -7,6 +7,9 @@ type Props = {
   /** The `<li>` cards, already rendered, so they stay Server Components. */
   children: ReactNode
   label: string
+  /** What the arrows move, for their names: "Next containers". */
+  itemName?: string
+  className?: string
 }
 
 const ARROW_CLASS = `hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-white transition-colors hover:bg-black
@@ -16,8 +19,10 @@ const ARROW_CLASS = `hidden h-10 w-10 shrink-0 items-center justify-center round
 /**
  * A row that scrolls sideways and snaps to whole cards: swiped on a phone, with
  * arrows from `sm` up. An arrow moves a screenful of cards, and greys out at its end.
+ *
+ * Shared since the location pages' delivery photos (first: rent-to-own's "Near Me" row).
  */
-export function RtoNearMeCarousel({ children, label }: Props) {
+export function SnapCarousel({ children, label, itemName = 'containers', className = 'mt-8' }: Props) {
   const trackRef = useRef<HTMLUListElement>(null)
   const [atStart, setAtStart] = useState(true)
   const [atEnd, setAtEnd] = useState(false)
@@ -48,8 +53,8 @@ export function RtoNearMeCarousel({ children, label }: Props) {
   }
 
   return (
-    <div className="mt-8 flex items-center gap-3">
-      <button type="button" onClick={() => move(-1)} disabled={atStart} aria-label="Previous containers" className={ARROW_CLASS}>
+    <div className={`flex items-center gap-3 ${className}`}>
+      <button type="button" onClick={() => move(-1)} disabled={atStart} aria-label={`Previous ${itemName}`} className={ARROW_CLASS}>
         <ChevronLeft aria-hidden className="h-6 w-6" />
       </button>
       <ul
@@ -61,7 +66,7 @@ export function RtoNearMeCarousel({ children, label }: Props) {
       >
         {children}
       </ul>
-      <button type="button" onClick={() => move(1)} disabled={atEnd} aria-label="Next containers" className={ARROW_CLASS}>
+      <button type="button" onClick={() => move(1)} disabled={atEnd} aria-label={`Next ${itemName}`} className={ARROW_CLASS}>
         <ChevronRight aria-hidden className="h-6 w-6" />
       </button>
     </div>

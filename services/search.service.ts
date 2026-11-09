@@ -310,7 +310,16 @@ export async function getShippingContainersByLocation(location: string) {
  * which reads the real `{ name, value }` pair. Correct whatever the mapping
  * does, and cheap at this size.
  */
-export type DepotFeaturedKey = 'used_20s_wwt' | 'used_40s_wwt' | 'used_40h_wwt' | 'new_20s_iicl' | 'new_40h_iicl'
+export type DepotFeaturedKey =
+  | 'used_20s_wwt'
+  | 'used_40s_wwt'
+  | 'used_40h_wwt'
+  | 'new_20s_iicl'
+  | 'new_40h_iicl'
+  // The location pages' row (used 20 ft As-Is / WWT / Cargo Worthy, used 40 ft As-Is).
+  | 'used_20s_asis'
+  | 'used_20s_cw'
+  | 'used_40s_asis'
 
 export type DepotFeaturedSpec = {
   /** Stable key for the slot, so a caller can ask for it and tell which one is missing. */
@@ -320,8 +329,8 @@ export type DepotFeaturedSpec = {
   /** Matched as a substring of `height`, which reads `8' 6" Standard`. */
   height: 'Standard' | 'High Cube'
   condition: 'Used' | 'New'
-  /** Matched as a substring of `grade`, which reads `Wind and Water tight (WWT)`. */
-  grade: 'WWT' | 'IICL'
+  /** Matched as a substring of `grade`, which reads `Wind and Water tight (WWT)`, `Cargo Worthy (CW)` or `AS IS`. */
+  grade: 'WWT' | 'IICL' | 'CW' | 'AS IS'
 }
 
 export const DEPOT_FEATURED_SPECS: readonly DepotFeaturedSpec[] = [
@@ -330,6 +339,9 @@ export const DEPOT_FEATURED_SPECS: readonly DepotFeaturedSpec[] = [
   { key: 'used_40h_wwt', label: '40ft High Cube — Used WWT', size: '40', height: 'High Cube', condition: 'Used', grade: 'WWT' },
   { key: 'new_20s_iicl', label: '20ft Standard — New IICL',  size: '20', height: 'Standard',  condition: 'New',  grade: 'IICL' },
   { key: 'new_40h_iicl', label: '40ft High Cube — New IICL', size: '40', height: 'High Cube', condition: 'New',  grade: 'IICL' },
+  { key: 'used_20s_asis', label: '20ft Standard — Used As-Is', size: '20', height: 'Standard', condition: 'Used', grade: 'AS IS' },
+  { key: 'used_20s_cw',   label: '20ft Standard — Used Cargo Worthy', size: '20', height: 'Standard', condition: 'Used', grade: 'CW' },
+  { key: 'used_40s_asis', label: '40ft Standard — Used As-Is', size: '40', height: 'Standard', condition: 'Used', grade: 'AS IS' },
 ]
 
 /** What a caller gets when it does not choose. Its own list, so adding a spec above does not change every page. */
@@ -429,6 +441,24 @@ export async function getNationalFeaturedContainers(
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.HOMEPAGE)
 
   return getDepotFeaturedContainers(DEFAULT_LOCATION, specKeys, paymentType)
+}
+
+/**
+ * One named depot's featured containers, for a page that is about that depot
+ * (the /where-to-buy-shipping-containers/[location] pages), so its row is in
+ * the server HTML rather than fetched after load. Cached like the national
+ * lookup, for the same reason; a price change reaches it through the products tag.
+ */
+export async function getCachedDepotFeaturedContainers(
+  depot: string,
+  specKeys: readonly DepotFeaturedKey[],
+  paymentType: FeaturedPaymentType = 'buy',
+): Promise<DepotFeaturedContainer[]> {
+  'use cache'
+  cacheLife('hours')
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  return getDepotFeaturedContainers(depot, specKeys, paymentType)
 }
 
 // Single product lookup for the PDP (/product/[slug]). Accessories are

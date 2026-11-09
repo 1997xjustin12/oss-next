@@ -9,6 +9,7 @@ export const CACHE_TAGS = {
   SEO:        'seo',      // Per-page SEO overrides from the admin Page Configurator
   CONTENT:    'content',  // Visible on-page copy from the admin Content Editor
   GBP:        'gbp',      // GBP location pages: their content, shared content and template
+  LOCATION_PAGES: 'location-pages', // /where-to-buy-shipping-containers/[location]: template and records
   BLOG:       'blog',     // Blog posts from the Django blogs API
   ORDERS:     'orders',
   USERS:      'users',
@@ -84,6 +85,12 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
     tag: CACHE_TAGS.GBP,
     label: 'GBP Location Pages',
     description: 'The published content, shared content and template of all the GBP location pages. Publishing in the GBP screens already refreshes them; to refresh one location only, use "Purge this page" on its screen in GBP Pages.',
+    lifetime: 'hours — refreshed hourly, kept a day',
+  },
+  {
+    tag: CACHE_TAGS.LOCATION_PAGES,
+    label: 'Location Pages',
+    description: 'The template and records of the native /where-to-buy-shipping-containers/[location] pages.',
     lifetime: 'hours — refreshed hourly, kept a day',
   },
   {

@@ -1,5 +1,7 @@
 import { GBP_ROUTE_SEGMENTS, ROUTES } from '@/config/routes';
 import { gbpSeoDefaults, requireGbpPage } from '@/lib/gbp';
+import { LOCATION_PAGES } from '@/lib/data/locationPages';
+import { locationPath, locationSeoDefaults } from '@/lib/locationPage';
 import type { PageSeoDefaults } from '@/types/seo';
 
 // The built-in SEO copy for every page in config/pages.ts, moved out of the
@@ -373,4 +375,7 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
 
   // GBP location pages: their SEO is part of each page's data (lib/data/gbpPages.ts).
   ...Object.fromEntries(GBP_ROUTE_SEGMENTS.map((slug) => [`/${slug}`, gbpSeoDefaults(requireGbpPage(slug))])),
+
+  // Native location pages: their SEO is part of each record (lib/data/locationPages.ts).
+  ...Object.fromEntries(LOCATION_PAGES.map((page) => [locationPath(page.slug), locationSeoDefaults(page)])),
 };

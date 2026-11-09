@@ -1,5 +1,7 @@
 import { GBP_ROUTE_SEGMENTS, ROUTES } from '@/config/routes';
 import { requireGbpPage } from '@/lib/gbp';
+import { LOCATION_PAGES } from '@/lib/data/locationPages';
+import { locationPath } from '@/lib/locationPage';
 
 // The app's own statically-routed pages — the set the admin Page Configurator
 // can edit. This is a hand-maintained registry rather than a filesystem scan
@@ -55,6 +57,15 @@ export const NATIVE_PAGES: readonly NativePage[] = [
     const { location } = requireGbpPage(slug);
     return { id: slug, path: `/${slug}`, label: `${location.city}, ${location.stateCode}`, group: 'Locations', indexable: true };
   }),
+
+  // Location pages (/where-to-buy-shipping-containers/[location]), native ones only.
+  ...LOCATION_PAGES.map((page): NativePage => ({
+    id: `location-${page.slug}`,
+    path: locationPath(page.slug),
+    label: `Where to Buy — ${page.place.city}, ${page.place.region}`,
+    group: 'Locations',
+    indexable: true,
+  })),
 
   { id: 'cart', path: ROUTES.CART, label: 'Cart', group: 'Commerce', indexable: false },
   { id: 'checkout', path: ROUTES.CHECKOUT, label: 'Checkout', group: 'Commerce', indexable: false },
