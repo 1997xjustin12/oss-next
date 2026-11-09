@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { ADMIN_ROUTES } from '@/config/admin'
 import { readGbpTemplateState } from '@/services/gbp.service'
 import { GbpTemplateEditor } from '../_components/GbpTemplateEditor'
-import { editorStatus } from '../_components/gbpAdminStatus'
+import { editorStatus } from '@/lib/adminStatus'
 import { gbpPreviewLocations } from '../_components/gbpPreviewLocations'
 
 export const metadata: Metadata = { title: 'GBP template', robots: { index: false, follow: false } }

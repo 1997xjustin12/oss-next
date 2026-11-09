@@ -6,8 +6,8 @@ import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities'
 import { ChevronDown, GripVertical, Plus, Trash2 } from 'lucide-react'
 import { discardGbpRecordAction, publishGbpRecordAction, saveGbpTemplateDraftAction } from '@/actions/gbp'
-import { EditorShell } from './EditorShell'
-import { INPUT, ValueEditor, type FieldHints } from './ValueEditor'
+import { EditorShell } from '@/components/admin/EditorShell'
+import { INPUT, ValueEditor, type FieldHints } from '@/components/admin/ValueEditor'
 import type { GbpLibraryProps, GbpLibrarySectionType, GbpSectionInstance, GbpSectionStyle, GbpSectionType, GbpTemplate } from '@/types/gbp'
 
 const LABELS: Record<GbpSectionType, string> = {

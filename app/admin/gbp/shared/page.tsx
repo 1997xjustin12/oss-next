@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { ADMIN_ROUTES } from '@/config/admin'
 import { readGbpSharedState } from '@/services/gbp.service'
 import { GbpSharedEditor } from '../_components/GbpSharedEditor'
-import { editorStatus } from '../_components/gbpAdminStatus'
+import { editorStatus } from '@/lib/adminStatus'
 import { gbpPreviewLocations } from '../_components/gbpPreviewLocations'
 
 export const metadata: Metadata = { title: 'GBP shared content', robots: { index: false, follow: false } }

@@ -9,7 +9,7 @@ import { GBP_CONTENT_KEYS, pickKeys } from '@/lib/gbpAdmin'
 import { readGbpPageState } from '@/services/gbp.service'
 import { GbpContentEditor } from '../_components/GbpContentEditor'
 import { GbpLocationNav } from '../_components/GbpLocationNav'
-import { editorStatus } from '../_components/gbpAdminStatus'
+import { editorStatus } from '@/lib/adminStatus'
 
 type Props = { params: Promise<{ slug: string }> }
 

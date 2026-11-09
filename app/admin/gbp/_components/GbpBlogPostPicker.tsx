@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { AlertTriangle, Loader2, Search } from 'lucide-react'
 import { getGbpBlogPostAction, searchGbpBlogPostsAction, type GbpBlogOption } from '@/actions/gbp'
 import { formatBlogDate } from '@/lib/blog'
-import { HELP, INPUT, LABEL } from './ValueEditor'
+import { HELP, INPUT, LABEL } from '@/components/admin/ValueEditor'
 
 type Props = {
   /** The picked post's slug; empty until one is picked. */

@@ -4,14 +4,14 @@ import { useId, useState, type ReactNode } from 'react'
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 
 /**
- * A form for any GBP record, built from the shape of its value: strings are
+ * A form for any admin record (GBP pages, location pages), built from the shape of its value: strings are
  * inputs (or textareas), numbers number inputs, booleans checkboxes, lists get
  * add / remove / move, objects become fieldsets, and an image object
  * (`{ src, alt, width, height }`) shows a thumbnail. Hints, keyed by path with
  * `*` for list indexes (`blogCards.*.excerpt`), give fields a label, help
  * text, a long-text box, a colour picker, a select, or a raw-JSON box.
  *
- * The record is validated on save (lib/gbpValidate.ts); this only edits.
+ * The record is validated on save (lib/gbpValidate.ts, lib/locationValidate.ts); this only edits.
  */
 
 export type FieldHint = {

@@ -1,8 +1,8 @@
 'use client'
 
 import { discardGbpRecordAction, publishGbpRecordAction, saveGbpSharedDraftAction } from '@/actions/gbp'
-import { EditorShell } from './EditorShell'
-import { ValueEditor, type FieldHints } from './ValueEditor'
+import { EditorShell } from '@/components/admin/EditorShell'
+import { ValueEditor, type FieldHints } from '@/components/admin/ValueEditor'
 import type { GbpSharedContent } from '@/types/gbp'
 
 const ACCENT_HELP = 'Mark the red part with [[double brackets]].'

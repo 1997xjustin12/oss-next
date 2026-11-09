@@ -1,8 +1,8 @@
 'use client'
 
 import { discardGbpLocationAction, publishGbpLocationAction, saveGbpSeoDraftAction } from '@/actions/gbp'
-import { EditorShell } from './EditorShell'
-import { ValueEditor, type FieldHints } from './ValueEditor'
+import { EditorShell } from '@/components/admin/EditorShell'
+import { ValueEditor, type FieldHints } from '@/components/admin/ValueEditor'
 import type { GbpSeoForm, GbpSeoPageModel } from '@/lib/gbpAdmin'
 
 export type GbpSeoModel = { page: GbpSeoPageModel; extras: GbpSeoForm }

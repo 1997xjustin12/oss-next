@@ -32,6 +32,12 @@ export const ADMIN_ROUTES = {
   GBP_TEMPLATE: '/admin/gbp/template',
   /** The draft preview: the real GBP layout, so outside /admin (gated via ADMIN_PATHS). */
   GBP_PREVIEW: (slug: string) => `/admin-preview/gbp/${slug}`,
+  // /where-to-buy-shipping-containers/[location] (docs/reference/location-pages.md, "The configurator").
+  LOCATION_PAGES: '/admin/location-pages',
+  LOCATION_PAGE: (slug: string) => `/admin/location-pages/${slug}`,
+  LOCATION_TEMPLATE: '/admin/location-pages/template',
+  /** The draft preview: the real page layout, so outside /admin (gated via ADMIN_PATHS). */
+  LOCATION_PREVIEW: (slug: string) => `/admin-preview/location/${slug}`,
 } as const;
 
 export type AdminNavItem = {
@@ -63,6 +69,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'GBP Pages',
     icon: 'MapPinned',
     hint: 'Location pages: content, SEO, template',
+  },
+  {
+    href: ADMIN_ROUTES.LOCATION_PAGES,
+    label: 'Location Pages',
+    icon: 'MapPinned',
+    hint: 'Where-to-buy depot pages & template',
   },
   {
     href: ADMIN_ROUTES.AGENT_TRAFFIC,

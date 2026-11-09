@@ -9,7 +9,7 @@ import { readGbpPageState, readGbpSeoDraft } from '@/services/gbp.service'
 import { getPageSeo } from '@/services/seo.service'
 import { GbpLocationNav } from '../../_components/GbpLocationNav'
 import { GbpSeoEditor } from '../../_components/GbpSeoEditor'
-import { editorStatus } from '../../_components/gbpAdminStatus'
+import { editorStatus } from '@/lib/adminStatus'
 
 type Props = { params: Promise<{ slug: string }> }
 

@@ -1,8 +1,8 @@
 'use client'
 
-import { EditorShell } from './EditorShell'
+import { EditorShell } from '@/components/admin/EditorShell'
 import { GbpBlogPostPicker } from './GbpBlogPostPicker'
-import { ValueEditor, type FieldHints } from './ValueEditor'
+import { ValueEditor, type FieldHints } from '@/components/admin/ValueEditor'
 import type { GbpActionResult } from '@/actions/gbp'
 import type { GbpContentModel } from '@/lib/gbpAdmin'
 

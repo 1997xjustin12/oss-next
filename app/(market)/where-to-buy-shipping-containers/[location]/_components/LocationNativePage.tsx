@@ -34,9 +34,13 @@ import { LocationResources } from './LocationResources'
 import { LocationSatisfaction } from './LocationSatisfaction'
 import { LocationStory } from './LocationStory'
 import type { ReactNode } from 'react'
-import type { LocationPage, LocationSectionId } from '@/types/locationPage'
+import type { LocationPage, LocationSectionId, LocationTemplate } from '@/types/locationPage'
 
-type Props = { page: LocationPage }
+type Props = {
+  page: LocationPage
+  /** The template to render with: the published one when left out; the draft preview passes the draft. */
+  template?: LocationTemplate
+}
 
 /**
  * A native location page: the template's sections (or the location's own
@@ -44,8 +48,8 @@ type Props = { page: LocationPage }
  * the products, rent and reviews are cached reads, and the review slider, the
  * photo row, the forms and the videos are the client code.
  */
-export async function LocationNativePage({ page }: Props) {
-  const [template, reviews, lowestRent] = await Promise.all([getLocationTemplate(), getReviews(), getDepotLowestRent(page.depot)])
+export async function LocationNativePage({ page, template: given }: Props) {
+  const [template, reviews, lowestRent] = await Promise.all([given ?? getLocationTemplate(), getReviews(), getDepotLowestRent(page.depot)])
   const text = resolveLocationText(template, page, lowestRent !== null ? { lowestRent: `$${formatPrice(lowestRent)}` } : {})
   // No rental anywhere in the catalogue: drop the price clause rather than show
   // an unfilled placeholder or a figure nobody can get.

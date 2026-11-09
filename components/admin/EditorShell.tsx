@@ -3,19 +3,20 @@
 import { useEffect, useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { ExternalLink, Eye, Monitor, RotateCcw, Save, Send, Smartphone } from 'lucide-react'
-import type { GbpActionResult } from '@/actions/gbp'
+/** What a save, publish or discard action answers. The GBP and location-page actions both return this shape. */
+export type AdminActionResult = { ok: true; at: string } | { ok: false; error: string; rejected?: string[] }
 
 type Props<T> = {
   initialValue: T
   hasDraft: boolean
   /** "Draft saved Oct 29 by …", "Published …". */
   status: { draft?: string; published?: string }
-  save: (value: T) => Promise<GbpActionResult>
-  publish: () => Promise<GbpActionResult>
-  discard: () => Promise<GbpActionResult>
+  save: (value: T) => Promise<AdminActionResult>
+  publish: () => Promise<AdminActionResult>
+  discard: () => Promise<AdminActionResult>
   /** The draft preview, for one location (the template and shared screens let you pick which). */
   preview?: { href: string; locations?: readonly { slug: string; label: string }[] }
-  /** What Publish affects, for the confirmation: "every GBP page", "San Diego, CA". */
+  /** What Publish affects, for the confirmation: "every GBP page", "San Diego, CA", "every location page". */
   scope: string
   children: (value: T, setValue: (value: T) => void) => ReactNode
 }
@@ -24,7 +25,7 @@ const BTN =
   'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50'
 
 /**
- * The frame every GBP editor shares: the working copy, Save draft / Publish /
+ * The frame the record editors share (the GBP pages and the location pages): the working copy, Save draft / Publish /
  * Discard, the record's status, and the live draft preview.
  *
  * Draft → preview → publish: saving writes the draft only; the preview (the
@@ -167,7 +168,7 @@ export function EditorShell<T>({ initialValue, hasDraft: initialHasDraft, status
             </a>
           </div>
           <p className="mt-2 text-xs text-theme-muted dark:text-neutral-500">
-            The saved draft (content, shared content and template), as visitors would see it after publishing. Unsaved edits show after Save draft.
+            The saved drafts, as visitors would see them after publishing. Unsaved edits show after Save draft.
           </p>
           {previewOpen && (
             <div className="mt-3 overflow-auto rounded border border-theme-border bg-white dark:border-neutral-800">

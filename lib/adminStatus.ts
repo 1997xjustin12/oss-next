@@ -1,4 +1,5 @@
-import type { GbpDraftState } from '@/services/gbp.service'
+/** What a draft-and-publish record reports about itself (GBP pages, location pages). */
+type RecordStamps = { draftUpdatedAt?: string; draftUpdatedBy?: string; publishedAt?: string; publishedBy?: string }
 
 function stamp(iso: string | undefined, by: string | undefined): string | undefined {
   if (!iso) return undefined
@@ -7,6 +8,6 @@ function stamp(iso: string | undefined, by: string | undefined): string | undefi
 }
 
 /** A record's draft and published stamps, for the editor's status line. */
-export function editorStatus(state: GbpDraftState<unknown>): { draft?: string; published?: string } {
+export function editorStatus(state: RecordStamps): { draft?: string; published?: string } {
   return { draft: stamp(state.draftUpdatedAt, state.draftUpdatedBy), published: stamp(state.publishedAt, state.publishedBy) }
 }
