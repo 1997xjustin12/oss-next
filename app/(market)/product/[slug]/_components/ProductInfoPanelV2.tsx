@@ -1411,7 +1411,8 @@ export function ProductInfoPanelV2({
           <div className="text-[17px] font-extrabold sm:text-[22px]">
             {product?.size_title}
           </div>
-          <div className="text-[12px] text-neutral-500 underline sm:text-[14px]">
+          {/* Plain text, not underlined: it is not a link, and underlined it read as one. */}
+          <div className="text-[12px] text-neutral-500 sm:text-[14px]">
             Other size available
           </div>
         </div>

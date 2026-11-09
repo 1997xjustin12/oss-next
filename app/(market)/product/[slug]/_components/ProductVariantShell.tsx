@@ -124,7 +124,6 @@ export function ProductVariantShell({
     curatedImages.length > 0
       ? curatedImages
       : (activeProduct.images ?? []).map((img) => img.src).filter(Boolean);
-  const promoTag = activeProduct.tags?.find((t) => !/stock/i.test(t));
 
   return (
     <>
@@ -182,8 +181,10 @@ export function ProductVariantShell({
               key={String(activeProduct.objectID)}
               images={allImages}
               video={containerVideo}
+              // No tag badge: a container's `tags` are catalogue labels ("40'
+              // Product Template", "Rent-to-Own", a depot name), never a
+              // promotion, and the first of them showed as "* PRODUCT TEMPLATE".
               title={activeProduct.title}
-              tag={promoTag}
               inStock={isInStockHit(activeProduct)}
             />
             <div className="hidden lg:block">

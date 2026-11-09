@@ -1325,15 +1325,6 @@ export function CheckoutClient() {
               </div>
             )}
 
-            {/* Secure checkout note */}
-            <div className="mt-5 flex gap-2.5 rounded-md bg-theme-subtle p-3.5 text-sm text-theme-mid dark:bg-neutral-800 dark:text-neutral-300">
-              <Lock className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>
-                Your card is charged once you place the order below. We&apos;ll email a confirmation
-                with your order details right after.
-              </p>
-            </div>
-
             <p className="mt-4 text-sm text-theme-mid dark:text-neutral-400">
               Want faster service?{' '}
               <a href="tel:8889779085" className="font-bold text-theme-primary underline underline-offset-2 hover:decoration-2 dark:text-red-400">

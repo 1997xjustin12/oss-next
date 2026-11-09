@@ -1106,15 +1106,6 @@ export function ProductInfoPanel({
       : null;
 
   /**
-   * True while delivery for a purchase is still being priced.
-   *
-   * Narrow on purpose. Rent and rent-to-own never show delivery beside the
-   * figure, and with no ZIP there is nothing being calculated.
-   */
-  const deliveryPricing =
-    selection.tab === "buy" && !isGenericDisplay && !!zipcode && deliveryLoading;
-
-  /**
    * Subtotal: unit price × quantity.
    *
    * Delivery is billed after the order (the backend runs `estimate_only`,
@@ -1417,7 +1408,8 @@ export function ProductInfoPanel({
           <div className="text-[17px] font-extrabold sm:text-[22px]">
             {product?.size_title}
           </div>
-          <div className="text-[12px] text-neutral-500 underline sm:text-[14px]">
+          {/* Plain text, not underlined: it is not a link, and underlined it read as one. */}
+          <div className="text-[12px] text-neutral-500 sm:text-[14px]">
             Other size available
           </div>
         </div>
@@ -1879,21 +1871,14 @@ export function ProductInfoPanel({
                 </span>
               )}
             </div>
-            {/* Delivery beside the figure, not in it: it is billed after the
-                order, so the subtotal is what checkout charges. One line either
-                way — pricing, then the estimate — so the slab does not jump. */}
-            {deliveryPricing ? (
-              <div
-                aria-live="polite"
-                className="text-[11px] font-medium text-white/70"
-              >
-                + delivery, still calculating
-              </div>
-            ) : selection.tab === "buy" && deliveryOption ? (
-              <div className="text-[11px] font-medium text-white/70">
-                + est. delivery {formatMoney(deliveryTotal)}, billed after order
-              </div>
-            ) : null}
+            {/* Beside the figure, not in it: the subtotal is the container,
+                and delivery and sales tax are settled at checkout. One fixed
+                line (it replaced "+ est. delivery $…, billed after order" and
+                its "still calculating" state), so the slab never changes
+                height while a delivery quote is in flight. */}
+            <div className="text-[11px] font-medium text-white/70">
+              Delivery and Sales Tax calculated at checkout
+            </div>
           </div>
         </div>
         {/* Actions. One filled button carries the accent; the two supporting

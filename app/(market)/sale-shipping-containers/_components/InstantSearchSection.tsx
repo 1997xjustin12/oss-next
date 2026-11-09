@@ -553,8 +553,8 @@ function ProductHit({ hit }: { hit: HitData }) {
           </div>
           {/* No "+ delivery, no tax" line (removed 2026-09-16, decided with the
               user): it promised something about tax the site cannot stand
-              behind — the cart only claims "no sales tax on most container
-              orders", and the backend has no tax rates loaded — and it read as
+              behind — the cart says only that tax is calculated at checkout,
+              and the backend has no tax rates loaded — and it read as
               "+ delivery" on Rent and Rent-To-Own tiles, whose monthly price
               already covers delivery and pickup. Delivery and tax are shown
               where they are actually worked out: the product page and checkout. */}

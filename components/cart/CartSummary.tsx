@@ -143,7 +143,7 @@ export function CartSummary({ shipping = 0, tax = 0, loading = false, quote, ref
         <span className="text-3xl font-extrabold text-theme-primary">{formatMoney(total)}</span>
       </div>
       <p className="text-[11px] text-theme-muted mb-5">
-        *Tax calculated at checkout. No sales tax on most container orders.
+        *Tax calculated at checkout.
       </p>
 
       <Link
