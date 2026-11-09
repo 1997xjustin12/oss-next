@@ -22,6 +22,9 @@ import { ReviewsSection } from "@/components/shared/ReviewsSection";
 export const HOME_VARIANTS = [1, 2, 3] as const;
 export type HomeVariant = (typeof HOME_VARIANTS)[number];
 
+/** `window.ossHomeVariant`: the variant on the page (1, 2 or 3), for PageSense targeting. */
+export const HOME_VARIANT_GLOBAL = "ossHomeVariant";
+
 export function parseHomeVariant(raw: string | undefined): HomeVariant | null {
   const n = Number(raw);
   return (HOME_VARIANTS as readonly number[]).includes(n) ? (n as HomeVariant) : null;
@@ -78,6 +81,16 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
 
   return (
     <>
+      {/* Which variant this visitor sees, for page tools that cannot tell the
+          three apart by URL (all are `/`): Zoho PageSense heatmaps target the
+          JS variable (or the ab-home-variant cookie), and Tag Manager gets a
+          `home_variant` event to split analytics by. Static per variant page,
+          inline so it runs before any of those scripts load. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.${HOME_VARIANT_GLOBAL}=${variant};(window.dataLayer=window.dataLayer||[]).push({event:'home_variant',home_variant:'${variant}'});`,
+        }}
+      />
       <JsonLd data={jsonLd} />
       <PageHeadScripts path={ROUTES.HOME} />
       {/* <TrustStrip /> */}
