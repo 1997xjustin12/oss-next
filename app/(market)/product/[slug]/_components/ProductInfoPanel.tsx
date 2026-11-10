@@ -1399,9 +1399,11 @@ export function ProductInfoPanel({
         <span className="flex-1 h-px bg-theme-primary-light" />
       </div>
 
-      <h1 className="mb-2 font-anton text-[26px] leading-[30px] line-clamp-4 sm:text-[45px] sm:leading-11.5">
+      {/* h2, not h1: the page's one H1 is above the gallery (ProductVariantShell), led
+          by the focus keyphrase. Two H1s split what the page is about. */}
+      <h2 className="mb-2 font-anton text-[26px] leading-[30px] line-clamp-4 sm:text-[45px] sm:leading-11.5">
         {product.title}
-      </h1>
+      </h2>
 
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">

@@ -47,21 +47,17 @@ export type ProductHitCustomField = {
 }
 
 /**
- * SEO fields carried on the Elasticsearch document.
+ * SEO fields carried on the Elasticsearch document: the marketing team's
+ * Yoast-style title, meta description and focus keyphrase.
  *
- * Every field is optional, and measured against the live index (10,528
- * documents) they are very unevenly populated:
+ * Every field is optional and unevenly populated. Measured 2026-11-10: 4,102
+ * of ~10,500 products have a `focus_keyphrase`, and those also have a
+ * hand-written `title` and `description`. On the rest `title` is the product
+ * title and the other two are absent.
  *
- *   seo               100%
- *   seo.title         100%
- *   seo.description    19%
- *   seo.focus_keyphrase 19%
- *
- * So `title` is effectively always there while the other two are absent on four
- * products in five. Anything rendering `focus_keyphrase` or `description`
- * directly needs a fallback, or it renders nothing on most product pages —
- * which for a heading or a meta description is worse than not rendering the
- * element at all.
+ * Read them through lib/productSeo.ts, which cleans them (the text carries
+ * pasted zero-width spaces) and says when each is really there; the product
+ * page falls back to its own title and description.
  */
 export type ProductHitSeo = {
   title?: string

@@ -14,7 +14,7 @@ import { ProductImageGallery } from "@/components/product/ProductImageGallery";
 import type { LocationChangeStrategy } from "./DeliveryZipCheck";
 import { BASE_URL } from "@/lib/helpers";
 import { ROUTES } from "@/config/routes";
-import { capitalizeWords } from "@/lib/utils";
+import { keyphraseHeading } from "@/lib/productSeo";
 import { videoSizeKey } from "@/lib/productVideos";
 import { videosForSize } from "@/config/productVideos";
 import { getContainerVideo } from "@/lib/containerVideo";
@@ -99,6 +99,7 @@ export function ProductVariantShell({
   panelV2 = false,
 }: Props) {
   const crumb = getListingCrumb(activeProduct);
+  const keyphrase = keyphraseHeading(activeProduct);
   // Which summary the store is showing, decided on the server and passed down
   // rather than read here: this is a Client Component, and a fetch from the
   // browser would render one panel and then swap it under the visitor.
@@ -155,16 +156,15 @@ export function ProductVariantShell({
               pushed the gallery below the fold. Scaled for the viewport it
               carries the same weight in two. */}
           <h1 className="text-[22px] font-bold leading-[27px] sm:text-[42px] sm:leading-[42px]">
-            {activeProduct?.seo?.focus_keyphrase && (
+            {/* The page's one H1, led by the marketing team's focus keyphrase
+                where there is one (lib/productSeo.ts). */}
+            {keyphrase ? (
               <>
-                <span className="text-theme-primary">
-                  {capitalizeWords(activeProduct?.seo?.focus_keyphrase)}:
-                </span>
-                &nbsp;{activeProduct?.desc_title}
+                <span className="text-theme-primary">{keyphrase}:</span>
+                &nbsp;{activeProduct.desc_title || activeProduct.title}
               </>
-            )}
-            {!activeProduct?.seo?.focus_keyphrase && (
-              <>{activeProduct?.title}</>
+            ) : (
+              activeProduct.title
             )}
           </h1>
         </div>
@@ -185,6 +185,7 @@ export function ProductVariantShell({
               // Product Template", "Rent-to-Own", a depot name), never a
               // promotion, and the first of them showed as "* PRODUCT TEMPLATE".
               title={activeProduct.title}
+              keyphrase={keyphrase}
               inStock={isInStockHit(activeProduct)}
             />
             <div className="hidden lg:block">

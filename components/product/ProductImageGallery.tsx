@@ -31,6 +31,11 @@ type Props = {
    * is the LCP element, so the two don't compete for bandwidth.
    */
   lcp?: boolean
+  /**
+   * The page's focus keyphrase (lib/productSeo.ts), led into the first
+   * photograph's alt text, where Yoast-style SEO checks look for it.
+   */
+  keyphrase?: string
 }
 
 /**
@@ -54,7 +59,7 @@ type Slide =
   | { kind: 'video'; src: string; poster: string; label: string }
   | { kind: 'image'; src: string }
 
-export function ProductImageGallery({ images, title, tag, inStock = true, video, lcp = true }: Props) {
+export function ProductImageGallery({ images, title, tag, inStock = true, video, lcp = true, keyphrase }: Props) {
   const [active, setActive] = useState(0)
   const [lightbox, setLightbox] = useState(false)
   const [zoomed, setZoomed] = useState(false)
@@ -69,6 +74,9 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video,
     ...images.map((src) => ({ kind: 'image' as const, src })),
   ]
   const total = slides.length
+  // The first photograph (after the video, when there is one) carries the keyphrase.
+  const firstImage = video ? 1 : 0
+  const altTitle = (i: number) => (keyphrase && i === firstImage ? `${keyphrase}: ${title}` : title)
   const current = slides[active]
   const isVideo = current?.kind === 'video'
   /**
@@ -184,7 +192,7 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video,
           ) : current ? (
             <Image
               src={current.src}
-              alt={`${title} — image ${active + 1} of ${total}`}
+              alt={`${altTitle(active)} — image ${active + 1} of ${total}`}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
               priority={lcp && active === 0}
@@ -283,7 +291,7 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video,
                     )}
                   </>
                 ) : (
-                  <Image src={slide.src} alt={`${title} thumbnail ${i + 1}`} fill className="object-cover" sizes="160px" />
+                  <Image src={slide.src} alt={`${altTitle(i)} thumbnail ${i + 1}`} fill className="object-cover" sizes="160px" />
                 )}
               </button>
             ))}
@@ -403,7 +411,7 @@ export function ProductImageGallery({ images, title, tag, inStock = true, video,
               >
                 <Image
                   src={current.src}
-                  alt={`${title} — image ${active + 1} of ${total}`}
+                  alt={`${altTitle(active)} — image ${active + 1} of ${total}`}
                   fill
                   className="object-contain"
                   sizes="100vw"

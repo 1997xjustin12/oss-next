@@ -9,6 +9,7 @@ import { DEFAULT_LOCATION } from '@/lib/constants'
 import { getContainerVideo } from '@/lib/containerVideo'
 import { getContainerContent } from '@/lib/data/pdpShippingContainers'
 import { breadcrumbNode, faqNode, graph, productNode, siteNodes } from '@/lib/schema'
+import { focusKeyphrase, productSeoDescription, productSeoTitle } from '@/lib/productSeo'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { ProductDetail } from './_components/ProductDetail'
@@ -39,8 +40,13 @@ export async function generateStaticParams() {
 
 // Shared by generateMetadata's <meta name="description"> and the JSON-LD
 // below, so the two can never drift apart and describe the same product
-// two different ways.
+// two different ways. The marketing team's hand-written description wins where
+// there is one (lib/productSeo.ts); the generated sentence is the fallback.
 function buildProductDescription(product: ProductHit, location: string): string {
+  return productSeoDescription(product) ?? generatedDescription(product, location)
+}
+
+function generatedDescription(product: ProductHit, location: string): string {
   // "$232.14" on a rental product is a MONTHLY figure. Left unqualified here it
   // reaches the meta description and the JSON-LD description as the apparent
   // price of a 40ft container. getPriceBasis() is the single place that knows
@@ -82,14 +88,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const size = getCustomFieldValue(product, 'length_width')
 
   const description = buildProductDescription(product, location)
+  // The hand-written SEO title stands as written, without the "| On-Site
+  // Storage Solutions" suffix: it was written as the whole title (as Yoast's
+  // was), and with the suffix most run past what a results page shows.
+  const seoTitle = productSeoTitle(product)
+  const keyphrase = focusKeyphrase(product)
 
   return {
-    title: product.title,
+    title: seoTitle ? { absolute: seoTitle } : product.title,
     description,
+    ...(keyphrase && { keywords: [keyphrase] }),
     alternates: { canonical: ROUTES.PRODUCT(slug) },
     openGraph: {
-      title: product.title,
-      description: [grade, size, location].filter(Boolean).join(' · ') || description,
+      title: seoTitle ?? product.title,
+      description: productSeoDescription(product) ?? ([grade, size, location].filter(Boolean).join(' · ') || description),
       type: 'website',
       images: ogImages(product),
     },

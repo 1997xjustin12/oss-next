@@ -3,6 +3,7 @@ import { ROUTES } from '@/config/routes'
 import { getCustomFieldValue, getPriceBasis, isContainerHit } from '@/lib/pricing'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { normaliseRating } from '@/lib/ratings'
+import { focusKeyphrase } from '@/lib/productSeo'
 import { getTareWeightLbs } from '@/lib/data/pdpShippingContainers'
 import { getContainerVideo } from '@/lib/containerVideo'
 import type { ProductHit } from '@/types/product'
@@ -209,6 +210,7 @@ export function productNode(
   now: Date = new Date(),
 ): SchemaNode {
   const sku = product.variants?.[0]?.sku
+  const keyphrase = focusKeyphrase(product)
   const isContainer = isContainerHit(product)
   const location = getCustomFieldValue(product, 'location')
   const realLocation = location && location !== DEFAULT_LOCATION ? location : undefined
@@ -252,6 +254,8 @@ export function productNode(
     name: product.title,
     ...(sku && { sku, mpn: sku, gtin: sku }), // no real GTIN data exists — reusing the SKU, same as mpn
     description,
+    // The marketing team's focus keyphrase (lib/productSeo.ts), where there is one.
+    ...(keyphrase && { keywords: keyphrase }),
     url: absoluteUrl(ROUTES.PRODUCT(slug)),
     /**
      * The walkaround's poster frame first where this spec has one, then the
