@@ -6,7 +6,6 @@ import { findEquivalentContainer, isContainerHit, isGenericDisplayHit, lowestPri
 import { resolveContainerVariant } from "@/lib/containerVariant";
 import { ROUTES } from "@/config/routes";
 import { notifyVisitorZipChange, readVisitorZip } from "@/lib/visitorZip";
-import { getNearestLocation } from "@/lib/nearestDepot";
 import type { ProductHit } from "@/types/product";
 import { ProductVariantShell } from "./ProductVariantShell";
 import { MobileTrustSection } from "./MobileTrustSection";
@@ -90,12 +89,11 @@ async function depotForPostcode(postcode: string): Promise<string | null> {
     const params = new URLSearchParams({ text: postcode, type: "postcode", limit: "1" });
     const res = await fetch(`/api/geoapify?${params}`);
     if (!res.ok) return null;
+    // The proxy names the serving depot (resolveNearestDepot's rules).
     const json = (await res.json()) as {
-      features?: { properties?: { lat?: number; lon?: number } }[];
+      features?: { properties?: { nearest_depot?: string | null } }[];
     };
-    const props = json.features?.[0]?.properties;
-    if (typeof props?.lat !== "number" || typeof props?.lon !== "number") return null;
-    return getNearestLocation(props.lat, props.lon);
+    return json.features?.[0]?.properties?.nearest_depot || null;
   } catch {
     return null;
   }

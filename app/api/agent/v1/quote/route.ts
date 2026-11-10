@@ -3,7 +3,7 @@ import { agentError, agentJson, checkRateLimit, rateLimitHeaders } from '@/lib/a
 import { deliverQuoteRequest, type QuoteRequest } from '@/services/quote.service'
 import { getProductByHandle } from '@/services/search.service'
 import { lookupZipGeo } from '@/lib/zippopotam'
-import { findNearestLocation } from '@/lib/nearestDepot'
+import { resolveNearestDepot } from '@/services/depot.service'
 import { SITE } from '@/config/site'
 
 /**
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
       headers,
     )
   }
-  const depot = findNearestLocation(geo.latitude, geo.longitude)
+  const depot = await resolveNearestDepot(geo.latitude, geo.longitude, geo.countryCode)
 
   // ── Validate the product, when one was named ──────────────────────────────
   const handle = field(body, 'handle')

@@ -18,6 +18,7 @@ export const CACHE_TAGS = {
   PRICING:    'pricing',  // Order totals (delivery quotes) for cart and checkout
   AGENT_TRAFFIC: 'agent-traffic', // Admin crawler / MCP traffic report
   HOME_AB:    'home-ab',  // Admin homepage A/B report (lib/homeAbStore.ts)
+  DEPOTS:     'depots',   // Depot (store) list and records from the backend (services/depot.service.ts)
   QUOTES:     'quotes',   // Admin list of quote requests (leads)
 } as const;
 
@@ -125,6 +126,12 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
     label: 'Homepage A/B Report',
     description: 'The views, clicks and heatmaps on the Homepage A/B screen. Past days are kept; today refreshes every few minutes.',
     lifetime: 'today: 5 minutes — past days: kept a week',
+  },
+  {
+    tag: CACHE_TAGS.DEPOTS,
+    label: 'Depots',
+    description: 'The depot (store) list and records served by /api/depots. Purge after changing a depot in the backend.',
+    lifetime: 'hours',
   },
   {
     tag: CACHE_TAGS.REVIEWS,

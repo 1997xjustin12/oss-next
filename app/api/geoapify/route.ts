@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cachedGeoapifyAutocomplete, GeoapifyUpstreamError } from '@/services/geoapify.service'
 import { isOverDailyBudget, isOverGeoapifyRateLimit, visitorKey } from '@/lib/geoapifyGuard'
+import { depotCandidates, findNearestDepot } from '@/lib/nearestDepot'
+import { virtualDepotsEnabled } from '@/lib/virtualDepots'
+import { getDepots } from '@/services/depot.service'
 
 const API_KEY = process.env.GEOAPIFY_API_KEY ?? process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY ?? ''
 
@@ -16,6 +19,11 @@ const API_KEY = process.env.GEOAPIFY_API_KEY ?? process.env.NEXT_PUBLIC_GEOAPIFY
  * 200, not an error: the caller is a text field that works perfectly well
  * without suggestions, and a 429 there would be an error state over a feature
  * nobody has lost.
+ *
+ * Each suggestion comes back with `nearest_depot` (its properties): the depot
+ * that serves it, decided here so the browser needs no depot list. Added after
+ * the cached lookup, so a change to the depots or to the virtual-depot switch
+ * applies at once. Rules: services/depot.service.ts resolveNearestDepot.
  */
 export async function GET(req: NextRequest) {
   if (!API_KEY) {
@@ -53,7 +61,7 @@ export async function GET(req: NextRequest) {
       // unbiased results rather than an error.
       bias: searchParams.get('bias') ?? '',
     })
-    return NextResponse.json(data)
+    return NextResponse.json(await withNearestDepots(data))
   } catch (err) {
     if (err instanceof GeoapifyUpstreamError) {
       console.error(`[/api/geoapify] upstream ${err.status}`)
@@ -61,5 +69,24 @@ export async function GET(req: NextRequest) {
     }
     console.error('[/api/geoapify]', err)
     return NextResponse.json({ error: 'Failed to contact Geoapify' }, { status: 502 })
+  }
+}
+
+
+type Feature = { properties?: Record<string, unknown> }
+
+/** The answer with each feature's serving depot (title, or null) in its properties. */
+async function withNearestDepots<T>(data: T): Promise<T> {
+  const features = (data as { features?: Feature[] })?.features
+  if (!Array.isArray(features) || !features.length) return data
+  const [{ depots }, includeVirtual] = await Promise.all([getDepots(), virtualDepotsEnabled()])
+  const candidates = depotCandidates(depots, includeVirtual)
+  return {
+    ...data,
+    features: features.map((feature) => {
+      const p = feature.properties ?? {}
+      const nearest = findNearestDepot(Number(p.lat), Number(p.lon), candidates, String(p.country_code ?? ''))
+      return { ...feature, properties: { ...p, nearest_depot: nearest?.title ?? null } }
+    }),
   }
 }

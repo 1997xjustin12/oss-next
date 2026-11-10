@@ -5,7 +5,6 @@ import { saveVisitorZip } from '@/lib/visitorZip'
 import { useCart } from '@/hooks/useCart'
 import { findLocationConflict } from '@/lib/cart'
 import { usePathname } from 'next/navigation'
-import { getNearestLocation } from '@/lib/nearestDepot'
 import { ROUTES } from '@/config/routes'
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/reverse'
@@ -63,6 +62,7 @@ export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: 
               town?: string
               village?: string
               state?: string
+              country_code?: string
             }
           }
 
@@ -72,9 +72,13 @@ export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: 
           const city  = data.address?.city ?? data.address?.town ?? data.address?.village ?? ''
           const state = data.address?.state ?? ''
           const label = [city, state, postcode].filter(Boolean).join(', ')
-          const depot = getNearestLocation(latitude, longitude) ?? ''
+          // The serving depot, from the server (resolveNearestDepot's rules).
+          const depot = await nearestDepotTitle(latitude, longitude, data.address?.country_code ?? '')
 
           localStorage.setItem('userZipCode', postcode)
+          // No depot (the lookup failed): keep the ZIP for "use my location",
+          // but save no location rather than one without a depot.
+          if (!depot) return
 
           // A container from another depot is already in the cart: keep the
           // location that cart was built for. No prompt — nobody asked for this
@@ -101,4 +105,16 @@ export function ZipAutoDetect({ excludePaths = ZIP_AUTODETECT_EXCLUDED_PATHS }: 
   }, [])
 
   return null
+}
+
+/** The depot that serves a point, from /api/depots/nearest; '' when none or on failure. */
+async function nearestDepotTitle(lat: number, lon: number, country: string): Promise<string> {
+  try {
+    const res = await fetch(`/api/depots/nearest?${new URLSearchParams({ lat: String(lat), lon: String(lon), country })}`)
+    if (!res.ok) return ''
+    const body = (await res.json()) as { title?: string | null }
+    return body.title ?? ''
+  } catch {
+    return ''
+  }
 }

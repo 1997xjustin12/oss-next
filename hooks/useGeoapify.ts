@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { saveVisitorZip } from '@/lib/visitorZip'
-import { getNearestLocation } from '@/lib/nearestDepot'
 import { enrichSaleLinks } from '@/lib/linkEnrich'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { ROUTES } from '@/config/routes'
@@ -95,7 +94,9 @@ function parseFeature(feature: unknown): GeoapifyResult {
   const p = (feature as { properties: Record<string, unknown> }).properties
   const lat = Number(p.lat ?? 0)
   const lon = Number(p.lon ?? 0)
-  const nearestLocation = getNearestLocation(lat, lon)
+  // The serving depot, decided by /api/geoapify (resolveNearestDepot's rules:
+  // never "Various North America", virtual depots only when the admin allows).
+  const nearestLocation = typeof p.nearest_depot === 'string' && p.nearest_depot ? p.nearest_depot : null
   const postcode = String(p.postcode ?? '')
   const redirectParams = new URLSearchParams({ zipcode: postcode })
   // Built by joining the parts that exist rather than interpolating directly.

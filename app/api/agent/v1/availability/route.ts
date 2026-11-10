@@ -1,6 +1,6 @@
 import { getProductByHandle, getShippingContainersByLocation } from '@/services/search.service'
 import { findEquivalentContainer, isContainerHit } from '@/lib/pricing'
-import { findNearestLocation } from '@/lib/nearestDepot'
+import { resolveNearestDepot } from '@/services/depot.service'
 import { lookupZipGeo } from '@/lib/zippopotam'
 import { agentError, agentJson, withRateLimit } from '@/lib/agentApi'
 import { toAgentProduct } from '@/lib/agentProduct'
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       )
     }
 
-    const nearest = findNearestLocation(geo.latitude, geo.longitude)
+    const nearest = await resolveNearestDepot(geo.latitude, geo.longitude, geo.countryCode)
     if (!nearest) {
       return agentError('no_depot', 'No depot data is available.', 503, undefined, headers)
     }
