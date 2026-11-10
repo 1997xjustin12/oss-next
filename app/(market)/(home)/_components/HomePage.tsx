@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "@/config/cache";
+import { HOME_PREVIEW_PARAM, HOME_VARIANTS, type HomeVariant } from "@/config/homeAb";
 import { ROUTES } from "@/config/routes";
 import { SITE } from "@/config/site";
 import { graph, siteNodes, webPageNode } from "@/lib/schema";
@@ -14,13 +15,12 @@ import { HowItWorks } from "./HowItWorks";
 import { StatesSection } from "./StatesSection";
 import { Hero } from "./Hero";
 import { HeroBannerPreload } from "./HeroBannerPreload";
+import { HomeVariantTracker } from "./HomeVariantTracker";
 import { RightContainer } from "./RightContainer";
 import { OnsiteDifference } from "./OnsiteDifference";
 import { ReviewsSection } from "@/components/shared/ReviewsSection";
 
-/** The homepage A/B/C variants. Variant 1 is the control. */
-export const HOME_VARIANTS = [1, 2, 3] as const;
-export type HomeVariant = (typeof HOME_VARIANTS)[number];
+export { HOME_VARIANTS, type HomeVariant };
 
 /** `window.ossHomeVariant`: the variant on the page (1, 2 or 3), for PageSense targeting. */
 export const HOME_VARIANT_GLOBAL = "ossHomeVariant";
@@ -85,12 +85,14 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
           three apart by URL (all are `/`): Zoho PageSense heatmaps target the
           JS variable (or the ab-home-variant cookie), and Tag Manager gets a
           `home_variant` event to split analytics by. Static per variant page,
-          inline so it runs before any of those scripts load. */}
+          inline so it runs before any of those scripts load. Not on a
+          `?version=` preview, which is not part of the test. */}
       <script
         dangerouslySetInnerHTML={{
-          __html: `window.${HOME_VARIANT_GLOBAL}=${variant};(window.dataLayer=window.dataLayer||[]).push({event:'home_variant',home_variant:'${variant}'});`,
+          __html: `if(!new URLSearchParams(location.search).has('${HOME_PREVIEW_PARAM}')){window.${HOME_VARIANT_GLOBAL}=${variant};(window.dataLayer=window.dataLayer||[]).push({event:'home_variant',home_variant:'${variant}'});}`,
         }}
       />
+      <HomeVariantTracker variant={variant} />
       <JsonLd data={jsonLd} />
       <PageHeadScripts path={ROUTES.HOME} />
       {/* <TrustStrip /> */}

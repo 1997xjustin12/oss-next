@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse, type NextFetchEvent } from 'next/server'
 import { isMaintenanceMode } from '@/lib/maintenance'
-import { isAdminOpenEnv, isAdminPath, isPreviewOrDev } from '@/lib/admin'
+import { isAdminOpenEnv, isAdminPath } from '@/lib/admin'
 import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/adminSession'
 import { wpPathMayExist } from '@/lib/wpPaths'
 import { blogSlugMayExist } from '@/lib/blogSlugs'
 import { ROUTES } from '@/config/routes'
+import { HOME_PREVIEW_PARAM, HOME_VARIANTS } from '@/config/homeAb'
 import { recordAgentHit } from '@/lib/agentLog'
 import { isNativePath } from '@/config/routes'
 import { ORDER_STATUS_DEMO_ID } from '@/lib/data/orderStatusDemo'
@@ -38,8 +39,7 @@ const RETRY_AFTER = '3600'
 // The three Hero designs used to be the /version2 and /version3 routes; they
 // now live as branches inside (home)/_components/Hero.tsx.
 const VARIANT_COOKIE = 'ab-home-variant'
-const VARIANT_PARAM = 'variant'
-const VARIANTS = ['1', '2', '3']
+const VARIANTS: readonly string[] = HOME_VARIANTS.map(String)
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
 // Prebuilt variants of `/`. Internal only: reached through the rewrite in
@@ -225,18 +225,21 @@ function handleMaintenance(request: NextRequest): NextResponse | null {
 }
 
 function handleAbTest(request: NextRequest): NextResponse {
-  // Preview escape hatch: /?variant=2 forces that Hero, so all three designs
-  // can be reviewed on demand. Without it there is no way to see the other two
-  // — assignment is random on first visit and then pinned for 30 days.
+  // Preview: /?version=2 shows that variant to anyone, the live site included,
+  // so the client can see each design on demand. Without it there is no way to
+  // see the other two — assignment is random on first visit and then pinned
+  // for 30 days.
   //
-  // Gated to dev/preview by the same check that gates /admin. In production the
-  // param is ignored entirely, so it can neither skew live A/B numbers nor hand
-  // a crawler a second URL for the homepage.
-  const forced = request.nextUrl.searchParams.get(VARIANT_PARAM)
-  if (forced && VARIANTS.includes(forced) && isPreviewOrDev()) {
-    // Deliberately does not touch the cookie — previewing a variant must not
-    // change which one you're actually enrolled in.
-    return rewriteToVariant(request, forced)
+  // It cannot skew the test or hand a crawler a second homepage:
+  // - the cookie is not touched, so a preview never changes enrolment;
+  // - the page's own analytics (HomeVariantTracker, the ossHomeVariant /
+  //   dataLayer tag) see `version=` in the URL and record nothing;
+  // - the response says noindex, and the page's canonical is `/` anyway.
+  const forced = request.nextUrl.searchParams.get(HOME_PREVIEW_PARAM)
+  if (forced && VARIANTS.includes(forced)) {
+    const response = rewriteToVariant(request, forced)
+    response.headers.set('X-Robots-Tag', 'noindex')
+    return response
   }
 
   const existing = request.cookies.get(VARIANT_COOKIE)?.value

@@ -16,6 +16,7 @@ export const ADMIN_ROUTES = {
   CONTENT_EDITOR: '/admin/content-editor',
   CONTENT_EDITOR_EDIT: (id: string) => `/admin/content-editor/${id}`,
   AGENT_TRAFFIC: '/admin/agent-traffic',
+  HOME_AB: '/admin/home-ab',
   QUOTE_REQUESTS: '/admin/quote-requests',
   CACHE: '/admin/cache',
   CHAT: '/admin/chat',
@@ -43,7 +44,7 @@ export const ADMIN_ROUTES = {
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned' | 'ShoppingBag' | 'ListOrdered' | 'Headset';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Flame' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned' | 'ShoppingBag' | 'ListOrdered' | 'Headset';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -75,6 +76,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'Location Pages',
     icon: 'MapPinned',
     hint: 'Where-to-buy depot pages & template',
+  },
+  {
+    href: ADMIN_ROUTES.HOME_AB,
+    label: 'Homepage A/B',
+    icon: 'Flame',
+    hint: 'Views, clicks & heatmaps per version',
   },
   {
     href: ADMIN_ROUTES.AGENT_TRAFFIC,

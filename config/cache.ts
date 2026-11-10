@@ -17,6 +17,7 @@ export const CACHE_TAGS = {
   SETTINGS:   'settings', // Runtime switches flipped from the admin screens
   PRICING:    'pricing',  // Order totals (delivery quotes) for cart and checkout
   AGENT_TRAFFIC: 'agent-traffic', // Admin crawler / MCP traffic report
+  HOME_AB:    'home-ab',  // Admin homepage A/B report (lib/homeAbStore.ts)
   QUOTES:     'quotes',   // Admin list of quote requests (leads)
 } as const;
 
@@ -117,6 +118,12 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
     tag: CACHE_TAGS.AGENT_TRAFFIC,
     label: 'Agent Traffic Report',
     description: 'The crawler and MCP counts on the Agent Traffic screen. Past days are kept; today refreshes every few minutes.',
+    lifetime: 'today: 5 minutes — past days: kept a week',
+  },
+  {
+    tag: CACHE_TAGS.HOME_AB,
+    label: 'Homepage A/B Report',
+    description: 'The views, clicks and heatmaps on the Homepage A/B screen. Past days are kept; today refreshes every few minutes.',
     lifetime: 'today: 5 minutes — past days: kept a week',
   },
   {

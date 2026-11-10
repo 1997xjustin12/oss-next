@@ -22,6 +22,10 @@
 //             they reach it.
 //   newsletter — a signup writes a Contact to Zoho CRM and a subscriber to the
 //             backend. A person signs up once; past 5 a minute it is a script.
+//   beacon  — the homepage A/B tracker's reports (/api/ab/home). A view sends
+//             one or two; past 30 a minute from one address it is a script
+//             trying to skew the test. Checked inside the write itself
+//             (lib/homeAbStore.ts), so it costs no extra Redis request.
 
 export const RATE_LIMIT_BUCKETS = {
   light: 300,
@@ -30,6 +34,7 @@ export const RATE_LIMIT_BUCKETS = {
   quote: 5,
   auth: 10,
   newsletter: 5,
+  beacon: 30,
 } as const;
 
 export type RateLimitBucket = keyof typeof RATE_LIMIT_BUCKETS;

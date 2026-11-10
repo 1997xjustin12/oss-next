@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BellRing, Bot, DatabaseZap, FileCog, Headset, Inbox, LayoutPanelTop, MapPinned, ListOrdered, MessagesSquare, ShoppingBag, Type } from 'lucide-react';
+import { BellRing, Bot, DatabaseZap, FileCog, Flame, Headset, Inbox, LayoutPanelTop, MapPinned, ListOrdered, MessagesSquare, ShoppingBag, Type } from 'lucide-react';
 import { ADMIN_NAV } from '@/config/admin';
 
 // The only client component in the admin shell. It exists solely to mark the
@@ -10,7 +10,7 @@ import { ADMIN_NAV } from '@/config/admin';
 // alternative (threading an `active` prop through every admin page) is more
 // plumbing than this costs.
 
-const ICONS = { FileCog, Type, Bot, Inbox, DatabaseZap, MessagesSquare, LayoutPanelTop, BellRing, MapPinned, ShoppingBag, ListOrdered, Headset } as const;
+const ICONS = { FileCog, Type, Bot, Flame, Inbox, DatabaseZap, MessagesSquare, LayoutPanelTop, BellRing, MapPinned, ShoppingBag, ListOrdered, Headset } as const;
 
 export function AdminNav() {
   const pathname = usePathname();

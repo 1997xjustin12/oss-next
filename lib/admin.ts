@@ -36,18 +36,6 @@ export function isAdminOpenEnv(): boolean {
 }
 
 /**
- * True on a dev box or a Vercel preview/development deploy — never on the real
- * site. Not an admin check: this is for dev-only conveniences elsewhere, such
- * as forcing a specific A/B variant from a query parameter.
- */
-export function isPreviewOrDev(): boolean {
-  if (process.env.NODE_ENV !== 'production') return true;
-
-  const vercelEnv = process.env.VERCEL_ENV;
-  return vercelEnv === 'preview' || vercelEnv === 'development';
-}
-
-/**
  * Does any of these identities appear on the allowlist?
  *
  * Callers pass every identity the backend gave them — typically username and
