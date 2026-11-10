@@ -9,9 +9,6 @@ import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 
 export const ROUTES = {
   HOME: '/',
-  /** Public, noindex looks at homepage A/B variants 2 and 3 (for the client). */
-  HOME_VERSION2: '/version2',
-  HOME_VERSION3: '/version3',
   PLP: '/sale-shipping-containers',
   PLP_ACCESSORIES: '/sale-shipping-containers?ptype=accessories',
   /** The accessories page, native since 2026-10-26 (was a WordPress page). */
@@ -176,10 +173,6 @@ export const NATIVE_ROUTE_SEGMENTS = [
   // The prebuilt homepage A/B variants, reached only through the proxy's
   // rewrite of `/` (and 404 when requested directly).
   'home-variant',
-  // Public, noindex looks at homepage variants 2 and 3 for the client
-  // (app/(market)/(home)/version2, version3). Not in the sitemap.
-  'version2',
-  'version3',
   // Machine-readable file routes. These MUST be here: the proxy 404s any
   // non-native path missing from the backend's page list, and these are served
   // by route handlers that list knows nothing about. Omitting them 404'd
