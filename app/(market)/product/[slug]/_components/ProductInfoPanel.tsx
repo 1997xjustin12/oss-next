@@ -1275,8 +1275,10 @@ export function ProductInfoPanel({
           : deliveryOption
             ? `${formatMoney(deliveryTotal)}${selection.tab === "buy" ? "" : " (one-time)"}`
             : zipcode
-              ? "Call for rate"
+              ? `Call ${CONTACT_NUMBER} for rate`
               : "Enter a ZIP code for a rate",
+      // The quote modal makes the phone line a call link.
+      href: deliveryOption || deliveryLoading || isGenericDisplay || !zipcode ? undefined : CONTACT_TEL,
       muted: !deliveryOption,
       charge: true,
     });
@@ -1782,7 +1784,7 @@ export function ProductInfoPanel({
                 href={CONTACT_TEL}
                 className="text-right font-medium text-theme-primary underline underline-offset-2 hover:decoration-2"
               >
-                Call for rate
+                Call {CONTACT_NUMBER} for rate
               </Link>
             )}
           </li>

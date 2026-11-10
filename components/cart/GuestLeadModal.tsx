@@ -39,6 +39,8 @@ import type { GuestLead } from '@/lib/guestCapture'
 export type QuoteLine = {
   label: string
   value: string
+  /** Makes the value a link, e.g. `tel:` for "Call (888) 977-9085 for rate". */
+  href?: string
   /** Renders quieter — for context lines like distance rather than money. */
   muted?: boolean
   /**
@@ -503,15 +505,24 @@ export function GuestLeadModal({
                         }`}
                       >
                         <span className="shrink-0 text-theme-muted">{line.label}</span>
-                        <span
-                          className={`text-right tabular-nums ${
-                            line.muted && !line.charge
-                              ? 'text-theme-muted'
-                              : 'font-bold text-theme-dark dark:text-white'
-                          }`}
-                        >
-                          {line.value}
-                        </span>
+                        {line.href ? (
+                          <a
+                            href={line.href}
+                            className="text-right font-bold text-theme-primary underline underline-offset-2 hover:decoration-2"
+                          >
+                            {line.value}
+                          </a>
+                        ) : (
+                          <span
+                            className={`text-right tabular-nums ${
+                              line.muted && !line.charge
+                                ? 'text-theme-muted'
+                                : 'font-bold text-theme-dark dark:text-white'
+                            }`}
+                          >
+                            {line.value}
+                          </span>
+                        )}
                       </li>
                     )
                   })}
