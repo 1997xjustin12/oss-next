@@ -26,7 +26,7 @@ import {
   lowestPrice,
 } from "@/lib/pricing";
 import { normaliseRating } from "@/lib/ratings";
-import { GOOGLE_REVIEW_STATS } from "@/config/reviews";
+import { GOOGLE_REVIEW_STATS, GOOGLE_REVIEWS_URL } from "@/config/reviews";
 import { GuestLeadModal } from "@/components/cart/GuestLeadModal";
 import type { QuoteLine } from "@/components/cart/GuestLeadModal";
 import { getGuestLead, setGuestLead } from "@/lib/guestCapture";
@@ -1419,12 +1419,12 @@ export function ProductInfoPanelV2({
 
         <div className="flex items-center gap-1.5 text-[15px] sm:text-[20px]">
         {/* No reviews of its own: the Google rating the reviews section below
-            is built on, with its count linking down to that section. */}
+            is built on, with its count opening the reviews on Google. */}
         {rating === 0 && (
           <>
             <span>{GOOGLE_REVIEW_STATS.rating}</span>
             <Stars count={Math.round(GOOGLE_REVIEW_STATS.rating)} />
-            <a href="#reviews" className="text-[13px] underline underline-offset-2 sm:text-[15px]">
+            <a href={GOOGLE_REVIEWS_URL} target="_blank" rel="noopener noreferrer" className="text-[13px] underline underline-offset-2 sm:text-[15px]">
               ({GOOGLE_REVIEW_STATS.count} reviews)
             </a>
           </>

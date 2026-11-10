@@ -64,7 +64,7 @@ export function ContainerCardGrid({ defaults }: Props) {
   const current = useDefaults ? defaults : fetched?.location === location ? fetched.cards : null
 
   return (
-    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 -mx-5 px-5 scroll-px-5 pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:mx-0 sm:px-0 sm:scroll-px-0 sm:pb-0 sm:overflow-visible sm:snap-none py-8 sm:py-10 w-full">
+    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 -mx-[5vw] px-[5vw] scroll-px-[5vw] py-6 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-6 lg:gap-8 sm:mx-0 sm:px-0 sm:scroll-px-0 sm:py-10 sm:overflow-visible sm:snap-none w-full">
       {FEATURED_CONTAINERS.map((item) => {
         const card = pending ? defaults[item.depotSpec] : current?.[item.depotSpec]
         return (

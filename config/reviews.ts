@@ -17,12 +17,19 @@
  */
 export const GOOGLE_REVIEW_STATS = {
   rating: 4.9,
-  // Links to Google itself are deliberately absent: the site's Google Business
-  // Profile URL is not recorded anywhere in this repo, and a wrong Google link
-  // sends people to another business. The product page's count scrolls to the
-  // on-page reviews section (#reviews) instead.
   count: 229,
 } as const
+
+/**
+ * The company's reviews on Google: a search for the business with its review
+ * panel open (`lrd`, the Business Profile's id). Supplied by the owner on
+ * 2026-11-10; the search's session parameters are left out. Where the Google
+ * rating is shown — the badge (homepage hero, landing heroes, the product
+ * page), the product page's rating and trust strip, and listing cards that show
+ * the Google rating — it links here, in a new tab.
+ */
+export const GOOGLE_REVIEWS_URL =
+  'https://www.google.com/search?q=onsit+storage+solutions#lrd=0x80c2ba36a5e1fcab:0x804917772a6c15b4,1'
 
 export type Review = {
   name: string;

@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { GOOGLE_REVIEW_STATS } from '@/config/reviews'
+import { GOOGLE_REVIEW_STATS, GOOGLE_REVIEWS_URL } from '@/config/reviews'
 
 /**
  * The Google rating badge: logo, stars, and the review count.
@@ -80,8 +80,15 @@ export function GoogleReviewsBadge({
     ? 'text-xs sm:text-sm'
     : 'text-xs text-theme-mid dark:text-gray-300'
 
+  // External: a plain anchor (next/link is for this site's routes), new tab.
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <a
+      href={GOOGLE_REVIEWS_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Rated ${rating} out of 5 from ${count} Google reviews (opens Google in a new tab)`}
+      className={`flex w-fit items-center gap-3 rounded-sm transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current ${className}`}
+    >
       <Image
         src={GOOGLE_REVIEWS_IMAGE}
         alt="Google Reviews"
@@ -101,8 +108,8 @@ export function GoogleReviewsBadge({
           <RatingStars rating={rating} px={starPx} />
         </div>
 
-        <div className={countClasses}>{countLabel}</div>
+        <div className={`${countClasses} underline-offset-2 hover:underline`}>{countLabel}</div>
       </div>
-    </div>
+    </a>
   )
 }

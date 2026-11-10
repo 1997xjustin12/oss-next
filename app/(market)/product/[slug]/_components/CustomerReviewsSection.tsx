@@ -228,7 +228,7 @@ export function CustomerReviewsSection({ heading = 'Customer Reviews:' }: { head
         <h2 className="text-[16px] md:text-[24px] font-bold text-theme-dark sm:text-2xl dark:text-white">
           {heading}
         </h2>
-        {/* Not a link: it sits inside the section its count would point to. */}
+        {/* Opens the reviews on Google (config/reviews.ts). */}
         <GoogleReviewsBadge />
       </div>
 

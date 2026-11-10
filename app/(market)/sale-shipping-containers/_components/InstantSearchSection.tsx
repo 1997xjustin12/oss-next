@@ -24,6 +24,7 @@ import { DEFAULT_LOCATION } from '@/lib/constants'
 import { formatMoney } from '@/lib/formatters'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { displayRating, normaliseRating } from '@/lib/ratings'
+import { GOOGLE_REVIEWS_URL } from '@/config/reviews'
 import { getContainerImages } from '@/lib/containerImages'
 import { isContainerHit } from '@/lib/pricing'
 import type { CustomField, HitData } from './hitData'
@@ -465,7 +466,7 @@ function ProductHit({ hit }: { hit: HitData }) {
   const grade    = getCF(hit.custom_fields, 'grade')
   const sku      = variant?.sku ?? ''
   const href     = `/product/${hit.handle}`
-  const { value: rating, count: reviewCount } = displayRating(hit.ratings)
+  const { value: rating, count: reviewCount, fromGoogle } = displayRating(hit.ratings)
 
   const badge = (() => {
     const tag = hit.tags?.find((t) => /best|popular/i.test(t)) ?? hit.tags?.[0] ?? ''
@@ -502,7 +503,14 @@ function ProductHit({ hit }: { hit: HitData }) {
         <div className="flex items-center gap-2 text-xs">
           <StarRow rating={rating} />
           <span className="text-theme-dark-2">{rating.toFixed(1)}</span>
-          {reviewCount > 0 && (
+          {reviewCount > 0 && fromGoogle && (
+            // The Google rating stands in for the product's own: its count opens the
+            // reviews on Google. Above the card's stretched link, like the phone link.
+            <a href={GOOGLE_REVIEWS_URL} target="_blank" rel="noopener noreferrer" className="relative z-10 text-theme-muted underline-offset-2 hover:underline">
+              ({reviewCount} reviews)
+            </a>
+          )}
+          {reviewCount > 0 && !fromGoogle && (
             <span className="text-theme-muted">
               ({reviewCount} review{reviewCount === 1 ? '' : 's'})
             </span>

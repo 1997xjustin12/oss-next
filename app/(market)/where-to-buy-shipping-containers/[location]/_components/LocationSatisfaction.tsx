@@ -28,7 +28,7 @@ export function LocationSatisfaction({ text, seal, reviews }: Props) {
               <h2 id="location-satisfaction" className="text-2xl font-extrabold text-theme-dark sm:text-3xl dark:text-white">
                 {text.heading}
               </h2>
-              <GoogleReviewsBadge showRating size="sm" className="mt-2 justify-center sm:justify-start" />
+              <GoogleReviewsBadge showRating size="sm" className="mx-auto mt-2 sm:mx-0" />
             </div>
           </div>
           {text.body.split(/\n\s*\n/).map((paragraph) => (

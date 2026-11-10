@@ -3,7 +3,7 @@ import { PlpLink } from "@/components/shared/PlpLink";
 import { Phone, ShieldCheck, Trophy, Truck } from "lucide-react";
 import { Stars } from "@/components/product/Stars";
 import { ROUTES } from "@/config/routes";
-import { GOOGLE_REVIEW_STATS } from "@/config/reviews";
+import { GOOGLE_REVIEW_STATS, GOOGLE_REVIEWS_URL } from "@/config/reviews";
 import { CONTACT_NUMBER } from "@/lib/helpers";
 import { formatMoney } from "@/lib/formatters";
 
@@ -146,12 +146,14 @@ export function MobileTrustSection({ rentFrom, rtoFrom }: Props) {
               </div>
               <p className="mt-0.5 text-[11px] leading-snug text-theme-muted">
                 {count}+ Reviews ·{" "}
-                <Link
-                  href="#reviews"
+                <a
+                  href={GOOGLE_REVIEWS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="underline hover:text-theme-dark"
                 >
                   Read our reviews
-                </Link>
+                </a>
               </p>
             </div>
           </li>

@@ -12,16 +12,19 @@ type Props = {
   pricePending: boolean
 }
 
+/**
+ * One of the homepage's four container cards. White in both colour schemes:
+ * it sits on the section's navy (RightContainer), and the photos are cut-outs
+ * on white, so the card and the photo read as one.
+ */
 export function ContainerCard({ item, image, price, pricePending }: Props) {
   return (
     <PlpLink
       prefetch={false}
       href={featuredListingHref(item.spec)}
-      className="flex h-full flex-col gap-3 rounded-md border border-stone-300 p-4 transition-colors hover:border-theme-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-theme-primary dark:border-gray-700"
+      className="flex h-full flex-col gap-2 rounded-lg bg-white p-3 shadow-[0_0_0_3px_rgba(147,197,253,0.35),0_10px_30px_rgba(0,0,0,0.35)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_0_0_3px_rgba(147,197,253,0.7),0_14px_34px_rgba(0,0,0,0.45)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-400 sm:p-4"
     >
-      {/* White in both schemes, and the whole photo in frame: most of these are
-          cut-outs on white, so the box and the photo read as one. */}
-      <div className="relative aspect-square overflow-hidden rounded-sm bg-white">
+      <div className="relative aspect-4/3 overflow-hidden rounded-md bg-white">
         <Image
           src={image}
           alt={item.type}
@@ -30,23 +33,23 @@ export function ContainerCard({ item, image, price, pricePending }: Props) {
           className="object-contain"
         />
       </div>
-      <div className="text-xl sm:text-[24px] font-semibold dark:text-white">
+      <div className="mt-1 text-lg font-bold leading-tight text-neutral-900 sm:text-xl">
         {item.type}
       </div>
-      <div className="text-xs sm:text-[12px] font-light line-clamp-3 min-h-[54px] text-gray-600 dark:text-gray-400">
+      <div className="line-clamp-3 min-h-15 text-xs leading-snug text-neutral-600 sm:text-[13px]">
         {item.desc}
       </div>
       <div className="mt-auto">
         {/* min-h holds the line while the price loads, or when there is none. */}
-        <div className="min-h-7 text-lg sm:text-[18px] font-bold dark:text-white">
+        <div className="min-h-7 text-base font-bold text-neutral-900 sm:text-lg">
           {pricePending ? (
-            <span aria-hidden className="inline-block h-5 w-36 animate-pulse rounded bg-stone-200 dark:bg-stone-700" />
+            <span aria-hidden className="inline-block h-5 w-36 animate-pulse rounded bg-stone-200" />
           ) : price !== null ? (
             <>Starts at {formatMoney(price)}</>
           ) : null}
         </div>
-        <div className="text-xs text-green-700 font-bold dark:text-green-400">
-          Buy &middot; Rent &middot; Rent-To-Own
+        <div className="text-xs font-bold text-green-700">
+          Buy - Rent - Rent-To-Own
         </div>
       </div>
     </PlpLink>
