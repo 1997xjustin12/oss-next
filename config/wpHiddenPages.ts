@@ -161,4 +161,11 @@ export const WP_REDIRECTS: readonly { source: string; destination: string }[] = 
   { source: '/shipping-containers-new-york', destination: '/where-to-buy-shipping-containers/new-york-ny-newark-nj' },
   { source: '/shipping-containers-newark', destination: '/where-to-buy-shipping-containers/new-york-ny-newark-nj' },
   { source: '/tacoma-cargo-container', destination: '/where-to-buy-shipping-containers/tacoma-wa' },
+  // 404s from Search Console (2026-11-11): WordPress 301s each of these.
+  { source: '/buy-shipping-containers', destination: '/buy-shipping-containers-online' },
+  { source: '/container-shipping-industry-2025', destination: '/container-shipping-industry-2026' },
+  { source: '/shipping-container-rent-to-own', destination: '/shipping-container-rent-to-own-financing' },
+  // WordPress sends it to the homepage (the post is gone).
+  { source: '/storage-sea-container-requirements-for-residential-property', destination: '/' },
+  { source: '/where-is-the-best-place-to-buy-a-shipping-container', destination: '/best-place-to-buy-shipping-container' },
 ]

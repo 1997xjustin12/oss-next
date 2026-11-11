@@ -45,6 +45,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}${ROUTES.REFURBISHED_CONTAINERS}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${origin}${ROUTES.CARGO_WORTHY_CONTAINERS}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${origin}${ROUTES.CONTAINER_DIMENSIONS}`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${origin}${ROUTES.CONTAINER_OFFICE}`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${origin}${ROUTES.CONTAINER_RESTAURANT}`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${origin}${ROUTES.FAQS}`, changeFrequency: 'monthly', priority: 0.7 },
     // The two main landing pages: as high as the listing itself.
     { url: `${origin}${ROUTES.FOR_SALE}`, changeFrequency: 'weekly', priority: 0.9 },

@@ -1,5 +1,7 @@
 import { GBP_ROUTE_SEGMENTS, ROUTES } from '@/config/routes';
 import { gbpSeoDefaults, requireGbpPage } from '@/lib/gbp';
+import { CONTAINER_OFFICE_SEO } from '@/lib/data/containerOfficeContent';
+import { CONTAINER_RESTAURANT_SEO } from '@/lib/data/containerRestaurantContent';
 import { LOCATION_PAGES } from '@/lib/data/locationPages';
 import { locationPath, locationSeoDefaults } from '@/lib/locationPage';
 import type { PageSeoDefaults } from '@/types/seo';
@@ -139,6 +141,23 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
       'Compare shipping container dimensions for 10, 20, and 40 foot shipping containers side by side. Find the right size before you buy or rent.',
     canonical: ROUTES.CONTAINER_DIMENSIONS,
     openGraph: { type: 'article', images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2022/08/27100145/Header-2.png'] },
+  },
+
+  // Two more root-level WordPress posts (fixed articles), carried over word for
+  // word; WordPress's titles have no site ending, so they are kept whole.
+  [ROUTES.CONTAINER_OFFICE]: {
+    title: CONTAINER_OFFICE_SEO.title,
+    absoluteTitle: true,
+    description: CONTAINER_OFFICE_SEO.description,
+    canonical: ROUTES.CONTAINER_OFFICE,
+    openGraph: { type: 'article', images: [CONTAINER_OFFICE_SEO.ogImage] },
+  },
+  [ROUTES.CONTAINER_RESTAURANT]: {
+    title: CONTAINER_RESTAURANT_SEO.title,
+    absoluteTitle: true,
+    description: CONTAINER_RESTAURANT_SEO.description,
+    canonical: ROUTES.CONTAINER_RESTAURANT,
+    openGraph: { type: 'article', images: [CONTAINER_RESTAURANT_SEO.ogImage] },
   },
 
   // The next four: carried over from the WordPress pages they replaced. Their

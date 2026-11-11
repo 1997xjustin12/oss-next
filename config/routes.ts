@@ -29,6 +29,9 @@ export const ROUTES = {
   CARGO_WORTHY_CONTAINERS: '/cargo-worthy-shipping-container',
   /** A WordPress blog post at the root, kept at its URL as a fixed article. */
   CONTAINER_DIMENSIONS: '/shipping-container-dimensions',
+  /** Two more WordPress posts at the root the backend never imported (404'd), fixed articles since 2026-11-11. */
+  CONTAINER_OFFICE: '/shipping-container-office',
+  CONTAINER_RESTAURANT: '/shipping-container-restaurant',
   /** The FAQ page, native since 2026-11-06 (was a WordPress page). */
   FAQS: '/shipping-container-faqs',
   /** The buy and rental landing pages, native since 2026-11-06 (were WordPress pages). */
@@ -159,6 +162,8 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'refurbished-shipping-container',
   'cargo-worthy-shipping-container',
   'shipping-container-dimensions',
+  'shipping-container-office',
+  'shipping-container-restaurant',
   'shipping-container-faqs',
   'shipping-containers-for-sale',
   'shipping-container-rental',
