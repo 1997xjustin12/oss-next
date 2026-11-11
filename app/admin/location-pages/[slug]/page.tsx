@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, ExternalLink, FileCog } from 'lucide-react'
 import { discardLocationPageAction, publishLocationPageAction, saveLocationPageDraftAction } from '@/actions/locationPages'
 import { ADMIN_ROUTES } from '@/config/admin'
+import { DEPOT_SNAPSHOT } from '@/config/depotCoordinates'
+import { depotSelectOptions } from '@/lib/depotOptions'
 import { editorStatus } from '@/lib/adminStatus'
 import { LOCATION_PAGES } from '@/lib/data/locationPages'
 import { toLocationPageForm } from '@/lib/locationAdmin'
@@ -60,6 +62,7 @@ async function Editor({ params }: Props) {
         templateText={template.value.text}
         templateSections={template.value.sections}
         specOptions={DEPOT_FEATURED_SPECS.map((spec) => ({ value: spec.key, label: spec.label }))}
+        depotOptions={depotSelectOptions(DEPOT_SNAPSHOT)}
         hasDraft={state.hasDraft}
         status={editorStatus(state)}
         previewHref={ADMIN_ROUTES.LOCATION_PREVIEW(slug)}

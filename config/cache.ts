@@ -20,6 +20,7 @@ export const CACHE_TAGS = {
   HOME_AB:    'home-ab',  // Admin homepage A/B report (lib/homeAbStore.ts)
   DEPOTS:     'depots',   // Depot (store) list and records from the backend (services/depot.service.ts)
   QUOTES:     'quotes',   // Admin list of quote requests (leads)
+  DELIVERED:  'delivered', // Recently Delivered Containers: archive, delivered orders and admin edits
 } as const;
 
 export type CacheTag = (typeof CACHE_TAGS)[keyof typeof CACHE_TAGS];
@@ -131,6 +132,13 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
     tag: CACHE_TAGS.DEPOTS,
     label: 'Depots',
     description: 'The depot (store) list and records served by /api/depots. Purge after changing a depot in the backend.',
+    lifetime: 'hours',
+  },
+  {
+    tag: CACHE_TAGS.DELIVERED,
+    label: 'Delivered Containers',
+    description:
+      'Recently Delivered Containers on the homepage and location pages: the WordPress archive, delivered orders from the backend, and edits from Admin → Delivered Containers. Purge to show newly delivered orders now.',
     lifetime: 'hours',
   },
   {

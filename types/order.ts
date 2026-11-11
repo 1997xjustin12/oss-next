@@ -313,3 +313,19 @@ export type OrderStatusResult =
   | { state: 'ok'; order: GuestOrder }
   | { state: 'not_found' }
   | { state: 'error' }
+
+/**
+ * One record of the backend's delivered-product list
+ * (GET api/orders/delivered-products). The fields are not known yet: the list
+ * was empty when this was written (2026-11-10), so records are passed through
+ * as the backend sends them. Narrow this once a real record has been seen.
+ */
+export type DeliveredProduct = Record<string, unknown>
+
+/** The backend's page of delivered products, Django REST pagination. */
+export interface DeliveredProductList {
+  count: number
+  next: string | null
+  previous: string | null
+  results: DeliveredProduct[]
+}

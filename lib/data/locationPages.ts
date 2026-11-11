@@ -18,6 +18,7 @@ const ATLANTA: readonly LocationPage[] = [
   {
     slug: 'atlanta-ga',
     depot: 'Atlanta, GA',
+    depotId: 4,
     place: { city: 'Atlanta', region: 'GA', regionName: 'Georgia', label: 'Atlanta, GA' },
     // Atlanta's own wording where the other locations share the template's.
     text: {

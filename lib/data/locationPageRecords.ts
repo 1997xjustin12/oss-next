@@ -12,6 +12,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "bakersfield-ca",
     depot: "Bakersfield, CA",
+    depotId: 107,
     place: {
       city: "Bakersfield",
       region: "CA",
@@ -61,6 +62,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "baltimore-md-2",
     depot: "Baltimore, MD",
+    depotId: 5,
     place: {
       city: "Baltimore",
       region: "MD",
@@ -196,6 +198,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "calgary-ab",
     depot: "Calgary, AB",
+    depotId: 6,
     place: {
       city: "Calgary",
       region: "AB",
@@ -326,6 +329,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "charleston-sc",
     depot: "Charleston, SC",
+    depotId: 7,
     place: {
       city: "Charleston",
       region: "SC",
@@ -456,6 +460,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "charlotte-nc",
     depot: "Charlotte, NC",
+    depotId: 8,
     place: {
       city: "Charlotte",
       region: "NC",
@@ -586,6 +591,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "chicago-il",
     depot: "Chicago, IL",
+    depotId: 9,
     place: {
       city: "Chicago",
       region: "IL",
@@ -724,6 +730,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "cincinnati-oh",
     depot: "Cincinnati, OH",
+    depotId: 10,
     place: {
       city: "Cincinnati",
       region: "OH",
@@ -854,6 +861,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "cleveland-oh",
     depot: "Cleveland, OH",
+    depotId: 11,
     place: {
       city: "Cleveland",
       region: "OH",
@@ -984,6 +992,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "columbus-oh",
     depot: "Columbus, OH",
+    depotId: 12,
     place: {
       city: "Columbus",
       region: "OH",
@@ -1114,6 +1123,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "dallas-tx",
     depot: "Dallas, TX",
+    depotId: 13,
     place: {
       city: "Dallas",
       region: "TX",
@@ -1244,6 +1254,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "denver-co",
     depot: "Denver, CO",
+    depotId: 14,
     place: {
       city: "Denver",
       region: "CO",
@@ -1374,6 +1385,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "detroit-mi",
     depot: "Detroit, MI",
+    depotId: 15,
     place: {
       city: "Detroit",
       region: "MI",
@@ -1504,6 +1516,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "edmonton-ab",
     depot: "Edmonton, AB",
+    depotId: 16,
     place: {
       city: "Edmonton",
       region: "AB",
@@ -1634,6 +1647,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "el-paso-tx",
     depot: "El Paso, TX",
+    depotId: 17,
     place: {
       city: "El Paso",
       region: "TX",
@@ -1764,6 +1778,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "halifax-dartmouth-ns",
     depot: "Halifax / Dartmouth, NS",
+    depotId: 51,
     place: {
       city: "Halifax / Dartmouth",
       region: "NS",
@@ -1789,6 +1804,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "houston-tx",
     depot: "Houston, TX",
+    depotId: 18,
     place: {
       city: "Houston",
       region: "TX",
@@ -1938,6 +1954,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "indianapolis-in",
     depot: "Indianapolis, IN",
+    depotId: 19,
     place: {
       city: "Indianapolis",
       region: "IN",
@@ -2071,6 +2088,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "jacksonville-fl",
     depot: "Jacksonville, FL",
+    depotId: 20,
     place: {
       city: "Jacksonville",
       region: "FL",
@@ -2201,6 +2219,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "kansas-city-ks",
     depot: "Kansas City, KS",
+    depotId: 21,
     place: {
       city: "Kansas City",
       region: "KS",
@@ -2331,6 +2350,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "laredo-tx",
     depot: "Laredo, TX",
+    depotId: 22,
     place: {
       city: "Laredo",
       region: "TX",
@@ -2461,6 +2481,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "las-vegas-nv",
     depot: "Las Vegas, NV",
+    depotId: 57,
     place: {
       city: "Las Vegas",
       region: "NV",
@@ -2510,6 +2531,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "los-angeles-long-beach-ca",
     depot: "Los Angeles / Long Beach, CA",
+    depotId: 23,
     place: {
       city: "Los Angeles / Long Beach",
       region: "CA",
@@ -2758,6 +2780,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "louisville-ky",
     depot: "Louisville, KY",
+    depotId: 24,
     place: {
       city: "Louisville",
       region: "KY",
@@ -2907,6 +2930,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "memphis-tn",
     depot: "Memphis, TN",
+    depotId: 25,
     place: {
       city: "Memphis",
       region: "TN",
@@ -3037,6 +3061,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "miami-fl",
     depot: "Miami, FL",
+    depotId: 26,
     place: {
       city: "Miami",
       region: "FL",
@@ -3172,6 +3197,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "minneapolis-mn",
     depot: "Minneapolis, MN",
+    depotId: 27,
     place: {
       city: "Minneapolis",
       region: "MN",
@@ -3321,6 +3347,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "mobile-al",
     depot: "Mobile, AL",
+    depotId: 28,
     place: {
       city: "Mobile",
       region: "AL",
@@ -3451,6 +3478,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "montreal-qb",
     depot: "Montreal, QB",
+    depotId: 29,
     place: {
       city: "Montreal",
       region: "QC",
@@ -3581,6 +3609,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "nashville-tn",
     depot: "Nashville, TN",
+    depotId: 30,
     place: {
       city: "Nashville",
       region: "TN",
@@ -3711,6 +3740,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "new-orleans-la",
     depot: "New Orleans, LA",
+    depotId: 31,
     place: {
       city: "New Orleans",
       region: "LA",
@@ -3841,6 +3871,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "new-york-ny-newark-nj",
     depot: "New York, NY / Newark, NJ",
+    depotId: 32,
     place: {
       city: "New York / Newark",
       region: "NJ",
@@ -3971,6 +4002,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "norfolk-va",
     depot: "Norfolk, VA",
+    depotId: 33,
     place: {
       city: "Norfolk",
       region: "VA",
@@ -4101,6 +4133,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "omaha-ne",
     depot: "Omaha, NE",
+    depotId: 34,
     place: {
       city: "Omaha",
       region: "NE",
@@ -4231,6 +4264,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "phoenix-az",
     depot: "Phoenix, AZ",
+    depotId: 35,
     place: {
       city: "Phoenix",
       region: "AZ",
@@ -4361,6 +4395,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "portland-or",
     depot: "Portland, OR",
+    depotId: 36,
     place: {
       city: "Portland",
       region: "OR",
@@ -4491,6 +4526,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "raleigh-nc",
     depot: "Raleigh, NC",
+    depotId: 37,
     place: {
       city: "Raleigh",
       region: "NC",
@@ -4621,6 +4657,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "regina-sk",
     depot: "Regina, SK",
+    depotId: 52,
     place: {
       city: "Regina",
       region: "SK",
@@ -4646,6 +4683,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "salt-lake-city",
     depot: "Salt Lake City",
+    depotId: 38,
     place: {
       city: "Salt Lake City",
       region: "",
@@ -4776,6 +4814,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "san-antonio-tx",
     depot: "San Antonio, TX",
+    depotId: 39,
     place: {
       city: "San Antonio",
       region: "TX",
@@ -4905,6 +4944,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "san-francisco-oakland-ca",
     depot: "San Francisco / Oakland, CA",
+    depotId: 40,
     place: {
       city: "San Francisco / Oakland",
       region: "CA",
@@ -5035,6 +5075,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "saskatoon-sk",
     depot: "Saskatoon, SK",
+    depotId: 53,
     place: {
       city: "Saskatoon",
       region: "SK",
@@ -5060,6 +5101,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "savannah-ga",
     depot: "Savannah, GA",
+    depotId: 41,
     place: {
       city: "Savannah",
       region: "GA",
@@ -5190,6 +5232,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "seattle-wa",
     depot: "Seattle, WA",
+    depotId: 42,
     place: {
       city: "Seattle",
       region: "WA",
@@ -5339,6 +5382,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "st-louis-mo",
     depot: "St. Louis, MO",
+    depotId: 43,
     place: {
       city: "St. Louis",
       region: "MO",
@@ -5488,6 +5532,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "tacoma-wa",
     depot: "Tacoma, WA",
+    depotId: 44,
     place: {
       city: "Tacoma",
       region: "WA",
@@ -5618,6 +5663,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "tampa-fl",
     depot: "Tampa, FL",
+    depotId: 45,
     place: {
       city: "Tampa",
       region: "FL",
@@ -5748,6 +5794,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "temecula-ca",
     depot: "Temecula, CA",
+    depotId: 144,
     place: {
       city: "Temecula",
       region: "CA",
@@ -5798,6 +5845,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "toronto-on",
     depot: "Toronto, ON",
+    depotId: 46,
     place: {
       city: "Toronto",
       region: "ON",
@@ -5928,6 +5976,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "vancouver-bc-delta-bc",
     depot: "Vancouver, BC / Delta, BC",
+    depotId: 47,
     place: {
       city: "Vancouver / Delta",
       region: "BC",
@@ -6077,6 +6126,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "wilmington-nc",
     depot: "Wilmington, NC",
+    depotId: 48,
     place: {
       city: "Wilmington",
       region: "NC",
@@ -6226,6 +6276,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "winnipeg-mb",
     depot: "Winnipeg, MB",
+    depotId: 49,
     place: {
       city: "Winnipeg",
       region: "MB",
@@ -6352,6 +6403,7 @@ export const LOCATION_PAGE_RECORDS: readonly LocationPage[] = [
   {
     slug: "worcester-boston-ma",
     depot: "Worcester / Boston, MA",
+    depotId: 50,
     place: {
       city: "Worcester / Boston",
       region: "MA",

@@ -116,6 +116,12 @@ export type LocationPage = {
   slug: string
   /** The depot record's title (config/locations.ts): its listings, listing links and LocalBusiness. */
   depot: string
+  /**
+   * The depot's id in the backend's list (config/depotCoordinates.ts,
+   * /api/depots). The page's "Recently Delivered Containers" are this depot's
+   * deliveries and those of the virtual depots it serves.
+   */
+  depotId: number
   place: {
     city: string
     /** State or province code: `GA`, `AB`. */

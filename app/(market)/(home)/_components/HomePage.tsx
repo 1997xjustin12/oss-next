@@ -6,6 +6,8 @@ import { SITE } from "@/config/site";
 import { graph, siteNodes, webPageNode } from "@/lib/schema";
 import { resolveAgentSummary } from "@/lib/seo";
 import { getReviews } from "@/services/review.service";
+import { getDeliveredContainers } from "@/services/deliveredContainer.service";
+import { DeliveredContainers } from "@/components/shared/DeliveredContainers";
 import { getHomeHeadings } from "@/lib/content";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
@@ -73,10 +75,13 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
   // themselves. See config/homeContent.ts for the registry.
   // Cached reads, run together. getReviews() merges every review source (this
   // site's own, REVIEWS.io, Google) — see services/review.service.ts.
-  const [copy, jsonLd, reviews] = await Promise.all([
+  // getDeliveredContainers(): every delivery, unfiltered (the archive, delivered
+  // orders and admin edits; services/deliveredContainer.service.ts).
+  const [copy, jsonLd, reviews, delivered] = await Promise.all([
     getHomeHeadings(),
     buildHomeJsonLd(),
     getReviews(),
+    getDeliveredContainers(),
   ]);
 
   return (
@@ -123,6 +128,7 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
       />
       <TrustedBySection heading={copy["trustedBy.h2"]} />
       <QuoteForm heading={copy["quoteForm.h2"]} />
+      <DeliveredContainers heading="Recently Delivered Containers" items={delivered} />
       <ReviewsSection heading={copy["reviews.h2"]} reviews={reviews} />
       <StatesSection heading={copy["states.h2"]} />
     </>

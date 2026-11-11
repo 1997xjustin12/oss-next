@@ -1,4 +1,5 @@
 import { YouTubeEmbed } from '@/components/product/YouTubeEmbed'
+import { DeliveredContainers } from '@/components/shared/DeliveredContainers'
 import { AccentText } from '@/components/shared/AccentText'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { LandingHero } from '@/components/shared/LandingHero'
@@ -17,6 +18,7 @@ import {
   resolveLocationText,
 } from '@/lib/locationPage'
 import { breadcrumbNode, faqNode, graph, localBusinessNode, siteNodes, webPageNode } from '@/lib/schema'
+import { getDeliveredForDepot } from '@/services/deliveredContainer.service'
 import { getLocationTemplate } from '@/services/locationPage.service'
 import { getReviews } from '@/services/review.service'
 import { getDepotLowestRent } from '@/services/search.service'
@@ -49,7 +51,13 @@ type Props = {
  * photo row, the forms and the videos are the client code.
  */
 export async function LocationNativePage({ page, template: given }: Props) {
-  const [template, reviews, lowestRent] = await Promise.all([given ?? getLocationTemplate(), getReviews(), getDepotLowestRent(page.depot)])
+  // The deliveries: this depot's and its virtual depots' (page.depotId).
+  const [template, reviews, lowestRent, delivered] = await Promise.all([
+    given ?? getLocationTemplate(),
+    getReviews(),
+    getDepotLowestRent(page.depot),
+    getDeliveredForDepot(page.depotId),
+  ])
   const text = resolveLocationText(template, page, lowestRent !== null ? { lowestRent: `$${formatPrice(lowestRent)}` } : {})
   // No rental anywhere in the catalogue: drop the price clause rather than show
   // an unfilled placeholder or a figure nobody can get.
@@ -78,7 +86,13 @@ export async function LocationNativePage({ page, template: given }: Props) {
       <LocationProducts text={text.products} depot={page.depot} specs={locationProductSpecs(template, page)} href={locationLink(page, 'products')} />
     ),
     buy: () => <LocationBuy text={text.buy} page={page} href={locationLink(page, 'buy')} phone={phone} />,
-    delivered: () => <LocationDelivered heading={text.delivered.heading} photos={[...page.deliveredLead, ...template.deliveredPhotos]} />,
+    // Its deliveries when it has any; the fixed delivery photos otherwise.
+    delivered: () =>
+      delivered.length ? (
+        <DeliveredContainers heading={text.delivered.heading} items={delivered} tone="band" />
+      ) : (
+        <LocationDelivered heading={text.delivered.heading} photos={[...page.deliveredLead, ...template.deliveredPhotos]} />
+      ),
     satisfaction: () => <LocationSatisfaction text={text.satisfaction} seal={template.media.satisfactionSeal} reviews={reviews} />,
     callBand: () => <LocationBand text={text.callBand} variant="call" phone={phone} />,
     featured: () =>

@@ -15,6 +15,8 @@ type Props = {
   templateText: LocationTemplate['text']
   templateSections: LocationTemplate['sections']
   specOptions: readonly { value: string; label: string }[]
+  /** Every depot (main and virtual), for the depot id select. */
+  depotOptions: readonly { value: string; label: string }[]
   hasDraft: boolean
   status: { draft?: string; published?: string }
   previewHref: string
@@ -34,7 +36,7 @@ function templateHelp(value: string): string {
  * buttons, cities, map, stories, photos, resources, and its wording where it
  * differs from the template (blank = the template's). SEO is the Page Configurator's.
  */
-export function LocationPageEditor({ label, initialValue, templateText, templateSections, specOptions, previewHref, ...props }: Props) {
+export function LocationPageEditor({ label, initialValue, templateText, templateSections, specOptions, depotOptions, previewHref, ...props }: Props) {
   const sectionOptions = (Object.keys(LOCATION_SECTION_LABELS) as LocationSectionId[]).map((id) => ({ value: id, label: LOCATION_SECTION_LABELS[id] }))
 
   const textHints: FieldHints = Object.fromEntries(
@@ -53,6 +55,12 @@ export function LocationPageEditor({ label, initialValue, templateText, template
 
   const hints: FieldHints = {
     depot: { help: 'The depot record’s name, as the catalogue writes it ("Atlanta, GA"): its products, listing links and Google business data.' },
+    depotId: {
+      label: 'Depot (location id)',
+      kind: 'select',
+      options: depotOptions,
+      help: 'Its “Recently Delivered Containers”: this depot’s deliveries and those of the virtual depots it serves.',
+    },
     place: { label: 'Place', help: 'How the page names its place: {city}, {region}, {regionName}, {cityRegion} in the wording.' },
     'place.label': { label: 'Full name ({cityRegion})', help: '“Atlanta, GA”, “New York, NY / Newark, NJ”, “Salt Lake City”.' },
     'place.region': { label: 'State / province code' },

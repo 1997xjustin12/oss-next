@@ -151,6 +151,11 @@ const PAGE_FIELDS: { [K in keyof LocationPage]-?: V<LocationPage[K]> } = {
   // The slug is the record's identity: never taken from the record.
   slug: () => undefined,
   depot: text,
+  // The editor's select sends it as a string.
+  depotId: (r) => {
+    const n = typeof r === 'string' && /^\d+$/.test(r) ? Number(r) : r
+    return typeof n === 'number' && Number.isInteger(n) && n > 0 ? n : undefined
+  },
   place: shape<LocationPage['place']>({ city: text, region: str, regionName: text, label: text }),
   phone: (r) => (r === '' ? '' : displayPhone(r)),
   sections: nullable(sections) as V<LocationPage['sections']>,
