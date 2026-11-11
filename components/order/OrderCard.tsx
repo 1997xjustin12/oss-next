@@ -22,13 +22,17 @@ type Props = {
 }
 
 /** One sentence on where the order stands, from whatever dates it carries. */
-function statusLine(order: GuestOrder): string {
+function statusLine(order: GuestOrder, canPay: boolean): string {
   const eta = formatOrderDate(order.estimated_delivery)
   const delivered = formatOrderDate(order.delivered_at)
 
   switch (order.status) {
     case 'unpaid':
-      return 'Awaiting payment. We start preparing your order as soon as it is paid.'
+      // No link to pay from (payment not open on this domain yet): the team
+      // takes payment, as the checkout confirmation tells them.
+      return canPay
+        ? 'Awaiting payment. We start preparing your order as soon as it is paid.'
+        : 'We have your order. Our team will contact you to arrange payment.'
     case 'pending':
       return 'We have your order and are preparing it.'
     case 'paid':
@@ -59,7 +63,7 @@ export function OrderCard({ order, isDemo = false, itemActions, collapsible = fa
   const paymentUrl = order.status === 'unpaid' ? safeHttpsUrl(order.payment_url) : null
   const hasDelivery = Boolean(destination || order.tracking_number)
   const hasBreakdown = [order.sub_total, order.total_shipping, order.total_tax].some((v) => v !== undefined)
-  const status = statusLine(order)
+  const status = statusLine(order, !!paymentUrl)
 
   const heading = (
     <div>

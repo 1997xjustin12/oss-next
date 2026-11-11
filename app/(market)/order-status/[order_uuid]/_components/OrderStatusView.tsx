@@ -1,4 +1,6 @@
+import { headers } from 'next/headers'
 import { OrderCard } from '@/components/order/OrderCard'
+import { isPaymentRedirectOn } from '@/lib/paymentRedirect'
 import { DEMO_ORDER, ORDER_STATUS_DEMO_ID } from '@/lib/data/orderStatusDemo'
 import { getOrderStatus } from '@/services/order.service'
 import { getProductsByIds } from '@/services/search.service'
@@ -48,7 +50,13 @@ export async function OrderStatusView({ params }: Props) {
   if (result.state === 'not_found') return <OrderStatusNotice kind="not_found" />
   if (result.state === 'error') return <OrderStatusNotice kind="error" />
 
-  const order = await withProductDetails(result.order)
+  // The payment link follows the same per-domain switch as checkout (Admin →
+  // Checkout, lib/paymentRedirect): where payment is not open yet, it is left
+  // out here on the server, so the browser never has it and no "Complete
+  // payment" button shows. The demo keeps its inert button.
+  const paymentOn = isDemo || (await isPaymentRedirectOn((await headers()).get('host') ?? ''))
+  const withDetails = await withProductDetails(result.order)
+  const order = paymentOn ? withDetails : { ...withDetails, payment_url: undefined }
 
   return (
     <section aria-label="Your order" className="flex flex-col gap-5">
