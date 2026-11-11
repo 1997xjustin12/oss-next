@@ -28,12 +28,13 @@ const HINTS: FieldHints = {
   'page.listing.openingHours.*.opens': { help: '24-hour HH:MM' },
   'page.listing.openingHours.*.closes': { help: '24-hour HH:MM' },
   'page.listing.extraJsonLd': { label: 'Extra JSON-LD nodes', kind: 'json', help: 'A JSON array of objects, added to the page’s graph as written.' },
-  extras: { label: 'Keywords, robots, social text & head scripts' },
+  extras: { label: 'Focus keyphrase, keywords, robots, social text & head scripts' },
   // The page record holds these; the override layer would only duplicate them.
   'extras.title': { kind: 'hidden' },
   'extras.description': { kind: 'hidden' },
   'extras.canonical': { kind: 'hidden' },
   'extras.ogImage': { kind: 'hidden' },
+  'extras.focusKeyphrase': { label: 'Focus keyphrase', help: 'The one phrase this page is written to rank for. Leads the keywords meta tag.' },
   'extras.keywords': { help: 'Comma-separated. Empty for none.' },
   'extras.agentSummary': { label: 'Summary for AI agents', multiline: true, help: 'Plain sentences for /llms.txt. Empty: the description is used.' },
   'extras.robots': {

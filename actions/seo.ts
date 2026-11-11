@@ -7,6 +7,7 @@ import { ADMIN_ROUTES, MAX_PAGE_SCRIPTS } from '@/config/admin';
 import { CACHE_TAGS } from '@/config/cache';
 import { findNativePageById } from '@/config/pages';
 import { hasAdminAccess } from '@/lib/adminGuard';
+import { cleanKeyphrase } from '@/lib/seoKeywords';
 import { deletePageSeo, savePageSeo } from '@/services/seo.service';
 import type { HeadScript, PageSeo, ScriptStrategy } from '@/types/seo';
 
@@ -114,6 +115,7 @@ export async function savePageSeoAction(formData: FormData): Promise<void> {
     title: text(formData, 'title'),
     description: text(formData, 'description'),
     agentSummary: text(formData, 'agentSummary'),
+    focusKeyphrase: cleanKeyphrase(text(formData, 'focusKeyphrase')).slice(0, 120) || undefined,
     keywords: parseKeywords(text(formData, 'keywords')),
     canonical: text(formData, 'canonical'),
     robots: parseRobots(text(formData, 'robots')),

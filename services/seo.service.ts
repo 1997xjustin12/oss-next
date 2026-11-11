@@ -82,6 +82,7 @@ function normalize(raw: unknown): PageSeo | null {
   return {
     title: str(value.title),
     description: str(value.description),
+    focusKeyphrase: str(value.focusKeyphrase),
     keywords: keywords?.length ? keywords : undefined,
     canonical: str(value.canonical),
     robots,

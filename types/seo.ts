@@ -53,6 +53,12 @@ export type PageSeo = {
    * would force one to be bad at its job.
    */
   agentSummary?: string;
+  /**
+   * The one phrase the page is written to rank for (Yoast's "focus
+   * keyphrase"). Leads <meta name="keywords">, before `keywords`
+   * (lib/seoKeywords.ts). Read by the analytics team.
+   */
+  focusKeyphrase?: string;
   /** Rendered as <meta name="keywords">. */
   keywords?: string[];
   /** Overrides alternates.canonical. Root-relative or absolute. */
@@ -83,6 +89,8 @@ export type PageSeoDefaults = {
   absoluteTitle?: boolean;
   /** Root-relative path, e.g. ROUTES.CART. Resolved against metadataBase. */
   canonical: string;
+  /** Built-in focus keyphrase; see PageSeo.focusKeyphrase. */
+  focusKeyphrase?: string;
   keywords?: string[];
   robots?: SeoRobots;
   openGraph?: {

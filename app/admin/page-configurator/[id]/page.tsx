@@ -50,8 +50,10 @@ async function Editor({ params, searchParams }: Props) {
   const page = findNativePageById(id);
   if (!page) notFound();
 
-  // GBP location pages have one place to edit: the GBP SEO screen.
-  if (page.group === 'Locations') {
+  // GBP location pages have one place to edit: the GBP SEO screen. The
+  // where-to-buy location pages (`location-<slug>`) share the group but are
+  // edited here, as their Location Pages screen says.
+  if (page.group === 'Locations' && !page.id.startsWith('location-')) {
     return (
       <p className="text-sm">
         This is a GBP location page. Edit its SEO and scripts in{' '}

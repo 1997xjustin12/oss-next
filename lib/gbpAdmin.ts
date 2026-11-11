@@ -8,6 +8,7 @@
 
 import { GBP_LISTING_NAME, GBP_OPENING_HOURS } from '@/lib/gbpDefaults'
 import { bool, oneOf, shape, text, url } from '@/lib/gbpValidate'
+import { cleanKeyphrase } from '@/lib/seoKeywords'
 import type { GbpListing, GbpPage } from '@/types/gbp'
 import type { HeadScript, PageSeo } from '@/types/seo'
 
@@ -40,6 +41,8 @@ export type GbpSeoForm = {
   title: string
   description: string
   agentSummary: string
+  /** Leads <meta name="keywords">. */
+  focusKeyphrase: string
   /** Comma-separated. */
   keywords: string
   canonical: string
@@ -58,6 +61,7 @@ export function toSeoForm(seo: PageSeo | null): GbpSeoForm {
     title: seo?.title ?? '',
     description: seo?.description ?? '',
     agentSummary: seo?.agentSummary ?? '',
+    focusKeyphrase: seo?.focusKeyphrase ?? '',
     keywords: seo?.keywords?.join(', ') ?? '',
     canonical: seo?.canonical ?? '',
     robots,
@@ -113,6 +117,7 @@ export function fromSeoForm(form: GbpSeoForm): { seo: PageSeo; rejected: string[
       title: opt(form.title),
       description: opt(form.description),
       agentSummary: opt(form.agentSummary),
+      focusKeyphrase: cleanKeyphrase(form.focusKeyphrase ?? '').slice(0, 120) || undefined,
       ...(keywords.length ? { keywords } : {}),
       canonical,
       ...(robots ? { robots } : {}),

@@ -222,6 +222,25 @@ export function SeoForm({ page, seo, defaults }: Props) {
           </div>
 
           <div>
+            <label className={LABEL_CLASS} htmlFor="focusKeyphrase">
+              Focus keyphrase
+            </label>
+            <input
+              id="focusKeyphrase"
+              name="focusKeyphrase"
+              type="text"
+              maxLength={120}
+              defaultValue={seo?.focusKeyphrase ?? ''}
+              placeholder={defaults.focusKeyphrase ?? 'shipping containers for sale in atlanta'}
+              className={`mt-1 ${INPUT_CLASS}`}
+            />
+            <p className={HELP_CLASS}>
+              The one phrase this page is written to rank for (Yoast&apos;s focus keyphrase). It
+              leads <code>&lt;meta name=&quot;keywords&quot;&gt;</code>, before the keywords below.
+            </p>
+          </div>
+
+          <div>
             <label className={LABEL_CLASS} htmlFor="keywords">
               Keywords
             </label>

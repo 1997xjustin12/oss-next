@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { PAGE_SEO_DEFAULTS } from '@/config/pageSeoDefaults';
 import { isDisallowedPath } from '@/config/crawlers';
+import { metaKeywords } from '@/lib/seoKeywords';
 import { getPageSeo } from '@/services/seo.service';
 import type { PageSeoDefaults } from '@/types/seo';
 
@@ -58,7 +59,11 @@ export async function resolvePageMetadata(
   const title = override?.title || defaults.title;
   const description = override?.description || defaults.description;
   const canonical = override?.canonical || defaults.canonical;
-  const keywords = override?.keywords?.length ? override.keywords : defaults.keywords;
+  // The focus keyphrase leads the keywords tag; each layer falls back on its own.
+  const keywords = metaKeywords(
+    override?.focusKeyphrase || defaults.focusKeyphrase,
+    override?.keywords?.length ? override.keywords : defaults.keywords,
+  );
 
   // Paths disallowed in robots.txt are non-negotiably noindex, whatever the
   // defaults or the admin override say. Without this, ticking "index" in the

@@ -29,6 +29,7 @@ function isCustomised(seo: PageSeo | null): boolean {
   return Boolean(
     seo.title ||
       seo.description ||
+      seo.focusKeyphrase ||
       seo.keywords?.length ||
       seo.canonical ||
       seo.robots ||
