@@ -1,5 +1,6 @@
 import { GBP_ROUTE_SEGMENTS, ROUTES } from '@/config/routes';
 import { requireGbpPage } from '@/lib/gbp';
+import { ALL_CITY_PAGES } from '@/lib/data/allCityPages';
 import { LOCATION_PAGES } from '@/lib/data/locationPages';
 import { locationPath } from '@/lib/locationPage';
 
@@ -66,6 +67,15 @@ export const NATIVE_PAGES: readonly NativePage[] = [
     path: locationPath(page.slug),
     label: `Where to Buy — ${page.place.label}`,
     group: 'Locations',
+    indexable: true,
+  })),
+
+  // The native /all-city/ pages (WordPress's "Cities" posts).
+  ...Object.values(ALL_CITY_PAGES).map((page): NativePage => ({
+    id: `all-city-${page.slug}`,
+    path: ROUTES.ALL_CITY(page.slug),
+    label: `City — ${page.h1}`,
+    group: 'Storefront',
     indexable: true,
   })),
 

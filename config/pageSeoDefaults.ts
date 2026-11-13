@@ -1,5 +1,6 @@
 import { GBP_ROUTE_SEGMENTS, ROUTES } from '@/config/routes';
 import { gbpSeoDefaults, requireGbpPage } from '@/lib/gbp';
+import { ALL_CITY_PAGES } from '@/lib/data/allCityPages';
 import { CONTAINER_OFFICE_SEO } from '@/lib/data/containerOfficeContent';
 import { CONTAINER_RESTAURANT_SEO } from '@/lib/data/containerRestaurantContent';
 import { LOCATION_PAGES } from '@/lib/data/locationPages';
@@ -397,4 +398,21 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
 
   // Native location pages: their SEO is part of each record (lib/data/locationPages.ts).
   ...Object.fromEntries(LOCATION_PAGES.map((page) => [locationPath(page.slug), locationSeoDefaults(page)])),
+
+  // The native /all-city/ pages: Yoast's title (its own ending, not the site's,
+  // so absolute) and description, word for word; og:type article as Yoast
+  // declared; no og:image on WordPress, so the default. No focus keyphrase or
+  // keywords tag on WordPress to carry over.
+  ...Object.fromEntries(
+    Object.values(ALL_CITY_PAGES).map((page): [string, PageSeoDefaults] => [
+      ROUTES.ALL_CITY(page.slug),
+      {
+        title: page.seoTitle,
+        absoluteTitle: true,
+        description: page.seoDescription,
+        canonical: ROUTES.ALL_CITY(page.slug),
+        openGraph: { type: 'article' },
+      },
+    ]),
+  ),
 };

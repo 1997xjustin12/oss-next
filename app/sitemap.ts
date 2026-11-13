@@ -3,6 +3,7 @@ import { BASE_URL } from '@/lib/helpers'
 import { fetchProductSitemap, fetchPageSitemap } from '@/services/sitemap.service'
 import { getAllBlogSlugs } from '@/services/blog.service'
 import { GBP_ROUTE_SEGMENTS, ROUTES, isNativePath } from '@/config/routes'
+import { ALL_CITY_PAGE_SLUGS } from '@/lib/data/allCityPageSlugs'
 import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 import { WP_NOINDEX_PATHS, WP_REDIRECTS } from '@/config/wpHiddenPages'
 
@@ -52,6 +53,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}${ROUTES.FOR_SALE}`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${origin}${ROUTES.RENTAL}`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${origin}${ROUTES.TAX_EXEMPTION}`, changeFrequency: 'monthly', priority: 0.5 },
+    // The native /all-city/ pages (WordPress's sitemap listed none of its city pages).
+    ...ALL_CITY_PAGE_SLUGS.map((slug) => ({ url: `${origin}${ROUTES.ALL_CITY(slug)}`, changeFrequency: 'monthly' as const, priority: 0.5 })),
     // The GBP location pages, for the same reason: they are native routes, so
     // `isNativePath` drops their backend rows below.
     ...GBP_ROUTE_SEGMENTS.map((slug): MetadataRoute.Sitemap[number] => ({
