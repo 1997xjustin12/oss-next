@@ -6,11 +6,10 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const { ALL_CITY_FLAGS, allSeedPages, decodeRow, getSeedPage, seedSlugs } = await import('@/lib/allCitySeed')
-const { allCityDepotParts, allCityOtherHref, allCityVars, isListable, resolveAllCityText } = await import('@/lib/allCityPage')
+const { allCityDepotParts, allCityOtherHref, allCityVars, buildAllCityLists, isListable, resolveAllCityText, withoutPage } = await import('@/lib/allCityPage')
 const { ALL_CITY_DEPOTS } = await import('@/lib/data/allCityDepots')
 const { ALL_CITY_TEMPLATE_DEFAULT } = await import('@/lib/data/allCityTemplate')
 const { LOCATION_PAGE_SLUGS } = await import('@/lib/data/locationPageSlugs')
-const { getAllCityLists } = await import('@/services/allCity.service')
 const { isDepotFeaturedKey } = await import('@/services/search.service')
 const { isNativePath, ROUTES } = await import('@/config/routes')
 
@@ -97,6 +96,9 @@ describe('the depots', () => {
 })
 
 describe('the lists, against WordPress', () => {
+  const seed = allSeedPages()
+  const getAllCityLists = async (state: Parameters<typeof buildAllCityLists>[1], slug: string) => withoutPage(buildAllCityLists(seed, state), slug)
+
   it('Cocoa Beach: 20 popular, 492 in Florida’s view-all, itself left out', async () => {
     const lists = await getAllCityLists('FL', 'storage-units-cocoa-beach-fl')
     assert.equal(lists.popular.length, 20)

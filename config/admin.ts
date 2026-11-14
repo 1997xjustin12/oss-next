@@ -41,6 +41,15 @@ export const ADMIN_ROUTES = {
   LOCATION_TEMPLATE: '/admin/location-pages/template',
   /** The draft preview: the real page layout, so outside /admin (gated via ADMIN_PATHS). */
   LOCATION_PREVIEW: (slug: string) => `/admin-preview/location/${slug}`,
+  // /all-city/[slug] (docs/reference/all-city-pages.md §3.7).
+  ALL_CITY: '/admin/all-city-pages',
+  ALL_CITY_PAGE: (slug: string) => `/admin/all-city-pages/page/${slug}`,
+  ALL_CITY_NEW: '/admin/all-city-pages/new',
+  ALL_CITY_TEMPLATE: '/admin/all-city-pages/template',
+  ALL_CITY_DEPOTS: '/admin/all-city-pages/depots',
+  ALL_CITY_DEPOT: (key: string) => `/admin/all-city-pages/depots/${key}`,
+  /** The draft preview: the real page layout, so outside /admin (gated via ADMIN_PATHS). */
+  ALL_CITY_PREVIEW: (slug: string) => `/admin-preview/all-city/${slug}`,
 } as const;
 
 export type AdminNavItem = {
@@ -78,6 +87,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'Location Pages',
     icon: 'MapPinned',
     hint: 'Where-to-buy depot pages & template',
+  },
+  {
+    href: ADMIN_ROUTES.ALL_CITY,
+    label: 'All City Pages',
+    icon: 'MapPinned',
+    hint: '/all-city/ pages, depots & template',
   },
   {
     href: ADMIN_ROUTES.DEPOTS,

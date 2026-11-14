@@ -10,6 +10,7 @@ export const CACHE_TAGS = {
   CONTENT:    'content',  // Visible on-page copy from the admin Content Editor
   GBP:        'gbp',      // GBP location pages: their content, shared content and template
   LOCATION_PAGES: 'location-pages', // /where-to-buy-shipping-containers/[location]: template and records
+  ALL_CITY:   'all-city', // /all-city/[slug]: template, depots, page records and each state's city lists
   BLOG:       'blog',     // Blog posts from the Django blogs API
   ORDERS:     'orders',
   USERS:      'users',
@@ -94,6 +95,13 @@ export const PURGEABLE_CACHE_TAGS: readonly CacheTagInfo[] = [
     tag: CACHE_TAGS.LOCATION_PAGES,
     label: 'Location Pages',
     description: 'The template and records of the native /where-to-buy-shipping-containers/[location] pages.',
+    lifetime: 'hours — refreshed hourly, kept a day',
+  },
+  {
+    tag: CACHE_TAGS.ALL_CITY,
+    label: 'All City Pages',
+    description:
+      'Every /all-city/ page (8,539): the template, depots, page edits and the city lists. Publishing in All City Pages already refreshes what changed; this rebuilds every one of them on its next visit.',
     lifetime: 'hours — refreshed hourly, kept a day',
   },
   {
