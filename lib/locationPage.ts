@@ -74,7 +74,7 @@ function fillDeep<T>(value: T, vars: Record<string, string>): T {
  * The page's wording: the template's, with the location's overrides laid over
  * it field by field (an empty override keeps the template's), then the
  * placeholders filled. `{phone}` is left in place: the renderer turns it into
- * a call link (LocationRichText), so it is filled there.
+ * a call link (TemplateRichText), so it is filled there.
  */
 export function resolveLocationText(
   template: LocationTemplate,

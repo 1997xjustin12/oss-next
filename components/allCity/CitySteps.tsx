@@ -1,14 +1,15 @@
-type Step = { title: string; text: string; link?: string }
+import { TemplateRichText } from '@/components/shared/TemplateRichText'
 
 type Props = {
   heading: string
-  steps: readonly Step[]
-  /** Where step 1's "Enter zip/postal code" goes: the ZIP box further down. */
-  zipAnchor: string
+  /** Each step's text is template text: step 1 links to the ZIP box (`#find-prices`). */
+  steps: readonly { title: string; text: string }[]
 }
 
+const LINK = 'text-theme-primary underline underline-offset-2 hover:no-underline dark:text-red-400'
+
 /** "BUY A SHIPPING CONTAINER IN <CITY>": the red box with WordPress's three steps. */
-export function CitySteps({ heading, steps, zipAnchor }: Props) {
+export function CitySteps({ heading, steps }: Props) {
   return (
     <section aria-labelledby="city-steps" className="bg-white px-[5%] py-10 dark:bg-neutral-950">
       <div className="rounded-sm bg-theme-primary px-5 py-8 sm:px-8">
@@ -16,16 +17,11 @@ export function CitySteps({ heading, steps, zipAnchor }: Props) {
           {heading}
         </h2>
         <ol className="mt-6 grid gap-5 md:grid-cols-3">
-          {steps.map((step) => (
-            <li key={step.title} className="bg-white px-5 py-6 text-center dark:bg-neutral-950">
+          {steps.map((step, i) => (
+            <li key={i} className="bg-white px-5 py-6 text-center dark:bg-neutral-950">
               <h3 className="text-xl font-semibold text-theme-primary dark:text-red-400">{step.title}</h3>
               <p className="mt-4 text-sm leading-relaxed text-theme-dark sm:text-base dark:text-neutral-200">
-                {step.link && (
-                  <a href={zipAnchor} className="text-theme-primary underline underline-offset-2 hover:no-underline dark:text-red-400">
-                    {step.link}
-                  </a>
-                )}
-                {step.text}
+                <TemplateRichText text={step.text} linkClassName={LINK} />
               </p>
             </li>
           ))}

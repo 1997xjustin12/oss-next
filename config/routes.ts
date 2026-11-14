@@ -5,7 +5,6 @@
 // this app doesn't own those slugs, WordPress does, so encoding them here
 // would misrepresent who's responsible for keeping them correct.
 
-import { ALL_CITY_PAGE_SLUGS } from '@/lib/data/allCityPageSlugs'
 import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 
 export const ROUTES = {
@@ -52,7 +51,7 @@ export const ROUTES = {
    * not in NATIVE_ROUTE_SEGMENTS.
    */
   WHERE_TO_BUY: '/where-to-buy-shipping-containers',
-  /** WordPress's "Cities" pages; four are native (lib/data/allCityPages.ts), the rest are not. */
+  /** WordPress's "Cities" pages (8,541), native at the same paths (docs/reference/all-city-pages.md). */
   ALL_CITY: (slug: string) => `/all-city/${slug}`,
   WISHLIST: '/wishlist',
   /** Quotes this browser has saved from a product page. */
@@ -170,6 +169,9 @@ export const NATIVE_ROUTE_SEGMENTS = [
   'shipping-container-faqs',
   'shipping-containers-for-sale',
   'shipping-container-rental',
+  // WordPress's "Cities" pages: every /all-city/ URL is this app's; an unknown
+  // or hidden slug 404s in the route itself (app/(market)/all-city/[slug]).
+  'all-city',
   // Operational and internal routes. Not reachable as WordPress content, but
   // listed so a stray backend row can never claim one of them.
   'maintenance',
@@ -217,9 +219,6 @@ const NATIVE_EXACT_PATHS: readonly string[] = [
   // Each is claimed by its exact path, so the cities not yet native keep their
   // backend check and their real 404.
   ...LOCATION_PAGE_SLUGS.map((slug) => `${ROUTES.WHERE_TO_BUY}/${slug}`),
-  // The four native /all-city/ pages, by exact path: the other cities under
-  // /all-city/ are not native and keep their real 404.
-  ...ALL_CITY_PAGE_SLUGS.map((slug) => ROUTES.ALL_CITY(slug)),
 ]
 
 export function isNativePath(path: string): boolean {

@@ -327,6 +327,7 @@ export type DepotFeaturedKey =
   | 'used_40s_cw'
   | 'used_40s_iicl'
   | 'used_40h_iicl'
+  | 'used_40h_asis'
 
 export type DepotFeaturedSpec = {
   /** Stable key for the slot, so a caller can ask for it and tell which one is missing. */
@@ -354,6 +355,7 @@ export const DEPOT_FEATURED_SPECS: readonly DepotFeaturedSpec[] = [
   { key: 'used_40s_cw', label: '40ft Standard — Used Cargo Worthy', size: '40', height: 'Standard', condition: 'Used', grade: 'CW' },
   { key: 'used_40s_iicl', label: '40ft Standard — Used IICL', size: '40', height: 'Standard', condition: 'Used', grade: 'IICL' },
   { key: 'used_40h_iicl', label: '40ft High Cube — Used IICL', size: '40', height: 'High Cube', condition: 'Used', grade: 'IICL' },
+  { key: 'used_40h_asis', label: '40ft High Cube — Used As-Is', size: '40', height: 'High Cube', condition: 'Used', grade: 'AS IS' },
 ]
 
 /** What a caller gets when it does not choose. Its own list, so adding a spec above does not change every page. */

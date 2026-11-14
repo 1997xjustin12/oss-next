@@ -60,9 +60,9 @@ function render(text: string, accentClassName: string, linkClassName: string, ph
 }
 
 /**
- * The location template's text syntax, rendered: `[[…]]` is the accent run,
+ * The page templates' text syntax (location pages, /all-city/ pages), rendered: `[[…]]` is the accent run,
  * `[label](/path)` a link, `{phone}` a call link to the sales line.
  */
-export function LocationRichText({ text, accentClassName = ACCENT, linkClassName = LINK, phone = CONTACT_NUMBER }: Props) {
+export function TemplateRichText({ text, accentClassName = ACCENT, linkClassName = LINK, phone = CONTACT_NUMBER }: Props) {
   return <Fragment>{render(text, accentClassName, linkClassName, phone, 'r')}</Fragment>
 }

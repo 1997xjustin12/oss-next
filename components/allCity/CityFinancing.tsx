@@ -1,16 +1,11 @@
 import { CircleArrowRight } from 'lucide-react'
-import { LandingRichText } from '@/components/shared/LandingRichText'
-import type { LandingInline } from '@/lib/data/containerLandingContent'
-
-type Block = { title: string; body: readonly LandingInline[] }
+import { CityParagraphs } from './CityParagraphs'
 
 type Props = {
   heading: string
-  rental: Block
-  lease: Block & { button: string; href: string }
+  rental: { title: string; body: string }
+  lease: { title: string; body: string; button: string; href: string }
 }
-
-const PARAGRAPH = 'mt-3 text-base leading-relaxed text-theme-dark dark:text-neutral-200'
 
 /** "FINANCING AND RENTAL OPTIONS AVAILABLE": the navy band, then rental and lease-to-purchase. */
 export function CityFinancing({ heading, rental, lease }: Props) {
@@ -22,17 +17,13 @@ export function CityFinancing({ heading, rental, lease }: Props) {
 
       <div className="grid gap-10 px-[5%] py-10 md:grid-cols-2">
         <article>
-          <h3 className="text-sm font-bold tracking-wider text-theme-dark dark:text-white">{rental.title}</h3>
-          <p className={PARAGRAPH}>
-            <LandingRichText content={rental.body} />
-          </p>
+          <h3 className="mb-3 text-sm font-bold tracking-wider text-theme-dark dark:text-white">{rental.title}</h3>
+          <CityParagraphs text={rental.body} />
         </article>
 
         <article>
-          <h3 className="text-sm font-bold tracking-wider text-theme-dark dark:text-white">{lease.title}</h3>
-          <p className={PARAGRAPH}>
-            <LandingRichText content={lease.body} />
-          </p>
+          <h3 className="mb-3 text-sm font-bold tracking-wider text-theme-dark dark:text-white">{lease.title}</h3>
+          <CityParagraphs text={lease.body} />
           {/* Off-site (TimePayment), so a plain anchor rather than PillLink's prefetching link. */}
           <a
             href={lease.href}
