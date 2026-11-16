@@ -5,7 +5,7 @@ import { getLocationPageSeed } from '@/lib/data/locationPages'
 import { LOCATION_SNAPSHOT } from '@/lib/data/locationSnapshot'
 import { LOCATION_TEMPLATE_DEFAULT } from '@/lib/data/locationTemplate'
 import { conformLocationPage, conformLocationTemplate } from '@/lib/locationValidate'
-import { getRedisClient } from '@/lib/redis'
+import { getRedisClient, getWithRetry } from '@/lib/redis'
 import type { LocationPage, LocationTemplate } from '@/types/locationPage'
 
 /**
@@ -52,16 +52,6 @@ function unwrap(raw: unknown): { data: unknown; updatedAt?: string; updatedBy?: 
     }
   }
   return { data: value }
-}
-
-/** One more try after a short pause: the build prerenders every location at once, and a read can time out under that load. */
-async function getWithRetry(key: string): Promise<unknown> {
-  try {
-    return await getRedisClient().get<unknown>(key)
-  } catch {
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    return getRedisClient().get<unknown>(key)
-  }
 }
 
 /**

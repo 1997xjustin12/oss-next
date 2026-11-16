@@ -4,6 +4,7 @@ import { findDepotByPath, toLocalBusinessInput } from '@/lib/locations'
 import { EXTERNAL_HTML_ATTR } from '@/lib/linkEnrich'
 import { breadcrumbFromPath, graph, localBusinessNode, siteNodes, webPageNode } from '@/lib/schema'
 import { ASSET_CDN, fetchWpPage, hasSchemaType } from '@/services/wp-pages.service'
+import type { WpPage } from '@/services/wp-pages.service'
 
 type Props = {
   /** The page's path segments, e.g. `['where-to-buy-shipping-containers', 'calgary-ab']`. */
@@ -39,8 +40,22 @@ function localBusinessNodes(path: string, recovered: unknown[]) {
 export async function WordPressPage({ slug }: Props) {
   const page = await fetchWpPage(slug)
   if (!page) notFound()
+  return <WordPressPageView page={page} slug={slug} />
+}
 
-  const path = `/${slug.join('/')}`
+type ViewProps = Props & {
+  page: WpPage
+  /** The URL this is served at, when it isn't `slug` (a numbered blog-listing page). */
+  path?: string
+}
+
+/**
+ * Renders a converted page the caller already has: for pages built from
+ * another page's markup (services/wpBlogList.service.ts). `slug` is the
+ * converted page's own path, used for the breadcrumb trail.
+ */
+export function WordPressPageView({ page, slug, path: servedAt }: ViewProps) {
+  const path = servedAt ?? `/${slug.join('/')}`
 
   // Structured data for the converted pages, in two parts.
   //

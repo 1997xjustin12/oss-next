@@ -7,6 +7,7 @@
 
 import { ALL_CITY_PAGE_SLUGS } from '@/lib/data/allCityPageSlugs'
 import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
+import { WP_BLOG_LIST_PAGE_COUNT } from '@/lib/data/wpBlogListPageCount'
 
 export const ROUTES = {
   HOME: '/',
@@ -42,6 +43,13 @@ export const ROUTES = {
   TAX_EXEMPTION_THANK_YOU: '/sales-tax-exemption-request-thank-you',
   PRODUCT: (handle: string) => `/product/${handle}`,
   BLOGS: '/blogs',
+  /**
+   * WordPress's blog listing, native since 2026-11-16: page 1 is the converted
+   * WordPress page, and every page (1 … WP_BLOG_LIST_PAGE_COUNT) shows its
+   * posts from lib/data/wpBlogListArchive.ts. Page 1 has no number.
+   */
+  WP_BLOG_LIST: '/shipping-containers-blogs',
+  WP_BLOG_LIST_PAGE: (page: number) => (page <= 1 ? '/shipping-containers-blogs' : `/shipping-containers-blogs/${page}`),
   AGENTS: '/agents',
   BLOG: (slug: string) => `/blogs/${slug}`,
   CART: '/cart',
@@ -220,6 +228,9 @@ const NATIVE_EXACT_PATHS: readonly string[] = [
   // The four native /all-city/ pages, by exact path: the other cities under
   // /all-city/ are not native and keep their real 404.
   ...ALL_CITY_PAGE_SLUGS.map((slug) => ROUTES.ALL_CITY(slug)),
+  // The blog listing and its numbered pages, by exact path, so a number past
+  // the end (or anything else under it) keeps the proxy's real 404.
+  ...Array.from({ length: WP_BLOG_LIST_PAGE_COUNT }, (_, i) => ROUTES.WP_BLOG_LIST_PAGE(i + 1)),
 ]
 
 export function isNativePath(path: string): boolean {

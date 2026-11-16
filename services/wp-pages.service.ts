@@ -217,6 +217,35 @@ function demoteExtraH1s($: ReturnType<typeof load>): void {
   })
 }
 
+/** Hosts the converted markup's own links point at: the WordPress site's domain and this one. */
+const SITE_HOSTS = new Set(['onsitestorage.com', 'www.onsitestorage.com', new URL(SITE_URL).host])
+
+/**
+ * The converted markup links to its own site by absolute URL
+ * (`https://onsitestorage.com/shipping-containers-blogs/2/`). That only worked
+ * where this app happens to be served at that domain: locally and on preview
+ * deploys every such link left for production. Made root-relative, they stay
+ * on whichever host is serving the page.
+ *
+ * Files (`/wp-content/…`, anything with an extension) keep their absolute URL,
+ * since this app does not serve them.
+ */
+function relativiseSiteLinks($: ReturnType<typeof load>): void {
+  $('a[href]').each((_, el) => {
+    const href = $(el).attr('href') ?? ''
+    if (!/^(https?:)?\/\//i.test(href)) return
+    let url: URL
+    try {
+      url = new URL(href, SITE_URL)
+    } catch {
+      return
+    }
+    if (!SITE_HOSTS.has(url.host.toLowerCase())) return
+    if (url.pathname.startsWith('/wp-') || /\.[a-z0-9]{2,5}$/i.test(url.pathname)) return
+    $(el).attr('href', `${url.pathname}${url.search}${url.hash}`)
+  })
+}
+
 /**
  * Accessibility repairs the converted WordPress markup needs.
  *
@@ -445,6 +474,7 @@ export async function fetchWpPage(segments: string[]): Promise<WpPage | null> {
   $('script').remove()
 
   demoteExtraH1s($)
+  relativiseSiteLinks($)
   repairAccessibility($)
   optimiseImages($)
 
