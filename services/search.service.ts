@@ -451,10 +451,31 @@ export async function getNationalFeaturedContainers(
   paymentType: FeaturedPaymentType = 'buy',
 ): Promise<DepotFeaturedContainer[]> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.HOMEPAGE)
 
-  return getDepotFeaturedContainers(DEFAULT_LOCATION, specKeys, paymentType)
+  return withSearchFallback('national featured containers', () => getDepotFeaturedContainers(DEFAULT_LOCATION, specKeys, paymentType), [])
+}
+
+/**
+ * A cached lookup that a slow or failed Elasticsearch must not take down: on
+ * failure, the empty answer, cached briefly (OUTAGE_CACHE_LIFE) so it is asked
+ * again within minutes; never cached for hours as if the depot stocked nothing.
+ *
+ * Called inside a `'use cache'` function. Before this, one search timing out
+ * (8 s, one retry) threw out of the page that called it, and during a build
+ * that stopped the whole build at whichever depot page was rendering
+ * (/where-to-buy-shipping-containers/dallas-tx, 2026-11-17).
+ */
+async function withSearchFallback<T>(label: string, lookup: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    const result = await lookup()
+    cacheLife('hours')
+    return result
+  } catch (err) {
+    console.error(`[search] ${label} failed:`, err)
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return fallback
+  }
 }
 
 /**
@@ -481,12 +502,18 @@ function lowestRentAt(pool: FormattedContainerHit[], depot: string): number | nu
  */
 export async function getDepotLowestRent(depot: string): Promise<number | null> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
-  const own = lowestRentAt(await getShippingContainersByLocation(depot), depot)
-  if (own !== null) return own
-  return lowestRentAt(await getShippingContainersByLocation(DEFAULT_LOCATION), DEFAULT_LOCATION)
+  // Null on a failed search: the page drops the price clause, as for a depot with no rentals.
+  return withSearchFallback(
+    `lowest rent for ${depot}`,
+    async () => {
+      const own = lowestRentAt(await getShippingContainersByLocation(depot), depot)
+      if (own !== null) return own
+      return lowestRentAt(await getShippingContainersByLocation(DEFAULT_LOCATION), DEFAULT_LOCATION)
+    },
+    null,
+  )
 }
 
 /**
@@ -501,10 +528,10 @@ export async function getCachedDepotFeaturedContainers(
   paymentType: FeaturedPaymentType = 'buy',
 ): Promise<DepotFeaturedContainer[]> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
-  return getDepotFeaturedContainers(depot, specKeys, paymentType)
+  // Empty on a failed search: the row is left out, as for a depot that stocks none of the specs.
+  return withSearchFallback(`featured containers for ${depot}`, () => getDepotFeaturedContainers(depot, specKeys, paymentType), [])
 }
 
 // Single product lookup for the PDP (/product/[slug]). Accessories are
@@ -696,9 +723,15 @@ export type ProductHandleEntry = { handle: string; updatedAt?: string }
 // grows.
 export async function getAllProductHandles(): Promise<ProductHandleEntry[]> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
 
+  // Empty on a failed search: the product route prebuilds its placeholder only
+  // (every product still renders on request), and the sitemap's product list is
+  // asked again within minutes, rather than the build or the sitemap failing.
+  return withSearchFallback('product handle list', listAllProductHandles, [])
+}
+
+async function listAllProductHandles(): Promise<ProductHandleEntry[]> {
   const PAGE_SIZE = 1000
   const entries: ProductHandleEntry[] = []
   let searchAfter: (string | number)[] | undefined

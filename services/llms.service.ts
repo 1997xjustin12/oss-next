@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { CACHE_TAGS } from '@/config/cache'
+import { CACHE_TAGS, OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { DEPOTS, depotPagePath } from '@/lib/locations'
 import { NATIVE_PAGES } from '@/config/pages'
 import { ROUTES } from '@/config/routes'
@@ -29,6 +29,19 @@ const MAX_BLOG_LINKS = 40
 const MAX_GUIDE_LINKS = 40
 /** Pages whose full text is inlined into llms-full.txt. */
 const MAX_FULL_PAGES = 20
+
+/**
+ * How long llms-full.txt may take before it stops waiting for the pages it
+ * inlines, counted from its start. Next gives one cache fill 54 s during a
+ * build (90% of staticPageGenerationTimeout), and this file is prerendered:
+ * the index (sitemap and blog list) plus twenty page fetches over a slow
+ * backend went past it and stopped the build (2026-11-17). A page not back in
+ * time is left out, like one that failed, and the count in the file says so;
+ * the file is then cached briefly so a full one follows.
+ */
+const FULL_TXT_BUDGET_MS = 40_000
+/** The least the pages get, however long the index took. */
+const MIN_INLINE_MS = 5_000
 
 /**
  * Pages worth naming explicitly, in the order a reader wants them.
@@ -308,8 +321,8 @@ export async function buildLlmsTxt(): Promise<string> {
  */
 export async function buildLlmsFullTxt(): Promise<string> {
   'use cache'
-  cacheLife('hours')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PAGES, CACHE_TAGS.BLOG)
+  const started = Date.now()
 
   const [index, contentPages, blogList] = await Promise.all([
     buildLlmsTxt(),
@@ -326,11 +339,22 @@ export async function buildLlmsFullTxt(): Promise<string> {
   const keyPaths = KEY_PAGES.map((p) => p.path).filter((path) => live.has(path))
   const selected = [...new Set([...keyPaths, ...candidates.sort()])].slice(0, MAX_FULL_PAGES)
 
+  // One deadline for all of them, not one per page: they run in parallel.
+  const inlineMs = Math.max(MIN_INLINE_MS, FULL_TXT_BUDGET_MS - (Date.now() - started))
+  let outOfTime = false
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const deadline = new Promise<null>((resolve) => {
+    timer = setTimeout(() => {
+      outOfTime = true
+      resolve(null)
+    }, inlineMs)
+  })
+
   const pages = await Promise.all(
     selected.map(async (path) => {
       const segments = path.replace(/^\/|\/$/g, '').split('/')
       try {
-        const page = await fetchWpPage(segments)
+        const page = await Promise.race([fetchWpPage(segments), deadline])
         if (!page) return null
         const body = htmlToMarkdown(page.content, {
           baseUrl: SITE.url,
@@ -345,7 +369,13 @@ export async function buildLlmsFullTxt(): Promise<string> {
     }),
   )
 
+  clearTimeout(timer)
   const included = pages.filter((p): p is string => Boolean(p))
+  // A file cut short by the budget is replaced within minutes, not served for hours.
+  // Two calls, not a ternary: cacheLife takes a profile name or an object, not their union.
+  if (outOfTime) cacheLife(OUTAGE_CACHE_LIFE)
+  else cacheLife('hours')
+  if (outOfTime) console.error(`[llms] llms-full.txt inlined ${included.length} of ${selected.length} pages within ${Math.round(inlineMs / 1000)} s`)
 
   const articles = blogList.posts.map((post) =>
     [
