@@ -6,7 +6,7 @@ import { GBP_SHARED_DEFAULTS } from '@/lib/data/gbpShared'
 import { GBP_SNAPSHOT } from '@/lib/data/gbpSnapshot'
 import { GBP_TEMPLATE_DEFAULT } from '@/lib/data/gbpTemplate'
 import { conformGbpPage, conformGbpShared, conformGbpTemplate } from '@/lib/gbpValidate'
-import { getRedisClient } from '@/lib/redis'
+import { getRedisClient, getWithRetry } from '@/lib/redis'
 import type { GbpPage, GbpSharedContent, GbpTemplate } from '@/types/gbp'
 import type { PageSeo } from '@/types/seo'
 
@@ -61,23 +61,9 @@ function unwrap(raw: unknown): { data: unknown; updatedAt?: string; updatedBy?: 
 // ─── Published reads (the live pages) ────────────────────────────────────────
 
 /**
- * One more try after a short pause before giving up. Builds prerender every
- * GBP page in parallel, and a read can hit the client's 3 s timeout under that
- * load; without this the page was built from the code seed and kept it for
- * up to 15 minutes, which once Redis has admin edits means stale content after
- * a deploy.
- */
-async function getWithRetry(key: string): Promise<unknown> {
-  try {
-    return await getRedisClient().get<unknown>(key)
-  } catch {
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    return getRedisClient().get<unknown>(key)
-  }
-}
-
-/**
- * Never throws: an unreachable Redis renders the record as of the last build
+ * Never throws: a read is retried once (a slow answer under build load would
+ * otherwise bake the code seed into the page for up to 15 minutes) and capped
+ * by a deadline (lib/redis.ts getWithRetry). An unreachable Redis renders the record as of the last build
  * (the snapshot; the code seed if it has none), cached only briefly
  * (SHELL_OUTAGE_CACHE_LIFE), so edits published since that build return
  * within 15 minutes of Redis recovering.

@@ -35,6 +35,42 @@ export function getRedisClient(): Redis {
 }
 
 /**
+ * A cached page read from Redis: one GET, one more try after a short pause,
+ * and a hard deadline over both that does not depend on the client's own
+ * per-command abort.
+ *
+ * The build prerenders every GBP and location page at once, and Next fails the
+ * whole build when a `'use cache'` fill takes over 50 s ("Filling a cache
+ * during prerender timed out"). That happened once on a local build
+ * (2026-11-16, getGbpTemplate) although each command is capped at 3 s; the
+ * cause was not found. With this deadline a stalled read rejects, and the
+ * caller's fallback (the snapshot, else the code seed) renders the page.
+ */
+const PAGE_READ_DEADLINE_MS = 10_000
+
+export async function getWithRetry<T = unknown>(key: string): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Redis read of ${key} exceeded ${PAGE_READ_DEADLINE_MS} ms`)), PAGE_READ_DEADLINE_MS)
+  })
+  const read = (async () => {
+    try {
+      return await getRedisClient().get<T>(key)
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      return getRedisClient().get<T>(key)
+    }
+  })()
+  // The losing read may still reject later; that must not surface as unhandled.
+  read.catch(() => {})
+  try {
+    return await Promise.race([read, deadline])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/**
  * Count one event in a window that expires on its own, in ONE request.
  *
  * Every rate limiter here used to send `INCR`, then — on the first hit of a
