@@ -4,44 +4,45 @@ import { LocationSearch } from '@/components/shared/LocationSearch'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ReviewsSection } from '@/components/shared/ReviewsSection'
 import { ROUTES } from '@/config/routes'
-import { ALL_CITY_LINKS, ALL_CITY_TEXT, ALL_CITY_VIDEO } from '@/lib/data/allCityContent'
-import { ALL_CITY_LISTS } from '@/lib/data/allCityLists'
+import { allCityDepotParts, allCityOtherHref, allCityPath, resolveAllCityText } from '@/lib/allCityPage'
+import { ALL_CITY_ZIP_ANCHOR } from '@/lib/data/allCityTemplate'
 import { locationPath } from '@/lib/locationPage'
 import { breadcrumbNode, graph, siteNodes, webPageNode } from '@/lib/schema'
+import { getAllCityLists } from '@/services/allCity.service'
 import { getReviews } from '@/services/review.service'
 import { CityFinancing } from './CityFinancing'
 import { CityHero } from './CityHero'
 import { CityIntro } from './CityIntro'
 import { CityLists } from './CityLists'
+import { CityOfferBand } from './CityOfferBand'
 import { CityProducts } from './CityProducts'
 import { CitySteps } from './CitySteps'
-import type { AllCityLink, AllCityPage as AllCityPageRecord } from '@/types/allCity'
+import type { AllCityDepot, AllCityPage as AllCityPageRecord, AllCityTemplate } from '@/types/allCity'
 
-type Props = { page: AllCityPageRecord }
-
-/** The ZIP box the steps' "Enter zip/postal code" link scrolls to. */
-const ZIP_ANCHOR = 'find-prices'
+type Props = {
+  page: AllCityPageRecord
+  /** The published template, or a draft for the admin preview. */
+  template: AllCityTemplate
+  depot: AllCityDepot
+}
 
 /**
- * One /all-city/ page: WordPress's city template, its visible sections in its
- * order (copy in lib/data/allCityContent.ts, the record in allCityPages.ts).
- * Static: the products and reviews are cached reads; the ZIP box, the review
- * slider and the video are the client code.
+ * One /all-city/ page: WordPress's city template (or its depot-city variant),
+ * its visible sections in its order, filled from the page, its depot and the
+ * template. Static: the products, lists and reviews are cached reads; the ZIP
+ * box, the review slider and the video are the client code.
  */
-export async function AllCityPage({ page }: Props) {
-  const reviews = await getReviews()
-  const { depot } = page
-  const path = ROUTES.ALL_CITY(page.slug)
+export async function AllCityPage({ page, template, depot }: Props) {
+  const [reviews, lists] = await Promise.all([getReviews(), getAllCityLists(page.state, page.slug)])
+  const text = resolveAllCityText(template, page)
+  const { banner, specs } = allCityDepotParts(depot, page)
+  const path = allCityPath(page.slug)
   const depotHref = locationPath(depot.locationSlug)
-
-  // The state's two lists, without this page (WordPress left the current post out of both).
-  const lists = ALL_CITY_LISTS[depot.state]
-  const toLinks = (list: readonly (readonly [string, string])[] = []): AllCityLink[] =>
-    list.filter(([slug]) => slug !== page.slug).map(([slug, city]) => ({ slug, city }))
+  const depotCity = page.variant === 'depotCity'
 
   const jsonLd = graph([
     ...siteNodes(),
-    webPageNode({ path, name: page.seoTitle, description: page.seoDescription }),
+    webPageNode({ path, name: page.seo.title, description: page.seo.description }),
     breadcrumbNode([
       { name: 'Home', path: ROUTES.HOME },
       { name: 'Where to Buy', path: ROUTES.WHERE_TO_BUY },
@@ -58,42 +59,48 @@ export async function AllCityPage({ page }: Props) {
 
       <CityHero
         city={page.city}
-        body={ALL_CITY_TEXT.hero.body}
-        depotButton={{ label: ALL_CITY_TEXT.hero.depotButton, href: depotHref }}
-        otherButton={{ label: ALL_CITY_TEXT.hero.otherButton, href: depot.otherPricesHref }}
+        body={text.heroBody}
+        depotButton={{ label: text.depotButton, href: depotHref }}
+        otherButton={{ label: text.otherButton, href: allCityOtherHref(text, depot) }}
+        background={template.media.heroBackground}
+        pinIcon={template.media.pinIcon}
+        cityIsHeading={depotCity}
       />
 
       <CityIntro
-        banner={depot.banner}
+        banner={banner}
         bannerAlt={`Shipping containers at the ${depot.depot} depot`}
-        quote={{ label: ALL_CITY_TEXT.quoteButton, href: ALL_CITY_LINKS.quote }}
-        heading={ALL_CITY_TEXT.intro.heading(page.city)}
-        paragraphs={ALL_CITY_TEXT.intro.paragraphs(page.city)}
-        whyHeading={ALL_CITY_TEXT.why.heading}
-        why={ALL_CITY_TEXT.why.paragraphs(page.city)}
+        quote={{ label: text.quoteButton, href: template.links.quote }}
+        heading={text.introHeading}
+        body={text.introBody}
+        whyHeading={text.whyHeading}
+        whyBody={text.whyBody}
       />
 
-      <CityProducts heading={page.h1} depot={depot.depot} specs={depot.specs} seeMore={{ label: ALL_CITY_TEXT.seeMore, href: depotHref }} />
-
-      <CityLists
-        popularHeading={ALL_CITY_TEXT.popularHeading(depot.stateName)}
-        popular={toLinks(lists?.popular)}
-        viewAllLabel={ALL_CITY_TEXT.viewAllLabel(depot.stateName)}
-        viewAll={toLinks(lists?.viewAll)}
+      <CityProducts
+        heading={depotCity ? page.keywordHeading || page.h1 : page.h1}
+        headingLevel={depotCity ? 'h2' : 'h1'}
+        depot={depot.depot}
+        specs={specs}
+        seeMore={{ label: text.seeMore, href: depotHref }}
       />
 
-      <section aria-label={ALL_CITY_VIDEO.title} className="bg-white px-[5%] pb-10 dark:bg-neutral-950">
-        <div className="mx-auto max-w-4xl">
-          <YouTubeEmbed video={ALL_CITY_VIDEO} />
-        </div>
-      </section>
+      <CityLists popularHeading={text.popularHeading} popular={lists.popular} viewAllLabel={text.viewAllLabel} viewAll={lists.viewAll} />
 
-      <CitySteps heading={ALL_CITY_TEXT.steps.heading(page.city)} steps={ALL_CITY_TEXT.steps.items} zipAnchor={`#${ZIP_ANCHOR}`} />
+      {template.media.youtubeId && (
+        <section aria-label={template.media.videoTitle} className="bg-white px-[5%] pb-10 dark:bg-neutral-950">
+          <div className="mx-auto max-w-4xl">
+            <YouTubeEmbed video={{ id: template.media.youtubeId, title: template.media.videoTitle }} />
+          </div>
+        </section>
+      )}
 
-      <section id={ZIP_ANCHOR} aria-labelledby="city-find-prices" className="scroll-mt-24 bg-white px-[5%] pb-12 dark:bg-neutral-950">
+      <CitySteps heading={text.stepsHeading} steps={text.steps} />
+
+      <section id={ALL_CITY_ZIP_ANCHOR} aria-labelledby="city-find-prices" className="scroll-mt-24 bg-white px-[5%] pb-12 dark:bg-neutral-950">
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="city-find-prices" className="text-xl font-bold text-theme-dark sm:text-2xl dark:text-white">
-            {ALL_CITY_TEXT.locatorHeading}
+            {text.locatorHeading}
           </h2>
           <div className="mt-5">
             <LocationSearch tone="onLight" />
@@ -102,12 +109,14 @@ export async function AllCityPage({ page }: Props) {
       </section>
 
       <CityFinancing
-        heading={ALL_CITY_TEXT.financing.heading}
-        rental={ALL_CITY_TEXT.financing.rental}
-        lease={{ ...ALL_CITY_TEXT.financing.lease, href: ALL_CITY_LINKS.financing }}
+        heading={text.financingHeading}
+        rental={{ title: text.rentalTitle, body: text.rentalBody }}
+        lease={{ title: text.leaseTitle, body: text.leaseBody, button: text.leaseButton, href: template.links.financing }}
       />
 
-      <ReviewsSection heading={ALL_CITY_TEXT.reviewsHeading} reviews={reviews} />
+      <ReviewsSection heading={text.reviewsHeading} reviews={reviews} />
+
+      {text.offerBand.trim() && <CityOfferBand text={text.offerBand} />}
     </div>
   )
 }

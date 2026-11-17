@@ -1,26 +1,24 @@
 import Image from 'next/image'
-import { LandingRichText } from '@/components/shared/LandingRichText'
 import { PillLink } from '@/components/shared/PillLink'
-import type { LandingInline } from '@/lib/data/containerLandingContent'
+import { CityParagraphs } from './CityParagraphs'
+import type { AllCityImage } from '@/types/allCity'
 
 type Props = {
-  banner: { src: string; width: number; height: number }
+  banner: AllCityImage
   bannerAlt: string
   quote: { label: string; href: string }
   heading: string
-  paragraphs: LandingInline[][]
+  body: string
   whyHeading: string
-  why: LandingInline[][]
+  whyBody: string
 }
-
-const PARAGRAPH = 'text-base leading-relaxed text-theme-dark dark:text-neutral-200'
 
 /**
  * The grey band under the hero: the depot's photo and "GET A QUOTE" beside the
  * template's paragraphs about the city, then "WHY CHOOSE ON-SITE STORAGE
  * SOLUTIONS?" across the full width.
  */
-export function CityIntro({ banner, bannerAlt, quote, heading, paragraphs, whyHeading, why }: Props) {
+export function CityIntro({ banner, bannerAlt, quote, heading, body, whyHeading, whyBody }: Props) {
   return (
     <section aria-labelledby="city-intro" className="bg-neutral-100 px-[5%] py-10 sm:py-12 dark:bg-neutral-900">
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
@@ -40,23 +38,15 @@ export function CityIntro({ banner, bannerAlt, quote, heading, paragraphs, whyHe
           <h2 id="city-intro" className="text-xl font-bold text-theme-dark sm:text-2xl dark:text-white">
             {heading}
           </h2>
-          <div className="mt-4 space-y-4">
-            {paragraphs.map((paragraph, i) => (
-              <p key={i} className={PARAGRAPH}>
-                <LandingRichText content={paragraph} />
-              </p>
-            ))}
+          <div className="mt-4">
+            <CityParagraphs text={body} />
           </div>
         </div>
       </div>
 
       <h2 className="mt-10 text-xl font-bold text-theme-dark sm:text-2xl dark:text-white">{whyHeading}</h2>
-      <div className="mt-4 space-y-4">
-        {why.map((paragraph, i) => (
-          <p key={i} className={PARAGRAPH}>
-            <LandingRichText content={paragraph} />
-          </p>
-        ))}
+      <div className="mt-4">
+        <CityParagraphs text={whyBody} />
       </div>
     </section>
   )

@@ -190,7 +190,13 @@ export async function loginUser(identifier: string, password: string): Promise<A
 export async function requestPasswordReset(email: string): Promise<void> {
   const res = await fetch(FORGOT_PASSWORD_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(await visitorAuthHeaders()) },
+    headers: {
+      'Content-Type': 'application/json',
+      // Which store this is: without it the backend's welcome and reset emails
+      // named the API's own host ("Welcome to Be-Admin") and linked to the admin.
+      'X-Store-Domain': STORE_DOMAIN ?? '',
+      ...(await visitorAuthHeaders()),
+    },
     body: JSON.stringify({ email }),
   })
 
@@ -253,7 +259,13 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthSessio
 
   const res = await fetch(REGISTER_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(await visitorAuthHeaders()) },
+    headers: {
+      'Content-Type': 'application/json',
+      // Which store this is: without it the backend's welcome and reset emails
+      // named the API's own host ("Welcome to Be-Admin") and linked to the admin.
+      'X-Store-Domain': STORE_DOMAIN ?? '',
+      ...(await visitorAuthHeaders()),
+    },
     body: JSON.stringify(body),
   })
 

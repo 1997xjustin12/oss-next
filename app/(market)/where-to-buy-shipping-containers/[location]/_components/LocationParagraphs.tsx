@@ -1,4 +1,4 @@
-import { LocationRichText } from './LocationRichText'
+import { TemplateRichText } from '@/components/shared/TemplateRichText'
 
 type Props = {
   /** Template text; paragraphs are separated by a blank line. */
@@ -14,7 +14,7 @@ export function LocationParagraphs({ text, phone, className = 'text-base leading
     <div className="space-y-4">
       {paragraphs.map((paragraph) => (
         <p key={paragraph.slice(0, 48)} className={className}>
-          <LocationRichText text={paragraph} phone={phone} />
+          <TemplateRichText text={paragraph} phone={phone} />
         </p>
       ))}
     </div>

@@ -1,4 +1,4 @@
-import { LocationRichText } from './LocationRichText'
+import { TemplateRichText } from '@/components/shared/TemplateRichText'
 
 type Props = {
   text: string
@@ -31,7 +31,7 @@ export function LocationBand({ text, variant, phone }: Props) {
   return (
     <section className={style.section}>
       <h2 className={style.heading}>
-        <LocationRichText text={text} accentClassName={style.accent} linkClassName={style.link} phone={phone} />
+        <TemplateRichText text={text} accentClassName={style.accent} linkClassName={style.link} phone={phone} />
       </h2>
     </section>
   )
