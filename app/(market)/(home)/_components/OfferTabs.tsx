@@ -72,7 +72,8 @@ export function OfferTabs() {
 
   return (
     <section aria-label="Buy, rent or rent-to-own a shipping container" className="bg-white px-[5%] py-10 sm:py-14 dark:bg-neutral-950">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-x-10 lg:gap-y-8">
+      {/* Full width inside the section's 5% gutter, edges in line with the header and the other sections (AGENTS.md §14). */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-x-10 lg:gap-y-8">
         {tabs.map((tab, i) => {
           const open = tab.id === openId
           // Closed tabs keep their own order among themselves, after the open one's panel.
@@ -134,7 +135,8 @@ function OfferPanel({ tab }: { tab: OfferTab }) {
     <div className="grid grid-cols-1 gap-6 pt-2 lg:grid-cols-[1fr_20rem] lg:gap-x-16 lg:gap-y-8 lg:px-10 lg:pt-0">
       <div className="order-1">
         <h2 className="text-2xl font-bold text-theme-primary sm:text-3xl dark:text-red-400">{tab.heading}</h2>
-        <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-neutral-700 sm:mt-6 sm:text-base dark:text-neutral-300">
+        {/* The paragraphs alone keep a reading width (about 75 characters); the section itself is full width. */}
+        <div className="mt-4 max-w-3xl space-y-4 text-[15px] leading-relaxed text-neutral-700 sm:mt-6 sm:text-base dark:text-neutral-300">
           {paragraphs.map((paragraph, i) => (
             <p key={i}>
               <TemplateRichText text={paragraph} linkClassName={BODY_LINK} />
