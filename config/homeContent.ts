@@ -97,9 +97,9 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
     default: 'The On-Site Storage Difference',
   },
   { key: 'onsiteDifference.item1', section: 'The On-Site Difference', label: 'Point 1', element: 'h3', default: 'No Hidden Fees' },
-  { key: 'onsiteDifference.item2', section: 'The On-Site Difference', label: 'Point 2', element: 'h3', default: '70+ Strategic Hubs' },
-  { key: 'onsiteDifference.item3', section: 'The On-Site Difference', label: 'Point 3', element: 'h3', default: '75+ Years Experience' },
-  { key: 'onsiteDifference.item4', section: 'The On-Site Difference', label: 'Point 4', element: 'h3', default: 'Flexible Options' },
+  { key: 'onsiteDifference.item2', section: 'The On-Site Difference', label: 'Point 2', element: 'h3', default: '60+ Locations In The U.S. And Canada' },
+  { key: 'onsiteDifference.item3', section: 'The On-Site Difference', label: 'Point 3', element: 'h3', default: '75+ Years Of Combined Industry Experience' },
+  { key: 'onsiteDifference.item4', section: 'The On-Site Difference', label: 'Point 4', element: 'h3', default: 'Buy, Rent, Or Rent-To-Own' },
 
   {
     key: 'trustedBy.h2',
