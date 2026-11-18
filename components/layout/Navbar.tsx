@@ -125,12 +125,19 @@ export function Navbar() {
       {/* ── Desktop / tablet bar ── */}
       <div className="px-[5%] lg:px-4 xl:px-[5%] flex items-center justify-between h-17 gap-2 xl:gap-4">
         <Link href={ROUTES.HOME} className="flex items-center gap-[10px] shrink-0">
+          {/*
+            Unoptimized: the file is already the right size (290×80 for 2x
+            screens, 7 KB), and on every page view the logo went through the
+            image optimizer. On 2026-11-18 the server's AVIF version at 256 px
+            hung forever, so the browser tab kept loading on every page.
+          */}
           <Image
-            src="/images/logo/oss-logo.webp"
+            src="/images/logo/oss-logo-290.webp"
             alt="On-site Storage Solutions"
             width={145}
             height={40}
             priority
+            unoptimized
           />
         </Link>
 

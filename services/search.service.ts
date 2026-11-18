@@ -294,21 +294,40 @@ export async function getShippingContainersByLocation(location: string) {
 async function cachedLocationPool(location: string): Promise<{ ok: true; hits: FormattedContainerHit[] } | { ok: false }> {
   'use cache'
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.SEARCH)
+  let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    const result = await customFieldsSearch({
+    const search = customFieldsSearch({
       filters:     { location: [location] },
       categories:  SHIPPING_CONTAINER_CATEGORIES,
       page:        0,
       hitsPerPage: ALL_RESULTS_CAP,
     })
+    // The search may still fail after the deadline has answered; that must not surface as unhandled.
+    search.catch(() => {})
+    const deadline = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`no answer within ${LOCATION_POOL_DEADLINE_MS / 1000} s`)), LOCATION_POOL_DEADLINE_MS)
+    })
+    const result = await Promise.race([search, deadline])
     cacheLife('minutes')
     return { ok: true, hits: result.hits.map(withoutFieldMetadata) }
   } catch (err) {
     console.error('[search] containers at', location, 'failed:', err)
     cacheLife(OUTAGE_CACHE_LIFE)
     return { ok: false }
+  } finally {
+    clearTimeout(timer)
   }
 }
+
+/**
+ * The longest cachedLocationPool waits for its search. The client's own limit
+ * (8 s, one retry) did not stop a response that stalled mid-download ("Body
+ * Timeout Error"), and during a build Next fails the page when any cache fill
+ * passes 54 s, nested ones included: a lowest-rent lookup, which may search
+ * twice in a row, did (/where-to-buy-shipping-containers/baltimore-md-2,
+ * 2026-11-18). 20 s keeps two in a row under it.
+ */
+const LOCATION_POOL_DEADLINE_MS = 20_000
 
 /**
  * The containers a depot page leads with, one per requested spec.

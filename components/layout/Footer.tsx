@@ -97,11 +97,13 @@ export async function Footer() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-6 lg:gap-10 mb-8.5">
         <div className="sm:col-span-2 lg:col-span-1">
           <Link href={ROUTES.HOME} className="inline-flex items-center mb-3">
+            {/* Unoptimized, as in the Navbar: the file is already the right size. */}
             <Image
-              src="/images/logo/oss-logo.webp"
+              src="/images/logo/oss-logo-290.webp"
               alt="On-site Storage Solutions"
               width={145}
               height={40}
+              unoptimized
             />
           </Link>
           <p className="text-[13px] text-[#8a8a8a] leading-[1.65] mb-[15px]">

@@ -55,11 +55,13 @@ export function CartLocationConflictModal({
             className="object-cover object-[30%_center]"
           />
           <div className="absolute left-4 top-4 rounded bg-white/95 px-2 py-1.5 shadow-sm">
+            {/* Unoptimized, as in the Navbar: the file is already the right size. */}
             <Image
-              src="/images/logo/oss-logo.webp"
+              src="/images/logo/oss-logo-290.webp"
               alt="On Site Storage Solutions"
-              width={497}
-              height={98}
+              width={145}
+              height={40}
+              unoptimized
               className="h-auto w-28"
             />
           </div>
