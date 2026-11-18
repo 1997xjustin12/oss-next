@@ -132,7 +132,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
     label: 'Section Heading',
     element: 'h2',
     accent: true,
-    default: 'What Our [[Customers]] Say',
+    default: 'What Our Customers Say About Our Shipping Containers',
     help: 'Used by both the static and the live reviews section.',
   },
 

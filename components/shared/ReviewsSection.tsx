@@ -39,7 +39,7 @@ function GoogleIcon() {
  * Google Business Profile URL is not recorded anywhere (see config/reviews.ts).
  * A review left on this site is from a customer with an order, so it says so.
  */
-function SourceMark({ review }: { review: Review }) {
+export function SourceMark({ review }: { review: Review }) {
   if (review.source === 'onsite') {
     return (
       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 dark:text-green-400">

@@ -99,7 +99,7 @@ export function ContainerCardGrid({ defaults }: Props) {
         role="region"
         aria-label="Featured containers"
         // p-1 / scroll-px-1: room for a card's hover ring and lift inside the scrolling box, which clips.
-        className="flex min-w-0 [scrollbar-width:none] flex-1 snap-x snap-mandatory scroll-px-1 gap-4 overflow-x-auto scroll-smooth p-1 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:p-0 sm:snap-none lg:grid-cols-4 lg:gap-8"
+        className="scrollbar-none flex min-w-0 flex-1 snap-x snap-mandatory scroll-px-1 gap-4 overflow-x-auto scroll-smooth p-1 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:p-0 sm:snap-none lg:grid-cols-4 lg:gap-8"
       >
         {FEATURED_CONTAINERS.map((item) => {
           const card = pending ? defaults[item.depotSpec] : current?.[item.depotSpec]

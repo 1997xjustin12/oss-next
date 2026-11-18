@@ -22,7 +22,7 @@ import { OfferTabs } from "./OfferTabs";
 import { RightContainer } from "./RightContainer";
 import { ContainerServices } from "./ContainerServices";
 import { OnsiteDifference } from "./OnsiteDifference";
-import { ReviewsSection } from "@/components/shared/ReviewsSection";
+import { HomeReviews } from "./HomeReviews";
 
 export { HOME_VARIANTS, type HomeVariant };
 
@@ -139,7 +139,7 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
       <ContainerServices heading={copy["services.h2"]} />
       <QuoteForm heading={copy["quoteForm.h2"]} />
       <DeliveredContainers heading="Recently Delivered Containers" items={delivered} />
-      <ReviewsSection heading={copy["reviews.h2"]} reviews={reviews} />
+      <HomeReviews heading={copy["reviews.h2"]} reviews={reviews} />
       <StatesSection heading={copy["states.h2"]} />
     </>
   );
