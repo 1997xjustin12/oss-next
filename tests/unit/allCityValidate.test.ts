@@ -65,14 +65,39 @@ describe('conformAllCityTemplate', () => {
 
   it('takes wording, keeps the default for a bad link, image or empty steps', () => {
     const t = conformAllCityTemplate({
-      city: { introHeading: 'Containers in {city}', otherHref: 'javascript:alert(1)', steps: [] },
+      city: { introHeading: 'Containers in {city}', steps: [] },
       media: { heroBackground: 'https://evil.example.com/x.webp', youtubeId: 'https://www.youtube.com/watch?v=abcdefghijk' },
     })
     assert.equal(t.city.introHeading, 'Containers in {city}')
-    assert.equal(t.city.otherHref, ALL_CITY_TEMPLATE_DEFAULT.city.otherHref)
     assert.deepEqual(t.city.steps, ALL_CITY_TEMPLATE_DEFAULT.city.steps)
     assert.equal(t.media.heroBackground, ALL_CITY_TEMPLATE_DEFAULT.media.heroBackground)
     assert.equal(t.media.youtubeId, 'abcdefghijk')
+  })
+
+  it('gives a template saved before the redesigned sections their defaults, and checks their shape', () => {
+    // A template as stored before 2026-11-18: no sections, and the old hero fields.
+    const old = conformAllCityTemplate({ city: { heroBody: 'old', introHeading: 'Kept' } })
+    assert.deepEqual(old.sections, ALL_CITY_TEMPLATE_DEFAULT.sections)
+    assert.equal(old.city.introHeading, 'Kept')
+    assert.equal('heroBody' in old.city, false)
+
+    const t = conformAllCityTemplate({
+      sections: {
+        breadcrumbs: { home: 'Start', state: 42 },
+        hero: { badge: '', stats: [{ value: '9', label: 'Nine' }, 'junk', { value: 1 }], quote: { button: 'Send' } },
+      },
+    })
+    assert.equal(t.sections.breadcrumbs.home, 'Start')
+    assert.equal(t.sections.breadcrumbs.state, ALL_CITY_TEMPLATE_DEFAULT.sections.breadcrumbs.state)
+    assert.equal(t.sections.hero.badge, '')
+    assert.equal(t.sections.hero.heading, '{h1}')
+    // A bad item is dropped; an item missing a field takes the seed item's.
+    assert.deepEqual(t.sections.hero.stats, [
+      { value: '9', label: 'Nine' },
+      { value: ALL_CITY_TEMPLATE_DEFAULT.sections.hero.stats[0].value, label: ALL_CITY_TEMPLATE_DEFAULT.sections.hero.stats[0].label },
+    ])
+    assert.equal(t.sections.hero.quote.button, 'Send')
+    assert.equal(t.sections.hero.quote.heading, ALL_CITY_TEMPLATE_DEFAULT.sections.hero.quote.heading)
   })
 
   it('allows a blank video and a blank closing band', () => {

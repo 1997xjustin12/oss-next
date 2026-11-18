@@ -4,12 +4,14 @@ import { LocationSearch } from '@/components/shared/LocationSearch'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ReviewsSection } from '@/components/shared/ReviewsSection'
 import { ROUTES } from '@/config/routes'
-import { allCityDepotParts, allCityOtherHref, allCityPath, resolveAllCityText } from '@/lib/allCityPage'
+import { allCityDepotParts, allCityPath, resolveAllCitySections, resolveAllCityText } from '@/lib/allCityPage'
 import { ALL_CITY_ZIP_ANCHOR } from '@/lib/data/allCityTemplate'
 import { locationPath } from '@/lib/locationPage'
 import { breadcrumbNode, graph, siteNodes, webPageNode } from '@/lib/schema'
 import { getAllCityLists } from '@/services/allCity.service'
+import { getDepotLowestUsedBuy } from '@/services/search.service'
 import { getReviews } from '@/services/review.service'
+import { CityBreadcrumbs } from './CityBreadcrumbs'
 import { CityFinancing } from './CityFinancing'
 import { CityHero } from './CityHero'
 import { CityIntro } from './CityIntro'
@@ -33,21 +35,28 @@ type Props = {
  * box, the review slider and the video are the client code.
  */
 export async function AllCityPage({ page, template, depot }: Props) {
-  const [reviews, lists] = await Promise.all([getReviews(), getAllCityLists(page.state, page.slug)])
+  const [reviews, lists, usedFrom] = await Promise.all([
+    getReviews(),
+    getAllCityLists(page.state, page.slug),
+    getDepotLowestUsedBuy(depot.depot),
+  ])
   const text = resolveAllCityText(template, page)
+  const sections = resolveAllCitySections(template, page, { depot: depot.depot, usedFrom })
   const { banner, specs } = allCityDepotParts(depot, page)
   const path = allCityPath(page.slug)
   const depotHref = locationPath(depot.locationSlug)
   const depotCity = page.variant === 'depotCity'
+  // The state's list on the /all-city index.
+  const stateHref = `${ROUTES.ALL_CITY_INDEX}#state-${page.state.toLowerCase()}`
 
   const jsonLd = graph([
     ...siteNodes(),
     webPageNode({ path, name: page.seo.title, description: page.seo.description }),
+    // The trail the page shows (CityBreadcrumbs).
     breadcrumbNode([
-      { name: 'Home', path: ROUTES.HOME },
-      { name: 'Where to Buy', path: ROUTES.WHERE_TO_BUY },
-      { name: depot.depot, path: depotHref },
-      { name: page.city },
+      { name: sections.breadcrumbs.home, path: ROUTES.HOME },
+      { name: sections.breadcrumbs.state, path: stateHref },
+      { name: sections.breadcrumbs.city },
     ]),
   ])
 
@@ -57,15 +66,8 @@ export async function AllCityPage({ page, template, depot }: Props) {
       <JsonLd data={jsonLd} />
       <PageHeadScripts path={path} />
 
-      <CityHero
-        city={page.city}
-        body={text.heroBody}
-        depotButton={{ label: text.depotButton, href: depotHref }}
-        otherButton={{ label: text.otherButton, href: allCityOtherHref(text, depot) }}
-        background={template.media.heroBackground}
-        pinIcon={template.media.pinIcon}
-        cityIsHeading={depotCity}
-      />
+      <CityBreadcrumbs {...sections.breadcrumbs} stateHref={stateHref} />
+      <CityHero text={sections.hero} background={template.media.heroBackground} />
 
       <CityIntro
         banner={banner}
@@ -77,9 +79,11 @@ export async function AllCityPage({ page, template, depot }: Props) {
         whyBody={text.whyBody}
       />
 
+      {/* The hero holds the page's h1 now; until this section is redesigned, its heading is an h2
+          (the depot-city pages' keyword, or a plain one that does not repeat the h1). */}
       <CityProducts
-        heading={depotCity ? page.keywordHeading || page.h1 : page.h1}
-        headingLevel={depotCity ? 'h2' : 'h1'}
+        heading={depotCity ? page.keywordHeading || page.h1 : `Shipping Container Prices In ${page.city}, ${page.state}`}
+        headingLevel="h2"
         depot={depot.depot}
         specs={specs}
         seeMore={{ label: text.seeMore, href: depotHref }}

@@ -25,8 +25,8 @@ export default function AllCityTemplateAdmin() {
       </Link>
       <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">Template</h1>
       <p className="mt-1 mb-5 max-w-3xl text-sm text-theme-muted dark:text-neutral-400">
-        Every word on every /all-city/ page. A page’s own wording (its screen) replaces a field for that page only; its depot decides the banner, the
-        product cards and the location buttons. Publishing refreshes every page.
+        Every word on every /all-city/ page: first the redesigned sections (shared by every page), then each variant’s older sections. A page’s own wording (its screen) replaces a field of those for that page only; its depot decides the banner and the
+        product cards. Publishing refreshes every page.
       </p>
       <Suspense fallback={<p className="text-sm text-theme-muted">Loading…</p>}>
         <Editor />

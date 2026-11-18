@@ -18,10 +18,6 @@ type Props = {
 }
 
 const VARIANT_HINTS = (variant: 'city' | 'depotCity'): FieldHints => ({
-  [`${variant}.heroBody`]: { label: 'Hero text', multiline: true },
-  [`${variant}.depotButton`]: { label: '“See all location prices” button', help: 'Opens the depot’s location page.' },
-  [`${variant}.otherButton`]: { label: '“See other location prices” button' },
-  [`${variant}.otherHref`]: { label: 'Its link', help: 'Blank: each depot’s own (Depots screen).' },
   [`${variant}.introBody`]: { label: 'Intro paragraphs', multiline: true },
   [`${variant}.whyBody`]: { label: '“Why choose” paragraphs', multiline: true },
   [`${variant}.steps`]: { itemLabel: 'Step', newItem: { title: '', text: '' } },
@@ -30,16 +26,29 @@ const VARIANT_HINTS = (variant: 'city' | 'depotCity'): FieldHints => ({
   [`${variant}.offerBand`]: { label: 'Closing band', help: 'Blank: no band. The depot-city pages have “GET $50 OFF … {phone}”.' },
 })
 
-/** The template every /all-city/ page renders: both variants' wording, the images, the video and the two fixed links. */
+const SECTION_HERO_HELP =
+  'Also: {h1} the page’s own heading (city part in amber), {depot} its depot, {price} the depot’s lowest used container price (a figure using it is hidden when there is none), {depotCount} “1 Depot”.'
+
+/** The template every /all-city/ page renders: the redesigned sections, both variants' wording, the images, the video and the two fixed links. */
 export function AllCityTemplateEditor({ initialValue, previewPages, previewHref, ...props }: Props) {
   const hints: FieldHints = {
     city: { label: 'City pages (8,516)', help: ALL_CITY_PLACEHOLDER_HELP },
     depotCity: { label: 'Depot-city pages (23: Houston, Miami…)', help: ALL_CITY_PLACEHOLDER_HELP },
     ...VARIANT_HINTS('city'),
     ...VARIANT_HINTS('depotCity'),
+    sections: { label: 'Redesigned sections (every page)', help: `Top of the page, in order. ${ALL_CITY_PLACEHOLDER_HELP}` },
+    'sections.breadcrumbs': { label: 'Breadcrumbs', help: 'Home / state / city above the hero. The state links to its list on /all-city.' },
+    'sections.breadcrumbs.home': { label: 'First crumb (links to the homepage)' },
+    'sections.breadcrumbs.state': { label: 'Second crumb (the state)' },
+    'sections.breadcrumbs.city': { label: 'Last crumb (this page)' },
+    'sections.hero': { label: 'Hero', help: SECTION_HERO_HELP },
+    'sections.hero.badge': { label: 'Red label', help: 'Blank: no label.' },
+    'sections.hero.heading': { label: 'Heading (the page’s h1)', help: '{h1} is each page’s own heading (its screen), which matches its title and keyword: keep it for SEO.' },
+    'sections.hero.body': { label: 'Text under the heading', multiline: true },
+    'sections.hero.stats': { label: 'Figures under the hero', itemLabel: 'Figure', newItem: { value: '', label: '' } },
+    'sections.hero.quote': { label: 'Free-quote card', help: 'Its button is not connected yet.' },
     media: { label: 'Images and video' },
     'media.heroBackground': { label: 'Hero photo', help: 'A CDN link (onsite-cdn.sfo3.cdn.digitaloceanspaces.com) or a site path.' },
-    'media.pinIcon': { label: 'Pin icon beside the city' },
     'media.youtubeId': { label: 'Video (YouTube id or link)', help: 'Blank: no video.' },
     links: { label: 'Links' },
     'links.quote': { label: '“GET A QUOTE”' },

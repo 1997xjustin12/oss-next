@@ -569,6 +569,45 @@ export async function getDepotLowestRent(depot: string): Promise<number | null> 
 }
 
 /**
+ * The lowest price among a depot's published used containers for sale, or null
+ * when it sells none. A $0 listing is a price nobody entered, so it is skipped.
+ */
+function lowestUsedBuyAt(pool: FormattedContainerHit[], depot: string): number | null {
+  const prices = pool
+    .filter(
+      (product) =>
+        getCustomFieldValue(product, 'payment_type').toLowerCase() === 'buy' &&
+        getCustomFieldValue(product, 'condition').trim().toLowerCase() === 'used' &&
+        getCustomFieldValue(product, 'location').trim().toLowerCase() === depot.trim().toLowerCase(),
+    )
+    .map((product) => Number(product.sale_price))
+    .filter((price) => price > 0)
+  return prices.length ? Math.min(...prices) : null
+}
+
+/**
+ * "Used containers, starting price in <city>" on an /all-city/ page: its
+ * depot's cheapest used container for sale, or the national pool's when the
+ * depot sells none, so the figure is one a visitor can actually get. Null only
+ * when neither has one (or the search is down): the page then leaves the
+ * figure out. Cached for hours; a price change reaches it through the products tag.
+ */
+export async function getDepotLowestUsedBuy(depot: string): Promise<number | null> {
+  'use cache'
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  return withSearchFallback(
+    `lowest used buy price for ${depot}`,
+    async () => {
+      const own = lowestUsedBuyAt(await getShippingContainersByLocation(depot), depot)
+      if (own !== null) return own
+      return lowestUsedBuyAt(await getShippingContainersByLocation(DEFAULT_LOCATION), DEFAULT_LOCATION)
+    },
+    null,
+  )
+}
+
+/**
  * One named depot's featured containers, for a page that is about that depot
  * (the /where-to-buy-shipping-containers/[location] pages), so its row is in
  * the server HTML rather than fetched after load. Cached like the national

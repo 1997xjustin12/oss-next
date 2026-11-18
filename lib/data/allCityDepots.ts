@@ -9,14 +9,10 @@ import type { DepotFeaturedKey } from '@/services/search.service'
  *
  * WordPress had one Elementor template per depot, all with the same words
  * (lib/data/allCityTemplate.ts). What differed is here: the depot, its banner,
- * the four product cards and where "See other location prices" goes. Read from
+ * and the four product cards. Read from
  * the live pages on 2026-11-13. The code default, which the admin's All City
  * Pages → Depots edits.
  */
-
-/** "See other location prices": WordPress's /buy-shipping-containers, which it 301s to this (config/wpHiddenPages.ts). */
-const BUY_ONLINE = '/buy-shipping-containers-online'
-const WHERE_TO_BUY = '/where-to-buy-shipping-containers'
 
 const banner = (path: string, height = 455) => ({ src: `${CDN}/${path}`, width: 1024, height })
 
@@ -30,7 +26,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     state: 'GA',
     banner: banner('2022/12/27100125/Atlanta-Banner-1024x455.jpg'),
     depotCityBanner: banner('2022/12/27100124/Atlanta-Banner-1-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_20s_asis', 'used_40h_iicl', 'new_40s_iicl', 'new_40h_iicl'],
   },
   'baltimore-md': {
@@ -38,7 +33,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'baltimore-md-2',
     state: 'MD',
     banner: banner('2022/12/27100117/Baltimore-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_20s_cw', 'used_20s_iicl', 'used_20s_asis', 'new_40h_iicl'],
   },
   'charleston-sc': {
@@ -46,7 +40,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'charleston-sc',
     state: 'SC',
     banner: banner('2022/12/27100118/Charleston-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_40s_wwt', 'used_40s_cw', 'used_40s_asis', 'used_40s_iicl'],
     depotCitySpecs: ['used_20s_wwt', 'used_20s_asis', 'used_40s_iicl', 'new_40h_iicl'],
   },
@@ -55,7 +48,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'charlotte-nc',
     state: 'NC',
     banner: banner('2022/05/27100348/Charlotte-Banner-1024x455.jpg'),
-    otherPricesHref: BUY_ONLINE,
     specs: NEW_ROW,
   },
   'chicago-il': {
@@ -63,7 +55,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'chicago-il',
     state: 'IL',
     banner: banner('2022/12/27100118/Chicago-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_40s_wwt', 'used_40s_cw', 'used_40s_asis', 'used_40s_iicl'],
   },
   'cincinnati-oh': {
@@ -71,7 +62,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'cincinnati-oh',
     state: 'OH',
     banner: banner('2022/12/27100119/Cincinnati-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_40s_wwt', 'used_40s_asis', 'used_40s_iicl', 'used_40s_cw'],
   },
   'cleveland-oh': {
@@ -79,7 +69,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'cleveland-oh',
     state: 'OH',
     banner: banner('2022/12/27100119/Cleveland-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_40s_wwt', 'used_40s_iicl', 'used_40s_cw', 'used_40s_asis'],
   },
   'columbus-oh': {
@@ -87,7 +76,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'columbus-oh',
     state: 'OH',
     banner: banner('2022/12/27100121/Columbus-Ohio-Depot-1024x410.png', 410),
-    otherPricesHref: WHERE_TO_BUY,
     specs: NEW_ROW,
   },
   'dallas-tx': {
@@ -95,7 +83,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'dallas-tx',
     state: 'TX',
     banner: banner('2022/12/27100121/Dallas-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_40s_wwt', 'used_40s_iicl', 'used_40s_cw', 'used_40s_asis'],
   },
   'denver-co': {
@@ -103,7 +90,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'denver-co',
     state: 'CO',
     banner: banner('2022/12/27100121/Denver-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: NEW_ROW,
     depotCitySpecs: ['used_40s_wwt', 'used_40s_asis', 'used_40s_iicl', 'used_40s_cw'],
   },
@@ -112,7 +98,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'detroit-mi',
     state: 'MI',
     banner: banner('2022/12/27100124/Detroit-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_40s_wwt', 'used_40s_asis', 'used_40s_iicl', 'used_40s_cw'],
   },
   'el-paso-tx': {
@@ -120,7 +105,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'el-paso-tx',
     state: 'TX',
     banner: banner('2022/12/27100124/El-Paso-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: ['used_40s_wwt', 'used_40s_iicl', 'used_40s_cw', 'used_40s_asis'],
   },
   'houston-tx': {
@@ -128,7 +112,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'houston-tx',
     state: 'TX',
     banner: banner('2022/05/27100340/Houston-Banner-1024x455.jpg'),
-    otherPricesHref: BUY_ONLINE,
     specs: NEW_ROW,
     depotCitySpecs: ['used_40s_wwt', 'used_20s_cw', 'used_40s_iicl', 'used_40h_asis'],
   },
@@ -137,7 +120,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'indianapolis-in',
     state: 'IN',
     banner: banner('2022/05/27100339/Indianapolis-Banner-1024x455.jpg'),
-    otherPricesHref: BUY_ONLINE,
     specs: ['used_40s_wwt', 'used_40s_iicl', 'used_40s_cw', 'used_40s_asis'],
   },
   'jacksonville-fl': {
@@ -145,7 +127,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'jacksonville-fl',
     state: 'FL',
     banner: banner('2022/05/27100338/Jacksonville-Banner--1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: NEW_ROW,
   },
   'kansas-city-ks': {
@@ -153,7 +134,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'kansas-city-ks',
     state: 'KS',
     banner: banner('2022/05/27100338/Kansas-Banner-1024x455.jpg'),
-    otherPricesHref: BUY_ONLINE,
     specs: ['used_40s_wwt', 'used_40s_iicl', 'used_40s_cw', 'used_40s_asis'],
   },
   'laredo-tx': {
@@ -161,7 +141,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'laredo-tx',
     state: 'TX',
     banner: banner('2022/05/27100338/Laredo-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: NEW_ROW,
   },
   'miami-fl': {
@@ -169,7 +148,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'miami-fl',
     state: 'FL',
     banner: banner('2022/05/27100337/Miami-Banner-1024x455.jpg'),
-    otherPricesHref: BUY_ONLINE,
     specs: NEW_ROW,
   },
   'raleigh-nc': {
@@ -177,7 +155,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'raleigh-nc',
     state: 'NC',
     banner: banner('2022/05/27100332/Raleigh-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: NEW_ROW,
   },
   'san-antonio-tx': {
@@ -185,7 +162,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'san-antonio-tx',
     state: 'TX',
     banner: banner('2022/05/27100332/San-Antonio-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: NEW_ROW,
   },
   'tampa-fl': {
@@ -193,7 +169,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'tampa-fl',
     state: 'FL',
     banner: banner('2022/05/27100330/Tampa-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: NEW_ROW,
   },
   'wilmington-nc': {
@@ -201,7 +176,6 @@ const DEPOTS: Readonly<Record<string, Omit<AllCityDepot, 'key'>>> = {
     locationSlug: 'wilmington-nc',
     state: 'NC',
     banner: banner('2022/05/27100328/Wilmington-Banner-1024x455.jpg'),
-    otherPricesHref: WHERE_TO_BUY,
     specs: NEW_ROW,
   },
 }

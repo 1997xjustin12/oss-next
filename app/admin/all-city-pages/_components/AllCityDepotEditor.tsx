@@ -30,7 +30,6 @@ export function AllCityDepotEditor({ label, pageCount, stateOptions, locationOpt
     locationSlug: { label: 'Location page', kind: 'select', options: locationOptions, help: '“See all location prices” and “SEE MORE” open it.' },
     state: { kind: 'select', options: stateOptions },
     banner: { label: 'Banner photo', help: BANNER_HELP },
-    otherPricesHref: { label: '“See other location prices” link', help: 'City pages on this depot (the depot-city template has its own).' },
     specs: { label: 'Product cards', itemLabel: 'Card', newItem: specOptions[0]?.value ?? '', help: 'Up to four, in this order.' },
     'specs.*': { kind: 'select', options: specOptions },
     depotCityBanner: { label: 'Depot-city page banner', nullable: true, newItem: props.initialValue.banner, help: `Only where the depot-city page differs. ${BANNER_HELP}` },

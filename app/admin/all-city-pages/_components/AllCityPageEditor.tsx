@@ -69,7 +69,6 @@ export function AllCityPageEditor({ label, initialValue, templateText, stateOpti
     hidden: { label: 'Hidden', help: 'The URL answers 404 and the page leaves both lists.' },
     redirectTo: { label: 'Redirect to', help: 'Another /all-city/ page’s slug (storage-units-longmont-co): a 301, and the page leaves both lists. Blank: no redirect.' },
     text: { label: 'Its own wording', help: `Fill a field only where this page says it differently. ${ALL_CITY_PLACEHOLDER_HELP}` },
-    'text.otherHref': { label: 'Other prices button link', help: 'Blank: the template’s, else the depot’s.' },
     ...textHints,
   }
 

@@ -1,5 +1,5 @@
 import { CDN } from './containerLandingContent'
-import type { AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
+import type { AllCitySections, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
 
 /**
  * The /all-city/ pages' template as WordPress had it (read 2026-11-13): the
@@ -52,11 +52,6 @@ const SHARED = {
 
 const CITY: AllCityTemplateText = {
   ...SHARED,
-  heroBody:
-    'The cost of a shipping container depends on the transportation from the depot to you. We have a large network of depots across the United States and Canada. This allows us to find you the nearest shipping container so that we can keep the cost as affordable as possible.',
-  depotButton: 'See all location prices',
-  otherButton: 'See other location prices',
-  otherHref: '',
   introHeading: 'Shipping Storage Containers in {city}',
   introBody:
     'On-Site Storage Solutions is a leading provider of new and used shipping containers for sale in {city}. We sell a variety of container types, including one-trip containers, refurbished containers, cargo-worthy containers, and [wind and watertight shipping containers](/wwt-containers-wind-and-watertight-shipping-containers). We also have insulated and refrigerated shipping containers for sale.\n\n' +
@@ -69,12 +64,6 @@ const CITY: AllCityTemplateText = {
 
 const DEPOT_CITY: AllCityTemplateText = {
   ...SHARED,
-  heroBody:
-    'The cost of a shipping container is dependent on how far it must travel from the depot to your location. We have a large network of depots all throughout the United States and Canada and this allows us to find the nearest shipping container for you and keep costs as low as possible.',
-  depotButton: 'Shipping Container Prices - {city}',
-  otherButton: 'Shipping Container Prices Near You',
-  // WordPress's depot-city template always pointed here, whatever the depot.
-  otherHref: '/where-to-buy-shipping-containers',
   introHeading: 'BUY A SHIPPING CONTAINER {CITY}, {ST}',
   introBody:
     'If you’re seeking reliable and quality shipping cargo containers for sale in {city}, choose [On-Site Storage Solutions](/why-onsite-storage). We offer a large range of shipping containers in many sizes and conditions. We have containers from brand-new “one-trip” to “as-is.” containers.\n\n' +
@@ -86,12 +75,43 @@ const DEPOT_CITY: AllCityTemplateText = {
   offerBand: 'GET $50 OFF YOUR CONTAINER TODAY. CALL US! {phone}',
 }
 
+/**
+ * The redesigned sections (the 2026-11-18 designs), shared by both variants.
+ * `[[…]]` is the amber accent. The hero's heading is each page's own h1
+ * (`{h1}`), kept for SEO: it matches the page's title and keyword.
+ */
+const SECTIONS: AllCitySections = {
+  breadcrumbs: { home: 'Home', state: '{state}', city: '{city}' },
+  hero: {
+    badge: 'America’s #1 Container Wholesaler · Since 2002',
+    heading: '{h1}',
+    body: 'Buy, rent, or rent-to-own shipping containers in [[{city}]] and across [[{state}]]. Ships from our [[{depot}]] depot. Delivery typically takes 3–7 days after checkout.',
+    stats: [
+      { value: '{price}', label: 'Used containers, starting price in [[{city}, {ST}]]' },
+      { value: '3–7 Days', label: 'Typical delivery after checkout' },
+      { value: '{depotCount}', label: 'Ships from {depot}' },
+    ],
+    quote: {
+      heading: 'Get your free quote',
+      subheading: 'Same day reply. The quote is the final price.',
+      buyLabel: 'Buy',
+      rentLabel: 'Rent',
+      rtoLabel: 'Rent-to-own',
+      zipLabel: 'Delivery Zip',
+      sizeLabel: 'Size',
+      contactLabel: 'Phone or email',
+      button: 'Get My Free Quote',
+      note: 'No obligation. We reply within 2 business hours.',
+    },
+  },
+}
+
 export const ALL_CITY_TEMPLATE_DEFAULT: AllCityTemplate = {
+  sections: SECTIONS,
   city: CITY,
   depotCity: DEPOT_CITY,
   media: {
     heroBackground: `${CDN}/2022/05/27100440/new-location-template-header-bg.webp`,
-    pinIcon: `${CDN}/2022/05/27100440/new-location-template-location-icon.webp`,
     youtubeId: 'X_ZqX0SW0Go',
     videoTitle: 'On-Site Storage Solutions shipping containers',
   },

@@ -1,6 +1,6 @@
 import { ROUTES } from '@/config/routes'
 import { fillPlaceholders } from '@/lib/locationPage'
-import type { AllCityDepot, AllCityImage, AllCityLink, AllCityPage, AllCityState, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
+import type { AllCityDepot, AllCityImage, AllCityLink, AllCityPage, AllCitySections, AllCityState, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
 import type { DepotFeaturedKey } from '@/services/search.service'
 
 /** Pure helpers for the /all-city/ pages: wording, depot parts, paths. No I/O. */
@@ -67,9 +67,55 @@ export function allCityDepotParts(depot: AllCityDepot, page: Pick<AllCityPage, '
   }
 }
 
-/** Where "See other location prices" goes: the variant's own link, else the depot's. */
-export function allCityOtherHref(text: AllCityTemplateText, depot: AllCityDepot): string {
-  return text.otherHref.trim() || depot.otherPricesHref
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * The page's h1 with its city part marked as an accent (`[[…]]`), so the hero
+ * shows the page's own heading (its SEO keyword) in the design's style: the
+ * city, with the state code or name right after it if there is one ("Storage
+ * Units [[Adrian MI]]", "[[Detroit]]"). Unchanged when the city is not in it.
+ */
+export function accentCityInHeading(h1: string, page: Pick<AllCityPage, 'city' | 'state'>): string {
+  const state = `(?:,?\\s+(?:${escapeRegExp(page.state)}|${escapeRegExp(ALL_CITY_STATE_NAMES[page.state] ?? page.state)})\\b)?`
+  const match = new RegExp(`${escapeRegExp(page.city)}${state}`, 'i').exec(h1)
+  if (!match) return h1
+  return `${h1.slice(0, match.index)}[[${match[0]}]]${h1.slice(match.index + match[0].length)}`
+}
+
+/** What the hero knows of its depot: `{depot}`, `{depotCount}` and, when there is one, `{price}`. */
+export type AllCityHeroFacts = {
+  depot: string
+  /** The depot's lowest used container price; null leaves out what quotes it. */
+  usedFrom: number | null
+}
+
+const WHOLE_DOLLARS = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+
+/** Does a filled string still hold a placeholder it could not fill (say `{price}` with no price)? */
+const unfilled = (value: string, names: readonly string[]) => names.some((name) => value.includes(`{${name}}`))
+
+/**
+ * The redesigned sections' wording for one page: placeholders filled (the
+ * page's, plus the hero's `{h1}`, `{depot}`, `{depotCount}`, `{price}`). A hero
+ * figure that quotes `{price}` is left out when the depot has no price, rather
+ * than shown with a hole in it.
+ */
+export function resolveAllCitySections(template: AllCityTemplate, page: AllCityPage, facts: AllCityHeroFacts): AllCitySections {
+  const depots = facts.depot.split(/\s*\/\s*/).filter(Boolean)
+  const vars: Record<string, string> = {
+    ...allCityVars(page),
+    h1: accentCityInHeading(page.h1, page),
+    depot: facts.depot,
+    depotCount: `${depots.length} ${depots.length === 1 ? 'Depot' : 'Depots'}`,
+  }
+  if (facts.usedFrom !== null) vars.price = WHOLE_DOLLARS.format(facts.usedFrom)
+
+  const sections = fillDeep(template.sections, vars)
+  const missing = facts.usedFrom === null ? ['price'] : []
+  return {
+    ...sections,
+    hero: { ...sections.hero, stats: sections.hero.stats.filter((stat) => !unfilled(stat.value, missing) && !unfilled(stat.label, missing)) },
+  }
 }
 
 /** Whether a page is in its state's lists at all (hidden and redirected pages are not). */

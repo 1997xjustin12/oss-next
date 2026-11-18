@@ -75,10 +75,37 @@ function templateText(raw: unknown, seed: AllCityTemplateText): AllCityTemplateT
       const valid = steps(value)
       if (valid) out[key] = valid
     } else if (typeof value === 'string') {
-      out[key] = key === 'otherHref' ? (value.trim() ? (href(value) ?? base) : '') : value
+      out[key] = value
     }
   }
   return out as AllCityTemplateText
+}
+
+/** Most figures a section's list may hold (the hero's stats). */
+const MAX_SECTION_ITEMS = 6
+
+/**
+ * A section's wording, shaped as its seed: every string field a string (blank
+ * allowed), every group checked the same way, a list's items shaped as the
+ * seed's first (a bad item dropped, at most MAX_SECTION_ITEMS). A field that
+ * is missing or the wrong type keeps the seed's, so a template saved before a
+ * section existed gets the section's defaults.
+ */
+function sectionText<T>(raw: unknown, seed: T): T {
+  if (typeof seed === 'string') return (typeof raw === 'string' ? raw : seed) as T
+  if (Array.isArray(seed)) {
+    if (!Array.isArray(raw) || seed.length === 0) return seed
+    const item = seed[0]
+    return raw
+      .filter((entry) => (isObj(item) ? isObj(entry) : typeof entry === typeof item))
+      .slice(0, MAX_SECTION_ITEMS)
+      .map((entry) => sectionText(entry, item)) as T
+  }
+  if (isObj(seed)) {
+    const record = isObj(raw) ? raw : {}
+    return Object.fromEntries(Object.entries(seed).map(([key, base]) => [key, sectionText(record[key], base)])) as T
+  }
+  return seed
 }
 
 export function conformAllCityTemplate(raw: unknown, seed: AllCityTemplate = ALL_CITY_TEMPLATE_DEFAULT): AllCityTemplate {
@@ -87,7 +114,8 @@ export function conformAllCityTemplate(raw: unknown, seed: AllCityTemplate = ALL
     {
       city: (r) => (isObj(r) ? templateText(r, seed.city) : undefined),
       depotCity: (r) => (isObj(r) ? templateText(r, seed.depotCity) : undefined),
-      media: (r) => (isObj(r) ? withSeed({ heroBackground: imageSrc, pinIcon: imageSrc, youtubeId: (v) => (v === '' ? '' : youtubeId(v)), videoTitle: text }, seed.media, r) : undefined),
+      sections: (r) => (isObj(r) ? sectionText(r, seed.sections) : undefined),
+      media: (r) => (isObj(r) ? withSeed({ heroBackground: imageSrc, youtubeId: (v) => (v === '' ? '' : youtubeId(v)), videoTitle: text }, seed.media, r) : undefined),
       links: (r) => (isObj(r) ? withSeed({ quote: href, financing: href }, seed.links, r) : undefined),
     },
     seed,
@@ -105,7 +133,6 @@ export function conformAllCityDepot(raw: unknown, seed: AllCityDepot): AllCityDe
       locationSlug: (r) => (typeof r === 'string' && LOCATION_PAGE_SLUGS.includes(r) ? r : undefined),
       state,
       banner: image,
-      otherPricesHref: href,
       specs,
       depotCityBanner: (r) => (r === null ? null : image(r)) as AllCityImage | undefined,
       depotCitySpecs: (r) => (Array.isArray(r) && r.length === 0 ? [] : specs(r)),
@@ -159,8 +186,7 @@ export const textOverrides: V<Partial<AllCityTemplateText>> = (r) => {
       const valid = steps(value)
       if (valid?.some((s) => s.title.trim() || s.text.trim())) out[key] = valid
     } else if (typeof value === 'string' && value.trim()) {
-      out[key] = key === 'otherHref' ? href(value) : value
-      if (out[key] === undefined) delete out[key]
+      out[key] = value
     }
   }
   return out as Partial<AllCityTemplateText>

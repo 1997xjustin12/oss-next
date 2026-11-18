@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const { ALL_CITY_FLAGS, allSeedPages, decodeRow, getSeedPage, seedSlugs } = await import('@/lib/allCitySeed')
-const { allCityDepotParts, allCityOtherHref, allCityVars, buildAllCityLists, isListable, resolveAllCityText, withoutPage } = await import('@/lib/allCityPage')
+const { accentCityInHeading, allCityDepotParts, allCityVars, buildAllCityLists, isListable, resolveAllCitySections, resolveAllCityText, withoutPage } = await import('@/lib/allCityPage')
 const { ALL_CITY_DEPOTS } = await import('@/lib/data/allCityDepots')
 const { ALL_CITY_TEMPLATE_DEFAULT } = await import('@/lib/data/allCityTemplate')
 const { LOCATION_PAGE_SLUGS } = await import('@/lib/data/locationPageSlugs')
@@ -156,13 +156,36 @@ describe('the template', () => {
     assert.equal(text.whyHeading, 'WHY CHOOSE ON-SITE STORAGE SOLUTIONS?')
   })
 
-  it('takes the depot-city variant’s banner, cards and link where the depot has them', () => {
+  it('takes the depot-city variant’s banner and cards where the depot has them', () => {
     const houston = ALL_CITY_DEPOTS['houston-tx']
     assert.deepEqual(allCityDepotParts(houston, { variant: 'depotCity' }).specs, houston.depotCitySpecs)
     assert.deepEqual(allCityDepotParts(houston, { variant: 'city' }).specs, houston.specs)
-    const depotCityText = resolveAllCityText(ALL_CITY_TEMPLATE_DEFAULT, { ...cocoa, variant: 'depotCity' })
-    assert.equal(allCityOtherHref(depotCityText, houston), ROUTES.WHERE_TO_BUY)
-    assert.equal(allCityOtherHref(resolveAllCityText(ALL_CITY_TEMPLATE_DEFAULT, cocoa), houston), houston.otherPricesHref)
+  })
+})
+
+describe('redesigned sections (breadcrumbs, hero)', () => {
+  const cocoa = getSeedPage('storage-units-cocoa-beach-fl')!
+  it('accents the city (and the state after it) in the page’s own h1', () => {
+    assert.equal(accentCityInHeading('Storage Units Adrian MI', { city: 'Adrian', state: 'MI' }), 'Storage Units [[Adrian MI]]')
+    assert.equal(accentCityInHeading('Shipping Containers Oldtown Maryland', { city: 'Oldtown', state: 'MD' }), 'Shipping Containers [[Oldtown Maryland]]')
+    assert.equal(accentCityInHeading('Abbeville Storage Unit', { city: 'Abbeville', state: 'GA' }), '[[Abbeville]] Storage Unit')
+    assert.equal(accentCityInHeading('Detroit', { city: 'Detroit', state: 'MI' }), '[[Detroit]]')
+    assert.equal(accentCityInHeading('Cheap Storage Near Me', { city: 'Adrian', state: 'MI' }), 'Cheap Storage Near Me')
+  })
+
+  it('fills the hero: the page’s h1, its depot, the price, the depot count', () => {
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', usedFrom: 1250 })
+    assert.equal(s.hero.heading, accentCityInHeading(cocoa.h1, cocoa))
+    assert.ok(s.hero.body.includes('Ships from our [[Tampa, FL]] depot'))
+    assert.equal(s.hero.stats[0].value, '$1,250')
+    assert.equal(s.hero.stats[2].value, '1 Depot')
+    assert.deepEqual(s.breadcrumbs, { home: 'Home', state: 'Florida', city: 'Cocoa Beach' })
+  })
+
+  it('leaves out a figure that quotes {price} when the depot has none', () => {
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', usedFrom: null })
+    assert.equal(s.hero.stats.length, ALL_CITY_TEMPLATE_DEFAULT.sections.hero.stats.length - 1)
+    assert.ok(s.hero.stats.every((stat) => !stat.value.includes('{') && !stat.label.includes('{')))
   })
 })
 

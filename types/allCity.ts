@@ -26,14 +26,6 @@ export type AllCityVariant = 'city' | 'depotCity'
  * `{ST}` (code).
  */
 export type AllCityTemplateText = {
-  heroBody: string
-  depotButton: string
-  otherButton: string
-  /**
-   * Where "See other location prices" goes for this variant. Blank: the depot's
-   * own choice (WordPress's city templates differed by depot).
-   */
-  otherHref: string
   quoteButton: string
   introHeading: string
   introBody: string
@@ -56,12 +48,63 @@ export type AllCityTemplateText = {
   offerBand: string
 }
 
+/** "Home / Texas / Abilene" above the hero. Each crumb is template text. */
+export type AllCityBreadcrumbsText = {
+  home: string
+  /** Links to the state's list on /all-city. */
+  state: string
+  city: string
+}
+
+/** One figure under the hero ("$1,250" / "Used containers, starting price in …"). */
+export type AllCityHeroStat = { value: string; label: string }
+
+/** The hero's free-quote card. Its sending is not wired yet (a later step). */
+export type AllCityQuoteCardText = {
+  heading: string
+  subheading: string
+  buyLabel: string
+  rentLabel: string
+  rtoLabel: string
+  zipLabel: string
+  sizeLabel: string
+  contactLabel: string
+  button: string
+  note: string
+}
+
+/**
+ * The hero. Besides the page placeholders, it fills `{h1}` (the page's own
+ * h1, its city part accented), `{depot}` (its depot, "Houston, TX"),
+ * `{price}` (the depot's lowest used container price; a figure that needs it
+ * is left out when there is none) and `{depotCount}` ("1 Depot").
+ */
+export type AllCityHeroText = {
+  /** The red label above the heading. Blank: none. */
+  badge: string
+  /** The page's h1. `{h1}` keeps each page's own (its SEO heading). */
+  heading: string
+  body: string
+  stats: AllCityHeroStat[]
+  quote: AllCityQuoteCardText
+}
+
+/**
+ * The redesigned sections (2026-11-18), top to bottom, each with its own
+ * wording. Shared by both variants; a section not yet redesigned still reads
+ * its variant's text above.
+ */
+export type AllCitySections = {
+  breadcrumbs: AllCityBreadcrumbsText
+  hero: AllCityHeroText
+}
+
 export type AllCityTemplate = {
   city: AllCityTemplateText
   depotCity: AllCityTemplateText
+  sections: AllCitySections
   media: {
     heroBackground: string
-    pinIcon: string
     youtubeId: string
     videoTitle: string
   }
@@ -84,8 +127,6 @@ export type AllCityDepot = {
   state: AllCityState
   /** The photo beside the intro. */
   banner: AllCityImage
-  /** Where "See other location prices" goes on the city variant. */
-  otherPricesHref: string
   /** WordPress's four product cards, in its order. */
   specs: readonly DepotFeaturedKey[]
   /** The depot-city variant's photo, where it differs. */
