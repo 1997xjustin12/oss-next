@@ -68,6 +68,31 @@ const STATS: StatData[] = [
   { stats: "85%", Desc: LocationStat },
 ];
 
+/** Version 3's two figures, side by side with a red rule between them (its own wording). */
+const V3_STATS = [
+  { figure: "60", label: "Locations across the US and Canada", width: "max-w-[6.5rem] sm:max-w-[12rem] lg:max-w-[13rem]" },
+  { figure: "85%", label: "Of The U.S. And Canadian Population Within Our Delivery Network", width: "max-w-[8.5rem] sm:max-w-[16rem] lg:max-w-[19rem]" },
+] as const;
+
+function V3Stats() {
+  return (
+    <ul className="flex items-center justify-center gap-3 sm:gap-6 lg:justify-start">
+      {V3_STATS.map((stat, i) => (
+        <li key={stat.figure} className="flex items-center gap-3 sm:gap-6">
+          {i > 0 && <span aria-hidden className="h-12 w-0.5 bg-theme-primary sm:h-20 lg:h-24" />}
+          <span className="flex items-center gap-1.5 text-white text-shadow-lg sm:gap-3">
+            <span className="text-[44px] leading-none font-extrabold sm:text-6xl lg:text-[88px]">
+              {stat.figure}
+              <sup className="text-[0.4em]">+</sup>
+            </span>
+            <span className={`${stat.width} text-[10px] leading-tight font-medium sm:text-base lg:text-[22px]`}>{stat.label}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 // All three layout variants render the same two headings — the A/B test is on
 // layout, not wording — so one h1/h2 pair feeds every branch below.
 export function Hero({
@@ -80,53 +105,50 @@ export function Hero({
   h2?: string;
 }) {
   if (version === 3) {
+    // Redesigned 2026-11-18 (desktop and mobile mockups): the photo with the
+    // badge, headline, prices and two stats on the left; the black panel with
+    // the Google rating, the ZIP box and the container list on the right. On a
+    // phone the panel stacks under the photo, and the rating moves onto it.
     return (
-      <section data-home-variant="3" className="relative flex flex-col lg:flex-row min-h-120 sm:min-h-150">
-        <div className="relative w-full lg:w-[60%] min-h-120 sm:min-h-150">
+      <section data-home-variant="3" className="relative flex flex-col bg-black lg:flex-row">
+        <div className="relative w-full lg:w-[64%]">
           <Image
             src={BANNER_IMAGE}
             alt="Hero banner — shipping containers delivered nationwide"
             fill
             preload
-            sizes="(min-width: 1024px) 60vw, 100vw"
+            sizes="(min-width: 1024px) 64vw, 100vw"
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-black/40 dark:bg-black/60" />
+          <div className="absolute inset-0 bg-black/45 dark:bg-black/60" />
 
-          <div className="relative z-10 flex h-full flex-col justify-center gap-5 sm:gap-7.5 p-5 sm:p-10">
-            <div className="flex justify-center lg:justify-start">
-              <div className="shadow-lg bg-theme-primary text-sm sm:text-[20px] text-white py-1 px-3 rounded-sm font-semibold text-center">
+          <div className="relative z-10 flex h-full flex-col justify-center gap-3 px-[5%] py-6 sm:gap-6 sm:py-10 lg:gap-8 lg:py-12">
+            <div className="flex items-start justify-between gap-3 lg:justify-start">
+              {/* Wraps on the narrowest phones, where it and the rating cannot share one line. */}
+              <p className="min-w-0 bg-theme-primary px-2 py-1.5 text-[11px] text-white shadow-lg sm:px-5 sm:py-2 sm:text-base lg:text-[22px]">
                 America&apos;s #1 Container Wholesaler &middot; Since 2002
+              </p>
+              <div className="shrink-0 lg:hidden">
+                <GoogleReviewsBadge tone="onDark" showRating size="sm" />
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 text-center lg:text-left">
-              <h1 className="text-shadow-lg text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white">
-                {h1}
-              </h1>
-              <h2 className="text-shadow-lg text-white text-lg sm:text-2xl lg:text-[28px] leading-relaxed font-medium">
-                <AccentText text={h2} accentClassName="text-[#F4BF3C] font-extrabold" />
+            <div className="flex flex-col gap-2 text-center sm:gap-4 lg:text-left">
+              <h1 className="text-[25px] leading-[1.1] font-extrabold text-white text-shadow-lg sm:text-5xl lg:text-[60px]">{h1}</h1>
+              <h2 className="text-base leading-snug font-medium text-white text-shadow-lg sm:text-2xl lg:text-[34px] lg:leading-[1.15]">
+                <AccentText text={h2} accentClassName="text-[#F4BF3C]" />
               </h2>
             </div>
 
-            <div className="flex flex-row items-start lg:items-center justify-evenly gap-4 lg:gap-0 pt-2">
-              {STATS.map((item) => (
-                <StatItem key={String(item.stats)} stats={item} />
-              ))}
-            </div>
+            <V3Stats />
           </div>
         </div>
 
-        <div className="relative w-full lg:w-[40%] min-h-150 bg-black">
-          <div className="relative z-10 flex h-full flex-col gap-5 sm:gap-7.5 p-5 sm:p-10">
-            <div className="flex justify-end">
-              <GoogleReviewsBadge tone="onDark" showRating />
-            </div>
-
-            <div className="flex flex-1 flex-col items-stretch justify-center gap-6">
-              <ZipLookup1 homeVersion={3} />
-            </div>
+        <div className="w-full bg-black px-[5%] py-8 lg:w-[36%] lg:px-[3%] lg:py-8">
+          <div className="mb-6 hidden justify-end lg:flex">
+            <GoogleReviewsBadge tone="onDark" showRating />
           </div>
+          <ZipLookup1 homeVersion={3} />
         </div>
       </section>
     );

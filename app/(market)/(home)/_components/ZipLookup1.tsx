@@ -4,13 +4,15 @@ import { useState, useEffect, useMemo, useId, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { PlpLink } from "@/components/shared/PlpLink";
-import { Loader2, MapPin } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Loader2, MapPin } from "lucide-react";
 import { useZipLookup } from "@/hooks/useGeoapify";
 import type { GeoapifyResult } from "@/hooks/useGeoapify";
 import type { FormattedContainerHit } from "@/types/product";
 import { getCustomFieldValue } from "@/lib/pricing";
 import { formatMoney } from "@/lib/formatters";
 import { BASE_URL } from "@/lib/helpers";
+import { getContainerImagesForStem } from "@/lib/containerImages";
 
 type Props = {
   initialZip?: string;
@@ -27,6 +29,12 @@ type BannerParams = {
 };
 
 type BannerListItem = {
+  /**
+   * The row's photo: the first curated set (config/containerImages.ts) that has
+   * files, in this order, never the search result's own image. A later entry
+   * is the fallback until the first one's set exists.
+   */
+  imageStems: string[];
   title: string;
   price_starts: string;
   tags: string;
@@ -37,6 +45,7 @@ type BannerListItem = {
 
 const BANNER_LIST: BannerListItem[] = [
   {
+    imageStems: ["used_20s_wwt"],
     title: "20ft Standard Container",
     price_starts: "$1,350",
     tags: "Used · Wind & Watertight · 160 Sq Ft",
@@ -50,6 +59,8 @@ const BANNER_LIST: BannerListItem[] = [
     }
   },
   {
+    // No curated 40 ft standard WWT set yet: the 40 ft high cube WWT stands in.
+    imageStems: ["used_40s_wwt", "used_40h_wwt"],
     title: "40ft Standard Container",
     price_starts: "$2,000",
     tags: "Used · Wind & Watertight · 160 Sq Ft",
@@ -63,6 +74,7 @@ const BANNER_LIST: BannerListItem[] = [
     }
   },
   {
+    imageStems: ["used_20s_cw"],
     title: "Rental Containers",
     price_starts: "$95/mo",
     tags: "20ft & 40ft — Flexible Monthly Terms",
@@ -73,6 +85,7 @@ const BANNER_LIST: BannerListItem[] = [
     }
   },
   {
+    imageStems: ["used_20s_asis"],
     title: "Rent-To-Own",
     price_starts: "$79.99/mo",
     tags: "20ft & 40ft — Flexible Monthly Terms",
@@ -109,7 +122,8 @@ function getLowestPrice(
 
 function formatPrice(price: number, ptype: string): string {
   const suffix = ptype === "rental" || ptype === "rto" ? "/mo" : "";
-  return `${formatMoney(price)}${suffix}`;
+  // "$1,350", not "$1,350.00" (as the design); real cents stay ("$61.36/mo").
+  return `${formatMoney(price).replace(/\.00$/, "")}${suffix}`;
 }
 
 function buildBannerUrl(item: BannerListItem, zipcode: string, location: string): string {
@@ -121,24 +135,46 @@ function buildBannerUrl(item: BannerListItem, zipcode: string, location: string)
 
 type BannerItemProps = { item: BannerListItem };
 
+/** The first curated photo of the first stem that has any (see BannerListItem.imageStems). */
+function bannerImage(item: BannerListItem): string | null {
+  for (const stem of item.imageStems) {
+    const [first] = getContainerImagesForStem(stem);
+    if (first) return first;
+  }
+  return null;
+}
+
 function BannerItem({ item }: BannerItemProps) {
+  const image = bannerImage(item);
   return (
     <Link
       prefetch={false}
       href={item.url}
-      className="flex flex-col gap-3 border-b border-white/20 py-4 text-white last:border-b-0"
+      className="group flex items-stretch gap-3 border-b border-white/25 py-4 text-white last:border-b-0"
     >
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="font-bold text-white text-[20px]">{item.title}</div>
-          <div className="text-[13px] text-[#a3a3a3] font-light">{item.tags}</div>
-        </div>
-        <div className="font-bold whitespace-nowrap text-[24px]">{item.price_starts}</div>
-      </div>
-      <div className="flex items-center justify-between gap-4 text-sm">
-        <div className="text-[12px] font-bold text-[#04B761]">{item.availability}</div>
-        <div aria-hidden="true">&rarr;</div>
-      </div>
+      {/* The photo is the desktop panel's; the phone layout lists text only, as its mockup. */}
+      {image && (
+        <Image
+          src={image}
+          alt=""
+          width={82}
+          height={70}
+          sizes="82px"
+          className="hidden h-17.5 w-20.5 shrink-0 object-cover lg:block"
+        />
+      )}
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="text-[17px] font-bold leading-tight sm:text-[20px]">{item.title}</span>
+        <span className="mt-0.5 text-[12px] font-light text-[#a3a3a3] sm:text-[13px]">{item.tags}</span>
+        <span className="mt-1.5 flex items-center gap-2 text-[12px] font-bold text-[#04B761]">
+          <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#04B761]" />
+          {item.availability}
+        </span>
+      </span>
+      <span className="flex shrink-0 flex-col items-end justify-between">
+        <span className="whitespace-nowrap text-[20px] font-bold sm:text-[24px]">{item.price_starts}</span>
+        <ArrowRight aria-hidden className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+      </span>
     </Link>
   );
 }
@@ -267,11 +303,14 @@ export function ZipLookup1({
   const listboxId = useId();
   const showDropdown = open && (results.length > 0 || loading || !!error);
 
+  const v3 = homeVersion === 3;
+
   return (
     <div>
-      <div className="flex w-full max-w-xl mx-auto flex-col gap-3 sm:flex-row">
+      {/* Version 3: one row on every screen, spread to the panel's edges on desktop (its mockups). */}
+      <div className={v3 ? "flex w-full items-stretch justify-center gap-6 lg:justify-between" : "flex w-full max-w-xl mx-auto flex-col gap-3 sm:flex-row"}>
         {/* Input + dropdown */}
-        <div className="relative flex-1">
+        <div className={v3 ? "relative w-36 sm:w-52" : "relative flex-1"}>
           <input
             value={zip}
             onChange={(e) => {
@@ -294,7 +333,11 @@ export function ZipLookup1({
             inputMode="numeric"
             maxLength={10}
             placeholder="Enter Zipcode"
-            className="w-full bg-white text-theme-dark placeholder-theme-dark/70 px-4 py-3 sm:py-4 text-base sm:text-lg outline-none"
+            className={
+              v3
+                ? "h-full w-full bg-white px-3 py-2.5 text-center text-sm text-theme-dark placeholder-theme-dark/80 outline-none sm:py-3 sm:text-lg"
+                : "w-full bg-white text-theme-dark placeholder-theme-dark/70 px-4 py-3 sm:py-4 text-base sm:text-lg outline-none"
+            }
             aria-label="ZIP or postal code"
             role="combobox"
             aria-autocomplete="list"
@@ -345,7 +388,11 @@ export function ZipLookup1({
 
         <button
           onClick={handleSeePrices}
-          className="flex items-center justify-center bg-theme-primary px-6 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-colors hover:bg-theme-primary-dark sm:shrink-0"
+          className={
+            v3
+              ? "flex shrink-0 items-center justify-center bg-theme-primary px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark sm:px-7 sm:py-3 sm:text-lg"
+              : "flex items-center justify-center bg-theme-primary px-6 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-colors hover:bg-theme-primary-dark sm:shrink-0"
+          }
         >
           Find Local Pricing
         </button>
@@ -353,42 +400,31 @@ export function ZipLookup1({
 
       {homeVersion === 3 && (
         <>
-          <div className="mt-10">
-            <p className="flex items-center gap-2 text-white text-lg">
-              {selectedLocation ? (
-                <>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    className="w-6 h-6 text-theme-primary shrink-0"
-                  >
-                    <path d="M0 0h24v24H0z" fill="none" />
-                    <path
-                      fill="currentColor"
-                      d="M18.364 17.364L12 23.728l-6.364-6.364a9 9 0 1 1 12.728 0M12 15a4 4 0 1 0 0-8a4 4 0 0 0 0 8m0-2a2 2 0 1 1 0-4a2 2 0 0 1 0 4"
-                    />
-                  </svg>
-                  <span>{selectedLocation}</span>
-                </>
-              ) : (
-                "Enter your zipcode to see available price offers"
-              )}
+          {/* The depot the prices are for, once there is one (no placeholder line: the mockups have none). */}
+          {selectedLocation && (
+            <p className="mt-6 flex items-center gap-2 text-lg text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 text-theme-primary">
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path
+                  fill="currentColor"
+                  d="M18.364 17.364L12 23.728l-6.364-6.364a9 9 0 1 1 12.728 0M12 15a4 4 0 1 0 0-8a4 4 0 0 0 0 8m0-2a2 2 0 1 1 0-4a2 2 0 0 1 0 4"
+                />
+              </svg>
+              <span>{selectedLocation}</span>
             </p>
-          </div>
-          <div className="flex flex-col">
+          )}
+          <div className="mt-2 flex flex-col">
             {banners.map((item) => (
               <BannerItem key={item.title} item={item} />
             ))}
           </div>
-          <div className="flex justify-center">
-            <PlpLink
-              prefetch={false}
-              href={`${BASE_URL}/sale-shipping-containers?ptype=buy`}
-              className="text-white bg-theme-primary text-center py-2 px-5"
-            >
-              View All Containers & Pricing
-            </PlpLink>
-          </div>
+          <PlpLink
+            prefetch={false}
+            href={`${BASE_URL}/sale-shipping-containers?ptype=buy`}
+            className="mt-4 block w-full bg-theme-primary px-5 py-3 text-center text-base font-bold text-white transition-colors hover:bg-theme-primary-dark sm:text-lg"
+          >
+            View All Containers & Pricing
+          </PlpLink>
         </>
       )}
     </div>

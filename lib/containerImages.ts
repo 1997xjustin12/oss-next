@@ -25,7 +25,15 @@ export function getContainerImages(product: ProductHit): string[] {
   const condition = resolveCondition(product)
   const grade = resolveGrade(product)
 
-  const stem = specFileStem(size, condition, grade)
+  return getContainerImagesForStem(specFileStem(size, condition, grade))
+}
+
+/**
+ * The curated photographs of one spec stem (`used_20s_wwt`), in order, or an
+ * empty array. For callers that name the spec themselves rather than holding a
+ * product: the homepage's container list (version 3).
+ */
+export function getContainerImagesForStem(stem: string): string[] {
   const allowed = new Set<string>(CONTAINER_IMAGE_EXTENSIONS)
 
   return CONTAINER_IMAGE_FILES.map((file) => {

@@ -11,9 +11,10 @@ import type { HeadingLevel } from '@/types/content';
 // listing their 8 headings would make the editor claim control over copy that
 // never reaches a visitor. Uncomment a section, add its headings here.
 //
-// The three Hero layout variants share one set of headings: their wording is
-// identical today and only the layout differs, which keeps the A/B test
-// measuring one thing. Editing hero.h1 changes all three.
+// Hero layout variants 1 and 2 share one set of headings: only their layout
+// differs. Variant 3 has its own wording since 2026-11-18 (hero.v3.h1/h2: the
+// redesigned hero, which names the prices in its sub-headline), so editing
+// hero.h1 changes variants 1 and 2 only.
 
 export type HeadingField = {
   /** Stable key — the Redis field name and the form input name. */
@@ -37,7 +38,7 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
     label: 'Main Headline',
     element: 'h1',
     default: 'Local Shipping Containers Delivered Nationwide & Canada',
-    help: 'The page’s only H1. Shared by all three layout variants.',
+    help: 'The page’s only H1, in layout versions 1 and 2 (version 3 has its own, below).',
   },
   {
     key: 'hero.h2',
@@ -47,7 +48,25 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
     accent: true,
     default:
       'Whether You Want to [[Buy]], [[Rent]], Or [[Rent-To-Own]], We Deliver From A Local Hub To Save You Money On Mileage.',
-    help: 'Shared by all three layout variants.',
+    help: 'Layout versions 1 and 2 (version 3 has its own, below).',
+  },
+  {
+    key: 'hero.v3.h1',
+    section: 'Hero',
+    label: 'Main Headline (version 3)',
+    element: 'h1',
+    default: 'Shipping Containers For Sale, Rent, And Rent-To-Own',
+    help: 'The H1 of layout version 3 only.',
+  },
+  {
+    key: 'hero.v3.h2',
+    section: 'Hero',
+    label: 'Sub-Headline (version 3)',
+    element: 'h2',
+    accent: true,
+    default:
+      'New and used shipping containers delivered from a local depot across the U.S. and Canada. Buy from [[$1,350]], Rent from [[$95 a month]], or Rent-To-Own from [[$79.99 a month.]]',
+    help: 'Layout version 3 only. [[…]] marks the prices shown in yellow.',
   },
 
   {

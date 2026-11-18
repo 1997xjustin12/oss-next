@@ -106,7 +106,12 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
       {/* <Reviews /> */}
 
       <HeroBannerPreload />
-      <Hero version={variant} h1={copy["hero.h1"]} h2={copy["hero.h2"]} />
+      {/* Version 3 has its own wording (hero.v3.*); 1 and 2 share hero.h1/h2. */}
+      <Hero
+        version={variant}
+        h1={variant === 3 ? copy["hero.v3.h1"] : copy["hero.h1"]}
+        h2={variant === 3 ? copy["hero.v3.h2"] : copy["hero.h2"]}
+      />
       <RightContainer heading={copy["rightContainer.h2"]} />
       <HowItWorks
         heading={copy["howItWorks.h2"]}
