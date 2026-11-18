@@ -4,7 +4,22 @@ import { useId, useState } from 'react'
 import { ArrowLeftRight, BadgeCheck, BookOpen, CalendarClock, Container, DollarSign, KeyRound, Truck, type LucideIcon } from 'lucide-react'
 import { PlpLink } from '@/components/shared/PlpLink'
 import { TemplateRichText } from '@/components/shared/TemplateRichText'
-import { OFFER_TABS, type OfferFeatureIcon, type OfferTab } from '@/lib/data/homeOfferTabs'
+import { useDepotStartingPrices } from '@/hooks/useDepotStartingPrices'
+import { OFFER_DEFAULT_PRICES, OFFER_TABS, type OfferFeatureIcon, type OfferPrices, type OfferTab } from '@/lib/data/homeOfferTabs'
+
+/** Every `{buy}` / `{rent}` / `{rto}` in a tab's text, filled with the prices shown. */
+function withPrices(tab: OfferTab, prices: OfferPrices): OfferTab {
+  const fill = (text: string) => text.replace(/\{(buy|rent|rto)\}/g, (_, key: keyof OfferPrices) => prices[key])
+  return {
+    ...tab,
+    price: fill(tab.price),
+    note: fill(tab.note),
+    heading: fill(tab.heading),
+    body: fill(tab.body),
+    card: { ...tab.card, price: fill(tab.card.price), caption: fill(tab.card.caption) },
+    features: tab.features.map((feature) => ({ ...feature, title: fill(feature.title), text: fill(feature.text) })),
+  }
+}
 
 const ICONS: Record<OfferFeatureIcon, LucideIcon> = {
   price: DollarSign,
@@ -46,11 +61,19 @@ export function OfferTabs() {
   const [openId, setOpenId] = useState<OfferTab['id']>('buy')
   const baseId = useId()
   const openIndex = OFFER_TABS.findIndex((tab) => tab.id === openId)
+  // The visitor's depot's starting prices once known; the design's figures until then, and for anyone without a depot.
+  const depotPrices = useDepotStartingPrices()
+  const prices: OfferPrices = {
+    buy: depotPrices.buy ?? OFFER_DEFAULT_PRICES.buy,
+    rent: depotPrices.rent ?? OFFER_DEFAULT_PRICES.rent,
+    rto: depotPrices.rto ?? OFFER_DEFAULT_PRICES.rto,
+  }
+  const tabs = OFFER_TABS.map((tab) => withPrices(tab, prices))
 
   return (
     <section aria-label="Buy, rent or rent-to-own a shipping container" className="bg-white px-[5%] py-10 sm:py-14 dark:bg-neutral-950">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-x-10 lg:gap-y-8">
-        {OFFER_TABS.map((tab, i) => {
+        {tabs.map((tab, i) => {
           const open = tab.id === openId
           // Closed tabs keep their own order among themselves, after the open one's panel.
           const closedRank = i < openIndex ? i : i - 1
@@ -84,7 +107,7 @@ export function OfferTabs() {
           )
         })}
 
-        {OFFER_TABS.map((tab) => (
+        {tabs.map((tab) => (
           <div
             key={tab.id}
             id={`${baseId}-panel-${tab.id}`}
@@ -121,10 +144,14 @@ function OfferPanel({ tab }: { tab: OfferTab }) {
       </div>
 
       {/* After the features on a phone (its mockup), beside the text on desktop. */}
-      <aside aria-label={`${tab.card.lead} ${tab.card.price}`} className="order-3 self-center rounded-lg bg-[#0f3a59] text-center text-white shadow-lg lg:order-2">
+      <aside aria-label={`${tab.card.lead} ${tab.card.price}${tab.card.suffix}`} className="order-3 self-center rounded-lg bg-[#0f3a59] text-center text-white shadow-lg lg:order-2">
         <div className="px-6 pt-6 pb-5">
           <p className="text-base">{tab.card.lead}</p>
-          <p className="mt-1 text-5xl leading-none font-bold sm:text-6xl">{tab.card.price}</p>
+          {/* The suffix ("/mo") smaller, so a monthly price like "$79.99/mo" fits the card, centred, on one line. */}
+          <p className="mt-1 whitespace-nowrap leading-none font-bold">
+            <span className="text-5xl sm:text-6xl">{tab.card.price}</span>
+            {tab.card.suffix && <span className="ml-0.5 text-2xl sm:text-3xl">{tab.card.suffix}</span>}
+          </p>
           <p className="mt-4 text-base">{tab.card.caption}</p>
         </div>
         <div className="border-t border-white/25 px-5 py-4">
