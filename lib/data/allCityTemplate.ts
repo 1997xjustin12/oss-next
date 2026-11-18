@@ -1,3 +1,5 @@
+import { FEATURED_CONTAINERS } from '@/config/featuredContainers'
+import { ROUTES } from '@/config/routes'
 import { CDN } from './containerLandingContent'
 import type { AllCitySections, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
 
@@ -29,7 +31,6 @@ export const ALL_CITY_ZIP_ANCHOR = 'find-prices'
 const SHARED = {
   quoteButton: 'GET A QUOTE',
   whyHeading: 'WHY CHOOSE ON-SITE STORAGE SOLUTIONS?',
-  seeMore: 'SEE MORE',
   popularHeading: 'Popular Cities in {state}',
   viewAllLabel: 'View all cities in {state}',
   stepsHeading: 'BUY A SHIPPING CONTAINER IN {CITY}',
@@ -103,6 +104,21 @@ const SECTIONS: AllCitySections = {
       button: 'Get My Free Quote',
       note: 'No obligation. We reply within 2 business hours.',
     },
+  },
+  // The homepage's four cards and their words (config/featuredContainers.ts), priced at the page's depot.
+  products: {
+    heading: 'Find The Right Shipping Container In [{city}, {ST}]({depotPage})',
+    depotCityHeading: '{keyword}',
+    body: 'We ship from the nearest depot in our network, which keeps your delivery cost as low as possible. Choose a size and condition, then [[buy]], [[rent]], or [[rent-to-own]].',
+    cards: FEATURED_CONTAINERS.map((item) => ({
+      spec: item.depotSpec,
+      title: item.type,
+      description: item.home?.desc ?? item.desc,
+      button: item.home?.ctaLabel ?? item.ctaLabel,
+    })),
+    button: 'View All Shipping Containers & Pricing',
+    buttonHref: `${ROUTES.PLP}?ptype=buy`,
+    note: 'Final price depends on your delivery address',
   },
 }
 

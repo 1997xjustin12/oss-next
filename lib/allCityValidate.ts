@@ -20,7 +20,7 @@ import { ALL_CITY_TEMPLATE_DEFAULT } from '@/lib/data/allCityTemplate'
 import { DELIVERED_IMAGE_HOSTS } from '@/lib/deliveredContainers'
 import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 import { DEPOT_FEATURED_SPECS, type DepotFeaturedKey } from '@/services/search.service'
-import type { AllCityDepot, AllCityImage, AllCityPage, AllCitySeo, AllCityState, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
+import type { AllCityDepot, AllCityImage, AllCityPage, AllCitySections, AllCitySeo, AllCityState, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
 
 const isObj = (r: unknown): r is Record<string, unknown> => !!r && typeof r === 'object' && !Array.isArray(r)
 
@@ -51,10 +51,6 @@ const image = shape<AllCityImage>({ src: imageSrc, width: positive, height: posi
 const state: V<AllCityState> = oneOf(...ALL_CITY_STATES)
 const depotKey: V<string> = (r) => (typeof r === 'string' && ALL_CITY_DEPOTS[r] ? r : undefined)
 const spec: V<DepotFeaturedKey> = oneOf(...DEPOT_FEATURED_SPECS.map((s) => s.key))
-const specs: V<DepotFeaturedKey[]> = (r) => {
-  const value = list(spec)(r)
-  return value?.length ? [...new Set(value)].slice(0, 4) : undefined
-}
 
 // ─── Template ────────────────────────────────────────────────────────────────
 
@@ -108,13 +104,35 @@ function sectionText<T>(raw: unknown, seed: T): T {
   return seed
 }
 
+/**
+ * The redesigned sections: their wording as sectionText checks it, then the
+ * fields with a format. A container card must name a known listing (an unknown
+ * one is dropped), and the bottom button a safe link (else the default's).
+ */
+function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCitySections {
+  const out = sectionText(raw, seed)
+  const rawProducts = isObj(raw.products) ? raw.products : {}
+  if (Array.isArray(rawProducts.cards)) {
+    const shape = seed.products.cards[0]
+    out.products.cards = rawProducts.cards
+      .filter(isObj)
+      .slice(0, MAX_SECTION_ITEMS)
+      .flatMap((card) => {
+        const value = spec(card.spec)
+        return value ? [{ ...sectionText(card, shape), spec: value }] : []
+      })
+  }
+  out.products.buttonHref = href(out.products.buttonHref) ?? seed.products.buttonHref
+  return out
+}
+
 export function conformAllCityTemplate(raw: unknown, seed: AllCityTemplate = ALL_CITY_TEMPLATE_DEFAULT): AllCityTemplate {
   const record = isObj(raw) ? raw : {}
   return withSeed<AllCityTemplate>(
     {
       city: (r) => (isObj(r) ? templateText(r, seed.city) : undefined),
       depotCity: (r) => (isObj(r) ? templateText(r, seed.depotCity) : undefined),
-      sections: (r) => (isObj(r) ? sectionText(r, seed.sections) : undefined),
+      sections: (r) => (isObj(r) ? sections(r, seed.sections) : undefined),
       media: (r) => (isObj(r) ? withSeed({ heroBackground: imageSrc, youtubeId: (v) => (v === '' ? '' : youtubeId(v)), videoTitle: text }, seed.media, r) : undefined),
       links: (r) => (isObj(r) ? withSeed({ quote: href, financing: href }, seed.links, r) : undefined),
     },
@@ -133,16 +151,13 @@ export function conformAllCityDepot(raw: unknown, seed: AllCityDepot): AllCityDe
       locationSlug: (r) => (typeof r === 'string' && LOCATION_PAGE_SLUGS.includes(r) ? r : undefined),
       state,
       banner: image,
-      specs,
       depotCityBanner: (r) => (r === null ? null : image(r)) as AllCityImage | undefined,
-      depotCitySpecs: (r) => (Array.isArray(r) && r.length === 0 ? [] : specs(r)),
     },
     seed,
     raw,
   )
   // "Use the city variant's" is stored as absent.
   if (!out.depotCityBanner) delete out.depotCityBanner
-  if (!out.depotCitySpecs?.length) delete out.depotCitySpecs
   return out
 }
 

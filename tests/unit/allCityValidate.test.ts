@@ -100,6 +100,25 @@ describe('conformAllCityTemplate', () => {
     assert.equal(t.sections.hero.quote.heading, ALL_CITY_TEMPLATE_DEFAULT.sections.hero.quote.heading)
   })
 
+  it('container cards: an unknown listing is dropped, a bad link keeps the default', () => {
+    const t = conformAllCityTemplate({
+      sections: {
+        products: {
+          cards: [{ spec: 'used_20s_wwt', title: 'Twenty' }, { spec: 'bogus', title: 'Nope' }, 'junk', { spec: 'new_40h_iicl' }],
+          buttonHref: 'javascript:alert(1)',
+        },
+      },
+    })
+    assert.deepEqual(
+      t.sections.products.cards.map((c) => [c.spec, c.title]),
+      [['used_20s_wwt', 'Twenty'], ['new_40h_iicl', ALL_CITY_TEMPLATE_DEFAULT.sections.products.cards[0].title]],
+    )
+    assert.equal(t.sections.products.buttonHref, ALL_CITY_TEMPLATE_DEFAULT.sections.products.buttonHref)
+    // An empty list is allowed (no cards); no list keeps the default four.
+    assert.deepEqual(conformAllCityTemplate({ sections: { products: { cards: [] } } }).sections.products.cards, [])
+    assert.deepEqual(conformAllCityTemplate({ sections: {} }).sections.products.cards, ALL_CITY_TEMPLATE_DEFAULT.sections.products.cards)
+  })
+
   it('allows a blank video and a blank closing band', () => {
     const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
     assert.equal(t.media.youtubeId, '')
@@ -114,21 +133,20 @@ describe('conformAllCityDepot', () => {
     for (const depot of Object.values(ALL_CITY_DEPOTS)) assert.deepEqual(conformAllCityDepot(toAllCityDepotForm(depot), depot), depot, depot.key)
   })
 
-  it('keeps the seed for an unknown location page or a non-CDN banner; dedupes and caps the cards', () => {
+  it('keeps the seed for an unknown location page or a non-CDN banner; ignores the old card lists', () => {
     const d = conformAllCityDepot(
-      { key: 'x', locationSlug: 'nowhere', banner: { src: 'https://example.com/a.jpg', width: 1, height: 1 }, specs: ['new_20s_iicl', 'new_20s_iicl', 'used_40s_wwt', 'used_40s_cw', 'used_40s_iicl', 'used_40s_asis', 'bogus'] },
+      { key: 'x', locationSlug: 'nowhere', banner: { src: 'https://example.com/a.jpg', width: 1, height: 1 }, specs: ['new_20s_iicl'] },
       houston,
     )
     assert.equal(d.key, 'houston-tx')
     assert.equal(d.locationSlug, houston.locationSlug)
     assert.deepEqual(d.banner, houston.banner)
-    assert.deepEqual(d.specs, ['new_20s_iicl', 'used_40s_wwt', 'used_40s_cw', 'used_40s_iicl'])
+    assert.equal('specs' in d, false)
   })
 
-  it('a cleared depot-city banner or card list means "use the city page’s"', () => {
-    const d = conformAllCityDepot({ depotCityBanner: null, depotCitySpecs: [] }, houston)
+  it('a cleared depot-city banner means "use the city page’s"', () => {
+    const d = conformAllCityDepot({ depotCityBanner: null }, houston)
     assert.equal('depotCityBanner' in d, false)
-    assert.equal('depotCitySpecs' in d, false)
   })
 
   it('images: a site path or the CDN only', () => {

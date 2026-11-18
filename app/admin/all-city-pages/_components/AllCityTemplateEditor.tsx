@@ -12,6 +12,8 @@ type Props = {
   /** Pages to preview the draft on: a city page and a depot-city page. */
   previewPages: readonly { slug: string; label: string }[]
   previewHref: string
+  /** The listings a container card can stand for. */
+  specOptions: readonly { value: string; label: string }[]
   save: (value: AllCityTemplate) => Promise<AdminActionResult>
   publish: () => Promise<AdminActionResult>
   discard: () => Promise<AdminActionResult>
@@ -30,7 +32,7 @@ const SECTION_HERO_HELP =
   'Also: {h1} the page’s own heading (city part in amber), {depot} its depot, {price} the depot’s lowest used container price (a figure using it is hidden when there is none), {depotCount} “1 Depot”.'
 
 /** The template every /all-city/ page renders: the redesigned sections, both variants' wording, the images, the video and the two fixed links. */
-export function AllCityTemplateEditor({ initialValue, previewPages, previewHref, ...props }: Props) {
+export function AllCityTemplateEditor({ initialValue, previewPages, previewHref, specOptions, ...props }: Props) {
   const hints: FieldHints = {
     city: { label: 'City pages (8,516)', help: ALL_CITY_PLACEHOLDER_HELP },
     depotCity: { label: 'Depot-city pages (23: Houston, Miami…)', help: ALL_CITY_PLACEHOLDER_HELP },
@@ -47,6 +49,23 @@ export function AllCityTemplateEditor({ initialValue, previewPages, previewHref,
     'sections.hero.body': { label: 'Text under the heading', multiline: true },
     'sections.hero.stats': { label: 'Figures under the hero', itemLabel: 'Figure', newItem: { value: '', label: '' } },
     'sections.hero.quote': { label: 'Free-quote card', help: 'Its button is not connected yet.' },
+    'sections.products': {
+      label: 'Find The Right Shipping Container',
+      help: 'The container cards, priced and pictured from the page’s depot; a card the depot has no listing for is hidden. Also: {depotPage} the depot’s location page, {keyword} a depot-city page’s keyword heading.',
+    },
+    'sections.products.heading': { label: 'Heading', help: '[text]({depotPage}) links the city to its depot’s page.' },
+    'sections.products.depotCityHeading': { label: 'Heading on the depot-city pages', help: '{keyword} keeps each one’s keyword heading (its screen). Blank: the heading above.' },
+    'sections.products.body': { label: 'Text under the heading', multiline: true },
+    'sections.products.cards': {
+      label: 'Cards',
+      itemLabel: 'Card',
+      newItem: { spec: specOptions[0]?.value ?? '', title: '', description: '', button: 'Get Free Quote' },
+    },
+    'sections.products.cards.*.spec': { label: 'Container (its photo and price at the depot)', kind: 'select', options: specOptions },
+    'sections.products.cards.*.description': { multiline: true },
+    'sections.products.button': { label: 'Button under the cards', help: 'Blank: no button.' },
+    'sections.products.buttonHref': { label: 'Its link' },
+    'sections.products.note': { label: 'Line under the button', help: 'Blank: none.' },
     media: { label: 'Images and video' },
     'media.heroBackground': { label: 'Hero photo', help: 'A CDN link (onsite-cdn.sfo3.cdn.digitaloceanspaces.com) or a site path.' },
     'media.youtubeId': { label: 'Video (YouTube id or link)', help: 'Blank: no video.' },

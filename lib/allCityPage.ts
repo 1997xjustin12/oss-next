@@ -1,7 +1,6 @@
 import { ROUTES } from '@/config/routes'
 import { fillPlaceholders } from '@/lib/locationPage'
 import type { AllCityDepot, AllCityImage, AllCityLink, AllCityPage, AllCitySections, AllCityState, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
-import type { DepotFeaturedKey } from '@/services/search.service'
 
 /** Pure helpers for the /all-city/ pages: wording, depot parts, paths. No I/O. */
 
@@ -58,13 +57,10 @@ export function resolveAllCityText(template: AllCityTemplate, page: AllCityPage)
   return fillDeep(merged, allCityVars(page))
 }
 
-/** What the page shows of its depot: the depot-city variant may have its own banner and cards. */
-export function allCityDepotParts(depot: AllCityDepot, page: Pick<AllCityPage, 'variant'>): { banner: AllCityImage; specs: readonly DepotFeaturedKey[] } {
+/** What the page shows of its depot: the depot-city variant may have its own banner. */
+export function allCityDepotParts(depot: AllCityDepot, page: Pick<AllCityPage, 'variant'>): { banner: AllCityImage } {
   const depotCity = page.variant === 'depotCity'
-  return {
-    banner: (depotCity && depot.depotCityBanner) || depot.banner,
-    specs: (depotCity && depot.depotCitySpecs?.length && depot.depotCitySpecs) || depot.specs,
-  }
+  return { banner: (depotCity && depot.depotCityBanner) || depot.banner }
 }
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -82,9 +78,11 @@ export function accentCityInHeading(h1: string, page: Pick<AllCityPage, 'city' |
   return `${h1.slice(0, match.index)}[[${match[0]}]]${h1.slice(match.index + match[0].length)}`
 }
 
-/** What the hero knows of its depot: `{depot}`, `{depotCount}` and, when there is one, `{price}`. */
+/** What the sections know of the page's depot: `{depot}`, `{depotCount}`, `{depotPage}` and, when there is one, `{price}`. */
 export type AllCityHeroFacts = {
   depot: string
+  /** The depot's location page. */
+  depotPage: string
   /** The depot's lowest used container price; null leaves out what quotes it. */
   usedFrom: number | null
 }
@@ -96,9 +94,11 @@ const unfilled = (value: string, names: readonly string[]) => names.some((name) 
 
 /**
  * The redesigned sections' wording for one page: placeholders filled (the
- * page's, plus the hero's `{h1}`, `{depot}`, `{depotCount}`, `{price}`). A hero
- * figure that quotes `{price}` is left out when the depot has no price, rather
- * than shown with a hole in it.
+ * page's, plus `{h1}`, `{depot}`, `{depotCount}`, `{depotPage}`, `{keyword}`
+ * and `{price}`). A hero figure that quotes `{price}` is left out when the
+ * depot has no price, rather than shown with a hole in it. On a depot-city
+ * page the products heading is `depotCityHeading` (its keyword heading, by
+ * default) unless that comes out blank.
  */
 export function resolveAllCitySections(template: AllCityTemplate, page: AllCityPage, facts: AllCityHeroFacts): AllCitySections {
   const depots = facts.depot.split(/\s*\/\s*/).filter(Boolean)
@@ -107,14 +107,21 @@ export function resolveAllCitySections(template: AllCityTemplate, page: AllCityP
     h1: accentCityInHeading(page.h1, page),
     depot: facts.depot,
     depotCount: `${depots.length} ${depots.length === 1 ? 'Depot' : 'Depots'}`,
+    depotPage: facts.depotPage,
+    keyword: page.keywordHeading?.trim() ? accentCityInHeading(page.keywordHeading.trim(), page) : '',
   }
   if (facts.usedFrom !== null) vars.price = WHOLE_DOLLARS.format(facts.usedFrom)
 
   const sections = fillDeep(template.sections, vars)
   const missing = facts.usedFrom === null ? ['price'] : []
+  const depotCityHeading = sections.products.depotCityHeading.trim()
   return {
     ...sections,
     hero: { ...sections.hero, stats: sections.hero.stats.filter((stat) => !unfilled(stat.value, missing) && !unfilled(stat.label, missing)) },
+    products: {
+      ...sections.products,
+      heading: page.variant === 'depotCity' && depotCityHeading ? depotCityHeading : sections.products.heading,
+    },
   }
 }
 

@@ -11,7 +11,6 @@ import { ALL_CITY_STATE_NAMES } from '@/lib/allCityPage'
 import { ALL_CITY_STATES } from '@/lib/allCityValidate'
 import { ALL_CITY_DEPOTS } from '@/lib/data/allCityDepots'
 import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
-import { DEPOT_FEATURED_SPECS } from '@/services/search.service'
 import { readAllCityAdminRows, readAllCityDepotState } from '@/services/allCity.service'
 import { AllCityDepotEditor } from '../../_components/AllCityDepotEditor'
 
@@ -56,7 +55,6 @@ async function Editor({ params }: Props) {
         initialValue={toAllCityDepotForm(state.value)}
         stateOptions={ALL_CITY_STATES.map((st) => ({ value: st, label: `${ALL_CITY_STATE_NAMES[st]} (${st})` }))}
         locationOptions={LOCATION_PAGE_SLUGS.map((slug) => ({ value: slug, label: `/where-to-buy-shipping-containers/${slug}` }))}
-        specOptions={DEPOT_FEATURED_SPECS.map((spec) => ({ value: spec.key, label: spec.label }))}
         hasDraft={state.hasDraft}
         status={editorStatus(state)}
         previewPages={previewPages}

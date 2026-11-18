@@ -44,7 +44,7 @@ async function DepotList() {
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold">{depot.depot}</span>
                 <span className="block text-xs text-theme-muted dark:text-neutral-500">
-                  {pagesOn(depot.key).toLocaleString('en-US')} pages · {depot.specs.length} product cards
+                  {pagesOn(depot.key).toLocaleString('en-US')} pages · {depot.state}
                 </span>
               </span>
               {hasPublished && <span className={`${BADGE} bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300`}>Edited</span>}

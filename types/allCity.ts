@@ -31,7 +31,6 @@ export type AllCityTemplateText = {
   introBody: string
   whyHeading: string
   whyBody: string
-  seeMore: string
   popularHeading: string
   viewAllLabel: string
   stepsHeading: string
@@ -94,9 +93,37 @@ export type AllCityHeroText = {
  * wording. Shared by both variants; a section not yet redesigned still reads
  * its variant's text above.
  */
+/** One container card: which listing it stands for, and its words. */
+export type AllCityProductCard = {
+  /** The depot listing whose photo and price the card shows; the card is left out where the depot has none. */
+  spec: DepotFeaturedKey
+  title: string
+  description: string
+  button: string
+}
+
+/**
+ * "Find The Right Shipping Container In <city>": the container cards, priced
+ * at the page's depot. Besides the page placeholders, it fills `{depotPage}`
+ * (the depot's location page) and `{keyword}` (a depot-city page's keyword
+ * heading).
+ */
+export type AllCityProductsText = {
+  heading: string
+  /** The depot-city pages' heading (23 pages). `{keyword}` keeps each one's keyword heading; blank: `heading`. */
+  depotCityHeading: string
+  body: string
+  cards: AllCityProductCard[]
+  button: string
+  buttonHref: string
+  /** The line under the button. Blank: none. */
+  note: string
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
+  products: AllCityProductsText
 }
 
 export type AllCityTemplate = {
@@ -127,12 +154,8 @@ export type AllCityDepot = {
   state: AllCityState
   /** The photo beside the intro. */
   banner: AllCityImage
-  /** WordPress's four product cards, in its order. */
-  specs: readonly DepotFeaturedKey[]
   /** The depot-city variant's photo, where it differs. */
   depotCityBanner?: AllCityImage
-  /** The depot-city variant's cards, where they differ. */
-  depotCitySpecs?: readonly DepotFeaturedKey[]
 }
 
 export type AllCitySeo = {

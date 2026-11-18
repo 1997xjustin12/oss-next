@@ -86,12 +86,16 @@ describe('the depots', () => {
     assert.deepEqual([...block.matchAll(/'([a-z-]+)'/g)].map((m) => m[1]).sort(), Object.keys(ALL_CITY_DEPOTS).sort())
   })
 
-  it('each has a native location page and four known product specs', () => {
+  it('each has a native location page', () => {
     for (const depot of Object.values(ALL_CITY_DEPOTS)) {
       assert.ok(LOCATION_PAGE_SLUGS.includes(depot.locationSlug), `${depot.key}: ${depot.locationSlug}`)
-      assert.equal(depot.specs.length, 4, depot.key)
-      for (const spec of [...depot.specs, ...(depot.depotCitySpecs ?? [])]) assert.ok(isDepotFeaturedKey(spec), `${depot.key}: ${spec}`)
     }
+  })
+
+  it('the template’s container cards each name a known listing', () => {
+    const cards = ALL_CITY_TEMPLATE_DEFAULT.sections.products.cards
+    assert.equal(cards.length, 4)
+    for (const card of cards) assert.ok(isDepotFeaturedKey(card.spec), card.spec)
   })
 })
 
@@ -156,10 +160,10 @@ describe('the template', () => {
     assert.equal(text.whyHeading, 'WHY CHOOSE ON-SITE STORAGE SOLUTIONS?')
   })
 
-  it('takes the depot-city variant’s banner and cards where the depot has them', () => {
+  it('takes the depot-city variant’s banner where the depot has one', () => {
     const houston = ALL_CITY_DEPOTS['houston-tx']
-    assert.deepEqual(allCityDepotParts(houston, { variant: 'depotCity' }).specs, houston.depotCitySpecs)
-    assert.deepEqual(allCityDepotParts(houston, { variant: 'city' }).specs, houston.specs)
+    assert.deepEqual(allCityDepotParts(houston, { variant: 'depotCity' }).banner, houston.depotCityBanner ?? houston.banner)
+    assert.deepEqual(allCityDepotParts(houston, { variant: 'city' }).banner, houston.banner)
   })
 })
 
@@ -174,7 +178,7 @@ describe('redesigned sections (breadcrumbs, hero)', () => {
   })
 
   it('fills the hero: the page’s h1, its depot, the price, the depot count', () => {
-    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', usedFrom: 1250 })
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', depotPage: '/where-to-buy-shipping-containers/tampa-fl', usedFrom: 1250 })
     assert.equal(s.hero.heading, accentCityInHeading(cocoa.h1, cocoa))
     assert.ok(s.hero.body.includes('Ships from our [[Tampa, FL]] depot'))
     assert.equal(s.hero.stats[0].value, '$1,250')
@@ -182,8 +186,21 @@ describe('redesigned sections (breadcrumbs, hero)', () => {
     assert.deepEqual(s.breadcrumbs, { home: 'Home', state: 'Florida', city: 'Cocoa Beach' })
   })
 
+  it('fills the container section: the city linked to its depot’s page', () => {
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Miami, FL', depotPage: '/where-to-buy-shipping-containers/miami-fl', usedFrom: 1149 })
+    assert.equal(s.products.heading, 'Find The Right Shipping Container In [Cocoa Beach, FL](/where-to-buy-shipping-containers/miami-fl)')
+  })
+
+  it('a depot-city page keeps its keyword heading over the container section', () => {
+    const houston = { ...cocoa, city: 'Houston', state: 'TX' as const, variant: 'depotCity' as const, keywordHeading: 'Cargo Containers Houston TX' }
+    const facts = { depot: 'Houston, TX', depotPage: '/where-to-buy-shipping-containers/houston-tx', usedFrom: 1074 }
+    assert.equal(resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, houston, facts).products.heading, 'Cargo Containers [[Houston TX]]')
+    // No keyword heading: the ordinary heading.
+    assert.match(resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, { ...houston, keywordHeading: undefined }, facts).products.heading, /^Find The Right/)
+  })
+
   it('leaves out a figure that quotes {price} when the depot has none', () => {
-    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', usedFrom: null })
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', depotPage: '/where-to-buy-shipping-containers/tampa-fl', usedFrom: null })
     assert.equal(s.hero.stats.length, ALL_CITY_TEMPLATE_DEFAULT.sections.hero.stats.length - 1)
     assert.ok(s.hero.stats.every((stat) => !stat.value.includes('{') && !stat.label.includes('{')))
   })

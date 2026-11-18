@@ -146,12 +146,11 @@ export const ALL_CITY_BULK_LIMIT = 2000
 
 // ─── Depots ──────────────────────────────────────────────────────────────────
 
-/** A depot as the editor shows it: the depot-city overrides present (null / empty = use the city variant's). */
-export type AllCityDepotForm = Omit<AllCityDepot, 'depotCityBanner' | 'depotCitySpecs'> & {
+/** A depot as the editor shows it: the depot-city banner present (null = use the city variant's). */
+export type AllCityDepotForm = Omit<AllCityDepot, 'depotCityBanner'> & {
   depotCityBanner: AllCityDepot['banner'] | null
-  depotCitySpecs: AllCityDepot['specs'][number][]
 }
 
 export function toAllCityDepotForm(depot: AllCityDepot): AllCityDepotForm {
-  return { ...depot, depotCityBanner: depot.depotCityBanner ?? null, depotCitySpecs: [...(depot.depotCitySpecs ?? [])] }
+  return { ...depot, depotCityBanner: depot.depotCityBanner ?? null }
 }

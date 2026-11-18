@@ -6,6 +6,7 @@ import { discardAllCityTemplateAction, publishAllCityTemplateAction, saveAllCity
 import { ADMIN_ROUTES } from '@/config/admin'
 import { editorStatus } from '@/lib/adminStatus'
 import { readAllCityTemplateState } from '@/services/allCity.service'
+import { DEPOT_FEATURED_SPECS } from '@/services/search.service'
 import { AllCityTemplateEditor } from '../_components/AllCityTemplateEditor'
 
 export const metadata: Metadata = { title: 'All City Pages — Template', robots: { index: false, follow: false } }
@@ -44,6 +45,7 @@ async function Editor() {
       status={editorStatus(state)}
       previewPages={PREVIEW_PAGES}
       previewHref={ADMIN_ROUTES.ALL_CITY_PREVIEW(PREVIEW_PAGES[0].slug)}
+      specOptions={DEPOT_FEATURED_SPECS.map((spec) => ({ value: spec.key, label: spec.label }))}
       save={saveAllCityTemplateDraftAction}
       publish={publishAllCityTemplateAction}
       discard={discardAllCityTemplateAction}

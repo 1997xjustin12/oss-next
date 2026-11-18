@@ -41,11 +41,9 @@ export async function AllCityPage({ page, template, depot }: Props) {
     getDepotLowestUsedBuy(depot.depot),
   ])
   const text = resolveAllCityText(template, page)
-  const sections = resolveAllCitySections(template, page, { depot: depot.depot, usedFrom })
-  const { banner, specs } = allCityDepotParts(depot, page)
+  const sections = resolveAllCitySections(template, page, { depot: depot.depot, depotPage: locationPath(depot.locationSlug), usedFrom })
+  const { banner } = allCityDepotParts(depot, page)
   const path = allCityPath(page.slug)
-  const depotHref = locationPath(depot.locationSlug)
-  const depotCity = page.variant === 'depotCity'
   // The state's list on the /all-city index.
   const stateHref = `${ROUTES.ALL_CITY_INDEX}#state-${page.state.toLowerCase()}`
 
@@ -66,9 +64,12 @@ export async function AllCityPage({ page, template, depot }: Props) {
       <JsonLd data={jsonLd} />
       <PageHeadScripts path={path} />
 
+      {/* The redesigned sections, in the designs' order. */}
       <CityBreadcrumbs {...sections.breadcrumbs} stateHref={stateHref} />
       <CityHero text={sections.hero} background={template.media.heroBackground} />
+      <CityProducts text={sections.products} depot={depot.depot} />
 
+      {/* WordPress's sections, until each is redesigned. */}
       <CityIntro
         banner={banner}
         bannerAlt={`Shipping containers at the ${depot.depot} depot`}
@@ -77,16 +78,6 @@ export async function AllCityPage({ page, template, depot }: Props) {
         body={text.introBody}
         whyHeading={text.whyHeading}
         whyBody={text.whyBody}
-      />
-
-      {/* The hero holds the page's h1 now; until this section is redesigned, its heading is an h2
-          (the depot-city pages' keyword, or a plain one that does not repeat the h1). */}
-      <CityProducts
-        heading={depotCity ? page.keywordHeading || page.h1 : `Shipping Container Prices In ${page.city}, ${page.state}`}
-        headingLevel="h2"
-        depot={depot.depot}
-        specs={specs}
-        seeMore={{ label: text.seeMore, href: depotHref }}
       />
 
       <CityLists popularHeading={text.popularHeading} popular={lists.popular} viewAllLabel={text.viewAllLabel} viewAll={lists.viewAll} />
