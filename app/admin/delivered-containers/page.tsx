@@ -8,7 +8,7 @@ import { deleteDeliveredAction, saveDeliveredAction, setDeliveredHiddenAction } 
 import { ADMIN_ROUTES } from '@/config/admin';
 import { DEPOT_SNAPSHOT } from '@/config/depotCoordinates';
 import { DELIVERED_ARCHIVE_TAKEN_AT } from '@/lib/data/deliveredContainersArchive';
-import { DELIVERED_IMAGE_HOSTS, formatDeliveredOn } from '@/lib/deliveredContainers';
+import { DELIVERED_IMAGE_HOSTS, formatDeliveredOn, hasDeliveredPhoto } from '@/lib/deliveredContainers';
 import { depotSelectOptions } from '@/lib/depotOptions';
 import { readDeliveredForAdmin } from '@/services/deliveredContainer.service';
 import type { DeliveredContainer } from '@/types/deliveredContainer';
@@ -77,7 +77,8 @@ async function DeliveredAdmin({ searchParams }: Props) {
   const filtered = data.records.filter((r) => {
     if (search.source && r.source !== search.source) return false;
     if (depotFilter !== null && r.depotId !== depotFilter) return false;
-    if (view === 'shown' && data.hidden.has(r.id)) return false;
+    if (view === 'shown' && (data.hidden.has(r.id) || !hasDeliveredPhoto(r))) return false;
+    if (view === 'nophoto' && hasDeliveredPhoto(r)) return false;
     if (view === 'hidden' && !data.hidden.has(r.id)) return false;
     if (view === 'unmatched' && r.depotId !== null) return false;
     if (view === 'edited' && !data.edited.has(r.id)) return false;
@@ -99,7 +100,8 @@ async function DeliveredAdmin({ searchParams }: Props) {
   };
   const editing = search.edit ? (data.records.find((r) => r.id === search.edit) ?? null) : null;
 
-  const shownCount = data.records.filter((r) => !data.hidden.has(r.id)).length;
+  // The site shows only deliveries with a photo (services/deliveredContainer.service.ts).
+  const shownCount = data.records.filter((r) => !data.hidden.has(r.id) && hasDeliveredPhoto(r)).length;
   const counts = {
     archive: data.records.filter((r) => r.source === 'archive').length,
     order: data.records.filter((r) => r.source === 'order').length,
@@ -153,6 +155,7 @@ async function DeliveredAdmin({ searchParams }: Props) {
             <option value="all">All</option>
             <option value="shown">On the site</option>
             <option value="hidden">Hidden</option>
+            <option value="nophoto">No photo (not on the site)</option>
             <option value="edited">Added or edited here</option>
             <option value="unmatched">No depot</option>
           </select>
@@ -179,8 +182,9 @@ async function DeliveredAdmin({ searchParams }: Props) {
           {rows.map((r) => {
             const hidden = data.hidden.has(r.id);
             const edited = data.edited.has(r.id);
+            const noPhoto = !hasDeliveredPhoto(r);
             return (
-              <li key={r.id} className={`flex flex-wrap items-center gap-3 py-3 sm:flex-nowrap ${hidden ? 'opacity-55' : ''}`}>
+              <li key={r.id} className={`flex flex-wrap items-center gap-3 py-3 sm:flex-nowrap ${hidden || noPhoto ? 'opacity-55' : ''}`}>
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-theme-subtle dark:bg-neutral-800">
                   {r.image && <Image src={r.image} alt="" fill sizes="64px" className="object-cover" />}
                 </div>
@@ -194,6 +198,11 @@ async function DeliveredAdmin({ searchParams }: Props) {
                     <span className="rounded bg-theme-subtle px-1.5 py-0.5 text-theme-mid dark:bg-neutral-800 dark:text-neutral-300">{SOURCE_LABEL[r.source]}</span>
                     {edited && r.source !== 'admin' && <span className="rounded bg-sky-100 px-1.5 py-0.5 text-sky-800 dark:bg-sky-950 dark:text-sky-300">Edited</span>}
                     {hidden && <span className="rounded bg-neutral-200 px-1.5 py-0.5 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200">Hidden</span>}
+                    {noPhoto && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-amber-800 dark:bg-amber-950 dark:text-amber-300" title="Not shown on the site until it has a photo. Edit it to add one.">
+                        No photo · not on the site
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1.5">

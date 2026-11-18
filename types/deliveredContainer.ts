@@ -31,7 +31,10 @@ export type DeliveredContainer = {
    * then shows on the homepage but on no location page.
    */
   depotId: number | null
-  /** The photo, an absolute https URL; null shows the card without one. */
+  /**
+   * The photo, an absolute https URL. A record without one is kept (the admin
+   * lists it, to add a photo) but never shown on the site (hasDeliveredPhoto).
+   */
   image: string | null
 }
 

@@ -173,3 +173,10 @@ describe('parseDeliveredForm (Admin → Delivered Containers)', () => {
 it('formatDeliveredOn reads as the WordPress cards did', () => {
   assert.equal(formatDeliveredOn('2026-11-09'), 'November 9, 2026')
 })
+
+it('hasDeliveredPhoto: only a delivery with a photo is shown on the site', () => {
+  assert.equal(lib.hasDeliveredPhoto({ image: 'https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/a.png' }), true)
+  assert.equal(lib.hasDeliveredPhoto({ image: null }), false)
+  assert.equal(lib.hasDeliveredPhoto({ image: '' }), false)
+  assert.equal(lib.hasDeliveredPhoto({ image: '   ' }), false)
+})

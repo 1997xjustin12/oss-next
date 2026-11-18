@@ -3,7 +3,7 @@ import { CACHE_TAGS, SHELL_OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { DEPOT_SNAPSHOT } from '@/config/depotCoordinates'
 import { STORE_KEY } from '@/config/store'
 import { DELIVERED_CONTAINERS_ARCHIVE } from '@/lib/data/deliveredContainersArchive'
-import { depotFamily, filterByDepots, fromArchive, fromOrderRecord, mergeDelivered, type DeliveredEdits } from '@/lib/deliveredContainers'
+import { depotFamily, filterByDepots, fromArchive, fromOrderRecord, hasDeliveredPhoto, mergeDelivered, type DeliveredEdits } from '@/lib/deliveredContainers'
 import { getRedisClient } from '@/lib/redis'
 import { fetchDeliveredProducts } from '@/services/deliveredProduct.service'
 import type { DeliveredContainer } from '@/types/deliveredContainer'
@@ -77,8 +77,8 @@ export function archivedDeliveries(): DeliveredContainer[] {
 }
 
 /**
- * Every delivery to show, newest first. Cached for hours, shared by every
- * visitor; an admin save busts the tag at once. A source that fails is left
+ * Every delivery to show, newest first, photo only. Cached for hours, shared
+ * by every visitor; an admin save busts the tag at once. A source that fails is left
  * out, and the list is then kept only briefly so it returns soon.
  */
 export async function getDeliveredContainers(): Promise<DeliveredContainer[]> {
@@ -100,7 +100,8 @@ export async function getDeliveredContainers(): Promise<DeliveredContainer[]> {
   ])
   if (failed) cacheLife(SHELL_OUTAGE_CACHE_LIFE)
   else cacheLife('hours')
-  return mergeDelivered([orders, archivedDeliveries()], edits)
+  // Only deliveries with a photo reach the site; every section reads them from here (lib/deliveredContainers.ts hasDeliveredPhoto).
+  return mergeDelivered([orders, archivedDeliveries()], edits).filter(hasDeliveredPhoto)
 }
 
 /** The deliveries for a location page: its depot's, and those of the virtual depots it serves. */

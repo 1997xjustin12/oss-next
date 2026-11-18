@@ -200,6 +200,16 @@ export type DeliveredEdits = {
  * Every source in one list, newest first: an admin edit replaces the record
  * with its id, hidden ones are dropped, and a repeated id is kept once.
  */
+/**
+ * Whether a delivery may be shown on the site: only with a photo (since
+ * 2026-11-18; a card without one was an empty grey square). Applied where the
+ * site reads the list (getDeliveredContainers), so every section showing it
+ * follows; the admin list still shows them, flagged, so one can be given a photo.
+ */
+export function hasDeliveredPhoto(record: Pick<DeliveredContainer, 'image'>): boolean {
+  return !!record.image?.trim()
+}
+
 export function mergeDelivered(sources: readonly (readonly DeliveredContainer[])[], edits: DeliveredEdits): DeliveredContainer[] {
   const byId = new Map<string, DeliveredContainer>()
   for (const list of sources) for (const r of list) if (!byId.has(r.id)) byId.set(r.id, r)
