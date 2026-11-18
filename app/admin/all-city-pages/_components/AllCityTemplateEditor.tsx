@@ -28,6 +28,23 @@ const VARIANT_HINTS = (variant: 'city' | 'depotCity'): FieldHints => ({
   [`${variant}.offerBand`]: { label: 'Closing band', help: 'Blank: no band. The depot-city pages have “GET $50 OFF … {phone}”.' },
 })
 
+const OFFER_KIND_OPTIONS = [
+  { value: 'buy', label: 'Buy' },
+  { value: 'rent', label: 'Rent' },
+  { value: 'rto', label: 'Rent-To-Own' },
+]
+
+const OFFER_ICON_OPTIONS = [
+  { value: 'price', label: 'Price tag ($)' },
+  { value: 'sizes', label: 'Sizes (arrows)' },
+  { value: 'conditions', label: 'Conditions (container)' },
+  { value: 'guides', label: 'Guides (book)' },
+  { value: 'terms', label: 'Terms (calendar)' },
+  { value: 'delivery', label: 'Delivery (truck)' },
+  { value: 'ownership', label: 'Ownership (key)' },
+  { value: 'approval', label: 'Approval (badge)' },
+]
+
 const SECTION_HERO_HELP =
   'Also: {h1} the page’s own heading (city part in amber), {depot} its depot, {price} the depot’s lowest used container price (a figure using it is hidden when there is none), {depotCount} “1 Depot”.'
 
@@ -69,6 +86,25 @@ export function AllCityTemplateEditor({ initialValue, previewPages, previewHref,
     'sections.trustedBy': { label: 'Trusted By (logo carousel)', help: 'The homepage’s logos, scrolling, in colour on a light grey band.' },
     'sections.trustedBy.show': { label: 'Show it' },
     'sections.trustedBy.heading': { label: 'Heading over the logos', help: 'Blank: none (as designed).' },
+    'sections.offers': {
+      label: 'Buy / Rent / Rent-To-Own',
+      help: 'The homepage’s tabs, priced at the page’s depot: {buy}, {rent} and {rto} are its lowest prices of each kind (the country’s lowest where the depot has none).',
+    },
+    'sections.offers.show': { label: 'Show it' },
+    'sections.offers.tabs': {
+      label: 'Tabs',
+      itemLabel: 'Tab',
+      help: 'One each of Buy, Rent and Rent-To-Own, at most three; a repeated one is dropped.',
+    },
+    'sections.offers.tabs.*.id': { label: 'Kind', kind: 'select', options: OFFER_KIND_OPTIONS },
+    'sections.offers.tabs.*.label': { label: 'Tab name' },
+    'sections.offers.tabs.*.price': { label: 'Price on the tab' },
+    'sections.offers.tabs.*.note': { label: 'After the price (grey)' },
+    'sections.offers.tabs.*.body': { label: 'Paragraphs', multiline: true },
+    'sections.offers.tabs.*.card': { label: 'Price card' },
+    'sections.offers.tabs.*.card.suffix': { label: 'After the price (smaller)', help: '“/mo” for a monthly price.' },
+    'sections.offers.tabs.*.features': { label: 'Features', itemLabel: 'Feature', newItem: { icon: 'price', title: '', text: '' } },
+    'sections.offers.tabs.*.features.*.icon': { kind: 'select', options: OFFER_ICON_OPTIONS },
     media: { label: 'Images and video' },
     'media.heroBackground': { label: 'Hero photo', help: 'A CDN link (onsite-cdn.sfo3.cdn.digitaloceanspaces.com) or a site path.' },
     'media.youtubeId': { label: 'Video (YouTube id or link)', help: 'Blank: no video.' },

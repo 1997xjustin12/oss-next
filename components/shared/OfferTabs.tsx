@@ -47,20 +47,18 @@ const PRICE_COLOR: Record<OfferTab['id'], string> = {
  */
 const PHONE_ORDER_CLOSED = ['order-3', 'order-4', 'order-5'] as const
 const DESKTOP_TAB_ORDER = ['lg:order-1', 'lg:order-2', 'lg:order-3'] as const
+/** The desktop row, one column per tab, and the panel under all of them. */
+const DESKTOP_COLUMNS = ['lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3'] as const
+const DESKTOP_SPAN = ['lg:col-span-1', 'lg:col-span-2', 'lg:col-span-3'] as const
 
 const BODY_LINK = 'font-semibold text-theme-dark underline underline-offset-2 hover:text-theme-primary dark:text-white dark:hover:text-red-400'
 
 /**
  * The homepage's Buy / Rent / Rent-To-Own section, under the hero on every
- * version of the homepage (copy in lib/data/homeOfferTabs.ts). Tabs on desktop,
- * an accordion on a phone: each tab is a disclosure button for its panel, so
- * the same markup is accessible both ways. Every panel is in the HTML; only
- * the open one shows.
+ * version of the homepage (copy in lib/data/homeOfferTabs.ts), priced at the
+ * visitor's saved depot once the browser knows it (the page is prebuilt).
  */
 export function OfferTabs() {
-  const [openId, setOpenId] = useState<OfferTab['id']>('buy')
-  const baseId = useId()
-  const openIndex = OFFER_TABS.findIndex((tab) => tab.id === openId)
   // The visitor's depot's starting prices once known; the design's figures until then, and for anyone without a depot.
   const depotPrices = useDepotStartingPrices()
   const prices: OfferPrices = {
@@ -68,12 +66,28 @@ export function OfferTabs() {
     rent: depotPrices.rent ?? OFFER_DEFAULT_PRICES.rent,
     rto: depotPrices.rto ?? OFFER_DEFAULT_PRICES.rto,
   }
-  const tabs = OFFER_TABS.map((tab) => withPrices(tab, prices))
+  return <OfferTabsView tabs={OFFER_TABS} prices={prices} />
+}
+
+/**
+ * The Buy / Rent / Rent-To-Own section itself, for any wording and prices: the
+ * homepage's (above) and an /all-city/ page's, priced at its depot on the
+ * server. Tabs on desktop, an accordion on a phone: each tab is a disclosure
+ * button for its panel, so the same markup is accessible both ways. Every
+ * panel is in the HTML; only the open one shows. At most three tabs, one each
+ * of Buy, Rent and Rent-To-Own.
+ */
+export function OfferTabsView({ tabs: rawTabs, prices }: { tabs: readonly OfferTab[]; prices: OfferPrices }) {
+  const [openId, setOpenId] = useState<OfferTab['id']>(rawTabs[0]?.id ?? 'buy')
+  const baseId = useId()
+  const openIndex = rawTabs.findIndex((tab) => tab.id === openId)
+  const tabs = rawTabs.map((tab) => withPrices(tab, prices))
+  if (tabs.length === 0) return null
 
   return (
     <section aria-label="Buy, rent or rent-to-own a shipping container" className="bg-white px-[5%] py-10 sm:py-14 dark:bg-neutral-950">
       {/* Full width inside the section's 5% gutter, edges in line with the header and the other sections (AGENTS.md §14). */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-x-10 lg:gap-y-8">
+      <div className={`grid grid-cols-1 gap-4 lg:gap-x-10 lg:gap-y-8 ${DESKTOP_COLUMNS[tabs.length - 1]}`}>
         {tabs.map((tab, i) => {
           const open = tab.id === openId
           // Closed tabs keep their own order among themselves, after the open one's panel.
@@ -115,7 +129,7 @@ export function OfferTabs() {
             role="region"
             aria-labelledby={`${baseId}-tab-${tab.id}`}
             hidden={tab.id !== openId}
-            className="order-2 lg:order-4 lg:col-span-3"
+            className={`order-2 lg:order-4 ${DESKTOP_SPAN[tabs.length - 1]}`}
           >
             <OfferPanel tab={tab} />
           </div>

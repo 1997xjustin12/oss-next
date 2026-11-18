@@ -125,6 +125,26 @@ describe('conformAllCityTemplate', () => {
     assert.equal(conformAllCityTemplate({ sections: { trustedBy: { show: 'no' } } }).sections.trustedBy.show, true)
   })
 
+  it('Buy / Rent / Rent-To-Own: known kinds once each, known icons, safe links', () => {
+    const base = ALL_CITY_TEMPLATE_DEFAULT.sections.offers.tabs
+    const t = conformAllCityTemplate({
+      sections: {
+        offers: {
+          tabs: [
+            { ...base[1], card: { ...base[1].card, href: 'javascript:alert(1)' }, features: [{ icon: 'rocket', title: 'X', text: 'Y' }] },
+            { ...base[0], id: 'lease' },
+            base[1],
+            base[0],
+          ],
+        },
+      },
+    })
+    assert.deepEqual(t.sections.offers.tabs.map((tab) => tab.id), ['rent', 'buy'])
+    assert.equal(t.sections.offers.tabs[0].card.href, base[1].card.href)
+    assert.equal(t.sections.offers.tabs[0].features[0].icon, 'price')
+    assert.deepEqual(conformAllCityTemplate({ sections: {} }).sections.offers, ALL_CITY_TEMPLATE_DEFAULT.sections.offers)
+  })
+
   it('allows a blank video and a blank closing band', () => {
     const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
     assert.equal(t.media.youtubeId, '')

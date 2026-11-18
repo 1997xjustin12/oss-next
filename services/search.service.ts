@@ -607,6 +607,51 @@ export async function getDepotLowestUsedBuy(depot: string): Promise<number | nul
   )
 }
 
+/** The lowest price of one way to pay among a depot's own listings, or null when it has none. */
+function lowestAt(pool: FormattedContainerHit[], depot: string, paymentType: 'buy' | 'rental' | 'rto'): number | null {
+  const prices = pool
+    .filter(
+      (product) =>
+        getCustomFieldValue(product, 'payment_type').toLowerCase() === paymentType &&
+        getCustomFieldValue(product, 'location').trim().toLowerCase() === depot.trim().toLowerCase(),
+    )
+    .map((product) => Number(product.sale_price))
+    .filter((price) => price > 0)
+  return prices.length ? Math.min(...prices) : null
+}
+
+export type DepotStartingPrices = { buy: number | null; rent: number | null; rto: number | null }
+
+/**
+ * The lowest Buy, Rent and Rent-To-Own prices at a named depot, each from the
+ * national pool when the depot has none of that kind: the Buy / Rent /
+ * Rent-To-Own section on an /all-city/ page, rendered on the server for the
+ * page's own depot. (The homepage's copy of the section reads the visitor's
+ * saved depot in the browser, by the same rule: useDepotStartingPrices.) Null
+ * per kind only when neither has one, or the search is down. Cached for hours;
+ * a price change reaches it through the products tag.
+ */
+export async function getDepotStartingPrices(depot: string): Promise<DepotStartingPrices> {
+  'use cache'
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS)
+
+  return withSearchFallback(
+    `starting prices for ${depot}`,
+    async () => {
+      const own = await getShippingContainersByLocation(depot)
+      const ownPrices = { buy: lowestAt(own, depot, 'buy'), rent: lowestAt(own, depot, 'rental'), rto: lowestAt(own, depot, 'rto') }
+      if (ownPrices.buy !== null && ownPrices.rent !== null && ownPrices.rto !== null) return ownPrices
+      const national = await getShippingContainersByLocation(DEFAULT_LOCATION)
+      return {
+        buy: ownPrices.buy ?? lowestAt(national, DEFAULT_LOCATION, 'buy'),
+        rent: ownPrices.rent ?? lowestAt(national, DEFAULT_LOCATION, 'rental'),
+        rto: ownPrices.rto ?? lowestAt(national, DEFAULT_LOCATION, 'rto'),
+      }
+    },
+    { buy: null, rent: null, rto: null },
+  )
+}
+
 /**
  * One named depot's featured containers, for a page that is about that depot
  * (the /where-to-buy-shipping-containers/[location] pages), so its row is in

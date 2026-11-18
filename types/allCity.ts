@@ -1,3 +1,4 @@
+import type { OfferTab } from '@/lib/data/homeOfferTabs'
 import type { DepotFeaturedKey } from '@/services/search.service'
 
 /**
@@ -127,11 +128,22 @@ export type AllCityTrustedByText = {
   heading: string
 }
 
+/**
+ * The Buy / Rent / Rent-To-Own tabs (the homepage's section), priced at the
+ * page's depot: `{buy}`, `{rent}`, `{rto}` are its lowest prices of each kind.
+ */
+export type AllCityOffersText = {
+  show: boolean
+  /** One each of Buy, Rent and Rent-To-Own, in this order (at most three). */
+  tabs: OfferTab[]
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
   products: AllCityProductsText
   trustedBy: AllCityTrustedByText
+  offers: AllCityOffersText
 }
 
 export type AllCityTemplate = {

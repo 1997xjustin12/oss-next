@@ -1,16 +1,19 @@
 import { YouTubeEmbed } from '@/components/product/YouTubeEmbed'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { LocationSearch } from '@/components/shared/LocationSearch'
+import { OfferTabsView } from '@/components/shared/OfferTabs'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ReviewsSection } from '@/components/shared/ReviewsSection'
 import { TrustedBySection } from '@/components/shared/TrustedBySection'
 import { ROUTES } from '@/config/routes'
 import { allCityDepotParts, allCityPath, resolveAllCitySections, resolveAllCityText } from '@/lib/allCityPage'
 import { ALL_CITY_ZIP_ANCHOR } from '@/lib/data/allCityTemplate'
+import { OFFER_DEFAULT_PRICES, type OfferPrices } from '@/lib/data/homeOfferTabs'
+import { formatMoney } from '@/lib/formatters'
 import { locationPath } from '@/lib/locationPage'
 import { breadcrumbNode, graph, siteNodes, webPageNode } from '@/lib/schema'
 import { getAllCityLists } from '@/services/allCity.service'
-import { getDepotLowestUsedBuy } from '@/services/search.service'
+import { getDepotLowestUsedBuy, getDepotStartingPrices } from '@/services/search.service'
 import { getReviews } from '@/services/review.service'
 import { CityBreadcrumbs } from './CityBreadcrumbs'
 import { CityFinancing } from './CityFinancing'
@@ -35,12 +38,22 @@ type Props = {
  * template. Static: the products, lists and reviews are cached reads; the ZIP
  * box, the review slider and the video are the client code.
  */
+/** "$1,350", not "$1,350.00"; real cents stay ("$79.99"), as the homepage's tabs show them. */
+const priceLabel = (price: number) => formatMoney(price).replace(/\.00$/, '')
+
 export async function AllCityPage({ page, template, depot }: Props) {
-  const [reviews, lists, usedFrom] = await Promise.all([
+  const [reviews, lists, usedFrom, starting] = await Promise.all([
     getReviews(),
     getAllCityLists(page.state, page.slug),
     getDepotLowestUsedBuy(depot.depot),
+    getDepotStartingPrices(depot.depot),
   ])
+  // The Buy / Rent / Rent-To-Own tabs' {buy} {rent} {rto}: the page's depot's, else the design's figures.
+  const offerPrices: OfferPrices = {
+    buy: starting.buy !== null ? priceLabel(starting.buy) : OFFER_DEFAULT_PRICES.buy,
+    rent: starting.rent !== null ? priceLabel(starting.rent) : OFFER_DEFAULT_PRICES.rent,
+    rto: starting.rto !== null ? priceLabel(starting.rto) : OFFER_DEFAULT_PRICES.rto,
+  }
   const text = resolveAllCityText(template, page)
   const sections = resolveAllCitySections(template, page, { depot: depot.depot, depotPage: locationPath(depot.locationSlug), usedFrom })
   const { banner } = allCityDepotParts(depot, page)
@@ -76,6 +89,7 @@ export async function AllCityPage({ page, template, depot }: Props) {
           colour
         />
       )}
+      {sections.offers.show && <OfferTabsView tabs={sections.offers.tabs} prices={offerPrices} />}
 
       {/* WordPress's sections, until each is redesigned. */}
       <CityIntro

@@ -19,7 +19,7 @@ import { StatesSection } from "./StatesSection";
 import { Hero } from "./Hero";
 import { HeroBannerPreload } from "./HeroBannerPreload";
 import { HomeVariantTracker } from "./HomeVariantTracker";
-import { OfferTabs } from "./OfferTabs";
+import { OfferTabs } from "@/components/shared/OfferTabs";
 import { RightContainer } from "./RightContainer";
 import { ContainerServices } from "./ContainerServices";
 import { OnsiteDifference } from "./OnsiteDifference";

@@ -18,6 +18,7 @@ import { ALL_CITY_STATE_NAMES } from '@/lib/allCityPage'
 import { ALL_CITY_DEPOTS } from '@/lib/data/allCityDepots'
 import { ALL_CITY_TEMPLATE_DEFAULT } from '@/lib/data/allCityTemplate'
 import { DELIVERED_IMAGE_HOSTS } from '@/lib/deliveredContainers'
+import type { OfferFeatureIcon, OfferTab } from '@/lib/data/homeOfferTabs'
 import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 import { DEPOT_FEATURED_SPECS, type DepotFeaturedKey } from '@/services/search.service'
 import type { AllCityDepot, AllCityImage, AllCityPage, AllCitySections, AllCitySeo, AllCityState, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
@@ -124,8 +125,34 @@ function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCityS
       })
   }
   out.products.buttonHref = href(out.products.buttonHref) ?? seed.products.buttonHref
+
+  // Buy / Rent / Rent-To-Own: each tab one of the three, once (the section is laid out for at most three);
+  // a feature's icon one the section draws; a card's link a safe one.
+  const seen = new Set<string>()
+  out.offers.tabs = out.offers.tabs
+    .filter((tab) => OFFER_TAB_IDS.includes(tab.id) && !seen.has(tab.id) && seen.add(tab.id))
+    .map((tab) => {
+      const base = seed.offers.tabs.find((candidate) => candidate.id === tab.id) ?? seed.offers.tabs[0]
+      return {
+        ...tab,
+        card: { ...tab.card, href: href(tab.card.href) ?? base.card.href },
+        features: tab.features.map((feature) => ({ ...feature, icon: OFFER_FEATURE_ICONS.includes(feature.icon) ? feature.icon : 'price' })),
+      }
+    })
   return out
 }
+
+const OFFER_TAB_IDS: readonly string[] = ['buy', 'rent', 'rto'] satisfies OfferTab['id'][]
+const OFFER_FEATURE_ICONS: readonly string[] = [
+  'price',
+  'sizes',
+  'conditions',
+  'guides',
+  'terms',
+  'delivery',
+  'ownership',
+  'approval',
+] satisfies OfferFeatureIcon[]
 
 export function conformAllCityTemplate(raw: unknown, seed: AllCityTemplate = ALL_CITY_TEMPLATE_DEFAULT): AllCityTemplate {
   const record = isObj(raw) ? raw : {}

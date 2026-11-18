@@ -1,5 +1,6 @@
 import { FEATURED_CONTAINERS } from '@/config/featuredContainers'
 import { ROUTES } from '@/config/routes'
+import { OFFER_TABS } from './homeOfferTabs'
 import { CDN } from './containerLandingContent'
 import type { AllCitySections, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
 
@@ -122,6 +123,8 @@ const SECTIONS: AllCitySections = {
   },
   // The homepage's logo carousel, without its heading (the design).
   trustedBy: { show: true, heading: '' },
+  // The homepage's Buy / Rent / Rent-To-Own section and its words, priced at the page's depot.
+  offers: { show: true, tabs: structuredClone([...OFFER_TABS]) },
 }
 
 export const ALL_CITY_TEMPLATE_DEFAULT: AllCityTemplate = {
