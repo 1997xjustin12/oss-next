@@ -22,33 +22,36 @@ export async function RightContainer({
     return [];
   });
 
-  // Navy in both colour schemes, with a faint dot pattern in the lower corners
-  // (decoration only). The cards are white on it (ContainerCard).
+  // Light mode (the 2026-11-18 design): light grey, a red heading, a red
+  // full-width button. Dark mode keeps the earlier navy with a faint dot
+  // pattern in the lower corners (decoration only) and the amber button. The
+  // cards are white in both (ContainerCard).
   return (
-    <section className="relative isolate overflow-hidden bg-[#0f1c2e] bg-[radial-gradient(ellipse_at_top,#1e3352_0%,#0f1c2e_65%)] px-[5%] py-12 sm:py-16">
+    <section className="relative isolate overflow-hidden bg-neutral-100 px-[5%] py-12 sm:py-16 dark:bg-[#0f1c2e] dark:bg-[radial-gradient(ellipse_at_top,#1e3352_0%,#0f1c2e_65%)]">
       <div
         aria-hidden
-        className="absolute bottom-0 left-0 -z-10 h-40 w-56 bg-[radial-gradient(rgba(255,255,255,0.14)_1.5px,transparent_1.5px)] bg-size-[14px_14px] mask-[linear-gradient(to_top_right,black_20%,transparent_75%)]"
+        className="absolute bottom-0 left-0 -z-10 hidden h-40 w-56 bg-[radial-gradient(rgba(255,255,255,0.14)_1.5px,transparent_1.5px)] bg-size-[14px_14px] mask-[linear-gradient(to_top_right,black_20%,transparent_75%)] dark:block"
       />
       <div
         aria-hidden
-        className="absolute right-0 bottom-0 -z-10 hidden h-40 w-56 bg-[radial-gradient(rgba(255,255,255,0.14)_1.5px,transparent_1.5px)] bg-size-[14px_14px] mask-[linear-gradient(to_top_left,black_20%,transparent_75%)] sm:block"
+        className="absolute right-0 bottom-0 -z-10 hidden h-40 w-56 bg-[radial-gradient(rgba(255,255,255,0.14)_1.5px,transparent_1.5px)] bg-size-[14px_14px] mask-[linear-gradient(to_top_left,black_20%,transparent_75%)] sm:dark:block"
       />
-      <div className="max-w-[1280px] mx-auto flex flex-col gap-3 items-center">
-        <h2 className="font-extrabold text-3xl sm:text-[40px] leading-tight text-center text-white">
+      {/* 1480px wide at most, as the design: four cards wide enough for the price beside its button. */}
+      <div className="max-w-370 mx-auto flex flex-col gap-3 items-center">
+        <h2 className="font-extrabold text-3xl sm:text-[40px] leading-tight text-center text-theme-primary dark:text-white">
           {heading}
         </h2>
-        <p className="max-w-3xl text-base sm:text-lg leading-relaxed text-center text-white/85">
+        <p className="max-w-6xl text-base sm:text-xl xl:max-w-none xl:text-[21px] leading-relaxed text-center text-neutral-700 dark:text-white/85">
           From Compact 20ft Units To Oversized High Cubes And
           Temperature-Controlled Reefers — We Stock Every Size And
           Configuration.
         </p>
         <ContainerCardGrid defaults={toFeaturedCards(defaults)} />
-        <div className="mt-2">
+        <div className="mt-2 w-full max-w-xl">
           <PlpLink
             prefetch={false}
             href={`${ROUTES.PLP}?ptype=buy`}
-            className="inline-block rounded-md bg-linear-to-r from-amber-500 to-amber-300 px-7 py-2.5 text-base font-bold text-neutral-900 shadow-lg transition-[filter] hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300 sm:text-lg"
+            className="block bg-theme-primary px-7 py-3 text-center text-lg font-bold text-white shadow-md transition-colors hover:bg-theme-primary-dark focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-theme-primary sm:text-2xl dark:mx-auto dark:w-fit dark:rounded-md dark:bg-linear-to-r dark:from-amber-500 dark:to-amber-300 dark:py-2.5 dark:text-base dark:text-neutral-900 dark:shadow-lg dark:hover:brightness-105 dark:focus-visible:outline-amber-300 sm:dark:text-lg"
           >
             View All Containers &amp; Pricing
           </PlpLink>
