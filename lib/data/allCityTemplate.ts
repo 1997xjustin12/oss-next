@@ -120,6 +120,8 @@ const SECTIONS: AllCitySections = {
     buttonHref: `${ROUTES.PLP}?ptype=buy`,
     note: 'Final price depends on your delivery address',
   },
+  // The homepage's logo carousel, without its heading (the design).
+  trustedBy: { show: true, heading: '' },
 }
 
 export const ALL_CITY_TEMPLATE_DEFAULT: AllCityTemplate = {

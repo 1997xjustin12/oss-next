@@ -53,19 +53,25 @@ const LOGOS: Logo[] = [
  * `logos`: another page's own set (the for-sale and rental pages show
  * WordPress's 31, named, at 1000 px, so those go through the optimizer and sit
  * on a white tile in dark mode). `heading={null}`: no heading, for a page
- * whose band above already says it.
+ * whose band above already says it. `background`: the band's colours (the
+ * /all-city/ pages' light grey). `colour`: the logos in colour, not grey
+ * until hovered, on white tiles in dark mode (some logos are black).
  */
 export function TrustedBySection({
   heading = HOME_HEADING_DEFAULTS['trustedBy.h2'],
   logos,
+  background = 'dark:bg-gray-950',
+  colour = false,
 }: {
   heading?: string | null;
   logos?: readonly TrustedLogo[];
+  background?: string;
+  colour?: boolean;
 }) {
   const list = logos ?? LOGOS;
   const custom = logos !== undefined;
   return (
-    <section className="py-8 sm:py-10 overflow-hidden dark:bg-gray-950">
+    <section className={`py-8 sm:py-10 overflow-hidden ${background}`}>
       <style>{`
         @keyframes marquee {
           from { transform: translateX(0); }
@@ -90,7 +96,7 @@ export function TrustedBySection({
       <div className="overflow-hidden">
         <div className="logo-track flex w-max" role="group" aria-label="Trusted organizations carousel">
           {[...list, ...list].map((logo, i) => (
-            <div key={i} className={`flex items-center justify-center mx-4.75 w-34.75 h-25 ${custom ? 'rounded-md dark:bg-white' : ''}`}>
+            <div key={i} className={`flex items-center justify-center mx-4.75 w-34.75 h-25 ${custom || colour ? 'rounded-md dark:bg-white' : ''}`}>
               <Image
                 src={logo.src}
                 // The second copy only makes the loop seamless: named once, not twice.
@@ -99,7 +105,7 @@ export function TrustedBySection({
                 height={80}
                 // The default set is already 150x150 on the CDN: the optimizer had nothing to gain.
                 unoptimized={!custom}
-                className="object-contain grayscale hover:grayscale-0 dark:grayscale-0 transition-[filter] duration-300"
+                className={`object-contain ${colour ? '' : 'grayscale hover:grayscale-0 dark:grayscale-0 transition-[filter] duration-300'}`}
               />
             </div>
           ))}

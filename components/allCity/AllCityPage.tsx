@@ -3,6 +3,7 @@ import { JsonLd } from '@/components/shared/JsonLd'
 import { LocationSearch } from '@/components/shared/LocationSearch'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ReviewsSection } from '@/components/shared/ReviewsSection'
+import { TrustedBySection } from '@/components/shared/TrustedBySection'
 import { ROUTES } from '@/config/routes'
 import { allCityDepotParts, allCityPath, resolveAllCitySections, resolveAllCityText } from '@/lib/allCityPage'
 import { ALL_CITY_ZIP_ANCHOR } from '@/lib/data/allCityTemplate'
@@ -68,6 +69,13 @@ export async function AllCityPage({ page, template, depot }: Props) {
       <CityBreadcrumbs {...sections.breadcrumbs} stateHref={stateHref} />
       <CityHero text={sections.hero} background={template.media.heroBackground} />
       <CityProducts text={sections.products} depot={depot.depot} />
+      {sections.trustedBy.show && (
+        <TrustedBySection
+          heading={sections.trustedBy.heading.trim() || null}
+          background="bg-neutral-100 dark:bg-neutral-900"
+          colour
+        />
+      )}
 
       {/* WordPress's sections, until each is redesigned. */}
       <CityIntro

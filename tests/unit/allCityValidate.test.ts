@@ -119,6 +119,12 @@ describe('conformAllCityTemplate', () => {
     assert.deepEqual(conformAllCityTemplate({ sections: {} }).sections.products.cards, ALL_CITY_TEMPLATE_DEFAULT.sections.products.cards)
   })
 
+  it('Trusted By: an on/off must be a boolean, the heading text', () => {
+    const t = conformAllCityTemplate({ sections: { trustedBy: { show: false, heading: 'Trusted by' } } })
+    assert.deepEqual(t.sections.trustedBy, { show: false, heading: 'Trusted by' })
+    assert.equal(conformAllCityTemplate({ sections: { trustedBy: { show: 'no' } } }).sections.trustedBy.show, true)
+  })
+
   it('allows a blank video and a blank closing band', () => {
     const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
     assert.equal(t.media.youtubeId, '')

@@ -120,10 +120,18 @@ export type AllCityProductsText = {
   note: string
 }
 
+/** The "Trusted By" logo carousel (the homepage's logos). */
+export type AllCityTrustedByText = {
+  show: boolean
+  /** A heading over the logos. Blank: none (the design); the carousel is still named for screen readers. */
+  heading: string
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
   products: AllCityProductsText
+  trustedBy: AllCityTrustedByText
 }
 
 export type AllCityTemplate = {
