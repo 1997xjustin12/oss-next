@@ -111,6 +111,14 @@ export const HOME_HEADINGS: readonly HeadingField[] = [
   },
 
   {
+    key: 'services.h2',
+    section: 'Shipping Container Services',
+    label: 'Section Heading',
+    element: 'h2',
+    default: 'Shipping Container Services',
+  },
+
+  {
     key: 'quoteForm.h2',
     section: 'Quote Form',
     label: 'Section Heading',

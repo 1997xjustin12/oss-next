@@ -20,6 +20,7 @@ import { HeroBannerPreload } from "./HeroBannerPreload";
 import { HomeVariantTracker } from "./HomeVariantTracker";
 import { OfferTabs } from "./OfferTabs";
 import { RightContainer } from "./RightContainer";
+import { ContainerServices } from "./ContainerServices";
 import { OnsiteDifference } from "./OnsiteDifference";
 import { ReviewsSection } from "@/components/shared/ReviewsSection";
 
@@ -135,6 +136,7 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
         ]}
       />
       <TrustedBySection heading={copy["trustedBy.h2"]} />
+      <ContainerServices heading={copy["services.h2"]} />
       <QuoteForm heading={copy["quoteForm.h2"]} />
       <DeliveredContainers heading="Recently Delivered Containers" items={delivered} />
       <ReviewsSection heading={copy["reviews.h2"]} reviews={reviews} />
