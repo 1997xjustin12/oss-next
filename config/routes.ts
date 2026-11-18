@@ -61,6 +61,8 @@ export const ROUTES = {
   WHERE_TO_BUY: '/where-to-buy-shipping-containers',
   /** WordPress's "Cities" pages (8,541), native at the same paths (docs/reference/all-city-pages.md). */
   ALL_CITY: (slug: string) => `/all-city/${slug}`,
+  /** The index of those pages, by state (native; WordPress had none and sent it to the homepage). */
+  ALL_CITY_INDEX: '/all-city',
   WISHLIST: '/wishlist',
   /** Quotes this browser has saved from a product page. */
   SAVED_QUOTES: '/saved-quotes',

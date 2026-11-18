@@ -6,10 +6,10 @@ import { ALL_CITY_TEMPLATE_DEFAULT } from '@/lib/data/allCityTemplate'
 import { allSeedPages, getSeedPage } from '@/lib/allCitySeed'
 import type { AllCityAdminRow } from '@/lib/allCityAdmin'
 import { findAllCityIssues } from '@/lib/allCityIssues'
-import { buildAllCityLists, withoutPage, type AllCityStateLists } from '@/lib/allCityPage'
+import { ALL_CITY_STATE_NAMES, buildAllCityLists, withoutPage, type AllCityStateLists } from '@/lib/allCityPage'
 import { conformAllCityDepot, conformAllCityPage, conformAllCityTemplate } from '@/lib/allCityValidate'
 import { getRedisClient } from '@/lib/redis'
-import type { AllCityDepot, AllCityPage, AllCityState, AllCityTemplate } from '@/types/allCity'
+import type { AllCityDepot, AllCityLink, AllCityPage, AllCityState, AllCityTemplate } from '@/types/allCity'
 
 /**
  * The /all-city/ pages' records: the seed imported from WordPress
@@ -201,6 +201,32 @@ export type { AllCityStateLists }
 
 export async function getAllCityLists(state: AllCityState, exceptSlug: string): Promise<AllCityStateLists> {
   return withoutPage(await getStateLists(state), exceptSlug)
+}
+
+export type AllCityStateSummary = {
+  state: AllCityState
+  name: string
+  /** The state's listed city pages (its two lists together, each page once). */
+  count: number
+  popular: AllCityLink[]
+}
+
+/**
+ * The /all-city index: each state with its city-page count and its "Popular
+ * Cities" list, from the same cached per-state lists the city pages read (so
+ * publishing a page refreshes this too). States in name order.
+ */
+export async function getAllCityDirectory(): Promise<AllCityStateSummary[]> {
+  const states = (Object.keys(ALL_CITY_STATE_NAMES) as AllCityState[]).sort((a, b) =>
+    ALL_CITY_STATE_NAMES[a].localeCompare(ALL_CITY_STATE_NAMES[b]),
+  )
+  const lists = await Promise.all(states.map((state) => getStateLists(state)))
+  return states.map((state, i) => ({
+    state,
+    name: ALL_CITY_STATE_NAMES[state],
+    count: new Set([...lists[i].popular, ...lists[i].viewAll].map((link) => link.slug)).size,
+    popular: lists[i].popular,
+  }))
 }
 
 // ─── Admin: drafts and publishing (uncached, admin-only callers) ─────────────

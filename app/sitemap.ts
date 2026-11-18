@@ -42,6 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}${ROUTES.CONTAINER_CONDITIONS}`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${origin}${ROUTES.SPECIAL_PROMOTIONS}`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${origin}${ROUTES.WHY_ONSITE}`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${origin}${ROUTES.ALL_CITY_INDEX}`, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${origin}${ROUTES.REFURBISHED_CONTAINERS}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${origin}${ROUTES.CARGO_WORTHY_CONTAINERS}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${origin}${ROUTES.CONTAINER_DIMENSIONS}`, changeFrequency: 'monthly', priority: 0.6 },

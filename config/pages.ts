@@ -43,6 +43,7 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'container-conditions', path: ROUTES.CONTAINER_CONDITIONS, label: 'Shipping Container Conditions', group: 'Storefront', indexable: true },
   { id: 'special-promotions', path: ROUTES.SPECIAL_PROMOTIONS, label: 'Special Promotions', group: 'Storefront', indexable: true },
   { id: 'why-onsite', path: ROUTES.WHY_ONSITE, label: 'Why On-Site Storage', group: 'Storefront', indexable: true },
+  { id: 'all-city-index', path: ROUTES.ALL_CITY_INDEX, label: 'All Cities (index of the city pages)', group: 'Storefront', indexable: true },
   { id: 'refurbished-containers', path: ROUTES.REFURBISHED_CONTAINERS, label: 'Refurbished Shipping Containers', group: 'Storefront', indexable: true },
   { id: 'cargo-worthy-containers', path: ROUTES.CARGO_WORTHY_CONTAINERS, label: 'Cargo Worthy Shipping Containers', group: 'Storefront', indexable: true },
   { id: 'container-dimensions', path: ROUTES.CONTAINER_DIMENSIONS, label: 'Shipping Container Dimensions (article)', group: 'Storefront', indexable: true },

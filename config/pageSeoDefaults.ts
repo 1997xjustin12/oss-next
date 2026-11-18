@@ -191,6 +191,16 @@ export const PAGE_SEO_DEFAULTS: Record<string, PageSeoDefaults> = {
     openGraph: { type: 'article', images: ['/images/og-containers.jpg'] },
   },
 
+  // New with the native page (2026-11-18): WordPress had no /all-city page.
+  [ROUTES.ALL_CITY_INDEX]: {
+    title: 'Shipping Containers For Sale & Rent In Your City',
+    description:
+      'Find shipping containers for sale, rent and rent-to-own in your city. Browse city pages across 12 states and get local pricing delivered from the nearest depot.',
+    canonical: ROUTES.ALL_CITY_INDEX,
+    // The city pages' hero photo (the port), as the page's own hero shows it.
+    openGraph: { images: ['https://onsite-cdn.sfo3.cdn.digitaloceanspaces.com/wp-content/uploads/2022/05/27100440/new-location-template-header-bg.webp'] },
+  },
+
   [ROUTES.WHY_ONSITE]: {
     title: 'Onsite Storage Solutions | Leading Shipping Container Wholesaler',
     absoluteTitle: true,
