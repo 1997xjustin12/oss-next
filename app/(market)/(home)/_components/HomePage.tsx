@@ -6,8 +6,9 @@ import { SITE } from "@/config/site";
 import { graph, siteNodes, webPageNode } from "@/lib/schema";
 import { resolveAgentSummary } from "@/lib/seo";
 import { getReviews } from "@/services/review.service";
-import { getDeliveredContainers } from "@/services/deliveredContainer.service";
-import { DeliveredContainers } from "@/components/shared/DeliveredContainers";
+// Recently Delivered Containers: commented out of the homepage (2026-11-18); restore these two imports, the load below and the section to bring it back.
+// import { getDeliveredContainers } from "@/services/deliveredContainer.service";
+// import { DeliveredContainers } from "@/components/shared/DeliveredContainers";
 import { getHomeHeadings } from "@/lib/content";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
@@ -77,13 +78,13 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
   // themselves. See config/homeContent.ts for the registry.
   // Cached reads, run together. getReviews() merges every review source (this
   // site's own, REVIEWS.io, Google) — see services/review.service.ts.
-  // getDeliveredContainers(): every delivery, unfiltered (the archive, delivered
+  // getDeliveredContainers() (commented out with its section): every delivery with a photo (the archive, delivered
   // orders and admin edits; services/deliveredContainer.service.ts).
-  const [copy, jsonLd, reviews, delivered] = await Promise.all([
+  const [copy, jsonLd, reviews /* , delivered */] = await Promise.all([
     getHomeHeadings(),
     buildHomeJsonLd(),
     getReviews(),
-    getDeliveredContainers(),
+    // getDeliveredContainers(),
   ]);
 
   return (
@@ -138,7 +139,7 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
       <TrustedBySection heading={copy["trustedBy.h2"]} />
       <ContainerServices heading={copy["services.h2"]} />
       <QuoteForm heading={copy["quoteForm.h2"]} />
-      <DeliveredContainers heading="Recently Delivered Containers" items={delivered} />
+      {/* <DeliveredContainers heading="Recently Delivered Containers" items={delivered} /> */}
       <HomeReviews heading={copy["reviews.h2"]} reviews={reviews} />
       <StatesSection heading={copy["states.h2"]} />
     </>
