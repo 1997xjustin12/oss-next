@@ -156,6 +156,22 @@ export type AllCityHowItWorksText = {
   buttonHref: string
 }
 
+/**
+ * "The On-Site Storage Difference" (the homepage's section), its words about
+ * the page's city and depot: `[[…]]` is red, `[{depot}]({depotPage})` links
+ * the depot.
+ */
+export type AllCityDifferenceText = {
+  show: boolean
+  heading: string
+  body: string
+  points: { title: string; desc: string }[]
+  /** The call button. Blank: none. */
+  button: string
+  /** The photo. Blank: the page's depot's banner (Depots screen). */
+  image: string
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
@@ -163,6 +179,7 @@ export type AllCitySections = {
   trustedBy: AllCityTrustedByText
   offers: AllCityOffersText
   howItWorks: AllCityHowItWorksText
+  difference: AllCityDifferenceText
 }
 
 export type AllCityTemplate = {

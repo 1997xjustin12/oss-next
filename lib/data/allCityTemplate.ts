@@ -2,6 +2,7 @@ import { FEATURED_CONTAINERS } from '@/config/featuredContainers'
 import { ROUTES } from '@/config/routes'
 import { OFFER_TABS } from './homeOfferTabs'
 import { HOW_IT_WORKS_EYEBROW, HOW_IT_WORKS_STEPS } from './howItWorksSteps'
+import { ONSITE_DIFFERENCE_BODY, ONSITE_DIFFERENCE_BUTTON, ONSITE_DIFFERENCE_POINTS } from './onsiteDifference'
 import { CDN } from './containerLandingContent'
 import type { AllCitySections, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
 
@@ -135,6 +136,20 @@ const SECTIONS: AllCitySections = {
     steps: HOW_IT_WORKS_STEPS.map(({ title, desc }) => ({ title, desc })),
     button: 'View All Containers & Pricing',
     buttonHref: '{depotPlp}',
+  },
+  // The homepage's "On-Site Storage Difference", about the page's city and depot (the 2026-11-18 design).
+  difference: {
+    show: true,
+    heading: 'The On-Site Storage Difference in [[{city}, {ST}]]',
+    body: ONSITE_DIFFERENCE_BODY,
+    points: [
+      ONSITE_DIFFERENCE_POINTS[0],
+      { title: 'Nearby Depots Serving [[{city}, {ST}]]', desc: 'Shipping from [{depot}]({depotPage}) keeps mileage and delivery costs down.' },
+      ONSITE_DIFFERENCE_POINTS[2],
+      ONSITE_DIFFERENCE_POINTS[3],
+    ].map(({ title, desc }) => ({ title, desc })),
+    button: ONSITE_DIFFERENCE_BUTTON,
+    image: '',
   },
 }
 

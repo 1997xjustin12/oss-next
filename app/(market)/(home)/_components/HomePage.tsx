@@ -22,7 +22,7 @@ import { HomeVariantTracker } from "./HomeVariantTracker";
 import { OfferTabs } from "@/components/shared/OfferTabs";
 import { RightContainer } from "./RightContainer";
 import { ContainerServices } from "./ContainerServices";
-import { OnsiteDifference } from "./OnsiteDifference";
+import { OnsiteDifference } from "@/components/shared/OnsiteDifference";
 import { HomeReviews } from "./HomeReviews";
 
 export { HOME_VARIANTS, type HomeVariant };

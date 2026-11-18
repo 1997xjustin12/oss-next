@@ -153,6 +153,13 @@ describe('conformAllCityTemplate', () => {
     assert.equal(at('javascript:alert(1)'), '{depotPlp}')
   })
 
+  it('The Difference’s photo: blank (the depot’s banner), a site path or the CDN', () => {
+    const at = (image: unknown) => conformAllCityTemplate({ sections: { difference: { image } } }).sections.difference.image
+    assert.equal(at(''), '')
+    assert.equal(at('/images/a.webp'), '/images/a.webp')
+    assert.equal(at('https://evil.example.com/a.webp'), '')
+  })
+
   it('allows a blank video and a blank closing band', () => {
     const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
     assert.equal(t.media.youtubeId, '')

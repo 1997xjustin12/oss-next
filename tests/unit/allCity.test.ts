@@ -206,6 +206,13 @@ describe('redesigned sections (breadcrumbs, hero)', () => {
     assert.equal(s.howItWorks.steps.length, 4)
   })
 
+  it('The On-Site Storage Difference names the city and links the page’s depot', () => {
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Miami, FL', depotPage: '/where-to-buy-shipping-containers/miami-fl', usedFrom: 1149 })
+    assert.equal(s.difference.heading, 'The On-Site Storage Difference in [[Cocoa Beach, FL]]')
+    assert.equal(s.difference.points[1].title, 'Nearby Depots Serving [[Cocoa Beach, FL]]')
+    assert.equal(s.difference.points[1].desc, 'Shipping from [Miami, FL](/where-to-buy-shipping-containers/miami-fl) keeps mileage and delivery costs down.')
+  })
+
   it('leaves out a figure that quotes {price} when the depot has none', () => {
     const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', depotPage: '/where-to-buy-shipping-containers/tampa-fl', usedFrom: null })
     assert.equal(s.hero.stats.length, ALL_CITY_TEMPLATE_DEFAULT.sections.hero.stats.length - 1)

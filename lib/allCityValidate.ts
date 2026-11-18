@@ -144,6 +144,10 @@ function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCityS
   // How It Works: the button goes to the page's depot (a placeholder, filled per page) or to a safe link.
   const hiwHref = out.howItWorks.buttonHref.trim()
   out.howItWorks.buttonHref = DEPOT_LINKS.includes(hiwHref) ? hiwHref : (href(hiwHref) ?? seed.howItWorks.buttonHref)
+
+  // The Difference's photo: blank (the depot's banner) or one next/image may load.
+  const photo = out.difference.image.trim()
+  out.difference.image = photo ? (imageSrc(photo) ?? seed.difference.image) : ''
   return out
 }
 

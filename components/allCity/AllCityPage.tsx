@@ -3,6 +3,7 @@ import { HowItWorks } from '@/components/shared/HowItWorks'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { LocationSearch } from '@/components/shared/LocationSearch'
 import { OfferTabsView } from '@/components/shared/OfferTabs'
+import { OnsiteDifference } from '@/components/shared/OnsiteDifference'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { ReviewsSection } from '@/components/shared/ReviewsSection'
 import { TrustedBySection } from '@/components/shared/TrustedBySection'
@@ -99,6 +100,28 @@ export async function AllCityPage({ page, template, depot }: Props) {
           steps={sections.howItWorks.steps}
           button={{ label: sections.howItWorks.button, href: sections.howItWorks.buttonHref }}
           background="bg-neutral-100 dark:bg-theme-dark"
+        />
+      )}
+      {sections.difference.show && (
+        <OnsiteDifference
+          heading={sections.difference.heading}
+          body={sections.difference.body}
+          points={sections.difference.points}
+          button={sections.difference.button}
+          // The template's photo if it sets one, else this page's depot's banner.
+          image={
+            sections.difference.image
+              ? { src: sections.difference.image, alt: `Shipping container delivery in ${page.city}, ${page.state}` }
+              : {
+                  // The banner's full-size original (1800 x 800): the 1024 x 455 copy is stretched by this tall frame.
+                  src: banner.src.replace(/-1024x455(\.\w+)$/, '$1'),
+                  alt: `Shipping containers at the ${depot.depot} depot`,
+                  // Cropped to the frame's height, it shows at about 2.25 times the frame's width.
+                  sizes: '(min-width: 1024px) 100vw, 200vw',
+                }
+          }
+          background="bg-white dark:bg-neutral-950"
+          headingColour="text-neutral-900 dark:text-white"
         />
       )}
 
