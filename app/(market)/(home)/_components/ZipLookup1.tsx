@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo, useId, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
-import { PlpLink } from "@/components/shared/PlpLink";
 import Image from "next/image";
 import { ArrowRight, Loader2, MapPin } from "lucide-react";
 import { useZipLookup } from "@/hooks/useGeoapify";
@@ -13,6 +12,7 @@ import { getCustomFieldValue } from "@/lib/pricing";
 import { formatMoney } from "@/lib/formatters";
 import { BASE_URL } from "@/lib/helpers";
 import { getContainerImagesForStem } from "@/lib/containerImages";
+import { ViewAllContainersLink } from "./ViewAllContainersLink";
 
 type Props = {
   initialZip?: string;
@@ -423,13 +423,7 @@ export function ZipLookup1({
               <BannerItem key={item.title} item={item} />
             ))}
           </div>
-          <PlpLink
-            prefetch={false}
-            href={`${BASE_URL}/sale-shipping-containers?ptype=buy`}
-            className="mt-4 block w-full bg-theme-primary px-5 py-3 text-center text-base font-bold text-white transition-colors hover:bg-theme-primary-dark sm:text-lg"
-          >
-            View All Containers & Pricing
-          </PlpLink>
+          <ViewAllContainersLink fill className="mt-4" />
         </>
       )}
     </div>

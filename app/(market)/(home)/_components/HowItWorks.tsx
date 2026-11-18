@@ -1,8 +1,7 @@
-import { PlpLink } from "@/components/shared/PlpLink";
 import { TemplateRichText } from "@/components/shared/TemplateRichText";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
-import { ROUTES } from "@/config/routes";
 import { HOW_IT_WORKS_STEPS, HOW_IT_WORKS_SUBTITLE } from "./howItWorksSteps";
+import { ViewAllContainersLink } from "./ViewAllContainersLink";
 
 const DESC_LINK =
   "font-bold text-theme-primary underline underline-offset-2 hover:no-underline dark:text-red-400";
@@ -90,15 +89,7 @@ export function HowItWorks({
       </ol>
       </div>
 
-      <div className="mx-auto mt-10 w-full max-w-md sm:mt-12">
-        <PlpLink
-          prefetch={false}
-          href={`${ROUTES.PLP}?ptype=buy`}
-          className="block bg-theme-primary px-6 py-3 text-center text-base font-bold text-white transition-colors hover:bg-theme-primary-dark focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-theme-primary sm:text-lg"
-        >
-          View All Containers &amp; Pricing
-        </PlpLink>
-      </div>
+      <ViewAllContainersLink className="mt-10 sm:mt-12" />
     </section>
   );
 }

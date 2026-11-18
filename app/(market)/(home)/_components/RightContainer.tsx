@@ -1,10 +1,9 @@
-import { PlpLink } from "@/components/shared/PlpLink";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
-import { ROUTES } from "@/config/routes";
 import { FEATURED_CONTAINERS } from "@/config/featuredContainers";
 import { toFeaturedCards } from "@/lib/featuredCards";
 import { getNationalFeaturedContainers } from "@/services/search.service";
 import { ContainerCardGrid } from "@/components/product/ContainerCardGrid";
+import { ViewAllContainersLink } from "./ViewAllContainersLink";
 
 // Headings default to their shipped copy, so this still renders standalone;
 // (home)/page.tsx passes the admin-authored text in. See config/homeContent.ts.
@@ -47,15 +46,7 @@ export async function RightContainer({
           Configuration.
         </p>
         <ContainerCardGrid defaults={toFeaturedCards(defaults)} />
-        <div className="mt-2 w-full max-w-xl">
-          <PlpLink
-            prefetch={false}
-            href={`${ROUTES.PLP}?ptype=buy`}
-            className="block bg-theme-primary px-7 py-3 text-center text-lg font-bold text-white shadow-md transition-colors hover:bg-theme-primary-dark focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-theme-primary sm:text-2xl dark:mx-auto dark:w-fit dark:rounded-md dark:bg-linear-to-r dark:from-amber-500 dark:to-amber-300 dark:py-2.5 dark:text-base dark:text-neutral-900 dark:shadow-lg dark:hover:brightness-105 dark:focus-visible:outline-amber-300 sm:dark:text-lg"
-          >
-            View All Containers &amp; Pricing
-          </PlpLink>
-        </div>
+        <ViewAllContainersLink darkTone="amber" className="mt-2" />
       </div>
     </section>
   );
