@@ -18,6 +18,7 @@ import { StatesSection } from "./StatesSection";
 import { Hero } from "./Hero";
 import { HeroBannerPreload } from "./HeroBannerPreload";
 import { HomeVariantTracker } from "./HomeVariantTracker";
+import { OfferTabs } from "./OfferTabs";
 import { RightContainer } from "./RightContainer";
 import { OnsiteDifference } from "./OnsiteDifference";
 import { ReviewsSection } from "@/components/shared/ReviewsSection";
@@ -112,6 +113,8 @@ export async function HomePage({ variant }: { variant: HomeVariant }) {
         h1={variant === 3 ? copy["hero.v3.h1"] : copy["hero.h1"]}
         h2={variant === 3 ? copy["hero.v3.h2"] : copy["hero.h2"]}
       />
+      {/* Buy / Rent / Rent-To-Own, under the hero on every version. */}
+      <OfferTabs />
       <RightContainer heading={copy["rightContainer.h2"]} />
       <HowItWorks
         heading={copy["howItWorks.h2"]}
