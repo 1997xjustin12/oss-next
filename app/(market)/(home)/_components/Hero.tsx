@@ -70,8 +70,8 @@ const STATS: StatData[] = [
 
 /** Version 3's two figures, side by side with a red rule between them (its own wording). */
 const V3_STATS = [
-  { figure: "60", label: "Locations across the US and Canada", width: "max-w-[6.5rem] sm:max-w-[12rem] lg:max-w-[13rem]" },
-  { figure: "85%", label: "Of The U.S. And Canadian Population Within Our Delivery Network", width: "max-w-[8.5rem] sm:max-w-[16rem] lg:max-w-[19rem]" },
+  { figure: "60", label: "Locations across the US and Canada", width: "max-w-[6.5rem] sm:max-w-[12rem] lg:max-w-[10rem] 2xl:max-w-[13rem]" },
+  { figure: "85%", label: "Of The U.S. And Canadian Population Within Our Delivery Network", width: "max-w-[8.5rem] sm:max-w-[16rem] lg:max-w-[14rem] xl:max-w-[16rem] 2xl:max-w-[19rem]" },
 ] as const;
 
 function V3Stats() {
@@ -81,11 +81,11 @@ function V3Stats() {
         <li key={stat.figure} className="flex items-center gap-3 sm:gap-6">
           {i > 0 && <span aria-hidden className="h-12 w-0.5 bg-theme-primary sm:h-20 lg:h-24" />}
           <span className="flex items-center gap-1.5 text-white text-shadow-lg sm:gap-3">
-            <span className="text-[44px] leading-none font-extrabold sm:text-6xl lg:text-[88px]">
+            <span className="text-[44px] leading-none font-extrabold sm:text-6xl lg:text-[64px] xl:text-[76px] 2xl:text-[88px]">
               {stat.figure}
               <sup className="text-[0.4em]">+</sup>
             </span>
-            <span className={`${stat.width} text-[10px] leading-tight font-medium sm:text-base lg:text-[22px]`}>{stat.label}</span>
+            <span className={`${stat.width} text-[10px] leading-tight font-medium sm:text-base lg:text-[16px] xl:text-[19px] 2xl:text-[22px]`}>{stat.label}</span>
           </span>
         </li>
       ))}
@@ -111,13 +111,14 @@ export function Hero({
     // phone the panel stacks under the photo, and the rating moves onto it.
     return (
       <section data-home-variant="3" className="relative flex flex-col bg-black lg:flex-row">
-        <div className="relative w-full lg:w-[64%]">
+        {/* 58/42 on small desktops, so the panel's ZIP box keeps room for a whole place name; 64/36 from xl, as the mockup. */}
+        <div className="relative w-full lg:w-[58%] xl:w-[64%]">
           <Image
             src={BANNER_IMAGE}
             alt="Hero banner — shipping containers delivered nationwide"
             fill
             preload
-            sizes="(min-width: 1024px) 64vw, 100vw"
+            sizes="(min-width: 1280px) 64vw, (min-width: 1024px) 58vw, 100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/45 dark:bg-black/60" />
@@ -125,7 +126,7 @@ export function Hero({
           <div className="relative z-10 flex h-full flex-col justify-center gap-3 px-[5%] py-6 sm:gap-6 sm:py-10 lg:gap-8 lg:py-12">
             <div className="flex items-start justify-between gap-3 lg:justify-start">
               {/* Wraps on the narrowest phones, where it and the rating cannot share one line. */}
-              <p className="min-w-0 bg-theme-primary px-2 py-1.5 text-[11px] text-white shadow-lg sm:px-5 sm:py-2 sm:text-base lg:text-[22px]">
+              <p className="min-w-0 bg-theme-primary px-2 py-1.5 text-[11px] text-white shadow-lg sm:px-5 sm:py-2 sm:text-base lg:text-[18px] xl:text-[20px] 2xl:text-[22px]">
                 America&apos;s #1 Container Wholesaler &middot; Since 2002
               </p>
               <div className="shrink-0 lg:hidden">
@@ -134,8 +135,8 @@ export function Hero({
             </div>
 
             <div className="flex flex-col gap-2 text-center sm:gap-4 lg:text-left">
-              <h1 className="text-[25px] leading-[1.1] font-extrabold text-white text-shadow-lg sm:text-5xl lg:text-[60px]">{h1}</h1>
-              <h2 className="text-base leading-snug font-medium text-white text-shadow-lg sm:text-2xl lg:text-[34px] lg:leading-[1.15]">
+              <h1 className="text-[25px] leading-[1.1] font-extrabold text-white text-shadow-lg sm:text-5xl lg:text-[38px] xl:text-[52px] 2xl:text-[60px]">{h1}</h1>
+              <h2 className="text-base leading-snug font-medium text-white text-shadow-lg sm:text-2xl lg:text-[24px] lg:leading-[1.2] xl:text-[29px] 2xl:text-[34px]">
                 <AccentText text={h2} accentClassName="text-[#F4BF3C]" />
               </h2>
             </div>
@@ -144,7 +145,7 @@ export function Hero({
           </div>
         </div>
 
-        <div className="w-full bg-black px-[5%] py-8 lg:w-[36%] lg:px-[3%] lg:py-8">
+        <div className="w-full bg-black px-[5%] py-8 lg:w-[42%] lg:px-[3%] lg:py-8 xl:w-[36%]">
           <div className="mb-6 hidden justify-end lg:flex">
             <GoogleReviewsBadge tone="onDark" showRating />
           </div>

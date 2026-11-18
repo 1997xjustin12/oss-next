@@ -164,7 +164,7 @@ function BannerItem({ item }: BannerItemProps) {
         />
       )}
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-[17px] font-bold leading-tight sm:text-[20px]">{item.title}</span>
+        <span className="text-[17px] font-bold leading-tight sm:text-[20px] lg:text-[17px] xl:text-[19px] 2xl:text-[20px]">{item.title}</span>
         <span className="mt-0.5 text-[12px] font-light text-[#a3a3a3] sm:text-[13px]">{item.tags}</span>
         <span className="mt-1.5 flex items-center gap-2 text-[12px] font-bold text-[#04B761]">
           <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#04B761]" />
@@ -172,7 +172,7 @@ function BannerItem({ item }: BannerItemProps) {
         </span>
       </span>
       <span className="flex shrink-0 flex-col items-end justify-between">
-        <span className="whitespace-nowrap text-[20px] font-bold sm:text-[24px]">{item.price_starts}</span>
+        <span className="whitespace-nowrap text-[20px] font-bold sm:text-[24px] lg:text-[20px] xl:text-[22px] 2xl:text-[24px]">{item.price_starts}</span>
         <ArrowRight aria-hidden className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </span>
     </Link>
@@ -307,10 +307,14 @@ export function ZipLookup1({
 
   return (
     <div>
-      {/* Version 3: one row on every screen, spread to the panel's edges on desktop (its mockups). */}
-      <div className={v3 ? "flex w-full items-stretch justify-center gap-6 lg:justify-between" : "flex w-full max-w-xl mx-auto flex-col gap-3 sm:flex-row"}>
+      {/*
+        Version 3: one row on every screen, 20px between the box and the
+        button, and the box takes the rest of the width: once a place is
+        picked it shows the whole of it ("60601, Chicago, IL, United States").
+      */}
+      <div className={v3 ? "flex w-full items-stretch gap-5" : "flex w-full max-w-xl mx-auto flex-col gap-3 sm:flex-row"}>
         {/* Input + dropdown */}
-        <div className={v3 ? "relative w-36 sm:w-52" : "relative flex-1"}>
+        <div className={v3 ? "relative min-w-0 flex-1" : "relative flex-1"}>
           <input
             value={zip}
             onChange={(e) => {
@@ -335,7 +339,8 @@ export function ZipLookup1({
             placeholder="Enter Zipcode"
             className={
               v3
-                ? "h-full w-full bg-white px-3 py-2.5 text-center text-sm text-theme-dark placeholder-theme-dark/80 outline-none sm:py-3 sm:text-lg"
+                ? // Room on the right for the spinner only while it shows, so a picked place name fits the box.
+                  `h-full w-full bg-white py-2.5 pl-3 text-sm text-theme-dark placeholder-theme-dark/80 outline-none sm:py-3 sm:text-lg lg:text-base ${loading ? "pr-8" : "pr-3"}`
                 : "w-full bg-white text-theme-dark placeholder-theme-dark/70 px-4 py-3 sm:py-4 text-base sm:text-lg outline-none"
             }
             aria-label="ZIP or postal code"
@@ -390,7 +395,7 @@ export function ZipLookup1({
           onClick={handleSeePrices}
           className={
             v3
-              ? "flex shrink-0 items-center justify-center bg-theme-primary px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark sm:px-7 sm:py-3 sm:text-lg"
+              ? "flex shrink-0 items-center justify-center bg-theme-primary px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-theme-primary-dark sm:px-7 sm:py-3 sm:text-lg lg:px-4 lg:text-base 2xl:px-7 2xl:text-lg"
               : "flex items-center justify-center bg-theme-primary px-6 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-colors hover:bg-theme-primary-dark sm:shrink-0"
           }
         >
