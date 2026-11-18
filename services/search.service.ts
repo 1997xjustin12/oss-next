@@ -181,6 +181,11 @@ export async function cachedCustomFieldsSearch(input: CustomFieldsSearchInput) {
   cacheLife('minutes')
   cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.SEARCH)
 
+  return customFieldsSearch(input)
+}
+
+/** The search itself, uncached: cachedCustomFieldsSearch and cachedLocationPool each cache it their own way. */
+async function customFieldsSearch(input: CustomFieldsSearchInput) {
   const { filters, categories = [], page, hitsPerPage } = input
 
   const filterClauses = Object.entries(filters)
@@ -267,14 +272,42 @@ function withoutFieldMetadata<T>(hit: T): T {
 }
 
 // Quick helper for the common case: every shipping container at a given location.
+// Throws when the search failed, outside any cache (see cachedLocationPool), so
+// a caller's own fallback can catch it.
 export async function getShippingContainersByLocation(location: string) {
-  const result = await cachedCustomFieldsSearch({
-    filters:     { location: [location] },
-    categories:  SHIPPING_CONTAINER_CATEGORIES,
-    page:        0,
-    hitsPerPage: ALL_RESULTS_CAP,
-  })
-  return result.hits.map(withoutFieldMetadata)
+  const pool = await cachedLocationPool(location)
+  if (!pool.ok) throw new Error(`[search] the search for containers at ${location} failed`)
+  return pool.hits
+}
+
+/**
+ * Every shipping container at a location, cached, and **never throwing**: a
+ * failed search comes back as `{ ok: false }`, cached for a minute only.
+ *
+ * Why not throw from here: during a build, an error thrown inside a
+ * `'use cache'` function fails the page being prerendered even when the code
+ * around it catches the error. The depot pages' fallback (withSearchFallback)
+ * did catch an Elasticsearch timeout and still lost the build
+ * (/all-city/abbott-shipping-containers, 2026-11-18). Answering inside the
+ * cache and throwing outside it lets every caller's fallback work.
+ */
+async function cachedLocationPool(location: string): Promise<{ ok: true; hits: FormattedContainerHit[] } | { ok: false }> {
+  'use cache'
+  cacheTag(CACHE_TAGS.ALL, CACHE_TAGS.PRODUCTS, CACHE_TAGS.SEARCH)
+  try {
+    const result = await customFieldsSearch({
+      filters:     { location: [location] },
+      categories:  SHIPPING_CONTAINER_CATEGORIES,
+      page:        0,
+      hitsPerPage: ALL_RESULTS_CAP,
+    })
+    cacheLife('minutes')
+    return { ok: true, hits: result.hits.map(withoutFieldMetadata) }
+  } catch (err) {
+    console.error('[search] containers at', location, 'failed:', err)
+    cacheLife(OUTAGE_CACHE_LIFE)
+    return { ok: false }
+  }
 }
 
 /**
