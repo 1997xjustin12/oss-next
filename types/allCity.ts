@@ -138,12 +138,31 @@ export type AllCityOffersText = {
   tabs: OfferTab[]
 }
 
+/**
+ * "How It Works" (the homepage's section). `{depotPage}` is the page's depot's
+ * location page (the subtitle's city), `{depotPlp}` the listing at that depot
+ * (the button).
+ */
+export type AllCityHowItWorksText = {
+  show: boolean
+  /** The small red line over the heading. Blank: none. */
+  eyebrow: string
+  heading: string
+  subtitle: string
+  steps: { title: string; desc: string }[]
+  /** Blank: no button. */
+  button: string
+  /** `{depotPlp}` (the default: the listing at the page's depot), `{depotPage}`, or a link. */
+  buttonHref: string
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
   products: AllCityProductsText
   trustedBy: AllCityTrustedByText
   offers: AllCityOffersText
+  howItWorks: AllCityHowItWorksText
 }
 
 export type AllCityTemplate = {

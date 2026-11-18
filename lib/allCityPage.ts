@@ -78,7 +78,11 @@ export function accentCityInHeading(h1: string, page: Pick<AllCityPage, 'city' |
   return `${h1.slice(0, match.index)}[[${match[0]}]]${h1.slice(match.index + match[0].length)}`
 }
 
-/** What the sections know of the page's depot: `{depot}`, `{depotCount}`, `{depotPage}` and, when there is one, `{price}`. */
+/**
+ * What the sections know of the page's depot: `{depot}`, `{depotCount}`,
+ * `{depotPage}`, `{depotPlp}` (the listing at that depot) and, when there is
+ * one, `{price}`.
+ */
 export type AllCityHeroFacts = {
   depot: string
   /** The depot's location page. */
@@ -94,7 +98,7 @@ const unfilled = (value: string, names: readonly string[]) => names.some((name) 
 
 /**
  * The redesigned sections' wording for one page: placeholders filled (the
- * page's, plus `{h1}`, `{depot}`, `{depotCount}`, `{depotPage}`, `{keyword}`
+ * page's, plus `{h1}`, `{depot}`, `{depotCount}`, `{depotPage}`, `{depotPlp}`, `{keyword}`
  * and `{price}`). A hero figure that quotes `{price}` is left out when the
  * depot has no price, rather than shown with a hole in it. On a depot-city
  * page the products heading is `depotCityHeading` (its keyword heading, by
@@ -108,6 +112,8 @@ export function resolveAllCitySections(template: AllCityTemplate, page: AllCityP
     depot: facts.depot,
     depotCount: `${depots.length} ${depots.length === 1 ? 'Depot' : 'Depots'}`,
     depotPage: facts.depotPage,
+    // The listing at this depot. A link that names its location keeps it: the visitor's saved one is not swapped in (PlpLink).
+    depotPlp: `${ROUTES.PLP}?${new URLSearchParams({ location: facts.depot })}`,
     keyword: page.keywordHeading?.trim() ? accentCityInHeading(page.keywordHeading.trim(), page) : '',
   }
   if (facts.usedFrom !== null) vars.price = WHOLE_DOLLARS.format(facts.usedFrom)

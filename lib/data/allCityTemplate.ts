@@ -1,6 +1,7 @@
 import { FEATURED_CONTAINERS } from '@/config/featuredContainers'
 import { ROUTES } from '@/config/routes'
 import { OFFER_TABS } from './homeOfferTabs'
+import { HOW_IT_WORKS_EYEBROW, HOW_IT_WORKS_STEPS } from './howItWorksSteps'
 import { CDN } from './containerLandingContent'
 import type { AllCitySections, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
 
@@ -125,6 +126,16 @@ const SECTIONS: AllCitySections = {
   trustedBy: { show: true, heading: '' },
   // The homepage's Buy / Rent / Rent-To-Own section and its words, priced at the page's depot.
   offers: { show: true, tabs: structuredClone([...OFFER_TABS]) },
+  // The homepage's "How It Works": its city linked to the depot's page, its button to the listing at that depot.
+  howItWorks: {
+    show: true,
+    eyebrow: HOW_IT_WORKS_EYEBROW,
+    heading: 'How It Works',
+    subtitle: 'How To Buy Or Rent A Shipping Container [{city}, {ST}]({depotPage}) In Four Steps',
+    steps: HOW_IT_WORKS_STEPS.map(({ title, desc }) => ({ title, desc })),
+    button: 'View All Containers & Pricing',
+    buttonHref: '{depotPlp}',
+  },
 }
 
 export const ALL_CITY_TEMPLATE_DEFAULT: AllCityTemplate = {

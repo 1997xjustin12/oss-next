@@ -1,4 +1,5 @@
 import { YouTubeEmbed } from '@/components/product/YouTubeEmbed'
+import { HowItWorks } from '@/components/shared/HowItWorks'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { LocationSearch } from '@/components/shared/LocationSearch'
 import { OfferTabsView } from '@/components/shared/OfferTabs'
@@ -90,6 +91,16 @@ export async function AllCityPage({ page, template, depot }: Props) {
         />
       )}
       {sections.offers.show && <OfferTabsView tabs={sections.offers.tabs} prices={offerPrices} />}
+      {sections.howItWorks.show && (
+        <HowItWorks
+          eyebrow={sections.howItWorks.eyebrow}
+          heading={sections.howItWorks.heading}
+          subtitle={sections.howItWorks.subtitle}
+          steps={sections.howItWorks.steps}
+          button={{ label: sections.howItWorks.button, href: sections.howItWorks.buttonHref }}
+          background="bg-neutral-100 dark:bg-theme-dark"
+        />
+      )}
 
       {/* WordPress's sections, until each is redesigned. */}
       <CityIntro

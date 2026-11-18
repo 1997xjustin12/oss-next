@@ -1,3 +1,4 @@
+import { HoverPrefetchLink as Link } from "@/components/shared/HoverPrefetchLink";
 import { PlpLink } from "@/components/shared/PlpLink";
 import { ROUTES } from "@/config/routes";
 
@@ -9,6 +10,9 @@ type Props = {
   darkTone?: "red" | "amber";
   /** As wide as its container (the version 3 hero's price panel) instead of at most 28rem, centred. */
   fill?: boolean;
+  /** Where it goes: the listing (carrying the visitor's ZIP) unless a page sends it elsewhere (an /all-city/ page: its depot's page). */
+  href?: string;
+  label?: string;
   className?: string;
 };
 
@@ -23,16 +27,29 @@ const TONE = {
 
 /**
  * The homepage's "View All Containers & Pricing" button, shown under "Find The
- * Right Container", under "How It Works" and in the version 3 hero. One
- * component so they share one height and type size at every width (they had
- * drifted apart).
+ * Right Container", under "How It Works" and in the version 3 hero (and under
+ * an /all-city/ page's "How It Works"). One component so they share one height
+ * and type size at every width (they had drifted apart).
  */
-export function ViewAllContainersLink({ darkTone = "red", fill = false, className = "" }: Props) {
+export function ViewAllContainersLink({
+  darkTone = "red",
+  fill = false,
+  href = `${ROUTES.PLP}?ptype=buy`,
+  label = "View All Containers & Pricing",
+  className = "",
+}: Props) {
+  const classes = `${BASE} ${TONE[darkTone]}`;
   return (
     <div className={`w-full ${fill ? "" : "mx-auto max-w-md"} ${className}`}>
-      <PlpLink prefetch={false} href={`${ROUTES.PLP}?ptype=buy`} className={`${BASE} ${TONE[darkTone]}`}>
-        View All Containers &amp; Pricing
-      </PlpLink>
+      {href.startsWith(ROUTES.PLP) ? (
+        <PlpLink prefetch={false} href={href} className={classes}>
+          {label}
+        </PlpLink>
+      ) : (
+        <Link href={href} className={classes}>
+          {label}
+        </Link>
+      )}
     </div>
   );
 }

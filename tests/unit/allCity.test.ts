@@ -199,6 +199,13 @@ describe('redesigned sections (breadcrumbs, hero)', () => {
     assert.match(resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, { ...houston, keywordHeading: undefined }, facts).products.heading, /^Find The Right/)
   })
 
+  it('How It Works: its city goes to the depot’s page, its button to the listing at that depot', () => {
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Miami, FL', depotPage: '/where-to-buy-shipping-containers/miami-fl', usedFrom: 1149 })
+    assert.equal(s.howItWorks.buttonHref, '/sale-shipping-containers?location=Miami%2C+FL')
+    assert.ok(s.howItWorks.subtitle.includes('[Cocoa Beach, FL](/where-to-buy-shipping-containers/miami-fl)'))
+    assert.equal(s.howItWorks.steps.length, 4)
+  })
+
   it('leaves out a figure that quotes {price} when the depot has none', () => {
     const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', depotPage: '/where-to-buy-shipping-containers/tampa-fl', usedFrom: null })
     assert.equal(s.hero.stats.length, ALL_CITY_TEMPLATE_DEFAULT.sections.hero.stats.length - 1)

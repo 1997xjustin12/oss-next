@@ -124,7 +124,8 @@ function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCityS
         return value ? [{ ...sectionText(card, shape), spec: value }] : []
       })
   }
-  out.products.buttonHref = href(out.products.buttonHref) ?? seed.products.buttonHref
+  const productsHref = out.products.buttonHref.trim()
+  out.products.buttonHref = DEPOT_LINKS.includes(productsHref) ? productsHref : (href(productsHref) ?? seed.products.buttonHref)
 
   // Buy / Rent / Rent-To-Own: each tab one of the three, once (the section is laid out for at most three);
   // a feature's icon one the section draws; a card's link a safe one.
@@ -139,8 +140,15 @@ function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCityS
         features: tab.features.map((feature) => ({ ...feature, icon: OFFER_FEATURE_ICONS.includes(feature.icon) ? feature.icon : 'price' })),
       }
     })
+
+  // How It Works: the button goes to the page's depot (a placeholder, filled per page) or to a safe link.
+  const hiwHref = out.howItWorks.buttonHref.trim()
+  out.howItWorks.buttonHref = DEPOT_LINKS.includes(hiwHref) ? hiwHref : (href(hiwHref) ?? seed.howItWorks.buttonHref)
   return out
 }
+
+/** The placeholders a button's link may be: the page's depot's location page, or the listing at that depot. */
+const DEPOT_LINKS: readonly string[] = ['{depotPage}', '{depotPlp}']
 
 const OFFER_TAB_IDS: readonly string[] = ['buy', 'rent', 'rto'] satisfies OfferTab['id'][]
 const OFFER_FEATURE_ICONS: readonly string[] = [

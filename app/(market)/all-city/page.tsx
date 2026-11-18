@@ -1,4 +1,4 @@
-import { HowItWorks } from '@/app/(market)/(home)/_components/HowItWorks'
+import { HowItWorks } from '@/components/shared/HowItWorks'
 import { HomeReviews } from '@/app/(market)/(home)/_components/HomeReviews'
 import { RightContainer } from '@/app/(market)/(home)/_components/RightContainer'
 import { JsonLd } from '@/components/shared/JsonLd'

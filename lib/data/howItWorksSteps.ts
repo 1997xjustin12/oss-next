@@ -9,6 +9,14 @@ export type HowItWorksStep = {
   highlight: boolean;
 };
 
+/**
+ * "How It Works" (components/shared/HowItWorks.tsx): the homepage's words,
+ * which the /all-city/ template starts from.
+ */
+
+/** The small red line over the heading. */
+export const HOW_IT_WORKS_EYEBROW = "Simple Process";
+
 /** The section's line under the heading (the 2026-11-18 design). */
 export const HOW_IT_WORKS_SUBTITLE = "How To Buy Or Rent A Shipping Container In Four Steps";
 

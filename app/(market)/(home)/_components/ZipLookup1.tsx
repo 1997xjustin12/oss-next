@@ -12,7 +12,7 @@ import { getCustomFieldValue } from "@/lib/pricing";
 import { formatMoney } from "@/lib/formatters";
 import { BASE_URL } from "@/lib/helpers";
 import { getContainerImagesForStem } from "@/lib/containerImages";
-import { ViewAllContainersLink } from "./ViewAllContainersLink";
+import { ViewAllContainersLink } from "@/components/shared/ViewAllContainersLink";
 
 type Props = {
   initialZip?: string;

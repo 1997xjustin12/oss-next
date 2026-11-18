@@ -145,6 +145,14 @@ describe('conformAllCityTemplate', () => {
     assert.deepEqual(conformAllCityTemplate({ sections: {} }).sections.offers, ALL_CITY_TEMPLATE_DEFAULT.sections.offers)
   })
 
+  it('How It Works: the button goes to {depotPlp}, {depotPage} or a safe link', () => {
+    const at = (buttonHref: unknown) => conformAllCityTemplate({ sections: { howItWorks: { buttonHref } } }).sections.howItWorks.buttonHref
+    assert.equal(at('{depotPage}'), '{depotPage}')
+    assert.equal(at('{depotPlp}'), '{depotPlp}')
+    assert.equal(at('/where-to-buy-shipping-containers'), '/where-to-buy-shipping-containers')
+    assert.equal(at('javascript:alert(1)'), '{depotPlp}')
+  })
+
   it('allows a blank video and a blank closing band', () => {
     const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
     assert.equal(t.media.youtubeId, '')

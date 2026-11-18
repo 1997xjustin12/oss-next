@@ -3,7 +3,7 @@ import { FEATURED_CONTAINERS } from "@/config/featuredContainers";
 import { toFeaturedCards } from "@/lib/featuredCards";
 import { getNationalFeaturedContainers } from "@/services/search.service";
 import { ContainerCardGrid } from "@/components/product/ContainerCardGrid";
-import { ViewAllContainersLink } from "./ViewAllContainersLink";
+import { ViewAllContainersLink } from "@/components/shared/ViewAllContainersLink";
 
 // Headings default to their shipped copy, so this still renders standalone;
 // (home)/page.tsx passes the admin-authored text in. See config/homeContent.ts.

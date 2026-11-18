@@ -14,7 +14,7 @@ import { JsonLd } from "@/components/shared/JsonLd";
 import { PageHeadScripts } from "@/components/shared/PageHeadScripts";
 import { QuoteForm } from "@/components/shared/QuoteForm";
 import { TrustedBySection } from "@/components/shared/TrustedBySection";
-import { HowItWorks } from "./HowItWorks";
+import { HowItWorks } from "@/components/shared/HowItWorks";
 import { StatesSection } from "./StatesSection";
 import { Hero } from "./Hero";
 import { HeroBannerPreload } from "./HeroBannerPreload";
