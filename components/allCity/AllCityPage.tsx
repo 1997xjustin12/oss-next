@@ -12,12 +12,15 @@ import { allCityDepotParts, allCityPath, resolveAllCitySections, resolveAllCityT
 import { ALL_CITY_ZIP_ANCHOR } from '@/lib/data/allCityTemplate'
 import { OFFER_DEFAULT_PRICES, type OfferPrices } from '@/lib/data/homeOfferTabs'
 import { formatMoney } from '@/lib/formatters'
+import { getLocationPageSeed } from '@/lib/data/locationPages'
 import { locationPath } from '@/lib/locationPage'
 import { breadcrumbNode, graph, siteNodes, webPageNode } from '@/lib/schema'
 import { getAllCityLists } from '@/services/allCity.service'
+import { getDeliveredForDepot } from '@/services/deliveredContainer.service'
 import { getDepotLowestUsedBuy, getDepotStartingPrices } from '@/services/search.service'
 import { getReviews } from '@/services/review.service'
 import { CityBreadcrumbs } from './CityBreadcrumbs'
+import { CityDeliveries } from './CityDeliveries'
 import { CityFinancing } from './CityFinancing'
 import { CityHero } from './CityHero'
 import { CityIntro } from './CityIntro'
@@ -44,11 +47,14 @@ type Props = {
 const priceLabel = (price: number) => formatMoney(price).replace(/\.00$/, '')
 
 export async function AllCityPage({ page, template, depot }: Props) {
-  const [reviews, lists, usedFrom, starting] = await Promise.all([
+  // The depot's id in the delivery records: its location page's (every city depot has one; a test checks).
+  const depotId = getLocationPageSeed(depot.locationSlug)?.depotId
+  const [reviews, lists, usedFrom, starting, deliveries] = await Promise.all([
     getReviews(),
     getAllCityLists(page.state, page.slug),
     getDepotLowestUsedBuy(depot.depot),
     getDepotStartingPrices(depot.depot),
+    depotId === undefined ? [] : getDeliveredForDepot(depotId),
   ])
   // The Buy / Rent / Rent-To-Own tabs' {buy} {rent} {rto}: the page's depot's, else the design's figures.
   const offerPrices: OfferPrices = {
@@ -124,6 +130,7 @@ export async function AllCityPage({ page, template, depot }: Props) {
           headingColour="text-neutral-900 dark:text-white"
         />
       )}
+      {sections.deliveries.show && <CityDeliveries text={sections.deliveries} deliveries={deliveries} />}
 
       {/* WordPress's sections, until each is redesigned. */}
       <CityIntro

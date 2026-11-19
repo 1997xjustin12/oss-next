@@ -160,6 +160,15 @@ describe('conformAllCityTemplate', () => {
     assert.equal(at('https://evil.example.com/a.webp'), '')
   })
 
+  it('Recently Delivered: 1 to 12 whole cards; a non-number keeps the default', () => {
+    const at = (limit: unknown) => conformAllCityTemplate({ sections: { deliveries: { limit } } }).sections.deliveries.limit
+    assert.equal(at(6), 6)
+    assert.equal(at(0), 1)
+    assert.equal(at(40), 12)
+    assert.equal(at(2.6), 3)
+    assert.equal(at('9'), ALL_CITY_TEMPLATE_DEFAULT.sections.deliveries.limit)
+  })
+
   it('allows a blank video and a blank closing band', () => {
     const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
     assert.equal(t.media.youtubeId, '')

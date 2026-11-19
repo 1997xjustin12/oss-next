@@ -151,6 +151,14 @@ const SECTIONS: AllCitySections = {
     button: ONSITE_DIFFERENCE_BUTTON,
     image: '',
   },
+  // The depot's newest deliveries (the homepage's commented-out "Recently Delivered Containers", per depot).
+  deliveries: {
+    show: true,
+    heading: 'Recently Delivered Containers Near [[{city}, {ST}]]',
+    body: 'A look at recent orders we delivered near {city}. Each one comes from our delivery records, shown by city only.',
+    placeLabel: 'Delivered to {place}',
+    limit: 4,
+  },
 }
 
 export const ALL_CITY_TEMPLATE_DEFAULT: AllCityTemplate = {

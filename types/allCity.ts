@@ -172,6 +172,21 @@ export type AllCityDifferenceText = {
   image: string
 }
 
+/**
+ * "Recently Delivered Containers Near <city>": the newest deliveries from the
+ * page's depot (and the virtual depots it serves), photo only. Hidden when
+ * the depot has none.
+ */
+export type AllCityDeliveriesText = {
+  show: boolean
+  heading: string
+  body: string
+  /** Under each card's title; `{place}` is where it was delivered (city only). */
+  placeLabel: string
+  /** How many cards, newest first (1 to 12). */
+  limit: number
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
@@ -180,6 +195,7 @@ export type AllCitySections = {
   offers: AllCityOffersText
   howItWorks: AllCityHowItWorksText
   difference: AllCityDifferenceText
+  deliveries: AllCityDeliveriesText
 }
 
 export type AllCityTemplate = {

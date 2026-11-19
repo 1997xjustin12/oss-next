@@ -83,7 +83,7 @@ const MAX_SECTION_ITEMS = 6
 
 /**
  * A section's wording, shaped as its seed: every string field a string (blank
- * allowed), every on/off a boolean, every group checked the same way, a list's items shaped as the
+ * allowed), every on/off a boolean, every number a number, every group checked the same way, a list's items shaped as the
  * seed's first (a bad item dropped, at most MAX_SECTION_ITEMS). A field that
  * is missing or the wrong type keeps the seed's, so a template saved before a
  * section existed gets the section's defaults.
@@ -91,6 +91,7 @@ const MAX_SECTION_ITEMS = 6
 function sectionText<T>(raw: unknown, seed: T): T {
   if (typeof seed === 'string') return (typeof raw === 'string' ? raw : seed) as T
   if (typeof seed === 'boolean') return (typeof raw === 'boolean' ? raw : seed) as T
+  if (typeof seed === 'number') return (typeof raw === 'number' && Number.isFinite(raw) ? raw : seed) as T
   if (Array.isArray(seed)) {
     if (!Array.isArray(raw) || seed.length === 0) return seed
     const item = seed[0]
@@ -148,6 +149,9 @@ function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCityS
   // The Difference's photo: blank (the depot's banner) or one next/image may load.
   const photo = out.difference.image.trim()
   out.difference.image = photo ? (imageSrc(photo) ?? seed.difference.image) : ''
+
+  // Recently Delivered: a whole number of cards, 1 to 12.
+  out.deliveries.limit = Math.min(12, Math.max(1, Math.round(out.deliveries.limit)))
   return out
 }
 

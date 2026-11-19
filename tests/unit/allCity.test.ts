@@ -10,6 +10,7 @@ const { accentCityInHeading, allCityDepotParts, allCityVars, buildAllCityLists, 
 const { ALL_CITY_DEPOTS } = await import('@/lib/data/allCityDepots')
 const { ALL_CITY_TEMPLATE_DEFAULT } = await import('@/lib/data/allCityTemplate')
 const { LOCATION_PAGE_SLUGS } = await import('@/lib/data/locationPageSlugs')
+const { getLocationPageSeed } = await import('@/lib/data/locationPages')
 const { isDepotFeaturedKey } = await import('@/services/search.service')
 const { isNativePath, ROUTES } = await import('@/config/routes')
 
@@ -86,9 +87,10 @@ describe('the depots', () => {
     assert.deepEqual([...block.matchAll(/'([a-z-]+)'/g)].map((m) => m[1]).sort(), Object.keys(ALL_CITY_DEPOTS).sort())
   })
 
-  it('each has a native location page', () => {
+  it('each has a native location page, with the depot id its deliveries are filed under', () => {
     for (const depot of Object.values(ALL_CITY_DEPOTS)) {
       assert.ok(LOCATION_PAGE_SLUGS.includes(depot.locationSlug), `${depot.key}: ${depot.locationSlug}`)
+      assert.equal(typeof getLocationPageSeed(depot.locationSlug)?.depotId, 'number', depot.key)
     }
   })
 
