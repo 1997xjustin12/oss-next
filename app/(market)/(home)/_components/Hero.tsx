@@ -1,5 +1,6 @@
 import { PlpLink } from "@/components/shared/PlpLink";
 import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { BASE_URL } from "@/lib/helpers";
 import { AccentText } from "@/components/shared/AccentText";
@@ -257,14 +258,20 @@ export function Hero({
             </div>
 
             <div className="flex flex-col sm:flex-row justify-evenly gap-3 sm:gap-2">
+              {/* Made to read as buttons: an arrow that slides on hover, a lift on hover, a press on click, a focus ring. */}
               {PAY_OPTIONS.map((item) => (
                 <PlpLink
                   key={item.label}
                   prefetch={false}
                   href={item.href}
-                  className="shadow-lg text-lg sm:text-[22px] lg:text-[24px] bg-[#F2B824] border-[2px] border-white font-extrabold px-5 py-2 text-center"
+                  className="group inline-flex items-center justify-center gap-2 shadow-lg text-lg sm:text-[22px] lg:text-[24px] bg-[#F2B824] border-[2px] border-white font-extrabold px-5 py-2 text-center transition-[transform,box-shadow,background-color] duration-150 hover:-translate-y-0.5 hover:bg-[#F7C544] hover:shadow-2xl active:translate-y-0 active:shadow-md focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                 >
                   {item.label}
+                  <ArrowRight
+                    aria-hidden
+                    strokeWidth={2.75}
+                    className="h-5 w-5 shrink-0 transition-transform duration-150 group-hover:translate-x-1 motion-reduce:transition-none sm:h-6 sm:w-6"
+                  />
                 </PlpLink>
               ))}
             </div>
