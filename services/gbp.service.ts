@@ -106,6 +106,8 @@ export async function getGbpTemplate(): Promise<GbpTemplate> {
 export type GbpDraftState<T> = {
   /** The draft if there is one, else the published copy: what the editor shows. */
   value: T
+  /** What visitors see now (else the seed): the editor marks what the draft changes. */
+  published: T
   hasDraft: boolean
   draftUpdatedAt?: string
   draftUpdatedBy?: string
@@ -120,6 +122,7 @@ async function readState<T>(kind: GbpRecordKind, id: string | undefined, conform
   const published = unwrap(publishedRaw)
   return {
     value: conform(draft ? draft.data : published?.data),
+    published: conform(published?.data),
     hasDraft: !!draft,
     draftUpdatedAt: draft?.updatedAt,
     draftUpdatedBy: draft?.updatedBy,

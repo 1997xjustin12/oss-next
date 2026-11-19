@@ -1,7 +1,9 @@
 'use client'
 
 import { EditorShell, type AdminActionResult } from '@/components/admin/EditorShell'
-import { ValueEditor, type FieldHints } from '@/components/admin/ValueEditor'
+import { SectionDrawers, same, type DrawerSection, type SettingsPath } from '@/components/admin/SectionDrawers'
+import { type FieldHints } from '@/components/admin/ValueEditor'
+import { LOCATION_TEMPLATE_DEFAULT } from '@/lib/data/locationTemplate'
 import { LOCATION_SECTION_LABELS } from '@/lib/locationAdmin'
 import type { LocationSectionId, LocationTemplate } from '@/types/locationPage'
 
@@ -12,6 +14,8 @@ const IMAGE_HELP = 'An image URL on the CDN, its alt text (empty for a decorativ
 
 type Props = {
   initialValue: LocationTemplate
+  /** What the pages show now: the list marks the sections the draft changes. */
+  published: LocationTemplate
   hasDraft: boolean
   status: { draft?: string; published?: string }
   previewHref: string
@@ -23,7 +27,7 @@ type Props = {
 }
 
 /** The template every location page renders: sections, all shared wording, images, products, delivery photos, FAQ. */
-export function LocationTemplateEditor({ initialValue, previewHref, locations, specOptions, ...props }: Props) {
+export function LocationTemplateEditor({ initialValue, published, previewHref, locations, specOptions, ...props }: Props) {
   const sectionOptions = (Object.keys(LOCATION_SECTION_LABELS) as LocationSectionId[]).map((id) => ({ value: id, label: LOCATION_SECTION_LABELS[id] }))
   const hints: FieldHints = {
     sections: {
@@ -78,12 +82,91 @@ export function LocationTemplateEditor({ initialValue, previewHref, locations, s
   }
 
   return (
-    <EditorShell initialValue={initialValue} preview={{ href: previewHref, locations }} scope="every location page" {...props}>
-      {(value, setValue) => (
-        <div className="rounded-lg border border-theme-border bg-theme-bg p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
-          <ValueEditor value={value} onChange={(next) => setValue(next as LocationTemplate)} hints={hints} />
-        </div>
-      )}
+    <EditorShell initialValue={initialValue} preview={{ href: previewHref, locations }} scope="every location page" layout="split" {...props}>
+      {(value, setValue) => {
+        const missing = (Object.keys(LOCATION_SECTION_LABELS) as LocationSectionId[]).filter((id) => !value.sections.some((s) => s.id === id))
+        return (
+          <SectionDrawers
+            value={value}
+            onChange={setValue}
+            sections={value.sections.map((section) => drawerFor(section.id))}
+            hints={hints}
+            published={published}
+            defaults={LOCATION_TEMPLATE_DEFAULT}
+            onMove={move}
+            orderChanged={!same(value.sections.map((s) => s.id), published.sections.map((s) => s.id))}
+            title="Sections, top to bottom"
+            intro={
+              <>
+                Every location page, in this order: open a section to edit it, switch it off to hide it everywhere (a location can still set its own order on its screen). {PLACEHOLDER_HELP}
+              </>
+            }
+            footer={
+              missing.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {missing.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setValue({ ...value, sections: [...value.sections, { id, enabled: true }] })}
+                      className="rounded-md border border-dashed border-theme-border px-2.5 py-1.5 text-xs font-semibold hover:bg-theme-subtle dark:border-neutral-700 dark:hover:bg-neutral-800"
+                    >
+                      + Add {LOCATION_SECTION_LABELS[id]}
+                    </button>
+                  ))}
+                </div>
+              )
+            }
+          />
+        )
+      }}
     </EditorShell>
   )
+}
+
+/** Where each section's settings live: its wording, and the images, cards, products or questions it shows. */
+const SECTION_PARTS: Record<LocationSectionId, { path: SettingsPath; title?: string }[]> = {
+  hero: [{ path: ['text', 'hero'], title: 'Wording' }, { path: ['media', 'heroBackground'] }],
+  budgetBand: [{ path: ['text', 'budgetBand'], title: 'Wording' }],
+  options: [{ path: ['text', 'options'], title: 'Wording' }, { path: ['options'], title: 'The three cards' }],
+  products: [{ path: ['text', 'products'], title: 'Wording' }, { path: ['productSpecs'] }],
+  buy: [{ path: ['text', 'buy'], title: 'Wording' }],
+  delivered: [{ path: ['text', 'delivered'], title: 'Wording' }, { path: ['deliveredPhotos'] }],
+  satisfaction: [{ path: ['text', 'satisfaction'], title: 'Wording' }, { path: ['media', 'satisfactionSeal'], title: 'Seal image' }],
+  callBand: [{ path: ['text', 'callBand'], title: 'Wording' }],
+  featured: [{ path: ['text', 'stories'], title: 'Story labels (shared with News & updates)' }],
+  news: [{ path: ['text', 'stories'], title: 'Story labels (shared with Featured story)' }],
+  video: [{ path: ['text', 'video'], title: 'Wording' }, { path: ['media', 'youtubeId'] }],
+  overview: [{ path: ['text', 'overview'], title: 'Wording' }],
+  purchase: [{ path: ['text', 'purchase'], title: 'Wording' }, { path: ['media', 'purchaseImage'], title: 'Image' }],
+  rental: [{ path: ['text', 'rental'], title: 'Wording' }, { path: ['media', 'rentalImage'], title: 'Image' }],
+  rto: [{ path: ['text', 'rto'], title: 'Wording' }, { path: ['media', 'rtoImage'], title: 'Image' }],
+  closingBand: [{ path: ['text', 'closingBand'], title: 'Wording' }],
+  resources: [{ path: ['text', 'resources'], title: 'Wording' }],
+  pricingForm: [{ path: ['text', 'pricingForm'], title: 'Wording' }],
+  newsletter: [{ path: ['text', 'newsletter'], title: 'Wording' }],
+  faq: [{ path: ['text', 'faq'], title: 'Wording' }, { path: ['faqs'] }],
+}
+
+function drawerFor(id: LocationSectionId): DrawerSection<LocationTemplate> {
+  return {
+    id,
+    label: LOCATION_SECTION_LABELS[id],
+    parts: SECTION_PARTS[id],
+    shown: {
+      get: (value) => value.sections.find((s) => s.id === id)?.enabled ?? false,
+      set: (value, on) => ({ ...value, sections: value.sections.map((s) => (s.id === id ? { ...s, enabled: on } : s)) }),
+    },
+  }
+}
+
+/** Moves a section one place up or down in the page. */
+function move(value: LocationTemplate, id: string, direction: -1 | 1): LocationTemplate {
+  const from = value.sections.findIndex((s) => s.id === id)
+  const to = from + direction
+  if (from < 0 || to < 0 || to >= value.sections.length) return value
+  const sections = [...value.sections]
+  const [item] = sections.splice(from, 1)
+  sections.splice(to, 0, item)
+  return { ...value, sections }
 }

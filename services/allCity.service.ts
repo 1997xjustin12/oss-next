@@ -234,6 +234,8 @@ export async function getAllCityDirectory(): Promise<AllCityStateSummary[]> {
 export type AllCityDraftState<T> = {
   /** The draft if there is one, else the published copy (else the seed): what the editor shows. */
   value: T
+  /** What visitors see now (else the seed): the editor marks what the draft changes. */
+  published: T
   hasDraft: boolean
   hasPublished: boolean
   draftUpdatedAt?: string
@@ -251,6 +253,7 @@ async function readState<T>(kind: AllCityRecordKind, id: string | undefined, con
   if (value === null) return null
   return {
     value,
+    published: conform(published?.data) ?? value,
     hasDraft: !!draft,
     hasPublished: !!published,
     draftUpdatedAt: draft?.updatedAt,

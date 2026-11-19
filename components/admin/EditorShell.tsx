@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { ExternalLink, Eye, Monitor, RotateCcw, Save, Send, Smartphone } from 'lucide-react'
 /** What a save, publish or discard action answers. The GBP and location-page actions both return this shape. */
@@ -18,11 +18,20 @@ type Props<T> = {
   preview?: { href: string; locations?: readonly { slug: string; label: string }[] }
   /** What Publish affects, for the confirmation: "every GBP page", "San Diego, CA", "every location page". */
   scope: string
-  children: (value: T, setValue: (value: T) => void) => ReactNode
+  /**
+   * `split`: the editor and the preview side by side on a wide screen (the
+   * template screens' section lists), the preview scaled to fit its column.
+   * Default: the preview under the editor.
+   */
+  layout?: 'stacked' | 'split'
+  children: (value: T, setValue: (value: T) => void, preview: { showInPreview: (anchor: string) => void }) => ReactNode
 }
 
 const BTN =
   'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+
+/** The split layout's desktop preview width, before scaling. */
+const DESKTOP_WIDTH = 1280
 
 /**
  * The frame the record editors share (the GBP pages and the location pages): the working copy, Save draft / Publish /
@@ -32,7 +41,7 @@ const BTN =
  * real page, drafts and all, admin-only) reloads after each save; Publish puts
  * the draft live. Publishing with unsaved edits saves them first.
  */
-export function EditorShell<T>({ initialValue, hasDraft: initialHasDraft, status, save, publish, discard, preview, scope, children }: Props<T>) {
+export function EditorShell<T>({ initialValue, hasDraft: initialHasDraft, status, save, publish, discard, preview, scope, layout = 'stacked', children }: Props<T>) {
   const router = useRouter()
   const [value, setValue] = useState<T>(initialValue)
   const [saved, setSaved] = useState(() => JSON.stringify(initialValue))
@@ -43,6 +52,21 @@ export function EditorShell<T>({ initialValue, hasDraft: initialHasDraft, status
   const [previewOpen, setPreviewOpen] = useState(true)
   const [width, setWidth] = useState<'desktop' | 'mobile'>('desktop')
   const [location, setLocation] = useState(preview?.locations?.[0]?.slug)
+  // "Show in preview": an element id the preview scrolls to (a hash change scrolls without reloading).
+  const [anchor, setAnchor] = useState('')
+  const split = layout === 'split'
+  // The split layout's desktop preview: the page at 1280px, scaled to its column.
+  const frameBox = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+  useEffect(() => {
+    const box = frameBox.current
+    if (!split || !box) return
+    const fit = () => setScale(Math.min(1, box.clientWidth / DESKTOP_WIDTH))
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(box)
+    return () => observer.disconnect()
+  }, [split, previewOpen])
   const dirty = JSON.stringify(value) !== saved
 
   // The server sent a fresh record (after discard/publish → refresh).
@@ -75,6 +99,11 @@ export function EditorShell<T>({ initialValue, hasDraft: initialHasDraft, status
   }
 
   const run = (fn: () => Promise<void>) => startTransition(fn)
+
+  const showInPreview = (target: string) => {
+    setPreviewOpen(true)
+    setAnchor(target)
+  }
 
   const previewHref = preview
     ? location && preview.locations
@@ -136,10 +165,11 @@ export function EditorShell<T>({ initialValue, hasDraft: initialHasDraft, status
         )}
       </div>
 
-      {children(value, setValue)}
+      <div className={split ? 'grid gap-5 xl:grid-cols-[minmax(24rem,34rem)_minmax(0,1fr)] xl:items-start' : 'space-y-5'}>
+      <div className="min-w-0">{children(value, setValue, { showInPreview })}</div>
 
       {previewHref && (
-        <section aria-label="Draft preview" className="rounded-lg border border-theme-border bg-theme-bg p-3 dark:border-neutral-800 dark:bg-neutral-900">
+        <section aria-label="Draft preview" className={`rounded-lg border border-theme-border bg-theme-bg p-3 dark:border-neutral-800 dark:bg-neutral-900 ${split ? 'xl:sticky xl:top-19' : ''}`}>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => setPreviewOpen((o) => !o)} className={`${BTN} border border-theme-border dark:border-neutral-700`}>
               <Eye className="h-4 w-4" />
@@ -170,19 +200,32 @@ export function EditorShell<T>({ initialValue, hasDraft: initialHasDraft, status
           <p className="mt-2 text-xs text-theme-muted dark:text-neutral-500">
             The saved drafts, as visitors would see them after publishing. Unsaved edits show after Save draft.
           </p>
-          {previewOpen && (
-            <div className="mt-3 overflow-auto rounded border border-theme-border bg-white dark:border-neutral-800">
-              <iframe
-                key={`${previewKey}-${location}`}
-                src={previewHref}
-                title="Draft preview"
-                className="mx-auto block h-[80vh] border-0"
-                style={{ width: width === 'mobile' ? 390 : '100%', minWidth: width === 'mobile' ? 390 : 1024 }}
-              />
-            </div>
-          )}
+          {previewOpen &&
+            (split && width === 'desktop' ? (
+              // The page at desktop width, scaled to the column: the real layout, not a squeezed one.
+              <div ref={frameBox} className="mt-3 h-[calc(100vh-15rem)] overflow-hidden rounded border border-theme-border bg-white dark:border-neutral-800">
+                <iframe
+                  key={`${previewKey}-${location}`}
+                  src={anchor ? `${previewHref}#${anchor}` : previewHref}
+                  title="Draft preview"
+                  className="block origin-top-left border-0"
+                  style={{ width: DESKTOP_WIDTH, height: `calc((100vh - 15rem) / ${scale})`, transform: `scale(${scale})` }}
+                />
+              </div>
+            ) : (
+              <div className="mt-3 overflow-auto rounded border border-theme-border bg-white dark:border-neutral-800">
+                <iframe
+                  key={`${previewKey}-${location}`}
+                  src={anchor ? `${previewHref}#${anchor}` : previewHref}
+                  title="Draft preview"
+                  className={`mx-auto block border-0 ${split ? 'h-[calc(100vh-15rem)]' : 'h-[80vh]'}`}
+                  style={{ width: width === 'mobile' ? 390 : '100%', minWidth: width === 'mobile' ? 390 : 1024 }}
+                />
+              </div>
+            ))}
         </section>
       )}
+      </div>
     </div>
   )
 }

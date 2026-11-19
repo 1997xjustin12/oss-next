@@ -37,6 +37,7 @@ async function Editor() {
   return (
     <LocationTemplateEditor
       initialValue={state.value}
+      published={state.published}
       hasDraft={state.hasDraft}
       status={editorStatus(state)}
       previewHref={ADMIN_ROUTES.LOCATION_PREVIEW(locations[0].slug)}

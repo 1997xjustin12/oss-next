@@ -26,8 +26,7 @@ export default function AllCityTemplateAdmin() {
       </Link>
       <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">Template</h1>
       <p className="mt-1 mb-5 max-w-3xl text-sm text-theme-muted dark:text-neutral-400">
-        Every word on every /all-city/ page: first the redesigned sections (shared by every page), then each variant’s older sections. A page’s own wording (its screen) replaces a field of those for that page only; its depot decides the banner and the
-        product cards. Publishing refreshes every page.
+        Every word on every /all-city/ page, section by section: open one to edit it, switch it on or off, and watch the draft preview beside the list. Each page fills in its own city, state and depot (prices, deliveries). Save draft, check the preview, then Publish: it refreshes every page.
       </p>
       <Suspense fallback={<p className="text-sm text-theme-muted">Loading…</p>}>
         <Editor />
@@ -41,6 +40,7 @@ async function Editor() {
   return (
     <AllCityTemplateEditor
       initialValue={state.value}
+      published={state.published}
       hasDraft={state.hasDraft}
       status={editorStatus(state)}
       previewPages={PREVIEW_PAGES}

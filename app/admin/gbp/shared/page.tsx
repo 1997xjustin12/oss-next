@@ -35,6 +35,7 @@ async function Editor() {
   return (
     <GbpSharedEditor
       initialValue={state.value}
+      published={state.published}
       hasDraft={state.hasDraft}
       status={editorStatus(state)}
       previewHref={ADMIN_ROUTES.GBP_PREVIEW(locations[0].slug)}

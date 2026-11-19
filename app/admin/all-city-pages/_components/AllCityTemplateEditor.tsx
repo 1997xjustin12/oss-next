@@ -1,12 +1,16 @@
 'use client'
 
 import { EditorShell, type AdminActionResult } from '@/components/admin/EditorShell'
-import { ValueEditor, type FieldHints } from '@/components/admin/ValueEditor'
+import { SectionDrawers, type DrawerSection } from '@/components/admin/SectionDrawers'
+import { type FieldHints } from '@/components/admin/ValueEditor'
+import { ALL_CITY_TEMPLATE_DEFAULT } from '@/lib/data/allCityTemplate'
 import { ALL_CITY_PLACEHOLDER_HELP } from './AllCityPageEditor'
 import type { AllCityTemplate } from '@/types/allCity'
 
 type Props = {
   initialValue: AllCityTemplate
+  /** What the pages show now: the list marks the sections the draft changes. */
+  published: AllCityTemplate
   hasDraft: boolean
   status: { draft?: string; published?: string }
   /** Pages to preview the draft on: a city page and a depot-city page. */
@@ -40,7 +44,7 @@ const SECTION_HERO_HELP =
   'Also: {h1} the page’s own heading (city part in amber), {depot} its depot, {price} the depot’s lowest used container price (a figure using it is hidden when there is none), {depotCount} “1 Depot”.'
 
 /** The template every /all-city/ page renders: its sections, top to bottom, and the hero photo. */
-export function AllCityTemplateEditor({ initialValue, previewPages, previewHref, specOptions, ...props }: Props) {
+export function AllCityTemplateEditor({ initialValue, published, previewPages, previewHref, specOptions, ...props }: Props) {
   const hints: FieldHints = {
     sections: { label: 'Sections (every page)', help: `Top of the page, in order. ${ALL_CITY_PLACEHOLDER_HELP}` },
     'sections.breadcrumbs': { label: 'Breadcrumbs', help: 'Home / state / city above the hero. The state links to its list on /all-city.' },
@@ -149,12 +153,45 @@ export function AllCityTemplateEditor({ initialValue, previewPages, previewHref,
   }
 
   return (
-    <EditorShell initialValue={initialValue} preview={{ href: previewHref, locations: previewPages }} scope="every /all-city/ page" {...props}>
-      {(value, setValue) => (
-        <div className="rounded-lg border border-theme-border bg-theme-bg p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
-          <ValueEditor value={value} onChange={(next) => setValue(next as AllCityTemplate)} hints={hints} />
-        </div>
+    <EditorShell initialValue={initialValue} preview={{ href: previewHref, locations: previewPages }} scope="every /all-city/ page" layout="split" {...props}>
+      {(value, setValue, { showInPreview }) => (
+        <SectionDrawers
+          value={value}
+          onChange={setValue}
+          sections={DRAWERS}
+          hints={hints}
+          published={published}
+          defaults={ALL_CITY_TEMPLATE_DEFAULT}
+          showInPreview={showInPreview}
+          title="Sections, top to bottom"
+          intro={<>Open a section to edit it. {ALL_CITY_PLACEHOLDER_HELP}</>}
+        />
       )}
     </EditorShell>
   )
 }
+
+type SectionKey = keyof AllCityTemplate['sections']
+
+/** A section with a "Show it" switch: its `show` field, as the row's switch. */
+const shown = (key: SectionKey): DrawerSection<AllCityTemplate>['shown'] => ({
+  get: (value) => (value.sections[key] as { show?: boolean }).show !== false,
+  set: (value, on) => ({ ...value, sections: { ...value.sections, [key]: { ...value.sections[key], show: on } } }),
+  path: ['sections', key, 'show'],
+})
+
+/** The page's sections in order (components/allCity/AllCityPage.tsx), and the hero photo. Anchors: the section's id on the page. */
+const DRAWERS: readonly DrawerSection<AllCityTemplate>[] = [
+  { id: 'breadcrumbs', label: 'Breadcrumbs', parts: [{ path: ['sections', 'breadcrumbs'] }] },
+  { id: 'hero', label: 'Hero', parts: [{ path: ['sections', 'hero'] }], anchor: 'city-hero-title' },
+  { id: 'products', label: 'Find The Right Shipping Container', parts: [{ path: ['sections', 'products'] }], anchor: 'city-products' },
+  { id: 'trustedBy', label: 'Trusted By (logo carousel)', parts: [{ path: ['sections', 'trustedBy'] }], shown: shown('trustedBy') },
+  { id: 'offers', label: 'Buy / Rent / Rent-To-Own', parts: [{ path: ['sections', 'offers'] }], shown: shown('offers') },
+  { id: 'howItWorks', label: 'How It Works', parts: [{ path: ['sections', 'howItWorks'] }], shown: shown('howItWorks'), anchor: 'hiw-title' },
+  { id: 'difference', label: 'The On-Site Storage Difference', parts: [{ path: ['sections', 'difference'] }], shown: shown('difference'), anchor: 'osd-title' },
+  { id: 'deliveries', label: 'Recently Delivered Containers', parts: [{ path: ['sections', 'deliveries'] }], shown: shown('deliveries'), anchor: 'city-deliveries' },
+  { id: 'popular', label: 'Popular Cities', parts: [{ path: ['sections', 'popular'] }], shown: shown('popular'), anchor: 'city-popular-cities' },
+  { id: 'quote', label: 'Get A Free Quote (form)', parts: [{ path: ['sections', 'quote'] }], shown: shown('quote'), anchor: 'quote-section' },
+  { id: 'faq', label: 'Frequently Asked Questions', parts: [{ path: ['sections', 'faq'] }], shown: shown('faq'), anchor: 'city-faq' },
+  { id: 'media', label: 'Hero photo', parts: [{ path: ['media'] }], anchor: 'city-hero-title' },
+]
