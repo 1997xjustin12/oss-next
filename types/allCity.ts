@@ -3,50 +3,22 @@ import type { DepotFeaturedKey } from '@/services/search.service'
 
 /**
  * The /all-city/[slug] pages: WordPress's "Cities" post type (8,541 city
- * landing pages), native at the same URLs. Three layers, each blank = inherit:
- * the template (every word), the depot (banner, product cards, a link) and the
- * page (its own row). docs/reference/all-city-pages.md.
+ * landing pages), native at the same URLs. Three layers: the template (every
+ * word, section by section, since the 2026-11-18/19 redesign), the depot (its
+ * catalogue name, location page and banner) and the page (its city, state,
+ * depot, h1, SEO and lists). docs/reference/all-city-pages.md.
  */
 
 /** Two-letter code of a state with city pages. */
 export type AllCityState = 'CO' | 'FL' | 'GA' | 'IL' | 'IN' | 'KS' | 'MD' | 'MI' | 'NC' | 'OH' | 'SC' | 'TX'
 
 /**
- * Which of WordPress's two designs a page uses.
+ * Which of WordPress's two designs a page came from.
  * - `city`: every ordinary city page.
- * - `depotCity`: the depot cities themselves (Houston, Miami…, 23 pages): own
- *   hero and intro wording, the keyword as an h2 under the city's h1, and the
- *   "$50 off" band.
+ * - `depotCity`: the depot cities themselves (Houston, Miami…, 23 pages): the
+ *   keyword heading over the container cards, and the depot's own banner.
  */
 export type AllCityVariant = 'city' | 'depotCity'
-
-/**
- * One variant's wording. Template text syntax (TemplateRichText): `[label](/path)`
- * links, `[[…]]` accents, `{phone}` the call link, a blank line between
- * paragraphs. Placeholders: `{city}`, `{CITY}` (upper case), `{state}` (name),
- * `{ST}` (code).
- */
-export type AllCityTemplateText = {
-  quoteButton: string
-  introHeading: string
-  introBody: string
-  whyHeading: string
-  whyBody: string
-  popularHeading: string
-  viewAllLabel: string
-  stepsHeading: string
-  steps: { title: string; text: string }[]
-  locatorHeading: string
-  financingHeading: string
-  rentalTitle: string
-  rentalBody: string
-  leaseTitle: string
-  leaseBody: string
-  leaseButton: string
-  reviewsHeading: string
-  /** The closing band. Blank: no band. */
-  offerBand: string
-}
 
 /** "Home / Texas / Abilene" above the hero. Each crumb is template text. */
 export type AllCityBreadcrumbsText = {
@@ -197,6 +169,12 @@ export type AllCityPopularText = {
   body: string
   /** How many cities (1 to 20). */
   limit: number
+  /**
+   * The closed list under them of every other city page of the state ("View
+   * all cities in {state}"): how search engines reach all the city pages.
+   * Blank: no list.
+   */
+  viewAllLabel: string
   /** The call button. Blank: none. */
   button: string
 }
@@ -223,17 +201,9 @@ export type AllCitySections = {
 }
 
 export type AllCityTemplate = {
-  city: AllCityTemplateText
-  depotCity: AllCityTemplateText
   sections: AllCitySections
   media: {
     heroBackground: string
-    youtubeId: string
-    videoTitle: string
-  }
-  links: {
-    quote: string
-    financing: string
   }
 }
 
@@ -248,7 +218,7 @@ export type AllCityDepot = {
   /** Its native location page, /where-to-buy-shipping-containers/<slug>. */
   locationSlug: string
   state: AllCityState
-  /** The photo beside the intro. */
+  /** Its photo: The On-Site Storage Difference's, unless the template sets one. */
   banner: AllCityImage
   /** The depot-city variant's photo, where it differs. */
   depotCityBanner?: AllCityImage
@@ -285,8 +255,6 @@ export type AllCityPage = {
   hidden?: boolean
   /** A 301 to another /all-city/ page (by slug); the page leaves both lists. */
   redirectTo?: string
-  /** This page's own wording where it differs from the template's (blank = the template's). */
-  text?: Partial<AllCityTemplateText>
 }
 
 /** A link in one of the two city lists. */

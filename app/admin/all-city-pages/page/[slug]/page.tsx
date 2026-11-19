@@ -10,7 +10,7 @@ import { toAllCityPageForm } from '@/lib/allCityAdmin'
 import { ALL_CITY_STATE_NAMES, allCityPath } from '@/lib/allCityPage'
 import { ALL_CITY_STATES } from '@/lib/allCityValidate'
 import { ALL_CITY_DEPOTS } from '@/lib/data/allCityDepots'
-import { readAllCityAdminRows, readAllCityPageState, readAllCityTemplateState } from '@/services/allCity.service'
+import { readAllCityAdminRows, readAllCityPageState } from '@/services/allCity.service'
 import { AllCityPageEditor } from '../../_components/AllCityPageEditor'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -38,7 +38,7 @@ export default function AllCityPageAdmin({ params }: Props) {
 
 async function Editor({ params }: Props) {
   const { slug } = await params
-  const [state, template, rows] = await Promise.all([readAllCityPageState(slug), readAllCityTemplateState(), readAllCityAdminRows()])
+  const [state, rows] = await Promise.all([readAllCityPageState(slug), readAllCityAdminRows()])
   if (!state) notFound()
   const page = state.value
   const issues = rows.find((row) => row.page.slug === slug)?.issues ?? []
@@ -91,7 +91,6 @@ async function Editor({ params }: Props) {
       <AllCityPageEditor
         label={label}
         initialValue={toAllCityPageForm(page)}
-        templateText={template.value[page.variant]}
         stateOptions={ALL_CITY_STATES.map((st) => ({ value: st, label: `${ALL_CITY_STATE_NAMES[st]} (${st})` }))}
         depotOptions={Object.values(ALL_CITY_DEPOTS).map((depot) => ({ value: depot.key, label: depot.depot }))}
         hasDraft={state.hasDraft}

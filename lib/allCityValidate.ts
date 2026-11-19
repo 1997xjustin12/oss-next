@@ -11,7 +11,7 @@
  * Pure (no I/O); tested in tests/unit/allCityValidate.test.ts.
  */
 
-import { bool, list, num, oneOf, shape, str, text, url, withSeed, youtubeId, type V } from '@/lib/gbpValidate'
+import { bool, list, num, oneOf, shape, str, text, url, withSeed, type V } from '@/lib/gbpValidate'
 import { href } from '@/lib/locationValidate'
 import { cleanKeyphrase } from '@/lib/seoKeywords'
 import { ALL_CITY_STATE_NAMES } from '@/lib/allCityPage'
@@ -21,7 +21,7 @@ import { DELIVERED_IMAGE_HOSTS } from '@/lib/deliveredContainers'
 import type { OfferFeatureIcon, OfferTab } from '@/lib/data/homeOfferTabs'
 import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
 import { DEPOT_FEATURED_SPECS, type DepotFeaturedKey } from '@/services/search.service'
-import type { AllCityDepot, AllCityImage, AllCityPage, AllCitySections, AllCitySeo, AllCityState, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
+import type { AllCityDepot, AllCityImage, AllCityPage, AllCitySections, AllCitySeo, AllCityState, AllCityTemplate } from '@/types/allCity'
 
 const isObj = (r: unknown): r is Record<string, unknown> => !!r && typeof r === 'object' && !Array.isArray(r)
 
@@ -54,29 +54,6 @@ const depotKey: V<string> = (r) => (typeof r === 'string' && ALL_CITY_DEPOTS[r] 
 const spec: V<DepotFeaturedKey> = oneOf(...DEPOT_FEATURED_SPECS.map((s) => s.key))
 
 // ─── Template ────────────────────────────────────────────────────────────────
-
-type Step = AllCityTemplateText['steps'][number]
-const step = shape<Step>({ title: str, text: str })
-const steps: V<Step[]> = (r) => {
-  const value = list(step)(r)
-  return value?.length ? value : undefined
-}
-
-/** One variant's wording: every field a string (blank allowed), steps a non-empty list; a bad field keeps the seed's. */
-function templateText(raw: unknown, seed: AllCityTemplateText): AllCityTemplateText {
-  const record = isObj(raw) ? raw : {}
-  const out = structuredClone(seed) as Record<string, unknown>
-  for (const [key, base] of Object.entries(seed)) {
-    const value = record[key]
-    if (Array.isArray(base)) {
-      const valid = steps(value)
-      if (valid) out[key] = valid
-    } else if (typeof value === 'string') {
-      out[key] = value
-    }
-  }
-  return out as AllCityTemplateText
-}
 
 /** Most figures a section's list may hold (the hero's stats). */
 const MAX_SECTION_ITEMS = 6
@@ -177,11 +154,8 @@ export function conformAllCityTemplate(raw: unknown, seed: AllCityTemplate = ALL
   const record = isObj(raw) ? raw : {}
   return withSeed<AllCityTemplate>(
     {
-      city: (r) => (isObj(r) ? templateText(r, seed.city) : undefined),
-      depotCity: (r) => (isObj(r) ? templateText(r, seed.depotCity) : undefined),
       sections: (r) => (isObj(r) ? sections(r, seed.sections) : undefined),
-      media: (r) => (isObj(r) ? withSeed({ heroBackground: imageSrc, youtubeId: (v) => (v === '' ? '' : youtubeId(v)), videoTitle: text }, seed.media, r) : undefined),
-      links: (r) => (isObj(r) ? withSeed({ quote: href, financing: href }, seed.links, r) : undefined),
+      media: (r) => (isObj(r) ? withSeed({ heroBackground: imageSrc }, seed.media, r) : undefined),
     },
     seed,
     record,
@@ -238,22 +212,6 @@ function seo(raw: unknown, seed: AllCitySeo): AllCitySeo | undefined {
   return out
 }
 
-/** A page's own wording: only the template's fields, only filled ones. */
-export const textOverrides: V<Partial<AllCityTemplateText>> = (r) => {
-  if (!isObj(r)) return undefined
-  const out: Record<string, unknown> = {}
-  for (const [key, base] of Object.entries(ALL_CITY_TEMPLATE_DEFAULT.city)) {
-    const value = r[key]
-    if (Array.isArray(base)) {
-      const valid = steps(value)
-      if (valid?.some((s) => s.title.trim() || s.text.trim())) out[key] = valid
-    } else if (typeof value === 'string' && value.trim()) {
-      out[key] = value
-    }
-  }
-  return out as Partial<AllCityTemplateText>
-}
-
 /**
  * A page as stored, every field validated against its seed (the imported
  * page, or for a page created in the admin, the record it was created with).
@@ -273,7 +231,6 @@ export function conformAllCityPage(raw: unknown, seed: AllCityPage): AllCityPage
       lists: shape<AllCityPage['lists']>({ popular: bool, viewAll: bool }),
       hidden: bool,
       redirectTo: (r) => (r === '' ? '' : citySlug(r)),
-      text: textOverrides,
     },
     seed,
     raw,
@@ -282,6 +239,5 @@ export function conformAllCityPage(raw: unknown, seed: AllCityPage): AllCityPage
   if (!out.keywordHeading?.trim()) delete out.keywordHeading
   if (!out.hidden) delete out.hidden
   if (!out.redirectTo || out.redirectTo === out.slug) delete out.redirectTo
-  if (!out.text || !Object.keys(out.text).length) delete out.text
   return out
 }

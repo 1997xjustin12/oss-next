@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const { ALL_CITY_FLAGS, allSeedPages, decodeRow, getSeedPage, seedSlugs } = await import('@/lib/allCitySeed')
-const { accentCityInHeading, allCityDepotParts, allCityVars, buildAllCityLists, isListable, resolveAllCitySections, resolveAllCityText, withoutPage } = await import('@/lib/allCityPage')
+const { accentCityInHeading, allCityDepotParts, allCityVars, buildAllCityLists, isListable, resolveAllCitySections, withoutPage } = await import('@/lib/allCityPage')
 const { ALL_CITY_DEPOTS } = await import('@/lib/data/allCityDepots')
 const { ALL_CITY_TEMPLATE_DEFAULT } = await import('@/lib/data/allCityTemplate')
 const { LOCATION_PAGE_SLUGS } = await import('@/lib/data/locationPageSlugs')
@@ -140,26 +140,21 @@ describe('the lists, against WordPress', () => {
 describe('the template', () => {
   const cocoa = getSeedPage('storage-units-cocoa-beach-fl')!
 
-  it('fills every placeholder but {phone}, which the renderer makes a call link', () => {
+  it('fills every placeholder in the sections but those filled later', () => {
+    // {phone}: the renderer's call link. {buy} {rent} {rto}: the tabs, with the depot's prices. {place}: each delivery card.
+    const later = new Set(['{phone}', '{buy}', '{rent}', '{rto}', '{place}'])
+    const facts = { depot: 'Miami, FL', depotPage: '/where-to-buy-shipping-containers/miami-fl', usedFrom: 1149 }
     for (const variant of ['city', 'depotCity'] as const) {
-      const text = resolveAllCityText(ALL_CITY_TEMPLATE_DEFAULT, { ...cocoa, variant })
-      const left = JSON.stringify(text).match(/\{(\w+)\}/g) ?? []
-      assert.deepEqual([...new Set(left)].filter((p) => p !== '{phone}'), [], variant)
+      const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, { ...cocoa, variant, keywordHeading: 'Cargo Containers Cocoa Beach' }, facts)
+      const left = JSON.stringify(s).match(/\{(\w+)\}/g) ?? []
+      assert.deepEqual([...new Set(left)].filter((p) => !later.has(p)), [], variant)
     }
   })
 
   it('writes the city and state into the wording', () => {
-    const text = resolveAllCityText(ALL_CITY_TEMPLATE_DEFAULT, cocoa)
-    assert.equal(text.introHeading, 'Shipping Storage Containers in Cocoa Beach')
-    assert.equal(text.stepsHeading, 'BUY A SHIPPING CONTAINER IN COCOA BEACH')
-    assert.equal(text.popularHeading, 'Popular Cities in Florida')
     assert.deepEqual(allCityVars(cocoa), { city: 'Cocoa Beach', CITY: 'COCOA BEACH', state: 'Florida', ST: 'FL' })
-  })
-
-  it('lays a page’s own wording over the template; a blank override keeps the template’s', () => {
-    const text = resolveAllCityText(ALL_CITY_TEMPLATE_DEFAULT, { ...cocoa, text: { introHeading: 'Containers near {city}', whyHeading: '  ' } })
-    assert.equal(text.introHeading, 'Containers near Cocoa Beach')
-    assert.equal(text.whyHeading, 'WHY CHOOSE ON-SITE STORAGE SOLUTIONS?')
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Miami, FL', depotPage: '/where-to-buy-shipping-containers/miami-fl', usedFrom: 1149 })
+    assert.equal(s.popular.viewAllLabel, 'View all cities in Florida')
   })
 
   it('takes the depot-city variant’s banner where the depot has one', () => {

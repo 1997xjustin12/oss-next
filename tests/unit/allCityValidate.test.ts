@@ -30,12 +30,12 @@ describe('conformAllCityPage', () => {
     assert.equal(page.redirectTo, undefined)
   })
 
-  it('stores empty optional fields as absent, and only filled wording overrides', () => {
+  it('stores empty optional fields as absent; drops the old per-page wording', () => {
     const page = conformAllCityPage(
-      { hidden: false, redirectTo: '', keywordHeading: ' ', seo: { ...cocoa.seo, canonical: '', keywords: [], focusKeyphrase: '' }, text: { introHeading: 'Near {city}', whyHeading: '', steps: [] } },
+      { hidden: false, redirectTo: '', keywordHeading: ' ', seo: { ...cocoa.seo, canonical: '', keywords: [], focusKeyphrase: '' }, text: { introHeading: 'Near {city}' } },
       cocoa,
     )
-    assert.deepEqual(page.text, { introHeading: 'Near {city}' })
+    assert.equal('text' in page, false)
     assert.equal('hidden' in page, false)
     assert.equal('redirectTo' in page, false)
     assert.equal('keywordHeading' in page, false)
@@ -63,23 +63,21 @@ describe('conformAllCityTemplate', () => {
     assert.deepEqual(conformAllCityTemplate(undefined), ALL_CITY_TEMPLATE_DEFAULT)
   })
 
-  it('takes wording, keeps the default for a bad link, image or empty steps', () => {
+  it('keeps the default hero photo for one off the CDN; drops the removed sections’ settings', () => {
     const t = conformAllCityTemplate({
-      city: { introHeading: 'Containers in {city}', steps: [] },
-      media: { heroBackground: 'https://evil.example.com/x.webp', youtubeId: 'https://www.youtube.com/watch?v=abcdefghijk' },
+      city: { introHeading: 'Containers in {city}' },
+      media: { heroBackground: 'https://evil.example.com/x.webp', youtubeId: 'abcdefghijk' },
+      links: { quote: '/x' },
     })
-    assert.equal(t.city.introHeading, 'Containers in {city}')
-    assert.deepEqual(t.city.steps, ALL_CITY_TEMPLATE_DEFAULT.city.steps)
     assert.equal(t.media.heroBackground, ALL_CITY_TEMPLATE_DEFAULT.media.heroBackground)
-    assert.equal(t.media.youtubeId, 'abcdefghijk')
+    assert.deepEqual(Object.keys(t).sort(), ['media', 'sections'])
+    assert.deepEqual(Object.keys(t.media), ['heroBackground'])
   })
 
   it('gives a template saved before the redesigned sections their defaults, and checks their shape', () => {
-    // A template as stored before 2026-11-18: no sections, and the old hero fields.
-    const old = conformAllCityTemplate({ city: { heroBody: 'old', introHeading: 'Kept' } })
+    // A template as stored before 2026-11-18: no sections, only the old variants' wording.
+    const old = conformAllCityTemplate({ city: { heroBody: 'old', introHeading: 'Old' } })
     assert.deepEqual(old.sections, ALL_CITY_TEMPLATE_DEFAULT.sections)
-    assert.equal(old.city.introHeading, 'Kept')
-    assert.equal('heroBody' in old.city, false)
 
     const t = conformAllCityTemplate({
       sections: {
@@ -180,12 +178,6 @@ describe('conformAllCityTemplate', () => {
     const t = conformAllCityTemplate({ sections: { quote: { points: ['One', 2, 'Three', 'a', 'b', 'c', 'd', 'e'] } } })
     assert.deepEqual(t.sections.quote.points, ['One', 'Three', 'a', 'b', 'c', 'd'])
     assert.deepEqual(conformAllCityTemplate({}).sections.quote, ALL_CITY_TEMPLATE_DEFAULT.sections.quote)
-  })
-
-  it('allows a blank video and a blank closing band', () => {
-    const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
-    assert.equal(t.media.youtubeId, '')
-    assert.equal(t.depotCity.offerBand, '')
   })
 })
 

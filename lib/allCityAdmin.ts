@@ -1,6 +1,5 @@
-import { ALL_CITY_TEMPLATE_DEFAULT } from '@/lib/data/allCityTemplate'
 import type { AllCityIssue } from '@/lib/allCityIssues'
-import type { AllCityDepot, AllCityPage, AllCitySeo, AllCityState, AllCityTemplateText, AllCityVariant } from '@/types/allCity'
+import type { AllCityDepot, AllCityPage, AllCitySeo, AllCityState, AllCityVariant } from '@/types/allCity'
 
 /**
  * The admin side of the /all-city/ pages (app/admin/all-city-pages): the
@@ -8,18 +7,13 @@ import type { AllCityDepot, AllCityPage, AllCitySeo, AllCityState, AllCityTempla
  * tests/unit/allCityValidate.test.ts.
  */
 
-/** A page as the editor shows it: every optional field present (blank = none / the template's). */
-export type AllCityPageForm = Omit<AllCityPage, 'slug' | 'keywordHeading' | 'hidden' | 'redirectTo' | 'seo' | 'text'> & {
+/** A page as the editor shows it: every optional field present (blank = none). */
+export type AllCityPageForm = Omit<AllCityPage, 'slug' | 'keywordHeading' | 'hidden' | 'redirectTo' | 'seo'> & {
   keywordHeading: string
   hidden: boolean
   redirectTo: string
   seo: Required<AllCitySeo>
-  text: AllCityTemplateText
 }
-
-const BLANK_TEXT: AllCityTemplateText = Object.fromEntries(
-  Object.entries(ALL_CITY_TEMPLATE_DEFAULT.city).map(([key, value]) => [key, Array.isArray(value) ? [] : '']),
-) as unknown as AllCityTemplateText
 
 export function toAllCityPageForm(page: AllCityPage): AllCityPageForm {
   return {
@@ -40,7 +34,6 @@ export function toAllCityPageForm(page: AllCityPage): AllCityPageForm {
     lists: { ...page.lists },
     hidden: page.hidden ?? false,
     redirectTo: page.redirectTo ?? '',
-    text: { ...BLANK_TEXT, ...page.text },
   }
 }
 

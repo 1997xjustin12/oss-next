@@ -1,6 +1,6 @@
 import { ROUTES } from '@/config/routes'
 import { fillPlaceholders } from '@/lib/locationPage'
-import type { AllCityDepot, AllCityImage, AllCityLink, AllCityPage, AllCitySections, AllCityState, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
+import type { AllCityDepot, AllCityImage, AllCityLink, AllCityPage, AllCitySections, AllCityState, AllCityTemplate } from '@/types/allCity'
 
 /** Pure helpers for the /all-city/ pages: wording, depot parts, paths. No I/O. */
 
@@ -40,21 +40,6 @@ function fillDeep<T>(value: T, vars: Record<string, string>): T {
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, fillDeep(item, vars)])) as T
   }
   return value
-}
-
-/**
- * The page's wording: its variant's template text with the page's own
- * overrides laid over it field by field (a blank override keeps the
- * template's), placeholders filled.
- */
-export function resolveAllCityText(template: AllCityTemplate, page: AllCityPage): AllCityTemplateText {
-  const base = template[page.variant]
-  const merged: AllCityTemplateText = { ...base }
-  for (const [key, value] of Object.entries(page.text ?? {}) as [keyof AllCityTemplateText, AllCityTemplateText[keyof AllCityTemplateText]][]) {
-    const blank = typeof value === 'string' ? !value.trim() : !Array.isArray(value) || value.length === 0
-    if (!blank) (merged as Record<string, unknown>)[key] = value
-  }
-  return fillDeep(merged, allCityVars(page))
 }
 
 /** What the page shows of its depot: the depot-city variant may have its own banner. */

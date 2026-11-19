@@ -19,15 +19,6 @@ type Props = {
   discard: () => Promise<AdminActionResult>
 }
 
-const VARIANT_HINTS = (variant: 'city' | 'depotCity'): FieldHints => ({
-  [`${variant}.introBody`]: { label: 'Intro paragraphs', multiline: true },
-  [`${variant}.whyBody`]: { label: '“Why choose” paragraphs', multiline: true },
-  [`${variant}.steps`]: { itemLabel: 'Step', newItem: { title: '', text: '' } },
-  [`${variant}.rentalBody`]: { multiline: true },
-  [`${variant}.leaseBody`]: { multiline: true },
-  [`${variant}.offerBand`]: { label: 'Closing band', help: 'Blank: no band. The depot-city pages have “GET $50 OFF … {phone}”.' },
-})
-
 const OFFER_KIND_OPTIONS = [
   { value: 'buy', label: 'Buy' },
   { value: 'rent', label: 'Rent' },
@@ -48,14 +39,10 @@ const OFFER_ICON_OPTIONS = [
 const SECTION_HERO_HELP =
   'Also: {h1} the page’s own heading (city part in amber), {depot} its depot, {price} the depot’s lowest used container price (a figure using it is hidden when there is none), {depotCount} “1 Depot”.'
 
-/** The template every /all-city/ page renders: the redesigned sections, both variants' wording, the images, the video and the two fixed links. */
+/** The template every /all-city/ page renders: its sections, top to bottom, and the hero photo. */
 export function AllCityTemplateEditor({ initialValue, previewPages, previewHref, specOptions, ...props }: Props) {
   const hints: FieldHints = {
-    city: { label: 'City pages (8,516)', help: ALL_CITY_PLACEHOLDER_HELP },
-    depotCity: { label: 'Depot-city pages (23: Houston, Miami…)', help: ALL_CITY_PLACEHOLDER_HELP },
-    ...VARIANT_HINTS('city'),
-    ...VARIANT_HINTS('depotCity'),
-    sections: { label: 'Redesigned sections (every page)', help: `Top of the page, in order. ${ALL_CITY_PLACEHOLDER_HELP}` },
+    sections: { label: 'Sections (every page)', help: `Top of the page, in order. ${ALL_CITY_PLACEHOLDER_HELP}` },
     'sections.breadcrumbs': { label: 'Breadcrumbs', help: 'Home / state / city above the hero. The state links to its list on /all-city.' },
     'sections.breadcrumbs.home': { label: 'First crumb (links to the homepage)' },
     'sections.breadcrumbs.state': { label: 'Second crumb (the state)' },
@@ -132,11 +119,15 @@ export function AllCityTemplateEditor({ initialValue, previewPages, previewHref,
     'sections.deliveries.limit': { label: 'How many cards', help: '1 to 20, newest first; four show at a time on desktop, the arrows scroll the rest.' },
     'sections.popular': {
       label: 'Popular Cities',
-      help: 'Links to other city pages of the state (its Popular Cities list, set per page on its screen). With this on, the older section further down keeps only its “View all cities” list.',
+      help: 'Links to other city pages of the state (its Popular Cities list, set per page on its screen), then the closed “View all cities” list of every other city page of the state.',
     },
     'sections.popular.show': { label: 'Show it' },
     'sections.popular.body': { label: 'Text under the heading', multiline: true, help: '{depot} is the page’s depot, {state} the state’s name.' },
     'sections.popular.limit': { label: 'How many cities', help: '1 to 20 (a state lists at most 20).' },
+    'sections.popular.viewAllLabel': {
+      label: '“View all cities” button',
+      help: 'Opens the full list of the state’s other city pages, under the cities above. Keep it: it is how search engines reach every city page. It stays even with this section off; blank removes it.',
+    },
     'sections.popular.button': { label: 'Call button', help: 'Calls the sales line. Blank: no button.' },
     'sections.quote': {
       label: 'Get A Free Quote (form)',
@@ -146,12 +137,8 @@ export function AllCityTemplateEditor({ initialValue, previewPages, previewHref,
     'sections.quote.body': { label: 'Paragraph', multiline: true },
     'sections.quote.points': { label: 'Ticked points', itemLabel: 'Point', newItem: '', help: 'Up to six.' },
     'sections.howItWorks.buttonHref': { label: 'Its link', help: '{depotPlp}: the listing at the page’s main depot (the default). {depotPage}: its location page. Or any link.' },
-    media: { label: 'Images and video' },
+    media: { label: 'Images' },
     'media.heroBackground': { label: 'Hero photo', help: 'A CDN link (onsite-cdn.sfo3.cdn.digitaloceanspaces.com) or a site path.' },
-    'media.youtubeId': { label: 'Video (YouTube id or link)', help: 'Blank: no video.' },
-    links: { label: 'Links' },
-    'links.quote': { label: '“GET A QUOTE”' },
-    'links.financing': { label: '“APPLY FOR FINANCING”' },
   }
 
   return (
