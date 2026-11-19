@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { SnapCarousel } from '@/components/shared/SnapCarousel'
 import { TemplateRichText } from '@/components/shared/TemplateRichText'
 import { fillPlaceholders } from '@/lib/locationPage'
 import { formatDeliveredOn } from '@/lib/deliveredContainers'
@@ -15,8 +16,8 @@ type Props = {
 /**
  * "Recently Delivered Containers Near <city>" (the 2026-11-19 design): the
  * newest deliveries from the page's depot, a photo card each with what was
- * delivered, where (city only) and when. Server-rendered; the row swipes on a
- * phone (CSS scroll snap, no script) and is a grid from `sm`. Left out when
+ * delivered, where (city only) and when, in the homepage's carousel: swiped on a
+ * phone, arrows from `sm` (the cards stay server-rendered). Left out when
  * the depot has no delivery with a photo.
  */
 export function CityDeliveries({ text, deliveries }: Props) {
@@ -36,21 +37,22 @@ export function CityDeliveries({ text, deliveries }: Props) {
         )}
       </div>
 
-      <ul
-        aria-label="Recent deliveries"
-        className="-mx-[5vw] mt-8 flex snap-x snap-mandatory scroll-px-[5vw] gap-4 overflow-x-auto px-[5vw] scrollbar-none sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:snap-none lg:grid-cols-4 lg:gap-8"
-      >
+      {/* The homepage's carousel (SnapCarousel): swiped on a phone, arrows from sm. The cards stay server-rendered. */}
+      <SnapCarousel label="Recent deliveries" itemName="deliveries">
         {shown.map((item) => {
           const when = formatDeliveredOn(item.deliveredOn)
           return (
-            <li key={item.id} className="w-[70%] shrink-0 snap-start sm:w-auto">
+            <li
+              key={item.id}
+              className="w-[75%] shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-3.75rem)/4)]"
+            >
               <article>
                 <div className="relative aspect-4/5 overflow-hidden bg-neutral-200 dark:bg-neutral-800">
                   <Image
                     src={item.image!}
                     alt={`${item.title}, delivered${item.location ? ` to ${item.location}` : ''} on ${when}`}
                     fill
-                    sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 70vw"
+                    sizes="(min-width: 1280px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 75vw"
                     className="object-cover"
                   />
                 </div>
@@ -67,7 +69,7 @@ export function CityDeliveries({ text, deliveries }: Props) {
             </li>
           )
         })}
-      </ul>
+      </SnapCarousel>
     </section>
   )
 }

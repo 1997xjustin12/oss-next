@@ -183,7 +183,7 @@ export type AllCityDeliveriesText = {
   body: string
   /** Under each card's title; `{place}` is where it was delivered (city only). */
   placeLabel: string
-  /** How many cards, newest first (1 to 12). */
+  /** How many cards in the carousel, newest first (1 to 20). */
   limit: number
 }
 

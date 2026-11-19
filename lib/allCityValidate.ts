@@ -150,8 +150,8 @@ function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCityS
   const photo = out.difference.image.trim()
   out.difference.image = photo ? (imageSrc(photo) ?? seed.difference.image) : ''
 
-  // Recently Delivered: a whole number of cards, 1 to 12.
-  out.deliveries.limit = Math.min(12, Math.max(1, Math.round(out.deliveries.limit)))
+  // Recently Delivered: a whole number of cards, 1 to 20.
+  out.deliveries.limit = Math.min(20, Math.max(1, Math.round(out.deliveries.limit)))
   return out
 }
 

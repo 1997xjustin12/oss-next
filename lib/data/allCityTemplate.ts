@@ -157,7 +157,7 @@ const SECTIONS: AllCitySections = {
     heading: 'Recently Delivered Containers Near [[{city}, {ST}]]',
     body: 'A look at recent orders we delivered near {city}. Each one comes from our delivery records, shown by city only.',
     placeLabel: 'Delivered to {place}',
-    limit: 4,
+    limit: 12,
   },
 }
 
