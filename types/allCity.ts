@@ -201,6 +201,14 @@ export type AllCityPopularText = {
   button: string
 }
 
+/** The homepage's "Get a free quote" section: the Zoho pricing form beside a heading, a paragraph and ticked points. */
+export type AllCityQuoteText = {
+  show: boolean
+  heading: string
+  body: string
+  points: string[]
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
@@ -211,6 +219,7 @@ export type AllCitySections = {
   difference: AllCityDifferenceText
   deliveries: AllCityDeliveriesText
   popular: AllCityPopularText
+  quote: AllCityQuoteText
 }
 
 export type AllCityTemplate = {

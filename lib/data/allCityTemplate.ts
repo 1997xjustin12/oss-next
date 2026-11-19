@@ -1,8 +1,10 @@
 import { FEATURED_CONTAINERS } from '@/config/featuredContainers'
+import { HOME_HEADING_DEFAULTS } from '@/config/homeContent'
 import { ROUTES } from '@/config/routes'
 import { OFFER_TABS } from './homeOfferTabs'
 import { HOW_IT_WORKS_EYEBROW, HOW_IT_WORKS_STEPS } from './howItWorksSteps'
 import { ONSITE_DIFFERENCE_BODY, ONSITE_DIFFERENCE_BUTTON, ONSITE_DIFFERENCE_POINTS } from './onsiteDifference'
+import { QUOTE_FORM_BODY, QUOTE_FORM_POINTS } from './quoteForm'
 import { CDN } from './containerLandingContent'
 import type { AllCitySections, AllCityTemplate, AllCityTemplateText } from '@/types/allCity'
 
@@ -166,6 +168,13 @@ const SECTIONS: AllCitySections = {
     body: `We deliver shipping containers throughout the {depot} area and across {state}. Find your area below, or [see all shipping container locations](${ROUTES.ALL_CITY_INDEX}).`,
     limit: 8,
     button: 'Call For Expert Assistance',
+  },
+  // The homepage's "Get a free quote" section and its form (the Zoho pricing form).
+  quote: {
+    show: true,
+    heading: HOME_HEADING_DEFAULTS['quoteForm.h2'],
+    body: QUOTE_FORM_BODY,
+    points: [...QUOTE_FORM_POINTS],
   },
 }
 

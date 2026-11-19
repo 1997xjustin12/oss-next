@@ -5,6 +5,7 @@ import { LocationSearch } from '@/components/shared/LocationSearch'
 import { OfferTabsView } from '@/components/shared/OfferTabs'
 import { OnsiteDifference } from '@/components/shared/OnsiteDifference'
 import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
+import { QuoteForm } from '@/components/shared/QuoteForm'
 import { ReviewsSection } from '@/components/shared/ReviewsSection'
 import { TrustedBySection } from '@/components/shared/TrustedBySection'
 import { ROUTES } from '@/config/routes'
@@ -133,6 +134,7 @@ export async function AllCityPage({ page, template, depot }: Props) {
       )}
       {sections.deliveries.show && <CityDeliveries text={sections.deliveries} deliveries={deliveries} />}
       {sections.popular.show && <CityPopular text={sections.popular} cities={lists.popular} />}
+      {sections.quote.show && <QuoteForm heading={sections.quote.heading} body={sections.quote.body} points={sections.quote.points} />}
 
       {/* WordPress's sections, until each is redesigned. */}
       <CityIntro

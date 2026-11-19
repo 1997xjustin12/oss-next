@@ -3,14 +3,8 @@
 import { ArrowRight, Check, Lock } from "lucide-react";
 import { HOME_HEADING_DEFAULTS } from "@/config/homeContent";
 import { ZohoPricingForm, type ZohoPricingFormClasses } from "@/components/shared/ZohoPricingForm";
+import { QUOTE_FORM_BODY, QUOTE_FORM_POINTS } from "@/lib/data/quoteForm";
 
-const POINTS = [
-  "No obligation — free pricing always",
-  "Same-day response from our team",
-  "All container grades and conditions",
-  "Buy, rent, or rent-to-own options",
-  "Delivery from 130+ nationwide depots",
-];
 
 const INPUT_CLS =
   "w-full border-[1.5px] border-theme-border rounded-[4px] px-3 py-[10px] text-[14px] text-theme-dark dark:text-white outline-none focus:border-theme-primary bg-white dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 transition-colors";
@@ -47,12 +41,19 @@ const HOME_CLASSES: ZohoPricingFormClasses = {
  * dropped with the move to Zoho: the Zoho form has no field for it.
  *
  * A Client Component, so it can't read the copy itself — (home)/page.tsx
- * resolves it on the server and passes it in.
+ * resolves it on the server and passes it in. An /all-city/ page passes its
+ * template's heading, paragraph and points (defaults: lib/data/quoteForm.ts).
  */
 export function QuoteForm({
   heading = HOME_HEADING_DEFAULTS["quoteForm.h2"],
+  body = QUOTE_FORM_BODY,
+  points = QUOTE_FORM_POINTS,
 }: {
   heading?: string;
+  /** The paragraph beside the form (an /all-city/ page's from its template). */
+  body?: string;
+  /** The ticked points under it. */
+  points?: readonly string[];
 }) {
   return (
     <section
@@ -92,13 +93,11 @@ export function QuoteForm({
           >
             {heading}
           </h2>
-          <p className="text-[15px] text-white/90 leading-[1.65] mb-[22px] capitalize">
-            Tell us your size, location, and needs — we&rsquo;ll respond with an
-            accurate, no-obligation price and fast delivery timeline from our
-            nearest depot
-          </p>
+          {body.trim() && (
+            <p className="text-[15px] text-white/90 leading-[1.65] mb-[22px] capitalize">{body}</p>
+          )}
           <div className="flex flex-col gap-[10px]">
-            {POINTS.map((point) => (
+            {points.map((point) => (
               <div
                 key={point}
                 className="flex items-center gap-[10px] text-white/[.88] text-[14px] font-medium capitalize"

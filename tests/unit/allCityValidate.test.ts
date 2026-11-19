@@ -176,6 +176,12 @@ describe('conformAllCityTemplate', () => {
     assert.equal(at(99), 20)
   })
 
+  it('Get A Free Quote: points are text, at most six; the homepage’s words by default', () => {
+    const t = conformAllCityTemplate({ sections: { quote: { points: ['One', 2, 'Three', 'a', 'b', 'c', 'd', 'e'] } } })
+    assert.deepEqual(t.sections.quote.points, ['One', 'Three', 'a', 'b', 'c', 'd'])
+    assert.deepEqual(conformAllCityTemplate({}).sections.quote, ALL_CITY_TEMPLATE_DEFAULT.sections.quote)
+  })
+
   it('allows a blank video and a blank closing band', () => {
     const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
     assert.equal(t.media.youtubeId, '')
