@@ -169,6 +169,13 @@ describe('conformAllCityTemplate', () => {
     assert.equal(at('9'), ALL_CITY_TEMPLATE_DEFAULT.sections.deliveries.limit)
   })
 
+  it('Popular Cities: 1 to 20 whole cities', () => {
+    const at = (limit: unknown) => conformAllCityTemplate({ sections: { popular: { limit } } }).sections.popular.limit
+    assert.equal(at(8), 8)
+    assert.equal(at(0), 1)
+    assert.equal(at(99), 20)
+  })
+
   it('allows a blank video and a blank closing band', () => {
     const t = conformAllCityTemplate({ media: { youtubeId: '' }, depotCity: { offerBand: '' } })
     assert.equal(t.media.youtubeId, '')

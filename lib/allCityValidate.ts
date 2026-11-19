@@ -152,6 +152,9 @@ function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCityS
 
   // Recently Delivered: a whole number of cards, 1 to 20.
   out.deliveries.limit = Math.min(20, Math.max(1, Math.round(out.deliveries.limit)))
+
+  // Popular Cities: a whole number of cities, 1 to 20 (the state's list holds at most 20).
+  out.popular.limit = Math.min(20, Math.max(1, Math.round(out.popular.limit)))
   return out
 }
 

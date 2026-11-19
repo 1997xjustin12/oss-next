@@ -25,6 +25,7 @@ import { CityFinancing } from './CityFinancing'
 import { CityHero } from './CityHero'
 import { CityIntro } from './CityIntro'
 import { CityLists } from './CityLists'
+import { CityPopular } from './CityPopular'
 import { CityOfferBand } from './CityOfferBand'
 import { CityProducts } from './CityProducts'
 import { CitySteps } from './CitySteps'
@@ -131,6 +132,7 @@ export async function AllCityPage({ page, template, depot }: Props) {
         />
       )}
       {sections.deliveries.show && <CityDeliveries text={sections.deliveries} deliveries={deliveries} />}
+      {sections.popular.show && <CityPopular text={sections.popular} cities={lists.popular} />}
 
       {/* WordPress's sections, until each is redesigned. */}
       <CityIntro
@@ -143,7 +145,13 @@ export async function AllCityPage({ page, template, depot }: Props) {
         whyBody={text.whyBody}
       />
 
-      <CityLists popularHeading={text.popularHeading} popular={lists.popular} viewAllLabel={text.viewAllLabel} viewAll={lists.viewAll} />
+      {/* Its popular half moved up (CityPopular) unless that section is off; the full state list stays: it is how search engines reach every city page. */}
+      <CityLists
+        popularHeading={text.popularHeading}
+        popular={sections.popular.show ? [] : lists.popular}
+        viewAllLabel={text.viewAllLabel}
+        viewAll={lists.viewAll}
+      />
 
       {template.media.youtubeId && (
         <section aria-label={template.media.videoTitle} className="bg-white px-[5%] pb-10 dark:bg-neutral-950">

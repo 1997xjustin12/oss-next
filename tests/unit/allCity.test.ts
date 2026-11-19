@@ -215,6 +215,13 @@ describe('redesigned sections (breadcrumbs, hero)', () => {
     assert.equal(s.difference.points[1].desc, 'Shipping from [Miami, FL](/where-to-buy-shipping-containers/miami-fl) keeps mileage and delivery costs down.')
   })
 
+  it('Popular Cities names the city, its depot area and its state', () => {
+    const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Miami, FL', depotPage: '/where-to-buy-shipping-containers/miami-fl', usedFrom: 1149 })
+    assert.equal(s.popular.heading, 'Popular Cities in [[Cocoa Beach, FL]]')
+    assert.ok(s.popular.body.startsWith('We deliver shipping containers throughout the Miami, FL area and across Florida.'))
+    assert.ok(s.popular.body.includes('](/all-city)'))
+  })
+
   it('leaves out a figure that quotes {price} when the depot has none', () => {
     const s = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { depot: 'Tampa, FL', depotPage: '/where-to-buy-shipping-containers/tampa-fl', usedFrom: null })
     assert.equal(s.hero.stats.length, ALL_CITY_TEMPLATE_DEFAULT.sections.hero.stats.length - 1)

@@ -187,6 +187,20 @@ export type AllCityDeliveriesText = {
   limit: number
 }
 
+/**
+ * "Popular Cities in <city>": links to other city pages of the same state
+ * (its "Popular Cities" list, without this page).
+ */
+export type AllCityPopularText = {
+  show: boolean
+  heading: string
+  body: string
+  /** How many cities (1 to 20). */
+  limit: number
+  /** The call button. Blank: none. */
+  button: string
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
@@ -196,6 +210,7 @@ export type AllCitySections = {
   howItWorks: AllCityHowItWorksText
   difference: AllCityDifferenceText
   deliveries: AllCityDeliveriesText
+  popular: AllCityPopularText
 }
 
 export type AllCityTemplate = {

@@ -159,6 +159,14 @@ const SECTIONS: AllCitySections = {
     placeLabel: 'Delivered to {place}',
     limit: 12,
   },
+  // Other city pages of the state (its Popular Cities list): the 2026-11-19 design. No region data, so the depot's area.
+  popular: {
+    show: true,
+    heading: 'Popular Cities in [[{city}, {ST}]]',
+    body: `We deliver shipping containers throughout the {depot} area and across {state}. Find your area below, or [see all shipping container locations](${ROUTES.ALL_CITY_INDEX}).`,
+    limit: 8,
+    button: 'Call For Expert Assistance',
+  },
 }
 
 export const ALL_CITY_TEMPLATE_DEFAULT: AllCityTemplate = {
