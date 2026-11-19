@@ -57,6 +57,8 @@ const spec: V<DepotFeaturedKey> = oneOf(...DEPOT_FEATURED_SPECS.map((s) => s.key
 
 /** Most figures a section's list may hold (the hero's stats). */
 const MAX_SECTION_ITEMS = 6
+/** Most questions the FAQ may hold. */
+const MAX_FAQ_ITEMS = 12
 
 /**
  * A section's wording, shaped as its seed: every string field a string (blank
@@ -132,6 +134,16 @@ function sections(raw: Record<string, unknown>, seed: AllCitySections): AllCityS
 
   // Popular Cities: a whole number of cities, 1 to 20 (the state's list holds at most 20).
   out.popular.limit = Math.min(20, Math.max(1, Math.round(out.popular.limit)))
+
+  // The FAQ may hold more than a list's usual six: up to MAX_FAQ_ITEMS questions, each a question and an answer.
+  const rawFaq = isObj(raw.faq) ? raw.faq : {}
+  if (Array.isArray(rawFaq.items)) {
+    const shape = seed.faq.items[0]
+    out.faq.items = rawFaq.items
+      .filter(isObj)
+      .slice(0, MAX_FAQ_ITEMS)
+      .map((item) => sectionText(item, shape))
+  }
   return out
 }
 

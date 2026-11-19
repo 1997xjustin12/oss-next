@@ -6,17 +6,19 @@ import { PageHeadScripts } from '@/components/shared/PageHeadScripts'
 import { QuoteForm } from '@/components/shared/QuoteForm'
 import { TrustedBySection } from '@/components/shared/TrustedBySection'
 import { ROUTES } from '@/config/routes'
-import { allCityDepotParts, allCityPath, resolveAllCitySections } from '@/lib/allCityPage'
+import { allCityDepotParts, allCityPath, resolveAllCitySections, templatePlainText } from '@/lib/allCityPage'
 import { OFFER_DEFAULT_PRICES, type OfferPrices } from '@/lib/data/homeOfferTabs'
 import { getLocationPageSeed } from '@/lib/data/locationPages'
 import { formatMoney } from '@/lib/formatters'
 import { locationPath } from '@/lib/locationPage'
-import { breadcrumbNode, graph, siteNodes, webPageNode } from '@/lib/schema'
+import { CONTACT_NUMBER } from '@/lib/helpers'
+import { breadcrumbNode, faqNode, graph, siteNodes, webPageNode } from '@/lib/schema'
 import { getAllCityLists } from '@/services/allCity.service'
 import { getDeliveredForDepot } from '@/services/deliveredContainer.service'
 import { getDepotLowestUsedBuy, getDepotStartingPrices } from '@/services/search.service'
 import { CityBreadcrumbs } from './CityBreadcrumbs'
 import { CityDeliveries } from './CityDeliveries'
+import { CityFaq } from './CityFaq'
 import { CityHero } from './CityHero'
 import { CityPopular } from './CityPopular'
 import { CityProducts } from './CityProducts'
@@ -38,7 +40,7 @@ const priceLabel = (price: number) => formatMoney(price).replace(/\.00$/, '')
  * Template, filled from the page and its depot. Static: every read is cached
  * (prices, cards, deliveries, the state's lists). The client code is small:
  * the Buy / Rent / Rent-To-Own tabs, the delivery carousel's arrows and the
- * Zoho quote form.
+ * Zoho quote form. The FAQ is also the page's FAQPage structured data.
  */
 export async function AllCityPage({ page, template, depot }: Props) {
   // The depot's id in the delivery records: its location page's (every city depot has one; a test checks).
@@ -55,7 +57,14 @@ export async function AllCityPage({ page, template, depot }: Props) {
     rent: starting.rent !== null ? priceLabel(starting.rent) : OFFER_DEFAULT_PRICES.rent,
     rto: starting.rto !== null ? priceLabel(starting.rto) : OFFER_DEFAULT_PRICES.rto,
   }
-  const sections = resolveAllCitySections(template, page, { depot: depot.depot, depotPage: locationPath(depot.locationSlug), usedFrom })
+  const sections = resolveAllCitySections(template, page, {
+    depot: depot.depot,
+    depotPage: locationPath(depot.locationSlug),
+    usedFrom,
+    // Real prices only (not the tabs' fallback figures): an FAQ quoting one the depot lacks is left out.
+    rentFrom: starting.rent !== null ? priceLabel(starting.rent) : null,
+    rtoFrom: starting.rto !== null ? priceLabel(starting.rto) : null,
+  })
   const { banner } = allCityDepotParts(depot, page)
   const path = allCityPath(page.slug)
   // The state's list on the /all-city index.
@@ -70,6 +79,10 @@ export async function AllCityPage({ page, template, depot }: Props) {
       { name: sections.breadcrumbs.state, path: stateHref },
       { name: sections.breadcrumbs.city },
     ]),
+    // The questions the page shows (CityFaq), as plain text.
+    sections.faq.show
+      ? faqNode(sections.faq.items.map((item) => ({ question: templatePlainText(item.question, CONTACT_NUMBER), answer: templatePlainText(item.answer, CONTACT_NUMBER) })))
+      : null,
   ])
 
   // The (market) layout provides <main>.
@@ -125,6 +138,7 @@ export async function AllCityPage({ page, template, depot }: Props) {
       {/* Off, it still renders its "View all cities" list: how search engines reach every city page. */}
       <CityPopular text={sections.popular} cities={lists.popular} viewAll={lists.viewAll} listOnly={!sections.popular.show} />
       {sections.quote.show && <QuoteForm heading={sections.quote.heading} body={sections.quote.body} points={sections.quote.points} />}
+      {sections.faq.show && <CityFaq text={sections.faq} />}
     </div>
   )
 }

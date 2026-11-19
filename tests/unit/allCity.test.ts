@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const { ALL_CITY_FLAGS, allSeedPages, decodeRow, getSeedPage, seedSlugs } = await import('@/lib/allCitySeed')
-const { accentCityInHeading, allCityDepotParts, allCityVars, buildAllCityLists, isListable, resolveAllCitySections, withoutPage } = await import('@/lib/allCityPage')
+const { accentCityInHeading, allCityDepotParts, allCityVars, buildAllCityLists, isListable, resolveAllCitySections, templatePlainText, withoutPage } = await import('@/lib/allCityPage')
 const { ALL_CITY_DEPOTS } = await import('@/lib/data/allCityDepots')
 const { ALL_CITY_TEMPLATE_DEFAULT } = await import('@/lib/data/allCityTemplate')
 const { LOCATION_PAGE_SLUGS } = await import('@/lib/data/locationPageSlugs')
@@ -215,6 +215,23 @@ describe('redesigned sections (breadcrumbs, hero)', () => {
     assert.equal(s.popular.heading, 'Popular Cities in [[Cocoa Beach, FL]]')
     assert.ok(s.popular.body.startsWith('We deliver shipping containers throughout the Miami, FL area and across Florida.'))
     assert.ok(s.popular.body.includes('](/all-city)'))
+  })
+
+  it('FAQ: fills the city and the depot’s prices; leaves out a question whose price is missing', () => {
+    const facts = { depot: 'Miami, FL', depotPage: '/where-to-buy-shipping-containers/miami-fl', usedFrom: 1149, rentFrom: '$95', rtoFrom: '$56.77' }
+    const full = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, facts).faq.items
+    assert.equal(full.length, 5)
+    assert.equal(full[0].question, 'How much does a shipping container cost in Cocoa Beach, FL?')
+    assert.ok(full[0].answer.startsWith('Used shipping containers in Cocoa Beach start at $1,149.'))
+    assert.ok(full[3].answer.includes('Rentals start at $95 a month') && full[3].answer.includes('Rent-to-own starts at $56.77 a month'))
+    const noRent = resolveAllCitySections(ALL_CITY_TEMPLATE_DEFAULT, cocoa, { ...facts, rentFrom: null }).faq.items
+    assert.equal(noRent.length, 4)
+    // Nothing left unfilled but {phone}, which the page renders as the call link.
+    assert.ok(noRent.every((item) => !item.answer.replaceAll('{phone}', '').includes('{')))
+  })
+
+  it('templatePlainText: structured data gets plain words and the number', () => {
+    assert.equal(templatePlainText('Call {phone} or see [our guide](/guide), [[today]].\n\nThanks', '(888) 977-9085'), 'Call (888) 977-9085 or see our guide, today. Thanks')
   })
 
   it('leaves out a figure that quotes {price} when the depot has none', () => {

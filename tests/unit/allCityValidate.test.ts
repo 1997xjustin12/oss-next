@@ -174,6 +174,13 @@ describe('conformAllCityTemplate', () => {
     assert.equal(at(99), 20)
   })
 
+  it('FAQ: up to 12 questions; a bad item is dropped', () => {
+    const items = Array.from({ length: 15 }, (_, i) => ({ question: 'Q' + i, answer: 'A' + i }))
+    const t = conformAllCityTemplate({ sections: { faq: { items: [...items.slice(0, 2), 'junk', ...items.slice(2)] } } })
+    assert.equal(t.sections.faq.items.length, 12)
+    assert.deepEqual(t.sections.faq.items[2], { question: 'Q2', answer: 'A2' })
+  })
+
   it('Get A Free Quote: points are text, at most six; the homepage’s words by default', () => {
     const t = conformAllCityTemplate({ sections: { quote: { points: ['One', 2, 'Three', 'a', 'b', 'c', 'd', 'e'] } } })
     assert.deepEqual(t.sections.quote.points, ['One', 'Three', 'a', 'b', 'c', 'd'])

@@ -66,7 +66,7 @@ export function accentCityInHeading(h1: string, page: Pick<AllCityPage, 'city' |
 /**
  * What the sections know of the page's depot: `{depot}`, `{depotCount}`,
  * `{depotPage}`, `{depotPlp}` (the listing at that depot) and, when there is
- * one, `{price}`.
+ * one, `{price}`, `{rentFrom}`, `{rtoFrom}`.
  */
 export type AllCityHeroFacts = {
   depot: string
@@ -74,6 +74,9 @@ export type AllCityHeroFacts = {
   depotPage: string
   /** The depot's lowest used container price; null leaves out what quotes it. */
   usedFrom: number | null
+  /** Its lowest monthly rent and rent-to-own, already written ("$95", "$56.77"); null or absent leaves out what quotes them. */
+  rentFrom?: string | null
+  rtoFrom?: string | null
 }
 
 const WHOLE_DOLLARS = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
@@ -83,9 +86,9 @@ const unfilled = (value: string, names: readonly string[]) => names.some((name) 
 
 /**
  * The redesigned sections' wording for one page: placeholders filled (the
- * page's, plus `{h1}`, `{depot}`, `{depotCount}`, `{depotPage}`, `{depotPlp}`, `{keyword}`
- * and `{price}`). A hero figure that quotes `{price}` is left out when the
- * depot has no price, rather than shown with a hole in it. On a depot-city
+ * page's, plus `{h1}`, `{depot}`, `{depotCount}`, `{depotPage}`, `{depotPlp}`, `{keyword}`,
+ * `{price}`, `{rentFrom}`, `{rtoFrom}`). A hero figure or an FAQ that quotes a
+ * price the depot does not have is left out, rather than shown with a hole in it. On a depot-city
  * page the products heading is `depotCityHeading` (its keyword heading, by
  * default) unless that comes out blank.
  */
@@ -102,9 +105,11 @@ export function resolveAllCitySections(template: AllCityTemplate, page: AllCityP
     keyword: page.keywordHeading?.trim() ? accentCityInHeading(page.keywordHeading.trim(), page) : '',
   }
   if (facts.usedFrom !== null) vars.price = WHOLE_DOLLARS.format(facts.usedFrom)
+  if (facts.rentFrom) vars.rentFrom = facts.rentFrom
+  if (facts.rtoFrom) vars.rtoFrom = facts.rtoFrom
 
   const sections = fillDeep(template.sections, vars)
-  const missing = facts.usedFrom === null ? ['price'] : []
+  const missing = (['price', 'rentFrom', 'rtoFrom'] as const).filter((name) => !(name in vars))
   const depotCityHeading = sections.products.depotCityHeading.trim()
   return {
     ...sections,
@@ -113,7 +118,22 @@ export function resolveAllCitySections(template: AllCityTemplate, page: AllCityP
       ...sections.products,
       heading: page.variant === 'depotCity' && depotCityHeading ? depotCityHeading : sections.products.heading,
     },
+    // A question whose answer quotes a price the depot does not have is left out (it is also the FAQ structured data).
+    faq: { ...sections.faq, items: sections.faq.items.filter((item) => !unfilled(item.question, missing) && !unfilled(item.answer, missing)) },
   }
+}
+
+/**
+ * Template text as plain text, for structured data: a link is its label, an
+ * accent its words, `{phone}` the number, blank lines a space.
+ */
+export function templatePlainText(text: string, phone: string): string {
+  return text
+    .replace(/\[\[(.*?)\]\]/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replaceAll('{phone}', phone)
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 /** Whether a page is in its state's lists at all (hidden and redirected pages are not). */

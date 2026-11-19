@@ -113,6 +113,38 @@ const SECTIONS: AllCitySections = {
     body: QUOTE_FORM_BODY,
     points: [...QUOTE_FORM_POINTS],
   },
+  // The 2026-11-19 FAQ, word for word; {phone} is the sales line (a call link on the page).
+  faq: {
+    show: true,
+    heading: 'Frequently Asked Questions',
+    items: [
+      {
+        question: 'How much does a shipping container cost in {city}, {ST}?',
+        answer:
+          'Used shipping containers in {city} start at {price}. The final price depends on the size, the condition, and the delivery distance from the depot. Get a free quote for the exact price at your address. The quote you receive is the final price, with no hidden fees.',
+      },
+      {
+        question: 'How long does shipping container delivery take in {city}, {ST}?',
+        answer:
+          'Delivery typically takes 3 to 5 days after checkout from our main depot in {ST}. Timing depends on container availability and your delivery address. Call {phone} to check the timing for your location.',
+      },
+      {
+        question: 'What is the difference between wind and watertight, cargo-worthy, and as is containers?',
+        answer:
+          'A wind and watertight (WWT) container is sealed against wind and rain and is a good fit for storage. A cargo-worthy container is certified for ocean shipping. An as-is container is sold in its current condition, usually at the lowest price. New containers are one-trip units that have been shipped once.',
+      },
+      {
+        question: 'Can I rent or rent-to-own a shipping container in {city}, {ST}?',
+        answer:
+          'Yes. Rentals start at {rentFrom} a month for short-term or long-term use. Rent-to-own starts at {rtoFrom} a month. You pay in monthly installments and own the container at the end of your term. Sales tax may apply in some areas.',
+      },
+      {
+        question: 'What size shipping container should I buy or rent?',
+        answer:
+          'A 20ft container fits most driveways and suits home storage, tools, and small business inventory. A 40ft container doubles the space for larger inventory and equipment. A 40ft high cube adds about a foot of height for tall items and workshop setups. Call {phone} and our team will help you pick the right size.',
+      },
+    ],
+  },
 }
 
 export const ALL_CITY_TEMPLATE_DEFAULT: AllCityTemplate = {

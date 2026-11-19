@@ -187,6 +187,19 @@ export type AllCityQuoteText = {
   points: string[]
 }
 
+/**
+ * "Frequently Asked Questions": an accordion, the first one open, and the
+ * page's FAQPage structured data. Besides the page placeholders, the answers
+ * fill `{price}` (the depot's lowest used container price), `{rentFrom}` and
+ * `{rtoFrom}` (its lowest monthly rent and rent-to-own); a question whose
+ * answer needs a price the depot does not have is left out.
+ */
+export type AllCityFaqText = {
+  show: boolean
+  heading: string
+  items: { question: string; answer: string }[]
+}
+
 export type AllCitySections = {
   breadcrumbs: AllCityBreadcrumbsText
   hero: AllCityHeroText
@@ -198,6 +211,7 @@ export type AllCitySections = {
   deliveries: AllCityDeliveriesText
   popular: AllCityPopularText
   quote: AllCityQuoteText
+  faq: AllCityFaqText
 }
 
 export type AllCityTemplate = {
