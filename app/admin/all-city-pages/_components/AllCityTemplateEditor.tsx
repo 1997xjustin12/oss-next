@@ -56,7 +56,8 @@ export function AllCityTemplateEditor({ initialValue, published, previewPages, p
     'sections.hero.heading': { label: 'Heading (the page’s h1)', help: '{h1} is each page’s own heading (its screen), which matches its title and keyword: keep it for SEO.' },
     'sections.hero.body': { label: 'Text under the heading', multiline: true },
     'sections.hero.stats': { label: 'Figures under the hero', itemLabel: 'Figure', newItem: { value: '', label: '' } },
-    'sections.hero.quote': { label: 'Free-quote card', help: 'Its button is not connected yet.' },
+    'sections.hero.quote': { label: 'Free-quote card', help: 'Hidden for now: its button is not connected to a Zoho form yet. Turn it on once it is.' },
+    'sections.hero.quote.show': { label: 'Show it' },
     'sections.products': {
       label: 'Find The Right Shipping Container',
       help: 'The container cards, priced and pictured from the page’s depot; a card the depot has no listing for is hidden. Also: {depotPage} the depot’s location page, {keyword} a depot-city page’s keyword heading.',

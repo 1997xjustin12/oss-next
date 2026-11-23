@@ -33,7 +33,9 @@ const SECTIONS: AllCitySections = {
       { value: '3–7 Days', label: 'Typical delivery after checkout' },
       { value: '{depotCount}', label: 'Ships from {depot}' },
     ],
+    // Hidden (2026-11-23) until the team has a Zoho form for it; Admin → Template → Hero → Free-quote card turns it back on.
     quote: {
+      show: false,
       heading: 'Get your free quote',
       subheading: 'Same day reply. The quote is the final price.',
       buyLabel: 'Buy',
