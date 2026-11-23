@@ -75,6 +75,8 @@ type Props = {
   relatedProducts: ProductHit[];
   /** Render the V2 info panel — the admin switch, read by the page. */
   panelV2?: boolean;
+  /** An accessory's description, already cleaned on the server (lib/productDescription.ts). */
+  descriptionHtml?: string;
 };
 
 /**
@@ -165,7 +167,7 @@ function useLeavingRef() {
   return leaving;
 }
 
-export function ProductDetail({ product, relatedProducts, panelV2 = false }: Props) {
+export function ProductDetail({ product, relatedProducts, panelV2 = false, descriptionHtml = "" }: Props) {
   // Shared across ProductVariantShell, BodyTabsSection, and FaqAccordion so
   // they all react to whichever variant the shopper currently has selected.
   const [activeProduct, setActiveProduct] = useState(product);
@@ -386,7 +388,7 @@ export function ProductDetail({ product, relatedProducts, panelV2 = false }: Pro
   };
 
   if (!isContainerHit(product)) {
-    return <AccessoryDetail product={product} />;
+    return <AccessoryDetail product={product} descriptionHtml={descriptionHtml} />;
   }
 
   const containerVariant = resolveContainerVariant(activeProduct);

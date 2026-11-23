@@ -10,6 +10,7 @@ import { getContainerVideo } from '@/lib/containerVideo'
 import { getContainerContent } from '@/lib/data/pdpShippingContainers'
 import { breadcrumbNode, faqNode, graph, productNode, siteNodes } from '@/lib/schema'
 import { focusKeyphrase, productSeoDescription, productSeoTitle } from '@/lib/productSeo'
+import { productDescriptionHtml } from '@/lib/productDescription'
 import { JsonLd } from '@/components/shared/JsonLd'
 import { ROUTES } from '@/config/routes'
 import { ProductDetail } from './_components/ProductDetail'
@@ -210,7 +211,13 @@ async function ProductContent({ params }: Props) {
           server HTML already: the tab section renders every panel (hiding the
           inactive ones) and the FAQ keeps collapsed answers in the DOM. The old
           <noscript> copy crashed cold renders — see BodyTabsSection. */}
-      <ProductDetail product={product} relatedProducts={related_products} panelV2={panelV2} />
+      <ProductDetail
+        product={product}
+        relatedProducts={related_products}
+        panelV2={panelV2}
+        // An accessory's backend description, cleaned here on the server (cheerio stays out of the client bundle).
+        descriptionHtml={isContainerHit(product) ? '' : productDescriptionHtml(product.body_html)}
+      />
     </>
   )
 }
