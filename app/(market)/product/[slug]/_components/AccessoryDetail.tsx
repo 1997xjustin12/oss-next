@@ -61,15 +61,15 @@ export function AccessoryDetail({ product }: Props) {
   }
 
   return (
-    <div className="bg-theme-bg text-theme-dark min-h-screen">
+    <div className="page-fill bg-theme-bg text-theme-dark dark:bg-neutral-950 dark:text-neutral-100">
       {/* BREADCRUMB */}
-      <div className="flex items-center gap-1.5 flex-wrap px-4 sm:px-[5%] py-3 text-xs sm:text-sm text-theme-muted bg-theme-subtle border-b border-theme-border">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 flex-wrap px-4 sm:px-[5%] py-3 text-xs sm:text-sm text-theme-muted bg-theme-subtle border-b border-theme-border dark:bg-neutral-900 dark:border-neutral-800 dark:text-neutral-400">
         <Link href={ROUTES.HOME} className="hover:text-theme-primary transition-colors">Home</Link>
-        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+        <ChevronRight aria-hidden className="w-3.5 h-3.5 opacity-40" />
         <PlpLink href={ROUTES.PLP_ACCESSORIES} className="hover:text-theme-primary transition-colors">Container Accessories</PlpLink>
-        <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-        <span className="text-theme-dark font-semibold">{product.title}</span>
-      </div>
+        <ChevronRight aria-hidden className="w-3.5 h-3.5 opacity-40" />
+        <span aria-current="page" className="text-theme-dark font-semibold dark:text-white">{product.title}</span>
+      </nav>
 
       <section className="px-4 sm:px-[5%] py-8 sm:py-14">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-start">
@@ -88,7 +88,7 @@ export function AccessoryDetail({ product }: Props) {
                 {visibleCategories.map(c => (
                   <span
                     key={`category-${c.id ?? c.category_name}`}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide bg-theme-subtle dark:bg-white/5 text-theme-mid border border-theme-border px-2.5 py-1 rounded"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide bg-theme-subtle dark:bg-white/5 text-theme-mid dark:text-neutral-300 border border-theme-border dark:border-neutral-700 px-2.5 py-1 rounded"
                   >
                     <Tag className="w-3 h-3" />
                     {c.category_name}
@@ -115,11 +115,11 @@ export function AccessoryDetail({ product }: Props) {
                   {[1, 2, 3, 4, 5].map(n => (
                     <Star
                       key={n}
-                      className={`w-4 h-4 ${n <= Math.round(ratingNum) ? 'fill-amber-400 text-amber-400' : 'text-theme-border'}`}
+                      className={`w-4 h-4 ${n <= Math.round(ratingNum) ? 'fill-amber-400 text-amber-400' : 'text-theme-border dark:text-neutral-700'}`}
                     />
                   ))}
                 </div>
-                <span className="text-sm font-semibold text-theme-mid">{ratingNum.toFixed(1)}</span>
+                <span className="text-sm font-semibold text-theme-mid dark:text-neutral-300">{ratingNum.toFixed(1)}</span>
               </div>
             )}
 
@@ -131,18 +131,18 @@ export function AccessoryDetail({ product }: Props) {
                   In Stock
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 font-bold px-2.5 py-1 rounded bg-theme-subtle text-theme-muted dark:bg-white/5">
+                <span className="inline-flex items-center gap-1.5 font-bold px-2.5 py-1 rounded bg-theme-subtle text-theme-muted dark:bg-white/5 dark:text-neutral-400">
                   <XCircle className="w-3.5 h-3.5" />
                   Out of Stock
                 </span>
               )}
               {sku && (
-                <span className="text-theme-muted">
-                  SKU: <span className="font-mono font-semibold text-theme-mid">{sku}</span>
+                <span className="text-theme-muted dark:text-neutral-400">
+                  SKU: <span className="font-mono font-semibold text-theme-mid dark:text-neutral-200">{sku}</span>
                 </span>
               )}
               {location && location !== DEFAULT_LOCATION && (
-                <span className="flex items-center gap-1 text-theme-muted">
+                <span className="flex items-center gap-1 text-theme-muted dark:text-neutral-400">
                   <MapPin className="w-3.5 h-3.5" />
                   {location}
                 </span>
@@ -150,12 +150,12 @@ export function AccessoryDetail({ product }: Props) {
             </div>
 
             {/* Price */}
-            <div className="py-5 border-t border-b border-theme-border">
+            <div className="py-5 border-t border-b border-theme-border dark:border-neutral-800">
               <p className="text-4xl sm:text-5xl font-extrabold tracking-tight dark:text-white">
                 {product.sale_price > 0 ? formatMoney(product.sale_price) : 'Call for Price'}
               </p>
               {product.sale_price > 0 && (
-                <p className="text-sm text-theme-muted mt-1.5">
+                <p className="text-sm text-theme-muted mt-1.5 dark:text-neutral-400">
                   Per unit &middot; Shipping &amp; taxes calculated at checkout
                 </p>
               )}
@@ -163,8 +163,8 @@ export function AccessoryDetail({ product }: Props) {
 
             {/* Condition detail */}
             {condition && (
-              <div className="bg-theme-subtle dark:bg-white/5 border border-theme-border rounded-lg px-4 py-3.5">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-theme-muted mb-0.5">Condition</p>
+              <div className="bg-theme-subtle dark:bg-white/5 border border-theme-border dark:border-neutral-700 rounded-lg px-4 py-3.5">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-theme-muted dark:text-neutral-400 mb-0.5">Condition</p>
                 <p className="text-sm font-semibold dark:text-white">{condition}</p>
               </div>
             )}
@@ -172,6 +172,7 @@ export function AccessoryDetail({ product }: Props) {
             {/* CTA row */}
             <div className="flex flex-col sm:flex-row gap-3">
               <button
+                type="button"
                 onClick={handleAddToCart}
                 className="flex-1 flex items-center justify-center gap-2.5 bg-theme-primary hover:bg-theme-primary-dark text-white font-bold text-base px-6 py-3.5 rounded-lg transition-colors"
               >
@@ -180,7 +181,7 @@ export function AccessoryDetail({ product }: Props) {
               </button>
               <a
                 href={`tel:${CONTACT_NUMBER.replace(/[^\d+]/g, '')}`}
-                className="flex items-center justify-center gap-2 bg-theme-subtle dark:bg-white/5 hover:bg-theme-border dark:hover:bg-white/10 text-theme-dark dark:text-white font-bold px-5 py-3.5 rounded-lg border border-theme-border transition-colors"
+                className="flex items-center justify-center gap-2 bg-theme-subtle dark:bg-white/5 hover:bg-theme-border dark:hover:bg-white/10 text-theme-dark dark:text-white font-bold px-5 py-3.5 rounded-lg border border-theme-border dark:border-neutral-700 transition-colors"
               >
                 <Phone className="w-4 h-4 shrink-0" />
                 Call Us
