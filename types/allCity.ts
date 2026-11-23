@@ -275,3 +275,14 @@ export type AllCityPage = {
 
 /** A link in one of the two city lists. */
 export type AllCityLink = { slug: string; city: string }
+
+/**
+ * An old URL outside /all-city/ that answers a 301 to an /all-city/ page
+ * (Admin → All City Pages → Old URL redirects).
+ */
+export type AllCityOldUrl = {
+  /** The old path on this site, normalised: "/storage-kennesaw" (no host, query or trailing slash; lower case). */
+  from: string
+  /** The /all-city/ page's slug it goes to. */
+  to: string
+}

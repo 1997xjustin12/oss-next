@@ -6,6 +6,8 @@ import { CACHE_TAGS } from '@/config/cache'
 import { currentAdminUser } from '@/lib/adminGuard'
 import { ALL_CITY_BULK_LIMIT, applyAllCityBulkChange, matchesAllCityFilter, toAllCityDepotForm, toAllCityPageForm, type AllCityBulkChange, type AllCityFilter } from '@/lib/allCityAdmin'
 import { getSeedPage } from '@/lib/allCitySeed'
+import { checkAllCityOldUrls, type OldUrlRowInput } from '@/lib/allCityOldUrls'
+import { forgetAllCityOldUrls } from '@/lib/allCityOldUrlRedirects'
 import { ALL_CITY_DEPOTS } from '@/lib/data/allCityDepots'
 import { SLUG_PATTERN, conformAllCityDepot, conformAllCityPage, conformAllCityTemplate } from '@/lib/allCityValidate'
 import {
@@ -197,6 +199,47 @@ export async function publishAllCityTemplateAction(): Promise<AdminActionResult>
 export async function discardAllCityTemplateAction(): Promise<AdminActionResult> {
   await admin()
   await discardAllCityDraft('template')
+  return ok()
+}
+
+// ─── Old URL redirects (old paths that 301 to an /all-city/ page) ────────────
+
+/**
+ * Saves the list as a draft, every row checked: the old URL is a path on this
+ * site and not one of its own routes, each old URL appears once, and each new
+ * URL is an /all-city/ page that exists and renders (not hidden, not itself
+ * redirected, so a visitor never lands on a 404 or a second hop).
+ */
+export async function saveAllCityOldUrlsDraftAction(input: OldUrlRowInput[]): Promise<AdminActionResult> {
+  const by = await admin()
+  if (!Array.isArray(input)) return fail('Not saved: the list is not valid.')
+  const { rows, errors } = checkAllCityOldUrls(input)
+  const targets = [...new Set(rows.map((row) => row.to))]
+  const pages = await readAllCityWorkingCopies(targets)
+  rows.forEach((row) => {
+    const page = pages.get(row.to)
+    if (!page) errors.push(`${row.from}: /all-city/${row.to} does not exist.`)
+    else if (page.hidden || page.redirectTo) errors.push(`${row.from}: /all-city/${row.to} is ${page.hidden ? 'hidden' : 'itself redirected'}; point it at a live page.`)
+  })
+  if (errors.length) {
+    const shown = errors.slice(0, 8).join(' ')
+    return fail(`Not saved. ${shown}${errors.length > 8 ? ` …and ${errors.length - 8} more.` : ''}`)
+  }
+  await saveAllCityDraft('redirects', undefined, rows, by)
+  return ok()
+}
+
+export async function publishAllCityOldUrlsAction(): Promise<AdminActionResult> {
+  const by = await admin()
+  if (!(await publishAllCityDraft('redirects', undefined, by))) return fail('Nothing to publish: there is no draft.')
+  // This instance's proxy reads the list again on its next request; other instances within a minute.
+  forgetAllCityOldUrls()
+  return ok()
+}
+
+export async function discardAllCityOldUrlsAction(): Promise<AdminActionResult> {
+  await admin()
+  await discardAllCityDraft('redirects')
   return ok()
 }
 
