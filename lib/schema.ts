@@ -210,8 +210,9 @@ export function productNode(
   now: Date = new Date(),
 ): SchemaNode {
   const sku = product.variants?.[0]?.sku
-  const keyphrase = focusKeyphrase(product)
   const isContainer = isContainerHit(product)
+  // Containers only: an accessory carries no focus keyphrase (2026-11-23).
+  const keyphrase = isContainer ? focusKeyphrase(product) : null
   const location = getCustomFieldValue(product, 'location')
   const realLocation = location && location !== DEFAULT_LOCATION ? location : undefined
   const condition = getCustomFieldValue(product, 'condition')
