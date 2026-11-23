@@ -15,11 +15,15 @@ import { keyphraseHeading } from '@/lib/productSeo'
 import { ROUTES } from '@/config/routes'
 import type { ProductHit } from '@/types/product'
 
-type Props = { product: ProductHit }
+type Props = {
+  product: ProductHit
+  /** The backend description, cleaned on the server (lib/productDescription.ts). Empty: no section. */
+  descriptionHtml?: string
+}
 
 const CONTAINER_CATEGORY_NAMES = ['Shipping Containers', 'Generic Product Page']
 
-export function AccessoryDetail({ product }: Props) {
+export function AccessoryDetail({ product, descriptionHtml = '' }: Props) {
   const { addItem } = useCart()
   const [added, setAdded] = useState(false)
 
@@ -190,6 +194,33 @@ export function AccessoryDetail({ product }: Props) {
           </div>
         </div>
       </section>
+
+      {descriptionHtml && (
+        <section aria-labelledby="accessory-description" className="border-t border-theme-border px-4 pb-12 pt-8 sm:px-[5%] sm:pb-16 sm:pt-12 dark:border-neutral-800">
+          <div className="mx-auto max-w-6xl">
+            <h2 id="accessory-description" className="text-xl font-extrabold tracking-tight sm:text-2xl dark:text-white">
+              Description
+            </h2>
+            <div
+              className={DESCRIPTION}
+              // Cleaned on the server to an allowlist of formatting tags (lib/productDescription.ts).
+              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+            />
+          </div>
+        </section>
+      )}
     </div>
   )
 }
+
+/** The description's typography: the backend HTML has no classes of its own. */
+const DESCRIPTION = [
+  'mt-4 max-w-3xl text-base leading-relaxed text-theme-mid dark:text-neutral-300',
+  '[&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_b]:font-bold [&_strong]:text-theme-dark dark:[&_strong]:text-white',
+  '[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-bold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-bold [&_h4]:mt-4 [&_h4]:mb-1 [&_h4]:font-semibold',
+  '[&_h2]:text-theme-dark [&_h3]:text-theme-dark dark:[&_h2]:text-white dark:[&_h3]:text-white',
+  '[&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1',
+  '[&_a]:text-theme-primary [&_a]:underline [&_a]:underline-offset-2 dark:[&_a]:text-red-400',
+  '[&_table]:my-4 [&_table]:w-full [&_table]:text-sm [&_td]:border [&_td]:border-theme-border [&_td]:p-2 [&_th]:border [&_th]:border-theme-border [&_th]:p-2 [&_th]:text-left dark:[&_td]:border-neutral-700 dark:[&_th]:border-neutral-700',
+  '[&_img]:my-4 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg [&_blockquote]:border-l-4 [&_blockquote]:border-theme-border [&_blockquote]:pl-4 [&_blockquote]:italic',
+].join(' ')
