@@ -24,6 +24,15 @@ type Props = { params: Promise<{ slug: string }> }
 export const prefetch = 'partial'
 
 /**
+ * Allowed to block, on purpose: ProductPage reads `params` above its Suspense
+ * boundary so an unknown handle answers a real 404 status (see its comment).
+ * Without this, dev's instant-navigation check reports "encountered runtime
+ * data during prerendering" on every product outside generateStaticParams.
+ * Dev-only validation: the build and production behaviour are unchanged.
+ */
+export const instant = false
+
+/**
  * A few products are built at deploy time. Every other handle gets the App
  * Shell on its first request, is rendered with its params in the background,
  * and is then served whole from the cache until its tags or cache life expire —
