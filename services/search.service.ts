@@ -29,6 +29,20 @@ const client = new Client({
 const INDEX = cleanEnv(process.env.NEXT_PUBLIC_SEARCH_INDEX) || 'onsite_products_index'
 
 /**
+ * "This product is for sale": the one filter every storefront read uses (the
+ * listings, the PDP and its related products, the sitemap, the feeds).
+ *
+ * `published`, the backend's own switch, not WordPress's `status`. Until
+ * 2026-11-23 the two agreed on every document, because every product came from
+ * the WordPress import. A product created in the new backend has
+ * `published: true` but `status: null`, so it 404ed on its own page and was
+ * missing from every list (sea-rail-…-clamp-brand-new-380mm). Checked on the
+ * switch: no document has `status: 'publish'` without `published: true`, so
+ * nothing that showed before disappears.
+ */
+const PUBLISHED = { term: { published: true } } as const
+
+/**
  * Every category an accessory is filed under. Checked against the index on
  * 2026-10-26: "Accessories" (161 products) is spelled with a double s. The
  * single-s "Accesories" this list used to hold matches nothing, so products
@@ -211,14 +225,11 @@ async function customFieldsSearch(input: CustomFieldsSearchInput) {
    * option, priced, and could be added to the cart. A draft container was
    * purchasable on the Chicago depot's pages, which carried 45 of them.
    *
-   * `status` rather than `published`: the two agree exactly on every document,
-   * and this is the field `getAllProductHandles` and `getAllProductsForFeed`
-   * already filter on, so the sitemap, the feeds and the storefront now answer
-   * the same question the same way. It is a `text` field, so a `term` query
-   * matches on its single analysed token — aggregating on it needs
-   * `status.keyword` instead.
+   * The same filter (PUBLISHED) as `getAllProductHandles` and
+   * `getAllProductsForFeed`, so the sitemap, the feeds and the storefront
+   * answer the same question the same way.
    */
-  filterClauses.push({ term: { status: 'publish' } })
+  filterClauses.push(PUBLISHED)
 
   const esResponse = await client.search({
     index: INDEX,
@@ -712,9 +723,8 @@ async function lookUpProduct(handle: string): Promise<ProductDetailResponse | nu
         bool: {
           filter: [
             { term: { 'handle.keyword': handle } },
-            // Same field the sitemap, the feeds and cachedCustomFieldsSearch
-            // filter on — see the note there about `status` being a text field.
-            { term: { status: 'publish' } },
+            // The same filter as the sitemap, the feeds and the listings.
+            PUBLISHED,
           ],
         },
       },
@@ -773,7 +783,7 @@ async function searchProductsByIds(productIds: (string | number)[]): Promise<Pro
             // product it cannot resolve — the line reads "No longer available"
             // and Buy Again returns early rather than re-adding it. Which is
             // the honest outcome for something withdrawn from sale since.
-            { term: { status: 'publish' } },
+            PUBLISHED,
           ],
         },
       },
@@ -834,7 +844,7 @@ async function searchProductsBySkus(skus: string[]): Promise<ProductHit[] | type
           // longer in the catalogue is dropped: it cannot be ordered". A
           // withdrawn product is exactly that, so this makes the rule true
           // rather than leaving an unorderable line to reach checkout.
-          filter: [{ term: { status: 'publish' } }],
+          filter: [PUBLISHED],
         },
       },
     })
@@ -876,7 +886,7 @@ async function listAllProductHandles(): Promise<ProductHandleEntry[]> {
     const esResponse = await client.search({
       index: INDEX,
       size: PAGE_SIZE,
-      query: { term: { status: 'publish' } },
+      query: PUBLISHED,
       _source: ['handle', 'updated_at'],
       sort: [{ _doc: { order: 'asc' } }],
       ...(searchAfter ? { search_after: searchAfter } : {}),
@@ -916,7 +926,7 @@ export async function getAllProductsForFeed(): Promise<FormattedContainerHit[]> 
     const esResponse = await client.search({
       index: INDEX,
       size: PAGE_SIZE,
-      query: { term: { status: 'publish' } },
+      query: PUBLISHED,
       _source: ['objectID', 'title', 'handle', 'variants', 'images', 'product_category', 'custom_fields'],
       sort: [{ _doc: { order: 'asc' } }],
       ...(searchAfter ? { search_after: searchAfter } : {}),
@@ -988,7 +998,7 @@ export async function cachedEsSearch(input: SearchInput) {
   // API, the MCP tools and the Markdown renderer all come through here, and
   // none of them should be offering something that is not for sale. Pushed
   // after the caller's own filters so it cannot be displaced by one of them.
-  filters.push({ term: { status: 'publish' } })
+  filters.push(PUBLISHED)
 
   const aggs        = buildAggs(facets)
   const sortClauses = buildSort(sortParam)
