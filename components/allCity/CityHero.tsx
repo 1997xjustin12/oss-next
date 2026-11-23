@@ -17,7 +17,8 @@ const ACCENT = 'text-amber-300'
  * label, the page's h1 (its own SEO heading, the city part in amber), a line
  * on buying, renting and delivery, the free-quote card, and the figures
  * underneath. A Server Component: the quote card's tabs are radio buttons
- * styled with CSS, so nothing here needs script.
+ * styled with CSS, so nothing here needs script. The card is off by default
+ * (`quote.show`); without it the text takes the full width.
  */
 export function CityHero({ text, background }: Props) {
   return (
@@ -26,7 +27,11 @@ export function CityHero({ text, background }: Props) {
       {/* Darker on a phone, where the text runs over the busiest part of the photo. */}
       <div aria-hidden className="absolute inset-0 -z-10 bg-[#0b2b44]/80 lg:bg-[#0b2b44]/60 dark:bg-[#06192a]/85" />
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] lg:items-center lg:gap-12 xl:gap-20">
+      <div
+        className={
+          text.quote.show ? 'grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] lg:items-center lg:gap-12 xl:gap-20' : undefined
+        }
+      >
         <div>
           <GoogleReviewsBadge tone="onDark" showRating size="sm" />
           {text.badge.trim() && (
@@ -45,7 +50,7 @@ export function CityHero({ text, background }: Props) {
           </p>
         </div>
 
-        <QuoteCard text={text.quote} />
+        {text.quote.show && <QuoteCard text={text.quote} />}
       </div>
 
       {text.stats.length > 0 && (
