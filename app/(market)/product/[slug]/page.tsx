@@ -102,7 +102,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Storage Solutions" suffix: it was written as the whole title (as Yoast's
   // was), and with the suffix most run past what a results page shows.
   const seoTitle = productSeoTitle(product)
-  const keyphrase = focusKeyphrase(product)
+  // Containers only: an accessory page carries no focus keyphrase (2026-11-23).
+  const keyphrase = isContainerHit(product) ? focusKeyphrase(product) : null
 
   return {
     title: seoTitle ? { absolute: seoTitle } : product.title,

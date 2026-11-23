@@ -11,7 +11,6 @@ import { formatMoney } from '@/lib/formatters'
 import { DEFAULT_LOCATION } from '@/lib/constants'
 import { CONTACT_NUMBER } from '@/lib/helpers'
 import { normaliseRating } from '@/lib/ratings'
-import { keyphraseHeading } from '@/lib/productSeo'
 import { ROUTES } from '@/config/routes'
 import type { ProductHit } from '@/types/product'
 
@@ -46,7 +45,6 @@ export function AccessoryDetail({ product, descriptionHtml = '' }: Props) {
     )
   const promoTag = product.tags?.find((t) => !/stock/i.test(t))
   const inStock = isInStockHit(product)
-  const keyphrase = keyphraseHeading(product)
 
   function handleAddToCart() {
     addItem({
@@ -80,7 +78,7 @@ export function AccessoryDetail({ product, descriptionHtml = '' }: Props) {
 
           {/* ── Gallery ── */}
           <div className="w-full">
-            <ProductImageGallery images={images} title={product.title} tag={promoTag} inStock={inStock} keyphrase={keyphrase} />
+            <ProductImageGallery images={images} title={product.title} tag={promoTag} inStock={inStock} />
           </div>
 
           {/* ── Info Panel ── */}
@@ -101,16 +99,8 @@ export function AccessoryDetail({ product, descriptionHtml = '' }: Props) {
               </div>
             )}
 
-            {/* Title, led by the focus keyphrase where there is one (lib/productSeo.ts), as on a container. */}
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight dark:text-white">
-              {keyphrase ? (
-                <>
-                  <span className="text-theme-primary">{keyphrase}:</span> {product.title}
-                </>
-              ) : (
-                product.title
-              )}
-            </h1>
+            {/* The product's title only: the focus keyphrase leads the title on container pages, never on an accessory's (2026-11-23). */}
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight dark:text-white">{product.title}</h1>
 
             {/* Star rating */}
             {ratingNum > 0 && (
