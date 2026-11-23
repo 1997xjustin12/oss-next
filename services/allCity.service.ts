@@ -152,8 +152,25 @@ export async function getAllCityDepot(key: string): Promise<AllCityDepot | null>
   return (await getAllCityDepots())[key] ?? null
 }
 
-/** The published records of every edited page (one set read, one multi-get). */
-async function publishedEdits(): Promise<Map<string, AllCityPage>> {
+/**
+ * The read in flight, shared: the /all-city index builds every state's lists at
+ * once (getAllCityDirectory), and each state used to read every edited page
+ * itself — one identical multi-get per state, all in parallel, which on a slow link overran
+ * the prerender's cache-fill limit and failed the build (2026-11-23). Callers
+ * that arrive while a read is running share it; the next call after it settles
+ * reads again, so a publish is never served stale from here.
+ */
+let editsInFlight: Promise<Map<string, AllCityPage>> | null = null
+
+/** The published records of every edited page (one set read, one multi-get), one read at a time. */
+function publishedEdits(): Promise<Map<string, AllCityPage>> {
+  editsInFlight ??= readPublishedEdits().finally(() => {
+    editsInFlight = null
+  })
+  return editsInFlight
+}
+
+async function readPublishedEdits(): Promise<Map<string, AllCityPage>> {
   const redis = getRedisClient()
   const slugs = await redis.smembers(PAGES_SET)
   if (!slugs.length) return new Map()
