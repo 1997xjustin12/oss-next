@@ -98,6 +98,14 @@ describe('conformAllCityTemplate', () => {
     assert.equal(t.sections.hero.quote.heading, ALL_CITY_TEMPLATE_DEFAULT.sections.hero.quote.heading)
   })
 
+  it('hides the hero quote card unless the template turns it on (no Zoho form for it yet)', () => {
+    assert.equal(ALL_CITY_TEMPLATE_DEFAULT.sections.hero.quote.show, false)
+    // A template saved before the switch existed: hidden.
+    assert.equal(conformAllCityTemplate({ sections: { hero: { quote: { button: 'Send' } } } }).sections.hero.quote.show, false)
+    assert.equal(conformAllCityTemplate({ sections: { hero: { quote: { show: true } } } }).sections.hero.quote.show, true)
+    assert.equal(conformAllCityTemplate({ sections: { hero: { quote: { show: 'yes' } } } }).sections.hero.quote.show, false)
+  })
+
   it('container cards: an unknown listing is dropped, a bad link keeps the default', () => {
     const t = conformAllCityTemplate({
       sections: {

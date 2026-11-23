@@ -33,6 +33,8 @@ export type AllCityHeroStat = { value: string; label: string }
 
 /** The hero's free-quote card. Its sending is not wired yet (a later step). */
 export type AllCityQuoteCardText = {
+  /** Off by default (2026-11-23): hidden until a Zoho form is connected to it. */
+  show: boolean
   heading: string
   subheading: string
   buyLabel: string
