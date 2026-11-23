@@ -9,6 +9,7 @@ import { HOME_PREVIEW_PARAM, HOME_VARIANTS } from '@/config/homeAb'
 import { recordAgentHit } from '@/lib/agentLog'
 import { isNativePath } from '@/config/routes'
 import { ORDER_STATUS_DEMO_ID } from '@/lib/data/orderStatusDemo'
+import { allCityOldUrlTarget } from '@/lib/allCityOldUrlRedirects'
 
 // ── Maintenance wall ────────────────────────────────────────────────────────
 // When the wall is up, every request is served the /maintenance page with a
@@ -285,6 +286,14 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const toAccountOrders = handleOrderStatusWhileLoggedIn(request)
   if (toAccountOrders) return toAccountOrders
 
+  // Before the WordPress 404 check: an old URL keeps redirecting even after
+  // its WordPress page is gone from the backend.
+  const toAllCity = await handleAllCityOldUrl(request)
+  if (toAllCity) {
+    await logAgent(request, 301)
+    return toAllCity
+  }
+
   // Real 404s for missing WordPress paths. Must happen here, before anything
   // streams: once the catch-all's Suspense boundary flushes, the status line is
   // already sent and notFound() can only change the body. See lib/wpPaths.ts.
@@ -346,6 +355,25 @@ async function logAgent(request: NextRequest, status: number): Promise<void> {
  */
 function redactSecretPath(pathname: string): string {
   return pathname.startsWith(`${ROUTES.ORDER_STATUS}/`) ? `${ROUTES.ORDER_STATUS}/[order_uuid]` : pathname
+}
+
+/**
+ * An old city page outside /all-city/ (a WordPress "Location Popular City"
+ * page, say) answers a 301 to its /all-city/ page, from the list edited in
+ * Admin → All City Pages → Old URL redirects. Here rather than in a route, so
+ * it is a real 301 before anything streams. The query string is kept (ad and
+ * email tags). Native routes never reach the lookup: the list cannot hold
+ * them, and they need no Redis read.
+ */
+async function handleAllCityOldUrl(request: NextRequest): Promise<NextResponse | null> {
+  const { pathname, search } = request.nextUrl
+  if (isNativePath(pathname) || pathname.endsWith(MD_SUFFIX)) return null
+  const slug = await allCityOldUrlTarget(pathname)
+  if (!slug) return null
+  const response = NextResponse.redirect(new URL(`${ROUTES.ALL_CITY(slug)}${search}`, request.url), 301)
+  // An hour, browser and CDN: the list can change in the admin.
+  response.headers.set('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  return response
 }
 
 /**

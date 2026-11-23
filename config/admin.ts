@@ -47,6 +47,7 @@ export const ADMIN_ROUTES = {
   ALL_CITY_NEW: '/admin/all-city-pages/new',
   ALL_CITY_TEMPLATE: '/admin/all-city-pages/template',
   ALL_CITY_DEPOTS: '/admin/all-city-pages/depots',
+  ALL_CITY_OLD_URLS: '/admin/all-city-pages/old-urls',
   ALL_CITY_DEPOT: (key: string) => `/admin/all-city-pages/depots/${key}`,
   /** The draft preview: the real page layout, so outside /admin (gated via ADMIN_PATHS). */
   ALL_CITY_PREVIEW: (slug: string) => `/admin-preview/all-city/${slug}`,

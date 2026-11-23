@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, ExternalLink, Eye, LayoutTemplate, Plus, Warehouse } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CornerDownRight, ExternalLink, Eye, LayoutTemplate, Plus, Warehouse } from 'lucide-react'
 import { bulkEditAllCityPagesAction, bulkPublishAllCityPagesAction } from '@/actions/allCityPages'
 import { ADMIN_ROUTES } from '@/config/admin'
 import { STORE_KEY } from '@/config/store'
@@ -45,6 +45,10 @@ export default function AllCityPagesAdmin({ searchParams }: { searchParams: Sear
           <Link href={ADMIN_ROUTES.ALL_CITY_DEPOTS} className="inline-flex items-center gap-1.5 rounded-md border border-theme-border px-3 py-2 font-semibold hover:border-theme-primary dark:border-neutral-700">
             <Warehouse className="h-4 w-4 text-theme-primary" aria-hidden />
             Depots (22)
+          </Link>
+          <Link href={ADMIN_ROUTES.ALL_CITY_OLD_URLS} className="inline-flex items-center gap-1.5 rounded-md border border-theme-border px-3 py-2 font-semibold hover:border-theme-primary dark:border-neutral-700">
+            <CornerDownRight className="h-4 w-4 text-theme-primary" aria-hidden />
+            Old URL redirects
           </Link>
           <Link href={ADMIN_ROUTES.ALL_CITY_NEW} className="inline-flex items-center gap-1.5 rounded-md border border-theme-border px-3 py-2 font-semibold hover:border-theme-primary dark:border-neutral-700">
             <Plus className="h-4 w-4 text-theme-primary" aria-hidden />

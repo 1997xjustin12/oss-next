@@ -3,13 +3,15 @@ import { CACHE_TAGS, SHELL_OUTAGE_CACHE_LIFE } from '@/config/cache'
 import { STORE_KEY } from '@/config/store'
 import { ALL_CITY_DEPOTS } from '@/lib/data/allCityDepots'
 import { ALL_CITY_TEMPLATE_DEFAULT } from '@/lib/data/allCityTemplate'
+import { ALL_CITY_OLD_URLS_DEFAULT } from '@/lib/data/allCityOldUrls'
+import { conformAllCityOldUrls } from '@/lib/allCityOldUrls'
 import { allSeedPages, getSeedPage } from '@/lib/allCitySeed'
 import type { AllCityAdminRow } from '@/lib/allCityAdmin'
 import { findAllCityIssues } from '@/lib/allCityIssues'
 import { ALL_CITY_STATE_NAMES, buildAllCityLists, withoutPage, type AllCityStateLists } from '@/lib/allCityPage'
 import { conformAllCityDepot, conformAllCityPage, conformAllCityTemplate } from '@/lib/allCityValidate'
 import { getRedisClient } from '@/lib/redis'
-import type { AllCityDepot, AllCityLink, AllCityPage, AllCityState, AllCityTemplate } from '@/types/allCity'
+import type { AllCityDepot, AllCityLink, AllCityOldUrl, AllCityPage, AllCityState, AllCityTemplate } from '@/types/allCity'
 
 /**
  * The /all-city/ pages' records: the seed imported from WordPress
@@ -22,6 +24,7 @@ import type { AllCityDepot, AllCityLink, AllCityPage, AllCityState, AllCityTempl
  *   oss-next:<store>:allcity:depot:<key>(:draft)
  *   oss-next:<store>:allcity:page:<slug>(:draft)
  *   oss-next:<store>:allcity:pages      set: every slug with a page record (draft or published)
+ *   oss-next:<store>:allcity:redirects(:draft)   the old-URL redirects (one list)
  *
  * Only edited pages have a record: 8,539 pages render from the seed until
  * someone changes one. The set lets the admin list and each state's lists find
@@ -34,7 +37,8 @@ import type { AllCityDepot, AllCityLink, AllCityPage, AllCityState, AllCityTempl
 
 const KEY_PREFIX = 'oss-next'
 
-export type AllCityRecordKind = 'template' | 'depot' | 'page'
+/** `redirects`: the old-URL redirect list (lib/allCityOldUrls.ts), which the proxy reads (lib/allCityOldUrlRedirects.ts). */
+export type AllCityRecordKind = 'template' | 'depot' | 'page' | 'redirects'
 
 export function allCityKey(kind: AllCityRecordKind, id?: string, draft = false): string {
   return [KEY_PREFIX, STORE_KEY, 'allcity', kind, ...(id ? [id] : []), ...(draft ? ['draft'] : [])].join(':')
@@ -292,6 +296,11 @@ export async function readAllCityDepotState(key: string): Promise<AllCityDraftSt
   const seed = ALL_CITY_DEPOTS[key]
   if (!seed) return null
   return readState('depot', key, (raw) => conformAllCityDepot(raw, seed))
+}
+
+/** The old-URL redirects: the draft or published list, else the default (lib/data/allCityOldUrls.ts). */
+export async function readAllCityOldUrlsState(): Promise<AllCityDraftState<AllCityOldUrl[]>> {
+  return (await readState('redirects', undefined, (raw) => conformAllCityOldUrls(raw) ?? [...ALL_CITY_OLD_URLS_DEFAULT]))!
 }
 
 /** The published page as visitors see it now, uncached (for comparing before a publish). */
