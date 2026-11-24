@@ -160,6 +160,7 @@ const OFFER_FEATURE_ICONS: readonly string[] = [
   'delivery',
   'ownership',
   'approval',
+  'convert',
 ] satisfies OfferFeatureIcon[]
 
 export function conformAllCityTemplate(raw: unknown, seed: AllCityTemplate = ALL_CITY_TEMPLATE_DEFAULT): AllCityTemplate {

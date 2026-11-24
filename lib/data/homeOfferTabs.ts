@@ -2,11 +2,11 @@ import { ROUTES } from '@/config/routes'
 
 /**
  * The homepage's Buy / Rent / Rent-To-Own section (OfferTabs), under the hero
- * on every version of the homepage. Buy is word for word from the design
- * (2026-11-18); Rent and Rent-To-Own follow its pattern with the facts the
- * rental and rent-to-own pages already state, for the content owner to review.
+ * on every version of the homepage. Buy (2026-11-18) and Rent (2026-11-24) are
+ * word for word from the design; Rent-To-Own follows its pattern with the facts the
+ * rent-to-own page already states, for the content owner to review.
  *
- * Body text uses the template syntax (TemplateRichText): `[label](/path)` is
+ * Body text uses the template syntax (TemplateRichText): `[[bold]]` is bold, `[label](/path)` is
  * a link, and a blank line starts a new paragraph.
  *
  * Prices are placeholders, `{buy}`, `{rent}` and `{rto}` ("$1,350"): the
@@ -20,7 +20,7 @@ export type OfferPrices = { buy: string; rent: string; rto: string }
 /** The design's starting prices: shown until the real ones load, and if they cannot. */
 export const OFFER_DEFAULT_PRICES: OfferPrices = { buy: '$1,350', rent: '$95', rto: '$79.99' }
 
-export type OfferFeatureIcon = 'price' | 'sizes' | 'conditions' | 'guides' | 'terms' | 'delivery' | 'ownership' | 'approval'
+export type OfferFeatureIcon = 'price' | 'sizes' | 'conditions' | 'guides' | 'terms' | 'delivery' | 'ownership' | 'approval' | 'convert'
 
 export type OfferTab = {
   id: 'buy' | 'rent' | 'rto'
@@ -81,23 +81,24 @@ export const OFFER_TABS: readonly OfferTab[] = [
     price: 'From {rent}/Mo',
     note: 'Short/Long Term',
     heading: 'Shipping Container Rental',
+    // Word for word from the design (2026-11-24).
     body:
-      'Rent a shipping container from On-Site Storage Solutions for as long as you need it. Rentals start at {rent} a month, for short-term or long-term storage, and are delivered from a local depot across the U.S. and Canada.\n\n' +
-      'Rental containers are used 20ft and 40ft units, wind and watertight and ready for storage at a home, a jobsite, or a business. The monthly price depends on the location, the term, and the size of the container.\n\n' +
-      `Read our [shipping container rental](${ROUTES.RENTAL}) guide for terms and delivery, or browse [types of shipping containers](${ROUTES.CONTAINER_TYPES}) to choose a size. Need it long term? [Rent-to-own](${ROUTES.RENT_TO_OWN}) puts every payment toward owning it.`,
+      'Rent a shipping container for a few months or a few years. Rentals start at {rent} a month, and sales tax may apply in some areas. We rent dry van storage containers in standard and high cube sizes, and refrigerated units for temperature-controlled storage.\n\n' +
+      'Short-term rentals suit renovations, seasonal inventory, and job sites. Long-term rentals suit businesses that need extra space without buying. [[Rent now,]] and you can convert to ownership later with our rent-to-own program.',
     card: {
       lead: 'Starting at',
       price: '{rent}',
       suffix: '/mo',
-      caption: 'Short or long term, delivered locally',
+      caption: 'Quoted price is the price you pay',
       button: 'Rent A Shipping Container',
       href: `${ROUTES.PLP}?ptype=rental`,
     },
+    // Reading order (a phone's list); desktop fills its 2x2 grid column by column.
     features: [
-      { icon: 'price', title: 'Low Monthly Rates', text: 'From {rent} a month, with the price confirmed before you order.' },
-      { icon: 'terms', title: 'Short Or Long Term', text: 'Rent for a few months or keep it for as long as your project needs.' },
-      { icon: 'sizes', title: '20ft & 40ft Sizes', text: 'Wind & watertight units in 20ft and 40ft, ready for on-site storage.' },
-      { icon: 'delivery', title: 'Local Delivery', text: 'Delivered from a depot near you, across the U.S. and Canada.' },
+      { icon: 'price', title: 'Low Monthly Rates', text: 'From {rent} a month. Rent for a few months or a few years.' },
+      { icon: 'terms', title: 'Short & Long Term', text: 'Flexible rental terms to fit your project or business.' },
+      { icon: 'conditions', title: 'Sizes & Refrigerated Options', text: 'Choose from 20ft, 40ft, and 40ft High Cube dry van containers, or refrigerated units for cold storage.' },
+      { icon: 'convert', title: 'Rent Now, Own Later', text: 'Convert to ownership later with our rent-to-own program.' },
     ],
   },
   {
