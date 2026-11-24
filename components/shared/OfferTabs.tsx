@@ -142,6 +142,13 @@ export function OfferTabsView({ tabs: rawTabs, prices }: { tabs: readonly OfferT
   )
 }
 
+/** A paragraph whose every line starts "1. ", "2. "… is a numbered list: its steps, numbers removed. Else null. */
+function numberedList(paragraph: string): string[] | null {
+  const lines = paragraph.split('\n').map((line) => line.trim()).filter(Boolean)
+  if (!lines.every((line) => /^\d+\.\s/.test(line))) return null
+  return lines.map((line) => line.replace(/^\d+\.\s+/, ''))
+}
+
 function OfferPanel({ tab }: { tab: OfferTab }) {
   const paragraphs = tab.body
     .split(/\n\s*\n/)
@@ -154,11 +161,22 @@ function OfferPanel({ tab }: { tab: OfferTab }) {
         <h2 className="text-2xl font-bold text-theme-primary sm:text-3xl dark:text-red-400">{tab.heading}</h2>
         {/* The paragraphs alone keep a reading width (about 75 characters); the section itself is full width. */}
         <div className="mt-4 max-w-3xl space-y-4 text-[15px] leading-relaxed text-neutral-700 sm:mt-6 sm:text-base dark:text-neutral-300">
-          {paragraphs.map((paragraph, i) => (
-            <p key={i}>
-              <TemplateRichText text={paragraph} linkClassName={BODY_LINK} accentClassName={BODY_ACCENT} />
-            </p>
-          ))}
+          {paragraphs.map((paragraph, i) => {
+            const steps = numberedList(paragraph)
+            return steps ? (
+              <ol key={i} className="list-decimal space-y-1 pl-6 marker:text-neutral-700 dark:marker:text-neutral-300">
+                {steps.map((step, j) => (
+                  <li key={j} className="pl-1">
+                    <TemplateRichText text={step} linkClassName={BODY_LINK} accentClassName={BODY_ACCENT} />
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p key={i}>
+                <TemplateRichText text={paragraph} linkClassName={BODY_LINK} accentClassName={BODY_ACCENT} />
+              </p>
+            )
+          })}
         </div>
       </div>
 

@@ -2,12 +2,12 @@ import { ROUTES } from '@/config/routes'
 
 /**
  * The homepage's Buy / Rent / Rent-To-Own section (OfferTabs), under the hero
- * on every version of the homepage. Buy (2026-11-18) and Rent (2026-11-24) are
- * word for word from the design; Rent-To-Own follows its pattern with the facts the
- * rent-to-own page already states, for the content owner to review.
+ * on every version of the homepage. Buy (2026-11-18), Rent and Rent-To-Own
+ * (2026-11-24) are from the design.
  *
  * Body text uses the template syntax (TemplateRichText): `[[bold]]` is bold, `[label](/path)` is
- * a link, and a blank line starts a new paragraph.
+ * a link, and a blank line starts a new paragraph. A paragraph whose every line
+ * starts "1. ", "2. "… is a numbered list.
  *
  * Prices are placeholders, `{buy}`, `{rent}` and `{rto}` ("$1,350"): the
  * lowest prices at the visitor's depot, or nationally when they have none
@@ -107,23 +107,29 @@ export const OFFER_TABS: readonly OfferTab[] = [
     price: 'From {rto}/Mo',
     note: 'Own It At The End',
     heading: 'Rent-To-Own Shipping Containers',
+    // From the design (2026-11-24); the middle paragraph is a numbered list.
     body:
-      'Own a shipping container with easy monthly payments. Rent-to-own starts at {rto} a month, and every payment moves you closer to owning the container at the end of your term.\n\n' +
-      'There is no credit check: choose your container and a 12, 24, 36, or 48-month term, apply in minutes, and get approved the same day. It is available on almost every container, except As-is units and working refrigerated containers.\n\n' +
-      `See how it works on our [rent-to-own financing](${ROUTES.RENT_TO_OWN}) page, or compare [container conditions](${ROUTES.CONTAINER_CONDITIONS}) to choose the one you will own.`,
+      'Pay for your container in monthly installments and own it at the end. Rent-to-own shipping containers start at {rto} a month.\n\n' +
+      '1. Choose a payment term of 12, 24, 36, or 48 months on our website.\n' +
+      '2. No credit check is required. Everyone qualifies based on valid public background information.\n' +
+      '3. Pay off early and save 33% of the remaining balance with a one-time early payment discount.\n\n' +
+      'Rent-to-own is available on used and new containers in 20ft, 40ft, and 40ft high cube, in wind- and water-tight, cargo-worthy, and IICL conditions.',
     card: {
       lead: 'Starting at',
       price: '{rto}',
       suffix: '/mo',
-      caption: 'Own it at the end of your term',
+      caption: 'Quoted price is the price you pay',
+      // The design's button reads "Rent A Shipping Container" (the Rent tab's); this one goes to rent-to-own.
       button: 'Rent-To-Own A Container',
       href: `${ROUTES.PLP}?ptype=rto`,
     },
+    // Reading order (a phone's list); desktop fills its 2x2 grid column by column.
     features: [
-      { icon: 'approval', title: 'No Credit Check', text: 'Apply in minutes and get approved the same day.' },
-      { icon: 'terms', title: 'Flexible Terms', text: 'Choose 12, 24, 36, or 48 months to fit your budget.' },
-      { icon: 'ownership', title: 'Own It At The End', text: 'Every monthly payment counts toward owning your container.' },
-      { icon: 'guides', title: 'Expert Guides', text: 'Explore our container & grade guides to understand exactly what you’re getting.' },
+      { icon: 'price', title: 'Low Monthly Rates', text: 'From {rto} a month, with the container yours at the end of the term.' },
+      { icon: 'terms', title: 'Choose Your Term', text: 'Pick 12, 24, 36, or 48 months to fit your budget.' },
+      // The design repeats the Rent tab's sizes line here; this says what the title promises.
+      { icon: 'approval', title: 'No Credit Check', text: 'Everyone qualifies based on valid public background information.' },
+      { icon: 'convert', title: 'Save 33% When You Pay Early', text: 'Pay off early and save 33% of the remaining balance.' },
     ],
   },
 ]
