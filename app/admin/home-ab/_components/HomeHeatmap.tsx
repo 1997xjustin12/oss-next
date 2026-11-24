@@ -138,7 +138,7 @@ export function HomeHeatmap({ variant, device, cells }: Props) {
 
   return (
     <div ref={wrapRef} className="w-full">
-      <div className="relative overflow-hidden rounded-lg border border-neutral-200 bg-white" style={{ width: frameWidth * scale, height: height * scale }}>
+      <div className="relative overflow-hidden rounded-lg border border-neutral-200 bg-white dark:border-neutral-800" style={{ width: frameWidth * scale, height: height * scale }}>
         <div className="absolute left-0 top-0 origin-top-left" style={{ width: frameWidth, height, transform: `scale(${scale})` }}>
           <iframe
             ref={frameRef}

@@ -38,10 +38,10 @@ function href(search: Search, change: Partial<Search>) {
 }
 
 const VERDICT_STYLE: Record<ReturnType<typeof compareRates>, string> = {
-  better: 'text-emerald-700',
-  worse: 'text-red-700',
-  'no clear difference': 'text-neutral-500',
-  'too early': 'text-neutral-400',
+  better: 'text-emerald-700 dark:text-emerald-400',
+  worse: 'text-red-700 dark:text-red-400',
+  'no clear difference': 'text-neutral-500 dark:text-neutral-400',
+  'too early': 'text-neutral-400 dark:text-neutral-500',
 }
 
 function Verdict({ control, variant, hits }: { control: HomeAbTotals; variant: HomeAbTotals; hits: (t: HomeAbTotals) => number }) {
@@ -64,9 +64,9 @@ const METRICS: Metric[] = [
 
 function Comparison({ totals }: { totals: Record<HomeVariant, HomeAbTotals> }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-neutral-200">
+    <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
       <table className="w-full border-collapse text-left text-sm">
-        <thead className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+        <thead className="bg-neutral-50 dark:bg-neutral-900 text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
           <tr>
             <th scope="col" className="px-4 py-2.5 font-semibold">Measure</th>
             {HOME_VARIANTS.map((v) => (
@@ -74,12 +74,12 @@ function Comparison({ totals }: { totals: Record<HomeVariant, HomeAbTotals> }) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-100">
+        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
           {METRICS.map((metric) => (
             <tr key={metric.label}>
-              <th scope="row" className="px-4 py-2.5 font-medium text-neutral-900">
+              <th scope="row" className="px-4 py-2.5 font-medium text-neutral-900 dark:text-neutral-100">
                 {metric.label}
-                {metric.hint && <div className="text-xs font-normal text-neutral-500">{metric.hint}</div>}
+                {metric.hint && <div className="text-xs font-normal text-neutral-500 dark:text-neutral-400">{metric.hint}</div>}
               </th>
               {HOME_VARIANTS.map((v) => (
                 <td key={v} className="px-4 py-2.5 text-right tabular-nums">
@@ -99,12 +99,12 @@ function TopClicks({ totals }: { totals: Record<HomeVariant, HomeAbTotals> }) {
   const all = new Map<string, number>()
   for (const v of HOME_VARIANTS) for (const [target, n] of Object.entries(totals[v].targets)) all.set(target, (all.get(target) ?? 0) + n)
   const rows = [...all].sort((a, b) => b[1] - a[1]).slice(0, 20)
-  if (!rows.length) return <p className="text-sm text-neutral-500">No clicks on links or buttons yet.</p>
+  if (!rows.length) return <p className="text-sm text-neutral-500 dark:text-neutral-400">No clicks on links or buttons yet.</p>
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-neutral-200">
+    <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
       <table className="w-full border-collapse text-left text-sm">
-        <thead className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+        <thead className="bg-neutral-50 dark:bg-neutral-900 text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
           <tr>
             <th scope="col" className="px-4 py-2.5 font-semibold">Clicked</th>
             {HOME_VARIANTS.map((v) => (
@@ -112,20 +112,20 @@ function TopClicks({ totals }: { totals: Record<HomeVariant, HomeAbTotals> }) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-100">
+        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
           {rows.map(([target]) => {
             const [region, ...rest] = target.split(':')
             return (
               <tr key={target}>
                 <th scope="row" className="px-4 py-2 font-normal">
-                  <span className="mr-2 rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] text-neutral-600">{REGION_NAME[region] ?? region}</span>
-                  <span className="font-mono text-[13px] text-neutral-900">{rest.join(':')}</span>
+                  <span className="mr-2 rounded bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 text-[11px] text-neutral-600 dark:text-neutral-400">{REGION_NAME[region] ?? region}</span>
+                  <span className="font-mono text-[13px] text-neutral-900 dark:text-neutral-100">{rest.join(':')}</span>
                 </th>
                 {HOME_VARIANTS.map((v) => {
                   const n = totals[v].targets[target] ?? 0
                   return (
                     <td key={v} className="px-4 py-2 text-right tabular-nums">
-                      {num(n)} <span className="text-neutral-400">({totals[v].views ? ((n / totals[v].views) * 100).toFixed(1) : '—'})</span>
+                      {num(n)} <span className="text-neutral-400 dark:text-neutral-500">({totals[v].views ? ((n / totals[v].views) * 100).toFixed(1) : '—'})</span>
                     </td>
                   )
                 })}
@@ -147,7 +147,7 @@ function Tabs<T extends string | number>({ items, current, label, link }: { item
           href={link(item)}
           scroll={false}
           aria-current={item === current ? 'page' : undefined}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium ${item === current ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'}`}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium ${item === current ? 'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'}`}
         >
           {label(item)}
         </Link>
@@ -174,12 +174,12 @@ async function Report({ searchParams }: Props) {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs items={RANGES} current={range} label={(r) => `Last ${r} days`} link={(r) => href(state, { days: String(r) })} />
-        {(!complete || !heat.complete) && <p className="text-xs text-amber-700">Some days could not be read; the numbers are partial.</p>}
+        {(!complete || !heat.complete) && <p className="text-xs text-amber-700 dark:text-amber-400">Some days could not be read; the numbers are partial.</p>}
       </div>
 
       {!anyViews && (
-        <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-5 text-sm text-neutral-600">
-          <p className="font-medium text-neutral-800">No homepage views recorded in this range yet.</p>
+        <div className="rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-5 text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="font-medium text-neutral-800 dark:text-neutral-200">No homepage views recorded in this range yet.</p>
           <p className="mt-1">
             {homeAbRecording()
               ? 'Views are recorded on the live site as visitors leave the homepage; they show here within a few minutes.'
@@ -189,26 +189,26 @@ async function Report({ searchParams }: Props) {
       )}
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-neutral-900">Versions compared</h2>
-        <p className="text-xs text-neutral-600">
+        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Versions compared</h2>
+        <p className="text-xs text-neutral-600 dark:text-neutral-400">
           “Better / worse than V1” only appears once the difference is unlikely to be chance (95 %), with at least 100 views each.
         </p>
         <Comparison totals={totals} />
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-neutral-900">Most clicked</h2>
-        <p className="text-xs text-neutral-600">Links by address, buttons by their text.</p>
+        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Most clicked</h2>
+        <p className="text-xs text-neutral-600 dark:text-neutral-400">Links by address, buttons by their text.</p>
         <TopClicks totals={totals} />
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-neutral-900">Click heatmap</h2>
+        <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Click heatmap</h2>
         <div className="flex flex-wrap gap-4">
           <Tabs items={HOME_VARIANTS} current={variant} label={(v) => `Version ${v}`} link={(v) => href(state, { v: String(v) })} />
           <Tabs items={['d', 'm'] as const} current={device} label={(d) => (d === 'd' ? 'Desktop' : 'Mobile')} link={(d) => href(state, { d })} />
         </div>
-        <p className="text-xs text-neutral-600">
+        <p className="text-xs text-neutral-600 dark:text-neutral-400">
           {num(mapped)} click{mapped === 1 ? '' : 's'} on version {variant}, {device === 'd' ? 'desktop' : 'mobile'}, last {range} days, drawn over the page as it is now.
           Red is where most people clicked. Clicks in the site header and footer are counted above but not mapped.
         </p>
@@ -222,20 +222,20 @@ export default function HomeAbPage({ searchParams }: Props) {
   return (
     <div className="space-y-5">
       <header>
-        <h1 className="text-xl font-bold text-neutral-900">Homepage A/B</h1>
-        <p className="mt-1 text-sm text-neutral-600">
+        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">Homepage A/B</h1>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
           Each visitor sees one of three homepage versions, kept for 30 days. Preview one without joining the test (and without being counted):{' '}
           {HOME_VARIANTS.map((v, i) => (
             <span key={v}>
               {i > 0 && ' · '}
-              <Link href={`${ROUTES.HOME}?${HOME_PREVIEW_PARAM}=${v}`} prefetch={false} target="_blank" rel="noopener" className="font-medium text-blue-700 underline">
+              <Link href={`${ROUTES.HOME}?${HOME_PREVIEW_PARAM}=${v}`} prefetch={false} target="_blank" rel="noopener" className="font-medium text-blue-700 dark:text-sky-300 underline">
                 /?{HOME_PREVIEW_PARAM}={v}
               </Link>
             </span>
           ))}
         </p>
       </header>
-      <Suspense fallback={<p className="text-sm text-neutral-500">Loading the numbers…</p>}>
+      <Suspense fallback={<p className="text-sm text-neutral-500 dark:text-neutral-400">Loading the numbers…</p>}>
         <Report searchParams={searchParams} />
       </Suspense>
     </div>
