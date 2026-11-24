@@ -1,7 +1,7 @@
 'use client'
 
 import { useId, useState } from 'react'
-import { ArrowLeftRight, BadgeCheck, BookOpen, CalendarClock, Container, DollarSign, KeyRound, Truck, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, BadgeCheck, BookOpen, CalendarClock, Container, DollarSign, HandCoins, KeyRound, Truck, type LucideIcon } from 'lucide-react'
 import { PlpLink } from '@/components/shared/PlpLink'
 import { TemplateRichText } from '@/components/shared/TemplateRichText'
 import { useDepotStartingPrices } from '@/hooks/useDepotStartingPrices'
@@ -30,6 +30,7 @@ const ICONS: Record<OfferFeatureIcon, LucideIcon> = {
   delivery: Truck,
   ownership: KeyRound,
   approval: BadgeCheck,
+  convert: HandCoins,
 }
 
 /** Each tab's price colour when it is not the open one (4.5:1 on white and on the dark card). */
@@ -51,6 +52,8 @@ const DESKTOP_TAB_ORDER = ['lg:order-1', 'lg:order-2', 'lg:order-3'] as const
 const DESKTOP_COLUMNS = ['lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3'] as const
 const DESKTOP_SPAN = ['lg:col-span-1', 'lg:col-span-2', 'lg:col-span-3'] as const
 
+/** A `[[…]]` run in the body: bold, in the body's own colour ("Rent now,"). */
+const BODY_ACCENT = 'font-bold text-theme-dark dark:text-white'
 const BODY_LINK = 'font-semibold text-theme-dark underline underline-offset-2 hover:text-theme-primary dark:text-white dark:hover:text-red-400'
 
 /**
@@ -153,7 +156,7 @@ function OfferPanel({ tab }: { tab: OfferTab }) {
         <div className="mt-4 max-w-3xl space-y-4 text-[15px] leading-relaxed text-neutral-700 sm:mt-6 sm:text-base dark:text-neutral-300">
           {paragraphs.map((paragraph, i) => (
             <p key={i}>
-              <TemplateRichText text={paragraph} linkClassName={BODY_LINK} />
+              <TemplateRichText text={paragraph} linkClassName={BODY_LINK} accentClassName={BODY_ACCENT} />
             </p>
           ))}
         </div>

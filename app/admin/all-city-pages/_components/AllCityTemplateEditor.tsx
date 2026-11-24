@@ -38,6 +38,7 @@ const OFFER_ICON_OPTIONS = [
   { value: 'delivery', label: 'Delivery (truck)' },
   { value: 'ownership', label: 'Ownership (key)' },
   { value: 'approval', label: 'Approval (badge)' },
+  { value: 'convert', label: 'Convert (hand and coin)' },
 ]
 
 const SECTION_HERO_HELP =
