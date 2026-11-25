@@ -107,7 +107,7 @@ export function ContainerCardGrid({ defaults }: Props) {
             <div key={item.key} className="w-full shrink-0 snap-start sm:w-auto sm:shrink">
               <ContainerCard
                 item={item}
-                image={card?.image || item.image}
+                image={item.cardImage || card?.image || item.image}
                 price={card?.price ?? null}
                 pricePending={pending}
               />
