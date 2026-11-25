@@ -6,7 +6,7 @@ import assert from 'node:assert/strict'
 import { findNativePageById } from '@/config/pages'
 import { GBP_PAGES } from '@/lib/data/gbpPages'
 import { gbpJsonLd, gbpPageLabel, gbpSeoDefaults, requireGbpPage } from '@/lib/gbp'
-import { gbpContentKeys } from '@/lib/gbpAdmin'
+import { gbpContentKeys, gbpSeoPageModel, pickKeys } from '@/lib/gbpAdmin'
 import { conformGbpPage, optionalMapsEmbedUrl } from '@/lib/gbpValidate'
 
 const national = requireGbpPage('get')
@@ -19,6 +19,7 @@ describe('the national page record', () => {
   it('has no location, no map and the main line', () => {
     assert.equal(national.location, null)
     assert.equal(national.mapEmbedUrl, '')
+    assert.equal(national.youtubeId, '_eezA15UXHM', 'WordPress’s video beside the FAQ')
     assert.equal(national.contact.phoneE164, '+18886674834')
     assert.equal(national.seo.noindex, true)
   })
@@ -59,5 +60,23 @@ describe('its head and structured data', () => {
   it('is in the Page Configurator, marked not indexable', () => {
     assert.deepEqual(findNativePageById('get'), { id: 'get', path: '/get', label: 'GBP — Nationwide', group: 'Locations', indexable: false })
     assert.equal(findNativePageById(city.slug)?.indexable, true)
+  })
+})
+
+describe('its admin screens', () => {
+  it('content and SEO forms save back unchanged (what the save actions validate)', () => {
+    const content = pickKeys(national, gbpContentKeys(national))
+    assert.deepEqual(conformGbpPage({ ...national, ...structuredClone(content) }, national), national)
+    const seo = gbpSeoPageModel(national)
+    assert.deepEqual(Object.keys(seo).sort(), ['listing', 'seo'], 'no pin, areas or business details to edit')
+    const saved = conformGbpPage({ ...national, ...structuredClone(seo) }, national)
+    assert.equal(saved.seo.noindex, true)
+    assert.equal(saved.location, null)
+  })
+
+  it('unticking noindex is stored as false', () => {
+    const saved = conformGbpPage({ ...national, seo: { ...national.seo, noindex: false } }, national)
+    assert.equal(saved.seo.noindex, false)
+    assert.equal(gbpSeoDefaults(saved).robots, undefined)
   })
 })

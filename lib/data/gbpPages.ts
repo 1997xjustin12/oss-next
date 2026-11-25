@@ -1684,7 +1684,7 @@ export const GBP_PAGES: readonly GbpPage[] = [
     // The national page (2026-11-25): WordPress's "get-os" page, never live
     // there, rebuilt here at /get. Every GBP section but the local ones: no
     // location, no map (the quote form takes the full width), no blog cards,
-    // the main line and the head office. Kept out of search for now.
+    // the main line and the head office; the FAQ keeps WordPress's video. Kept out of search for now.
     // WordPress's "Areas We Serve" list is left out: Elementor hides it on
     // every device, so the page never showed it.
     slug: 'get',
@@ -1742,7 +1742,8 @@ export const GBP_PAGES: readonly GbpPage[] = [
       },
     ],
     mapEmbedUrl: '',
-    youtubeId: '',
+    // WordPress's video beside the FAQ ("Your Top 5 FAQs Answered"), as on Houston and Los Angeles.
+    youtubeId: '_eezA15UXHM',
     seo: {
       // WordPress's was "Shipping Containers For Sale - 2 - …": its duplicate-page suffix.
       title: 'Shipping Containers For Sale - Onsite Storage Solution',

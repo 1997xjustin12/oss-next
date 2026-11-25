@@ -5,7 +5,7 @@ import { ADMIN_ROUTES } from '@/config/admin'
 import { GBP_ROUTE_SEGMENTS } from '@/config/routes'
 import { GBP_PAGES } from '@/lib/data/gbpPages'
 import { gbpPageLabel } from '@/lib/gbp'
-import { listingWithDefaults, toSeoForm } from '@/lib/gbpAdmin'
+import { gbpSeoPageModel, toSeoForm } from '@/lib/gbpAdmin'
 import { readGbpPageState, readGbpSeoDraft } from '@/services/gbp.service'
 import { getPageSeo } from '@/services/seo.service'
 import { GbpLocationNav } from '../../_components/GbpLocationNav'
@@ -42,7 +42,7 @@ async function Editor({ params }: Props) {
         slug={slug}
         label={label}
         initialValue={{
-          page: { geo: page.geo, areaServed: page.areaServed, seo: page.seo, listing: listingWithDefaults(page.listing) },
+          page: gbpSeoPageModel(page),
           extras: toSeoForm(seoDraft ?? seoPublished),
         }}
         hasDraft={state.hasDraft || !!seoDraft}
