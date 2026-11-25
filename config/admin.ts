@@ -27,6 +27,9 @@ export const ADMIN_ROUTES = {
   CART_NOTICE: '/admin/cart-notice',
   CHECKOUT: '/admin/checkout',
   LISTING_ORDER: '/admin/listing-order',
+  PRODUCT_FEEDS: '/admin/product-feeds',
+  /** The ChatGPT feed download (a Route Handler, gated in itself as well as by the proxy). */
+  PRODUCT_FEED_CHATGPT_DOWNLOAD: '/admin/product-feeds/chatgpt.parquet',
   // GBP location pages (docs/reference/gbp-subdomain-pages.md, "Admin configurators").
   GBP: '/admin/gbp',
   GBP_CONTENT: (slug: string) => `/admin/gbp/${slug}`,
@@ -56,7 +59,7 @@ export const ADMIN_ROUTES = {
 export type AdminNavItem = {
   href: string;
   label: string;
-  icon: 'FileCog' | 'Type' | 'Bot' | 'Flame' | 'Warehouse' | 'Truck' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned' | 'ShoppingBag' | 'ListOrdered' | 'Headset';
+  icon: 'FileCog' | 'Type' | 'Bot' | 'Flame' | 'Warehouse' | 'Truck' | 'Inbox' | 'DatabaseZap' | 'MessagesSquare' | 'LayoutPanelTop' | 'BellRing' | 'MapPinned' | 'ShoppingBag' | 'ListOrdered' | 'Headset' | 'FileDown';
   /** One line in the sidenav clarifying what this edits. */
   hint: string;
 };
@@ -160,6 +163,12 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     label: 'Listing Order',
     icon: 'ListOrdered',
     hint: 'Default container sort',
+  },
+  {
+    href: ADMIN_ROUTES.PRODUCT_FEEDS,
+    label: 'Product Feeds',
+    icon: 'FileDown',
+    hint: 'Catalog file for ChatGPT shopping',
   },
   {
     href: ADMIN_ROUTES.CHECKOUT,

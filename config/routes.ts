@@ -38,6 +38,8 @@ export const ROUTES = {
   /** The buy and rental landing pages, native since 2026-11-06 (were WordPress pages). */
   FOR_SALE: '/shipping-containers-for-sale',
   RENTAL: '/shipping-container-rental',
+  /** The ChatGPT product feed (Parquet), for OpenAI's hosted-URL option. */
+  FEED_CHATGPT: '/api/feeds/chatgpt.parquet',
   /** Where Zoho sends a visitor after that form (TAX_EXEMPTION_FORM.hidden.returnURL). */
   TAX_EXEMPTION_THANK_YOU: '/sales-tax-exemption-request-thank-you',
   PRODUCT: (handle: string) => `/product/${handle}`,

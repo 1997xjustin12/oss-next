@@ -19,9 +19,13 @@ const INCLUDE_MONTHLY_LISTINGS = true
 // Builds a Google Merchant Center product feed (RSS 2.0 + g: namespace) from
 // formatted ES product hits. Pure string building — no I/O — so it's easy to
 // reason about and the route handler just fetches + calls buildMerchantFeed.
+//
+// The per-product reading (what is the id, the price, the condition, is it
+// monthly) lives in toFeedOffer(), which the ChatGPT feed (lib/openaiFeed.ts)
+// shares, so the two feeds cannot describe the same product differently.
 
-const BRAND = 'On-Site Storage Solutions'
-const CURRENCY = 'USD'
+export const FEED_BRAND = 'On-Site Storage Solutions'
+export const FEED_CURRENCY = 'USD'
 const TITLE_MAX = 150
 const DESC_MAX = 4000
 
@@ -52,8 +56,29 @@ function mapCondition(raw: string, isContainer: boolean): 'new' | 'used' {
   return isContainer ? 'used' : 'new'
 }
 
-/** One <item>, or null to skip products that can't be a valid Merchant offer. */
-function itemXml(hit: FormattedContainerHit, origin: string): string | null {
+/** One product as every feed reads it, before any feed-specific shaping. */
+export type FeedOffer = {
+  /** The SKU, or the handle where there is none. */
+  id: string
+  /** `/product/<handle>`, site-relative. */
+  path: string
+  /** Includes the "— Rental (monthly)" suffix on monthly listings, truncated to 150. */
+  title: string
+  description: string
+  images: string[]
+  inStock: boolean
+  /** The number on the page: per month for rental and rent-to-own. */
+  price: number
+  condition: 'new' | 'used'
+  category: string
+  monthly: boolean
+  /** `purchase` | `rental` | `rent_to_own`. */
+  priceLabel: 'purchase' | 'rental' | 'rent_to_own'
+  termMonths?: number
+}
+
+/** One product as a feed offer, or null where it can't be a valid one. */
+export function toFeedOffer(hit: FormattedContainerHit): FeedOffer | null {
   // Generic/display-only template pages aren't purchasable.
   if (isGenericDisplayHit(hit)) return null
 
@@ -62,11 +87,11 @@ function itemXml(hit: FormattedContainerHit, origin: string): string | null {
   const p = hit as unknown as ProductHit
   const handle = p.handle
   const title = clean(p.title ?? '')
-  const image = p.images?.[0]?.src
+  const images = (p.images ?? []).map((img) => img.src).filter((src): src is string => Boolean(src))
   const price = hit.sale_price
 
-  // Merchant requires id, title, link, image, and a positive price.
-  if (!handle || !title || !image || !Number.isFinite(price) || price <= 0) return null
+  // Every feed requires id, title, link, image, and a positive price.
+  if (!handle || !title || !images[0] || !Number.isFinite(price) || price <= 0) return null
 
   const container = isContainerHit(hit)
   const paymentType = getCustomFieldValue(hit, 'payment_type')
@@ -76,7 +101,6 @@ function itemXml(hit: FormattedContainerHit, origin: string): string | null {
   // from them.
   const basis = getPriceBasis(hit)
   const monthly = basis.period === 'monthly'
-  if (monthly && !INCLUDE_MONTHLY_LISTINGS) return null
 
   const cadence = paymentType === 'rto' ? 'Rent-to-Own' : 'Rental'
   const condition = mapCondition(getCustomFieldValue(hit, 'condition'), container)
@@ -85,14 +109,12 @@ function itemXml(hit: FormattedContainerHit, origin: string): string | null {
   const category = p.product_category?.[0]?.category_name ?? ''
   const sku = p.variants?.[0]?.sku?.trim() ?? ''
 
-  const displayTitle = truncate(monthly ? `${title} — ${cadence} (monthly)` : title, TITLE_MAX)
-
   // For a monthly listing the description states the monthly figure AND the
   // full-term total. A shopper (or an assistant reading the feed) seeing only
   // "$232.14" on a 40ft container would otherwise take it for the purchase
   // price — the single most damaging misreading this catalog allows.
   const termTotal =
-    monthly && basis.termMonths ? `${(price * basis.termMonths).toFixed(2)} ${CURRENCY}` : ''
+    monthly && basis.termMonths ? `${(price * basis.termMonths).toFixed(2)} ${FEED_CURRENCY}` : ''
 
   const description = truncate(
     [
@@ -111,27 +133,49 @@ function itemXml(hit: FormattedContainerHit, origin: string): string | null {
     DESC_MAX,
   )
 
+  return {
+    id: sku || handle,
+    path: `/product/${handle}`,
+    title: truncate(monthly ? `${title} — ${cadence} (monthly)` : title, TITLE_MAX),
+    description,
+    images,
+    inStock: isInStockHit(hit),
+    price,
+    condition,
+    category,
+    monthly,
+    priceLabel: monthly ? (paymentType === 'rto' ? 'rent_to_own' : 'rental') : 'purchase',
+    ...(monthly && basis.termMonths ? { termMonths: basis.termMonths } : {}),
+  }
+}
+
+/** One <item>, or null to skip products that can't be a valid Merchant offer. */
+function itemXml(hit: FormattedContainerHit, origin: string): string | null {
+  const offer = toFeedOffer(hit)
+  if (!offer) return null
+  if (offer.monthly && !INCLUDE_MONTHLY_LISTINGS) return null
+
   const rows = [
-    ['g:id', sku || handle],
-    ['g:title', displayTitle],
-    ['g:description', description],
-    ['g:link', `${origin}/product/${handle}`],
-    ['g:image_link', image],
-    ['g:availability', isInStockHit(hit) ? 'in_stock' : 'out_of_stock'],
-    ['g:price', `${price.toFixed(2)} ${CURRENCY}`],
-    ['g:condition', condition],
-    ['g:brand', BRAND],
+    ['g:id', offer.id],
+    ['g:title', offer.title],
+    ['g:description', offer.description],
+    ['g:link', `${origin}${offer.path}`],
+    ['g:image_link', offer.images[0]],
+    ['g:availability', offer.inStock ? 'in_stock' : 'out_of_stock'],
+    ['g:price', `${offer.price.toFixed(2)} ${FEED_CURRENCY}`],
+    ['g:condition', offer.condition],
+    ['g:brand', FEED_BRAND],
     // Shipping containers have no GTIN/MPN — tell Google so it doesn't require one.
     ['g:identifier_exists', 'no'],
-    ...(category ? [['g:product_type', category] as [string, string]] : []),
+    ...(offer.category ? [['g:product_type', offer.category] as [string, string]] : []),
     // Machine-readable price basis. `custom_label_0` is the one field Merchant
     // lets you filter and exclude on inside a campaign, so this is what makes
     // "run Shopping ads on purchase listings only" a setting rather than a
     // feed rebuild — and it is a flat, unambiguous signal for anything else
     // consuming the feed.
-    ['g:custom_label_0', monthly ? (paymentType === 'rto' ? 'rent_to_own' : 'rental') : 'purchase'],
-    ...(monthly && basis.termMonths
-      ? ([['g:custom_label_1', `${basis.termMonths}_month_term`]] as [string, string][])
+    ['g:custom_label_0', offer.priceLabel],
+    ...(offer.termMonths
+      ? ([['g:custom_label_1', `${offer.termMonths}_month_term`]] as [string, string][])
       : []),
   ] as [string, string][]
 
@@ -149,9 +193,9 @@ export function buildMerchantFeed(hits: FormattedContainerHit[], origin: string)
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
 <channel>
-  <title>${esc(BRAND)} — Products</title>
+  <title>${esc(FEED_BRAND)} — Products</title>
   <link>${esc(origin)}</link>
-  <description>Shipping containers and accessories from ${esc(BRAND)}.</description>
+  <description>Shipping containers and accessories from ${esc(FEED_BRAND)}.</description>
 ${items}
 </channel>
 </rss>`
