@@ -4,7 +4,8 @@ import { YouTubeEmbed } from '@/components/product/YouTubeEmbed'
 import { GBP_ACCENT, GBP_BG_WHITE, GBP_CONTAINER, GBP_HEADING, sectionPadding, sectionVars } from './gbpStyles'
 import type { GbpFaq as GbpFaqItem, GbpSectionStyle } from '@/types/gbp'
 
-type Props = { heading: string; faqs: readonly GbpFaqItem[]; youtubeId: string; city: string; style?: GbpSectionStyle }
+/** `videoTitle`: the video's accessible name. */
+type Props = { heading: string; faqs: readonly GbpFaqItem[]; youtubeId: string; videoTitle: string; style?: GbpSectionStyle }
 
 /**
  * "Frequently Asked Questions" (`#faqs`): red rows, one open at a time (the
@@ -15,7 +16,7 @@ type Props = { heading: string; faqs: readonly GbpFaqItem[]; youtubeId: string; 
  * The video is a poster until clicked, so YouTube's player costs nothing on
  * load.
  */
-export function GbpFaq({ heading, faqs, youtubeId, city, style }: Props) {
+export function GbpFaq({ heading, faqs, youtubeId, videoTitle, style }: Props) {
   return (
     <section
       id="faqs"
@@ -50,7 +51,7 @@ export function GbpFaq({ heading, faqs, youtubeId, city, style }: Props) {
         </div>
         {youtubeId && (
           <div className="md:pt-14">
-            <YouTubeEmbed video={{ id: youtubeId, title: `On-Site Storage Solutions in ${city}` }} radiusClassName="rounded-none" />
+            <YouTubeEmbed video={{ id: youtubeId, title: videoTitle }} radiusClassName="rounded-none" />
           </div>
         )}
       </div>

@@ -4,14 +4,15 @@ import { ZohoQuoteForm } from '@/components/shared/ZohoQuoteForm'
 import { GBP_ACCENT, GBP_BG_WHITE, GBP_CONTAINER, GBP_H2, sectionPadding, sectionVars } from './gbpStyles'
 import type { GbpSectionStyle } from '@/types/gbp'
 
-type Props = { heading: string; mapEmbedUrl: string; city: string; style?: GbpSectionStyle }
+type Props = { heading: string; mapEmbedUrl: string; place: string; style?: GbpSectionStyle }
 
 /**
  * "Get the Best Pricing Now!" (`#request_quote`): the page's Google Business
  * listing on a map beside the shared quote form. The map is a lazy iframe, so
- * it costs nothing until the visitor scrolls near it.
+ * it costs nothing until the visitor scrolls near it. With no map ('', the
+ * national page) the form takes the full width.
  */
-export function GbpQuote({ heading, mapEmbedUrl, city, style }: Props) {
+export function GbpQuote({ heading, mapEmbedUrl, place, style }: Props) {
   return (
     <section
       id={GBP_ZOHO_FORMS.quote.anchor}
@@ -23,15 +24,19 @@ export function GbpQuote({ heading, mapEmbedUrl, city, style }: Props) {
         <h2 id="gbp-quote" className={GBP_H2}>
           <AccentText text={heading} accentClassName={GBP_ACCENT} />
         </h2>
-        <div className="mt-8 grid overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.15)] md:grid-cols-2 dark:border-neutral-800 dark:bg-neutral-900">
-          <iframe
-            src={mapEmbedUrl}
-            title={`Map: On-Site Storage Solutions, ${city}`}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-            className="h-72 w-full border-0 md:h-full md:min-h-[420px]"
-          />
+        <div
+          className={`mt-8 grid overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.15)] dark:border-neutral-800 dark:bg-neutral-900 ${mapEmbedUrl ? 'md:grid-cols-2' : ''}`}
+        >
+          {mapEmbedUrl && (
+            <iframe
+              src={mapEmbedUrl}
+              title={`Map: On-Site Storage Solutions, ${place}`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              className="h-72 w-full border-0 md:h-full md:min-h-[420px]"
+            />
+          )}
           <div className="p-5 sm:p-6">
             <ZohoQuoteForm />
           </div>

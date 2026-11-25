@@ -17,6 +17,10 @@ const HINTS: FieldHints = {
   'page.seo.canonical': { help: 'The canonical URL. A trailing slash is dropped on the page (the slashed URL redirects); the structured data id keeps it as typed.' },
   'page.seo.ogType': { label: 'og:type', kind: 'select', options: [{ value: 'article', label: 'article' }, { value: 'website', label: 'website' }] },
   'page.seo.ogImage': { label: 'Sharing image (og:image)', nullable: true, newItem: { url: '', width: 1200, height: 630 } },
+  'page.seo.noindex': {
+    label: 'Keep out of search (noindex)',
+    help: 'Ticked: noindex, follow. The sitemap follows the code seed, so indexing this page for good is a code change too.',
+  },
   'page.seo.modifiedTime': { label: 'article:modified_time', help: 'ISO date, e.g. 2026-04-21T08:36:38+00:00. Empty for none.' },
   'page.geo': { label: 'Map coordinates (listing)', help: 'The pin in the structured data. Remove if unknown.', nullable: true, newItem: { lat: 0, lng: 0 } },
   'page.areaServed': { label: 'Areas served', itemLabel: 'City', newItem: '' },
