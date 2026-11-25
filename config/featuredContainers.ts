@@ -26,6 +26,13 @@ export type FeaturedContainer = {
    * (which the product page's "You may also need" keeps): the 2026-11-18 design.
    */
   home?: { desc?: string; ctaLabel?: string }
+  /**
+   * A chosen photo for this card on the homepage, /all-city and the city pages
+   * (/all-city/<city>), shown instead of the catalogue listing's own. Without
+   * it those cards show the listing's photo and fall back to `image`. The
+   * product page's "You may also need" keeps `image`.
+   */
+  cardImage?: string
 }
 
 export const FEATURED_CONTAINERS: FeaturedContainer[] = [
@@ -70,6 +77,8 @@ export const FEATURED_CONTAINERS: FeaturedContainer[] = [
     ctaLabel: 'Get Free Quote',
     spec: { paymentType: 'buy', size: "40'", height: 'high-cube', condition: 'New' },
     depotSpec: 'new_40h_iicl',
+    // 2026-11-25: a supplied photo, in place of the listing's.
+    cardImage: '/images/containers/new-40ft-hc-card.webp',
     // As the design has it; "Fits most driveways" is the 20ft card's old line, for the content owner to check.
     home: {
       desc: 'Perfect for residential, small business, and construction site storage. Fits most driveways.',
