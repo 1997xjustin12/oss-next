@@ -1680,6 +1680,82 @@ export const GBP_PAGES: readonly GbpPage[] = [
       },
     ],
   },
+  {
+    // The national page (2026-11-25): WordPress's "get-os" page, never live
+    // there, rebuilt here at /get. Every GBP section but the local ones: no
+    // location, no map (the quote form takes the full width), no blog cards,
+    // the main line and the head office; the FAQ keeps WordPress's video. Kept out of search for now.
+    // WordPress's "Areas We Serve" list is left out: Elementor hides it on
+    // every device, so the page never showed it.
+    slug: 'get',
+    subdomain: '',
+    location: null,
+    contact: {
+      phone: '(888) 667-4834',
+      phoneE164: '+18886674834',
+      email: 'info@onsitestorage.com',
+      addressLine: 'PO Box 1051 Wildomar, CA 92595',
+      address: {
+        streetAddress: 'PO Box 1051',
+        addressLocality: 'Wildomar',
+        addressRegion: 'CA',
+        postalCode: '92595',
+        addressCountry: 'US',
+      },
+      hours: '',
+    },
+    geo: null,
+    areaServed: [],
+    headings: {
+      hero: 'Your [[#1]] Source For New and Used Shipping Containers For Sale',
+      trustedBy: '[[Trusted By]] Organizations Like',
+      products: '[[Shipping Containers]] For Sale Options',
+      types: '[[Types]] of Shipping Containers for Sale',
+      resources: 'Container [[Resources]]',
+    },
+    about: [
+      'Since 2002, On-site Storage Solutions has been a trusted leader in the shipping container industry, offering a wide selection of new and used containers for sale, rent, or rent-to-own. We proudly serve all 50 U.S. states and Canada, delivering top-quality storage containers at the guaranteed lowest prices.',
+      'Whether you need a container for construction, residential, commercial, or industrial use, our expert team is here to guide you every step of the way. We also offer container modifications, parts, accessories, and certified inspections to meet your specific needs.',
+      'With over 60+ locations, we ensure fast, reliable delivery and personalized customer support.',
+    ],
+    blogCards: [],
+    faqs: [
+      {
+        question: 'What is a shipping container?',
+        answer: 'A shipping container is a standardized metal box used to transport goods internationally. It comes in various sizes, typically 20 or 40 feet long, and is designed to be easily loaded onto ships, trucks, and trains. Containers revolutionized global trade by simplifying handling and logistics, ensuring goods’ safety and enabling efficient intermodal transportation.',
+      },
+      {
+        question: 'What is the cost of a shipping container?',
+        answer: 'On average, used shipping containers can range from $1,200 to $8,000, while new or one-trip containers can cost between $2,850 and $7,800. Prices may also be influenced by additional features and specific requirements.',
+      },
+      {
+        question: 'What material are shipping containers made from?',
+        answer: 'Shipping containers are primarily made from a special type of steel called corten steel or weathering steel. Corten steel is known for its durability and resistance to corrosion, making it suitable for withstanding harsh weather conditions during shipping and storage.',
+      },
+      {
+        question: 'What is the size of a shipping container?',
+        answer: 'Shipping containers are available in various sizes, with the most common being 20 feet and 40 feet long. The width and height of a standard container are around 8 feet and 8 feet 6 inches, respectively. High cube containers have an added foot of height, measuring approximately 9 feet 6 inches tall.',
+      },
+      {
+        question: 'What is the floor of a shipping container made of?',
+        answer: 'The floor of a shipping container is commonly a 1-1/8 inch thick marine plywood. This particular type of plywood is specially designed to withstand the harsh conditions of marine environments, ensuring durability and strength. However, it is worth noting that certain containers may feature alternative flooring materials like bamboo, vinyl, or even steel.',
+      },
+    ],
+    mapEmbedUrl: '',
+    // WordPress's video beside the FAQ ("Your Top 5 FAQs Answered"), as on Houston and Los Angeles.
+    youtubeId: '_eezA15UXHM',
+    seo: {
+      // WordPress's was "Shipping Containers For Sale - 2 - …": its duplicate-page suffix.
+      title: 'Shipping Containers For Sale - Onsite Storage Solution',
+      description: 'New & used shipping containers for sale. Buy, rent, or rent-to-own with quick delivery and guaranteed lowest prices. Get a free quote now!',
+      canonical: 'https://onsitestorage.com/get',
+      ogType: 'website',
+      ogImage: { url: '/images/gbp/cropped-OSS-Logo-1.webp', width: 500, height: 138 },
+      modifiedTime: null,
+      noindex: true,
+    },
+    jsonLd: [],
+  },
 ]
 
 /** One page by its slug, or undefined. */

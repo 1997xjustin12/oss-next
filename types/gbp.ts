@@ -42,11 +42,16 @@ export type GbpPage = {
   slug: string
   /** Serves the same page; the canonical is always the path on onsitestorage.com. */
   subdomain: string
+  /**
+   * The listing's city. Null for the national page (/get, 2026-11-25), which
+   * stands for no single listing: it shows the main line and the head office,
+   * has no map and no `SelfStorage` node, and its breadcrumb names no city.
+   */
   location: {
     city: string
     stateCode: string
     stateName: string
-  }
+  } | null
   contact: {
     /** As shown, e.g. `(619) 839-0222`. Each page has its own number (call tracking per GBP listing). */
     phone: string
@@ -56,7 +61,7 @@ export type GbpPage = {
     /** As shown in the footer. */
     addressLine: string
     address: GbpPostalAddress
-    /** As shown in the footer, e.g. `M-F 5am-5pm`. */
+    /** As shown in the footer, e.g. `M-F 5am-5pm`; '' shows no hours. */
     hours: string
   }
   /** The listing's pin. Null where the live page has no coordinates in its structured data. */
@@ -76,7 +81,7 @@ export type GbpPage = {
   about: string[]
   blogCards: GbpBlogCard[]
   faqs: GbpFaq[]
-  /** Google Maps embed of the GBP listing, beside the quote form. */
+  /** Google Maps embed of the GBP listing, beside the quote form; '' for none (the form then takes the full width). */
   mapEmbedUrl: string
   /** The video beside the FAQ; '' for none (the FAQ then takes the full width). */
   youtubeId: string
@@ -88,6 +93,8 @@ export type GbpPage = {
     ogImage: { url: string; width?: number; height?: number } | null
     /** `article:modified_time` on the live page. */
     modifiedTime: string | null
+    /** Kept out of search: `noindex, follow` and left out of the sitemap. Absent means indexed. */
+    noindex?: boolean
   }
   /**
    * The live page's `SelfStorage` blocks, as WordPress emits them. A record,

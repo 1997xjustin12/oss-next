@@ -17,8 +17,23 @@ export const GBP_CONTENT_KEYS = ['location', 'contact', 'headings', 'about', 'bl
 /** The location fields the SEO screen edits (with the page's PageSeo). */
 export const GBP_SEO_PAGE_KEYS = ['geo', 'areaServed', 'seo', 'listing'] as const
 
-export type GbpContentModel = Pick<GbpPage, (typeof GBP_CONTENT_KEYS)[number]>
-export type GbpSeoPageModel = Required<Pick<GbpPage, (typeof GBP_SEO_PAGE_KEYS)[number]>>
+/** The fields one page's content screen shows: the national page has no location to edit. */
+export function gbpContentKeys(page: Pick<GbpPage, 'location'>): readonly (typeof GBP_CONTENT_KEYS)[number][] {
+  return page.location ? GBP_CONTENT_KEYS : GBP_CONTENT_KEYS.filter((key) => key !== 'location')
+}
+
+export type GbpContentModel = Partial<Pick<GbpPage, (typeof GBP_CONTENT_KEYS)[number]>>
+/**
+ * The SEO screen's page fields. The national page (no location) has no
+ * listing pin, areas or business details, only its SEO and extra JSON-LD.
+ */
+export type GbpSeoPageModel = Pick<GbpPage, 'seo'> & Partial<Pick<GbpPage, 'geo' | 'areaServed'>> & { listing: GbpListing }
+
+/** The SEO screen's page fields for one page. */
+export function gbpSeoPageModel(page: GbpPage): GbpSeoPageModel {
+  if (!page.location) return { seo: page.seo, listing: { extraJsonLd: page.listing?.extraJsonLd ?? [] } }
+  return { geo: page.geo, areaServed: page.areaServed, seo: page.seo, listing: listingWithDefaults(page.listing) }
+}
 
 export function pickKeys<T extends object, K extends keyof T>(value: T, keys: readonly K[]): Pick<T, K> {
   return Object.fromEntries(keys.map((key) => [key, value[key]])) as Pick<T, K>

@@ -23,7 +23,7 @@ const HINTS: FieldHints = {
   'contact.addressLine': { label: 'Address (footer)', help: 'As shown in the footer.' },
   'contact.address': { label: 'Address (structured)', help: 'For Google’s business listing data.' },
   'contact.address.addressCountry': { label: 'Country', kind: 'select', options: [{ value: 'US', label: 'United States' }, { value: 'CA', label: 'Canada' }] },
-  'contact.hours': { help: 'As shown in the footer, e.g. M-F 5am-5pm. The structured hours are on the SEO screen.' },
+  'contact.hours': { help: 'As shown in the footer, e.g. M-F 5am-5pm; empty shows no hours. The structured hours are on the SEO screen.' },
   'headings.hero': { label: 'Hero (h1)', help: ACCENT_HELP },
   'headings.trustedBy': { label: 'Trusted By', help: ACCENT_HELP },
   'headings.products': { label: 'Products', help: ACCENT_HELP },
@@ -50,7 +50,7 @@ const HINTS: FieldHints = {
   },
   faqs: { label: 'FAQs', itemLabel: 'FAQ', newItem: { question: '', answer: '' } },
   'faqs.*.answer': { multiline: true },
-  mapEmbedUrl: { label: 'Google Maps embed URL', help: 'Google Maps → the listing → Share → Embed a map → the src="…" URL.' },
+  mapEmbedUrl: { label: 'Google Maps embed URL', help: 'Google Maps → the listing → Share → Embed a map → the src="…" URL. Empty for none: the quote form then takes the full width.' },
   youtubeId: { label: 'YouTube video', help: 'The video id, or paste the YouTube link. Leave empty for no video.' },
 }
 

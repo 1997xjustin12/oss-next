@@ -6,6 +6,7 @@ import { ADMIN_ROUTES } from '@/config/admin'
 import { GBP_ROUTE_SEGMENTS } from '@/config/routes'
 import { STORE_KEY } from '@/config/store'
 import { GBP_PAGES } from '@/lib/data/gbpPages'
+import { gbpPageLabel } from '@/lib/gbp'
 import { readGbpPageState, readGbpSeoDraft, readGbpSharedState, readGbpTemplateState } from '@/services/gbp.service'
 
 export const metadata: Metadata = { title: 'GBP Pages', robots: { index: false, follow: false } }
@@ -76,13 +77,11 @@ async function Overview() {
         </h2>
         <ul className="overflow-hidden rounded-lg border border-theme-border bg-theme-bg dark:border-neutral-800 dark:bg-neutral-900">
           {locations.map(({ seed, state, hasDraft }) => {
-            const { city, stateCode } = (state?.value ?? seed).location
+            const label = gbpPageLabel(state?.value ?? seed)
             return (
               <li key={seed.slug} className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-theme-border p-3 last:border-b-0 dark:border-neutral-800">
                 <span className="min-w-0 flex-1">
-                  <span className="block font-semibold">
-                    {city}, {stateCode}
-                  </span>
+                  <span className="block font-semibold">{label}</span>
                   <span className="block truncate text-xs text-theme-muted dark:text-neutral-500">/{seed.slug}</span>
                 </span>
                 {live.has(seed.slug) ? (

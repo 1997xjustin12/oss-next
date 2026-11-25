@@ -100,6 +100,12 @@ export const mapsEmbedUrl: V<string> = (r) => {
   return value && /^https:\/\/www\.google\.com\/maps\/embed\?/.test(value) ? value : undefined
 }
 
+/**
+ * The quote form's map: a Google Maps embed, or '' for none (the form then
+ * takes the section's full width; the national page has no listing to show).
+ */
+export const optionalMapsEmbedUrl: V<string> = (r) => (typeof r === 'string' && r.trim() === '' ? '' : mapsEmbedUrl(r))
+
 /** A YouTube video id (11 characters), or the id out of a pasted YouTube URL. */
 export const youtubeId: V<string> = (r) => {
   if (typeof r !== 'string') return undefined
@@ -171,6 +177,7 @@ const listing = shape<GbpListing>(
 const PAGE_FIELDS: { [K in keyof GbpPage]-?: V<GbpPage[K]> } = {
   slug: text,
   subdomain: str,
+  // Never null here: whether a page has a location is its seed's (conformGbpPage).
   location: shape({ city: text, stateCode: text, stateName: text }),
   contact: shape({
     phone: text,
@@ -184,7 +191,8 @@ const PAGE_FIELDS: { [K in keyof GbpPage]-?: V<GbpPage[K]> } = {
       postalCode: text,
       addressCountry: oneOf('US', 'CA'),
     }),
-    hours: text,
+    // '' shows no hours (the national page's footer has none).
+    hours: str,
   }),
   geo: nullable(shape({ lat: num, lng: num })),
   areaServed: list(text),
@@ -192,23 +200,33 @@ const PAGE_FIELDS: { [K in keyof GbpPage]-?: V<GbpPage[K]> } = {
   about: list(copy),
   blogCards: list(blogCard),
   faqs: list(faq),
-  mapEmbedUrl: mapsEmbedUrl,
+  mapEmbedUrl: optionalMapsEmbedUrl,
   youtubeId: optionalYoutubeId,
-  seo: shape({
-    title: text,
-    description: text,
-    canonical: url,
-    ogType: oneOf('article', 'website'),
-    ogImage: nullable(shape<{ url: string; width?: number; height?: number }>({ url, width: num, height: num }, ['width', 'height'])),
-    modifiedTime: nullable(str),
-  }),
+  seo: shape<GbpPage['seo']>(
+    {
+      title: text,
+      description: text,
+      canonical: url,
+      ogType: oneOf('article', 'website'),
+      ogImage: nullable(shape<{ url: string; width?: number; height?: number }>({ url, width: num, height: num }, ['width', 'height'])),
+      modifiedTime: nullable(str),
+      noindex: bool,
+    },
+    ['noindex'],
+  ),
   jsonLd: list(json),
   listing,
 }
 
-/** A location page from Redis (or a form), over its code seed. The slug is always the seed's. */
+/**
+ * A location page from Redis (or a form), over its code seed. The slug is
+ * always the seed's, and so is whether the page has a location: a record can
+ * neither give the national page a city nor take a city page's away.
+ */
 export function conformGbpPage(raw: unknown, seed: GbpPage): GbpPage {
-  return { ...withSeed(PAGE_FIELDS, seed, raw), slug: seed.slug }
+  const page = { ...withSeed(PAGE_FIELDS, seed, raw), slug: seed.slug }
+  if (seed.location === null) page.location = null
+  return page
 }
 
 // ─── Shared content ──────────────────────────────────────────────────────────

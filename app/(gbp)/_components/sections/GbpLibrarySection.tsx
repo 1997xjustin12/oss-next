@@ -12,7 +12,8 @@ import type { GbpLibraryProps, GbpLibrarySectionType, GbpPage, GbpSectionStyle }
  * GbpLibraryProps, and in lib/gbpValidate.ts).
  *
  * Their text is shared by every GBP page, so `{city}`, `{state}` and
- * `{phone}` are filled in per page.
+ * `{phone}` are filled in per page. The national page (no location) fills
+ * `{city}` with "your area" and `{state}` with nothing.
  */
 
 type Props<T extends GbpLibrarySectionType> = {
@@ -26,8 +27,8 @@ type Props<T extends GbpLibrarySectionType> = {
 /** `{city}`, `{state}` and `{phone}` → the page's own. */
 export function fillPlaceholders(text: string, page: GbpPage): string {
   return text
-    .replaceAll('{city}', page.location.city)
-    .replaceAll('{state}', page.location.stateCode)
+    .replaceAll('{city}', page.location?.city ?? 'your area')
+    .replaceAll('{state}', page.location?.stateCode ?? '')
     .replaceAll('{phone}', page.contact.phone)
 }
 
@@ -91,7 +92,7 @@ export function GbpLibrarySection<T extends GbpLibrarySectionType>({ type, props
             </h2>
           )}
           <div className="mx-auto mt-8 max-w-3xl">
-            <YouTubeEmbed video={{ id: youtubeId, title: fillPlaceholders(heading, page) || `On-Site Storage Solutions in ${page.location.city}` }} />
+            <YouTubeEmbed video={{ id: youtubeId, title: fillPlaceholders(heading, page) || (page.location ? `On-Site Storage Solutions in ${page.location.city}` : 'On-Site Storage Solutions') }} />
           </div>
         </div>
       </section>
