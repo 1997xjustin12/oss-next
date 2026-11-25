@@ -5,7 +5,8 @@ import { discardGbpLocationAction, publishGbpLocationAction, saveGbpContentDraft
 import { ADMIN_ROUTES } from '@/config/admin'
 import { GBP_ROUTE_SEGMENTS } from '@/config/routes'
 import { GBP_PAGES } from '@/lib/data/gbpPages'
-import { GBP_CONTENT_KEYS, pickKeys } from '@/lib/gbpAdmin'
+import { gbpPageLabel } from '@/lib/gbp'
+import { gbpContentKeys, pickKeys } from '@/lib/gbpAdmin'
 import { readGbpPageState } from '@/services/gbp.service'
 import { GbpContentEditor } from '../_components/GbpContentEditor'
 import { GbpLocationNav } from '../_components/GbpLocationNav'
@@ -31,15 +32,14 @@ async function Editor({ params }: Props) {
   const { slug } = await params
   const state = await readGbpPageState(slug)
   if (!state) notFound()
-  const { location } = state.value
-  const label = `${location.city}, ${location.stateCode}`
+  const label = gbpPageLabel(state.value)
 
   return (
     <>
       <GbpLocationNav slug={slug} label={label} current="content" live={(GBP_ROUTE_SEGMENTS as readonly string[]).includes(slug)} />
       <GbpContentEditor
         label={label}
-        initialValue={pickKeys(state.value, GBP_CONTENT_KEYS)}
+        initialValue={pickKeys(state.value, gbpContentKeys(state.value))}
         hasDraft={state.hasDraft}
         status={editorStatus(state)}
         previewHref={ADMIN_ROUTES.GBP_PREVIEW(slug)}

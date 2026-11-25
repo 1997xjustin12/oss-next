@@ -1,5 +1,5 @@
 import { GBP_ROUTE_SEGMENTS, ROUTES } from '@/config/routes';
-import { requireGbpPage } from '@/lib/gbp';
+import { gbpPageLabel, requireGbpPage } from '@/lib/gbp';
 import { LOCATION_PAGES } from '@/lib/data/locationPages';
 import { locationPath } from '@/lib/locationPage';
 
@@ -55,10 +55,12 @@ export const NATIVE_PAGES: readonly NativePage[] = [
   { id: 'tax-exemption', path: ROUTES.TAX_EXEMPTION, label: 'Sales Tax Exemption Request', group: 'Storefront', indexable: true },
   { id: 'tax-exemption-thank-you', path: ROUTES.TAX_EXEMPTION_THANK_YOU, label: 'Sales Tax Exemption — Thank You', group: 'Storefront', indexable: false },
 
-  // GBP location pages (app/(gbp)): one per Google Business Profile listing.
+  // GBP location pages (app/(gbp)): one per Google Business Profile listing,
+  // plus the national page (/get).
   ...GBP_ROUTE_SEGMENTS.map((slug): NativePage => {
-    const { location } = requireGbpPage(slug);
-    return { id: slug, path: `/${slug}`, label: `${location.city}, ${location.stateCode}`, group: 'Locations', indexable: true };
+    const page = requireGbpPage(slug);
+    const label = page.location ? gbpPageLabel(page) : `GBP — ${gbpPageLabel(page)}`;
+    return { id: slug, path: `/${slug}`, label, group: 'Locations', indexable: !page.seo.noindex };
   }),
 
   // Location pages (/where-to-buy-shipping-containers/[location]), native ones only.

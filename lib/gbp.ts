@@ -18,6 +18,14 @@ export function requireGbpPage(slug: string): GbpPage {
   return page
 }
 
+/** The national page's name wherever a city page shows its city (admin labels, breadcrumb). */
+export const GBP_NATIONAL_LABEL = 'Nationwide'
+
+/** How the admin and the breadcrumb name a page: `San Diego, CA`, or the national page's label. */
+export function gbpPageLabel(page: Pick<GbpPage, 'location'>): string {
+  return page.location ? `${page.location.city}, ${page.location.stateCode}` : GBP_NATIONAL_LABEL
+}
+
 /** The page's path: its key in the SEO registry and its route folder. */
 export function gbpPath(page: GbpPage): string {
   return `/${page.slug}`
@@ -54,6 +62,8 @@ export function gbpSeoDefaults(page: GbpPage): PageSeoDefaults {
       ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
     },
     twitter: { card: 'summary_large_image', site: GBP_HEAD.twitterSite },
+    // The Page Configurator can still override it.
+    ...(seo.noindex ? { robots: { index: false, follow: true } } : {}),
   }
 }
 
@@ -66,7 +76,9 @@ export function gbpSeoDefaults(page: GbpPage): PageSeoDefaults {
  * `@id` is the live one, WordPress's slash and all, so the entity keeps its
  * identity across the move; `url` is the page as served.
  */
-export function gbpLocalBusinessNode(page: GbpPage): SchemaNode {
+export function gbpLocalBusinessNode(page: GbpPage): SchemaNode | null {
+  // The national page stands for no single listing.
+  if (!page.location) return null
   const url = gbpCanonical(page)
   const { contact, geo, areaServed } = page
   return {
@@ -93,14 +105,15 @@ export function gbpLocalBusinessNode(page: GbpPage): SchemaNode {
 /**
  * The page's whole JSON-LD graph: the site's Organization and WebSite, the
  * WebPage and breadcrumb (Yoast's graph on WordPress, generated here), the GBP
- * listing, and an FAQPage from the FAQ the page shows (WordPress had none).
+ * listing (none on the national page), and an FAQPage from the FAQ the page
+ * shows (WordPress had none).
  */
 export function gbpJsonLd(page: GbpPage): SchemaNode {
   const path = gbpPath(page)
   return graph([
     ...siteNodes(),
     webPageNode({ path, name: page.seo.title, description: page.seo.description }),
-    breadcrumbNode([{ name: 'Home', path: '/' }, { name: `${page.location.city}, ${page.location.stateCode}` }]),
+    breadcrumbNode([{ name: 'Home', path: '/' }, { name: page.location ? gbpPageLabel(page) : 'Shipping Containers For Sale' }]),
     gbpLocalBusinessNode(page),
     faqNode(page.faqs),
     // Extra nodes written in the GBP SEO screen, as entered (validated as JSON objects).

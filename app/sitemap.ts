@@ -4,6 +4,7 @@ import { fetchProductSitemap, fetchPageSitemap } from '@/services/sitemap.servic
 import { getAllBlogSlugs } from '@/services/blog.service'
 import { GBP_ROUTE_SEGMENTS, ROUTES, isNativePath } from '@/config/routes'
 import { LOCATION_PAGE_SLUGS } from '@/lib/data/locationPageSlugs'
+import { requireGbpPage } from '@/lib/gbp'
 import { WP_NOINDEX_PATHS, WP_REDIRECTS } from '@/config/wpHiddenPages'
 
 const origin = BASE_URL.replace(/\/$/, '')
@@ -55,7 +56,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}${ROUTES.TAX_EXEMPTION}`, changeFrequency: 'monthly', priority: 0.5 },
     // The GBP location pages, for the same reason: they are native routes, so
     // `isNativePath` drops their backend rows below.
-    ...GBP_ROUTE_SEGMENTS.map((slug): MetadataRoute.Sitemap[number] => ({
+    // A page kept out of search (/get) is left out.
+    ...GBP_ROUTE_SEGMENTS.filter((slug) => !requireGbpPage(slug).seo.noindex).map((slug): MetadataRoute.Sitemap[number] => ({
       url: `${origin}/${slug}`,
       changeFrequency: 'weekly',
       priority: 0.8,

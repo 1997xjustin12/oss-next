@@ -17,7 +17,12 @@ export const GBP_CONTENT_KEYS = ['location', 'contact', 'headings', 'about', 'bl
 /** The location fields the SEO screen edits (with the page's PageSeo). */
 export const GBP_SEO_PAGE_KEYS = ['geo', 'areaServed', 'seo', 'listing'] as const
 
-export type GbpContentModel = Pick<GbpPage, (typeof GBP_CONTENT_KEYS)[number]>
+/** The fields one page's content screen shows: the national page has no location to edit. */
+export function gbpContentKeys(page: Pick<GbpPage, 'location'>): readonly (typeof GBP_CONTENT_KEYS)[number][] {
+  return page.location ? GBP_CONTENT_KEYS : GBP_CONTENT_KEYS.filter((key) => key !== 'location')
+}
+
+export type GbpContentModel = Partial<Pick<GbpPage, (typeof GBP_CONTENT_KEYS)[number]>>
 export type GbpSeoPageModel = Required<Pick<GbpPage, (typeof GBP_SEO_PAGE_KEYS)[number]>>
 
 export function pickKeys<T extends object, K extends keyof T>(value: T, keys: readonly K[]): Pick<T, K> {

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { ReviewsSection } from '@/components/shared/ReviewsSection'
-import { gbpTelHref } from '@/lib/gbp'
+import { gbpPageLabel, gbpTelHref } from '@/lib/gbp'
 import { GbpAbout } from './GbpAbout'
 import { GbpFaq } from './GbpFaq'
 import { GbpFooter } from './GbpFooter'
@@ -59,11 +59,17 @@ const CORE: Record<GbpCoreSectionType, (ctx: Ctx, section: GbpSectionInstance) =
   whyChoose: ({ shared }, { style }) => <GbpWhyChoose content={shared.whyChoose} style={style} />,
   about: ({ page, shared, call }, { style }) => <GbpAbout paragraphs={page.about} content={shared.about} style={style} {...call} />,
   quote: ({ page, shared }, { style }) => (
-    <GbpQuote heading={shared.quote.heading} mapEmbedUrl={page.mapEmbedUrl} city={page.location.city} style={style} />
+    <GbpQuote heading={shared.quote.heading} mapEmbedUrl={page.mapEmbedUrl} place={gbpPageLabel(page)} style={style} />
   ),
   newsletter: ({ shared }, { style }) => <GbpNewsletter content={shared.newsletter} style={style} />,
   faq: ({ page, shared }, { style }) => (
-    <GbpFaq heading={shared.faqHeading} faqs={page.faqs} youtubeId={page.youtubeId} city={page.location.city} style={style} />
+    <GbpFaq
+      heading={shared.faqHeading}
+      faqs={page.faqs}
+      youtubeId={page.youtubeId}
+      videoTitle={page.location ? `On-Site Storage Solutions in ${page.location.city}` : 'On-Site Storage Solutions'}
+      style={style}
+    />
   ),
 }
 

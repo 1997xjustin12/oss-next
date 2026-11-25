@@ -147,6 +147,8 @@ export const GBP_ROUTE_SEGMENTS = [
   'shipping-containers-for-sale-in-oakland-ca',
   'shipping-containers-for-sale-in-miami-fl',
   'shipping-containers-for-sale-in-chicago-il',
+  // The national page: the GBP template with no single location (2026-11-25).
+  'get',
 ] as const
 
 export const NATIVE_ROUTE_SEGMENTS = [

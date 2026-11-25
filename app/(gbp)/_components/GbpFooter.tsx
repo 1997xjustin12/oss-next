@@ -38,7 +38,7 @@ export function GbpFooter({ contact, telHref, content, logo, options }: Props) {
               {contact.addressLine}
             </span>
           )}
-          {options.showHours && (
+          {options.showHours && contact.hours && (
             <span className={item}>
               <Clock aria-hidden className="h-4 w-4" />
               Store Hours: {contact.hours}
