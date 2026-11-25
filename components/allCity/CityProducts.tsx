@@ -27,9 +27,11 @@ function fallbackImage(key: DepotFeaturedKey): string {
 /** The homepage card's item for one of this section's cards: its words, and the listing filter its link opens. */
 function cardItem(card: AllCityProductCard): FeaturedContainer {
   const spec = DEPOT_FEATURED_SPECS.find((s) => s.key === card.spec)
+  const cardImage = FEATURED_CONTAINERS.find((item) => item.depotSpec === card.spec)?.cardImage
   return {
     key: card.spec,
     image: fallbackImage(card.spec),
+    ...(cardImage && { cardImage }),
     type: card.title,
     desc: card.description,
     ctaLabel: card.button,
@@ -84,7 +86,7 @@ export async function CityProducts({ text, depot }: Props) {
             const listing = found[card.spec]
             return (
               <li key={card.spec} className="w-[78%] shrink-0 snap-start sm:w-auto sm:shrink">
-                <ContainerCard item={item} image={listing.image || item.image} price={listing.price} pricePending={false} />
+                <ContainerCard item={item} image={item.cardImage || listing.image || item.image} price={listing.price} pricePending={false} />
               </li>
             )
           })}
